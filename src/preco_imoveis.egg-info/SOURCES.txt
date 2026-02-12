@@ -1,0 +1,9 @@
+README.md
+pyproject.toml
+src/preco_imoveis.egg-info/PKG-INFO
+src/preco_imoveis.egg-info/SOURCES.txt
+src/preco_imoveis.egg-info/dependency_links.txt
+src/preco_imoveis.egg-info/requires.txt
+src/preco_imoveis.egg-info/top_level.txt
+src/scraping_zap_imoveis/__init__.py
+src/scraping_zap_imoveis/total_pagina_zap_imovel_playwirght.py

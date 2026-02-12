@@ -1,0 +1,31 @@
+[project]
+name = "preco-imoveis"
+version = "0.1.0"
+description = "Web scraping of data price of houses in Joinville-SC, Brazil"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "apify-fingerprint-datapoints>=0.10.0",
+    "browserforge>=1.2.4",
+    "bs4>=0.0.2",
+    "crawlee>=1.3.1",
+    "distutils-pytest>=0.2.1",
+    "ipykernel>=7.1.0",
+    "lxml>=6.0.2",
+    "pandas>=3.0.0",
+    "playwright>=1.58.0",
+    "playwright-stealth>=2.0.1",
+    "selenium>=4.40.0",
+    "setuptools>=80.10.2",
+    "undetected-chromedriver>=3.5.5",
+    "webdriver-manager>=4.0.2",
+    "zapimoveis-scraper>=0.4.0",
+]
+
+[build-system]
+requires = ["setuptools>=77.0.0", "wheel>=0.40.0"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools]
+package-dir = {"" = "src"}
+packages = ["scraping_zap_imoveis"]

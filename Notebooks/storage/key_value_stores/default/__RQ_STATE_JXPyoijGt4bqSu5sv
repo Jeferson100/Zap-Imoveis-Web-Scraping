@@ -1,0 +1,12 @@
+{
+  "sequence_counter": 4,
+  "forefront_sequence_counter": 0,
+  "forefront_requests": {},
+  "regular_requests": {
+    "https://crawlee.dev": 3
+  },
+  "in_progress_requests": [],
+  "handled_requests": [
+    "https://crawlee.dev"
+  ]
+}
