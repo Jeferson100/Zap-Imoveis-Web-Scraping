@@ -3,9 +3,9 @@ import time
 import logging
 import json
 import sys
-from extrair_dados_zap_imoveis_playwright_async import ZapScraperDadosImovelAsync
-from total_pagina_zap_imovel_playwright_async import ZapScraperTotalPaginaAsync
-from link_anuncios_zap_imoveis_playwright_async import ZapScraperLinksAsync
+from .extrair_dados_zap_imoveis_playwright_async import ZapScraperDadosImovelAsync
+from .total_pagina_zap_imovel_playwright_async import ZapScraperTotalPaginaAsync
+from .link_anuncios_zap_imoveis_playwright_async import ZapScraperLinksAsync
 from tqdm import tqdm
 
 
