@@ -1,7 +1,8 @@
 name: Rodando Coleta Zap Imoveis Joinville
 on: 
-  
   workflow_dispatch:
+  schedule:
+    - cron: '0 9 * * 1'  
 
 jobs:
   build:
