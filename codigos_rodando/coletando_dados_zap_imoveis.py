@@ -16,4 +16,6 @@ os.makedirs("../dados", exist_ok=True)
 
 now = time.strftime("%Y-%m-%d")
 
-resultado = asyncio.run(orchestrator.run(output_file=f"../dados/zap_imoveis_joinville_{now}.json"))
+total_paginas = 333
+
+resultado = asyncio.run(orchestrator.run(output_file=f"../dados/zap_imoveis_joinville_{now}.json"), total_pages=total_paginas)

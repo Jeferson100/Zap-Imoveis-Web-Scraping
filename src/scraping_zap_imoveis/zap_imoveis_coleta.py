@@ -45,47 +45,50 @@ class ZapImoveisColeta:
                 logger.error(f"Erro ao extrair {url}: {e}")
                 return None
 
-    async def run(self, output_file="resultados.json"):
-        start_time = time.time()
+    async def run(self, output_file="resultados.json", total_pages: int = None):
         
-        # 1. Pega o total de páginas
-        total_paginas = await self._get_total_pages()
+        if total_pages is not None:
+            total_paginas = total_pages
+        else:
+            total_paginas = await self._get_total_pages()
+            
         if not total_paginas:
             logger.error("Não foi possível determinar o total de páginas.")
             return
-
+        
+        logger.info("Determinando o total de %s páginas ", total_paginas)
+        
         semaphore = asyncio.Semaphore(self.max_concurrency)
 
-        # 2. Loop pelas páginas
         for pagina in tqdm(range(1, total_paginas + 1)):
             
             logger.info(f"--- Processando Página {pagina}/{total_paginas} ---")
             
-            # Busca links da página atual
             links = await self._get_links_from_page(pagina)
             
             if not links:
+                logger.warning("Página %s não retornou links, pulando.", pagina)
                 continue
 
-            # 3. Extração concorrente dos dados dos imóveis daquela página
             tasks = [self._get_item_data(link, semaphore) for link in links]
+            
             resultados_pagina = await asyncio.gather(*tasks)
             
-            # Filtra resultados nulos e adiciona à lista principal
             valid_results = [r for r in resultados_pagina if r is not None]
+            
             self.lista_dados.extend(valid_results)
             
-            logger.info(f"Página {pagina} finalizada. {len(valid_results)} imóveis processados.")
+            logger.info("Página %s finalizada. %s imóveis processados.", pagina, len(valid_results))
 
-        # 4. Salva os resultados
         self._save_to_json(output_file)
+    
+        logger.info("Execução finalizada. Total de imóveis coletados: %s", len(self.lista_dados))
         
-        end_time = time.time()
-        logger.info(f"Execução finalizada em {end_time - start_time:.2f} segundos.")
+        return self.lista_dados
+
 
     def _save_to_json(self, filename):
         with open(filename, "w", encoding="utf-8") as f:
-            # Assume que DadosImovel tem o método to_dict()
             json.dump([d.to_dict() for d in self.lista_dados], f, indent=4, ensure_ascii=False)
         logger.info(f"Dados salvos em {filename}")
 
