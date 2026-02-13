@@ -62,6 +62,6 @@ jobs:
                   echo "No changes to commit"
                   exit 0
               fi
-              git commit -m "Criando Carteira: $(date +'%Y-%m-%d')"
-              git pull --rebase https://Jeferson100:${{ secrets.ZAP_IMOVEIS_WEB_SCRAPING }}@github.com:Jeferson100/Zap-Imoveis-Web-Scraping.git main
-              git push https://Jeferson100:${{ secrets.ZAP_IMOVEIS_WEB_SCRAPING }}@github.com:Jeferson100/Zap-Imoveis-Web-Scraping.git HEAD:main
+              git commit -m "Web Scraping Zap Imoveis Joinville: $(date +'%Y-%m-%d')"
+              git pull --rebase https://Jeferson100:${{ secrets.ZAP_IMOVEIS_WEB_SCRAPING }}@github.com/Jeferson100/Zap-Imoveis-Web-Scraping.git main
+              git push https://Jeferson100:${{ secrets.ZAP_IMOVEIS_WEB_SCRAPING }}@github.com/Jeferson100/Zap-Imoveis-Web-Scraping.git HEAD:main
