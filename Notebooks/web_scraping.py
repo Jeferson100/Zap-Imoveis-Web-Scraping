@@ -18,6 +18,7 @@ def run(playwright: Playwright) -> None:
     # Localiza o container de Banheiros e pega o valor numérico
     # Busca o parágrafo 'Banheiros', vai para o próximo elemento (div) e pega o <p> interno
     banheiros = page.locator("xpath=//p[text()='Banheiros']/following-sibling::div/p").text_content()
+    
     print(banheiros.strip())
     
     # Procura o texto 'Vagas', desce para a div seguinte e pega o parágrafo

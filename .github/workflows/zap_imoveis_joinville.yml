@@ -1,0 +1,65 @@
+name: Rodando Coleta Zap Imoveis Joinville
+on: 
+  
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Copia os arquivos do repo
+        uses: actions/checkout@v4
+
+      - name: Instalar o Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Cache Python dependencies
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ hashFiles('**/pyproject.toml') }}
+          restore-keys: |
+            ${{ runner.os }}-pip-
+
+      - name: Instalar o uv
+        run: |
+          python -m pip install --upgrade pip
+          pip install uv
+
+      - name: Criar ambiente virtual
+        run: |
+          uv venv
+
+      - name: Instalar as bibliotecas
+        run: |
+          source .venv/bin/activate
+          make uv_install
+
+      - name: Instalar o Playwright
+        run: |
+          uv install playwright
+          playwright install
+
+      - name: Rodando Coleta Zap Imoveis Joinville
+        run: |
+          cd ./codigos_rodando
+          pwd
+          uv run coletando_dados_zap_imoveis.py
+      - name : Configure Git
+        run: |
+            git config --global user.email "sehnemjeferson@gmail.com"
+            git config --global user.name "Jeferson Sehnem"    
+      - name: Commit and push changes
+        env:
+                GITHUB_TOKEN: ${{ secrets.ZAP_IMOVEIS_WEB_SCRAPING }}
+        run: |
+              git add .
+              if git diff-index --quiet HEAD; then
+                  echo "No changes to commit"
+                  exit 0
+              fi
+              git commit -m "Criando Carteira: $(date +'%Y-%m-%d')"
+              git pull --rebase https://Jeferson100:${{ secrets.ZAP_IMOVEIS_WEB_SCRAPING }}git@github.com:Jeferson100/Zap-Imoveis-Web-Scraping.git main
+              git push https://Jeferson100:${{ secrets.ZAP_IMOVEIS_WEB_SCRAPING }}git@github.com:Jeferson100/Zap-Imoveis-Web-Scraping.git HEAD:main

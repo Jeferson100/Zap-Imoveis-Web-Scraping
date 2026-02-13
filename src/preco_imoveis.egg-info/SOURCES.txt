@@ -1,3 +1,4 @@
+LICENSE
 README.md
 pyproject.toml
 src/preco_imoveis.egg-info/PKG-INFO
@@ -6,4 +7,10 @@ src/preco_imoveis.egg-info/dependency_links.txt
 src/preco_imoveis.egg-info/requires.txt
 src/preco_imoveis.egg-info/top_level.txt
 src/scraping_zap_imoveis/__init__.py
-src/scraping_zap_imoveis/total_pagina_zap_imovel_playwirght.py
+src/scraping_zap_imoveis/extrair_dados_zap_imoveis_playwright.py
+src/scraping_zap_imoveis/extrair_dados_zap_imoveis_playwright_async.py
+src/scraping_zap_imoveis/link_anuncios_zap_imoveis_playwright.py
+src/scraping_zap_imoveis/link_anuncios_zap_imoveis_playwright_async.py
+src/scraping_zap_imoveis/total_pagina_zap_imovel_playwright.py
+src/scraping_zap_imoveis/total_pagina_zap_imovel_playwright_async.py
+src/scraping_zap_imoveis/zap_imoveis_coleta.py

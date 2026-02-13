@@ -3,7 +3,7 @@ from playwright_stealth import Stealth
 import json
 from playwright_stealth import Stealth
 
-class ZapScraper:
+class ZapScraperPlaywright:
     def __init__(self, page, url):
         self.page = page
         self.url = url

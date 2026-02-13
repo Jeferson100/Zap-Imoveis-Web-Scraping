@@ -1,0 +1,82 @@
+from playwright.async_api import async_playwright
+from playwright_stealth import Stealth
+import logging
+import warnings
+import asyncio
+
+warnings.filterwarnings("ignore")
+
+logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
+
+logger = logging.getLogger(__name__)
+
+class ZapScraperTotalPaginaAsync:
+    
+    def __init__(self, headless: bool = True):
+        self.headless = headless
+        self._playwright = None
+        self._browser = None
+        self._context = None
+        self._pw_cm = None
+    
+    async def __aenter__(self):
+        try:
+            # Usar Stealth corretamente com async_playwright
+            self._pw_cm = Stealth().use_async(async_playwright())
+            self._playwright = await self._pw_cm.__aenter__()
+            self._browser = await self._playwright.chromium.launch(headless=self.headless)
+            self._context = await self._browser.new_context()
+            return self
+        except Exception as e:
+            logger.error("Erro ao inicializar navegador: %s", e)
+            raise
+    
+    async def __aexit__(self, exc_type, exc_val, exc_tb):
+        try:
+            if self._context:
+                await self._context.close()
+            if self._browser:
+                await self._browser.close()
+            if self._pw_cm:
+                await self._pw_cm.__aexit__(exc_type, exc_val, exc_tb)
+        except Exception as e:
+            logger.error("Erro ao fechar recursos: %s", e)
+    
+    async def get_total_pages(self, url: str) -> int:
+        page = await self._context.new_page()
+        
+        try:
+            await page.goto(url)
+            
+            await page.keyboard.press("End")
+            
+            ultimo_botao = page.locator('.olx-core-pagination__button').last
+            
+            await ultimo_botao.wait_for(state="attached", timeout=15000)
+            
+            texto = await ultimo_botao.inner_text()
+            
+            total_paginas = int(texto.replace('.', '').strip())
+            
+            return total_paginas
+        
+        except Exception as e:
+            logger.error("Erro ao obter o total de páginas: %s", e)
+            return 0
+        
+        finally:
+            await page.close()
+
+
+# Uso:
+if __name__ == "__main__":
+    link = "https://www.zapimoveis.com.br/venda/?pagina=1&transacao=Venda"
+    
+    async def main():
+        link = "https://www.zapimoveis.com.br/venda/?pagina=1&transacao=Venda"
+
+        async with ZapScraperTotalPaginaAsync(headless=True) as scanner:
+            total = await scanner.get_total_pages(link)
+            print(f"Total de páginas: {total}")
+    
+    asyncio.run(main())

@@ -4,6 +4,7 @@ Version: 0.1.0
 Summary: Web scraping of data price of houses in Joinville-SC, Brazil
 Requires-Python: >=3.12
 Description-Content-Type: text/markdown
+License-File: LICENSE
 Requires-Dist: apify-fingerprint-datapoints>=0.10.0
 Requires-Dist: browserforge>=1.2.4
 Requires-Dist: bs4>=0.0.2
@@ -11,11 +12,14 @@ Requires-Dist: crawlee>=1.3.1
 Requires-Dist: distutils-pytest>=0.2.1
 Requires-Dist: ipykernel>=7.1.0
 Requires-Dist: lxml>=6.0.2
+Requires-Dist: nest-asyncio>=1.6.0
 Requires-Dist: pandas>=3.0.0
 Requires-Dist: playwright>=1.58.0
 Requires-Dist: playwright-stealth>=2.0.1
 Requires-Dist: selenium>=4.40.0
 Requires-Dist: setuptools>=80.10.2
+Requires-Dist: tqdm>=4.67.3
 Requires-Dist: undetected-chromedriver>=3.5.5
 Requires-Dist: webdriver-manager>=4.0.2
 Requires-Dist: zapimoveis-scraper>=0.4.0
+Dynamic: license-file
