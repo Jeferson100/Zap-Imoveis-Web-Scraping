@@ -18,4 +18,4 @@ now = time.strftime("%Y-%m-%d")
 
 total_paginas = 333
 
-resultado = asyncio.run(orchestrator.run(output_file=f"../dados/zap_imoveis_joinville_{now}.json"), total_pages=total_paginas)
+resultado = asyncio.run(orchestrator.run(output_file=f"../dados/zap_imoveis_joinville_{now}.json", total_pages=total_paginas))
