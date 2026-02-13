@@ -40,7 +40,7 @@ jobs:
 
       - name: Instalar o Playwright
         run: |
-          uv install playwright
+          uv pip install playwright
           playwright install
 
       - name: Rodando Coleta Zap Imoveis Joinville
