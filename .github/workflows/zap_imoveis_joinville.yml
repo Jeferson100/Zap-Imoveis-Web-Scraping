@@ -55,13 +55,13 @@ jobs:
             git config --global user.name "Jeferson Sehnem"    
       - name: Commit and push changes
         env:
-                GITHUB_TOKEN: ${{ secrets.ZAP_IMOVEIS_WEB_SCRAPING }}
+            GITHUB_TOKEN: ${{ secrets.ZAP_IMOVEIS_WEB_SCRAPING }}
         run: |
-              git add .
-              if git diff-index --quiet HEAD; then
-                  echo "No changes to commit"
-                  exit 0
-              fi
-              git commit -m "Web Scraping Zap Imoveis Joinville: $(date +'%Y-%m-%d')"
-              git pull --rebase https://Jeferson100:${{ secrets.ZAP_IMOVEIS_WEB_SCRAPING }}@github.com/Jeferson100/Zap-Imoveis-Web-Scraping.git main
-              git push https://Jeferson100:${{ secrets.ZAP_IMOVEIS_WEB_SCRAPING }}@github.com/Jeferson100/Zap-Imoveis-Web-Scraping.git HEAD:main
+            git add .
+            if git diff-index --quiet HEAD; then
+              echo "No changes to commit"
+              exit 0
+            fi
+            git commit -m "Web Scraping Zap Imoveis Joinville: $(date +'%Y-%m-%d')"
+            git pull --rebase https://Jeferson100:${{ secrets.ZAP_IMOVEIS_WEB_SCRAPING }}@github.com/Jeferson100/Zap-Imoveis-Web-Scraping.git main
+            git push https://Jeferson100:${{ secrets.ZAP_IMOVEIS_WEB_SCRAPING }}@github.com/Jeferson100/Zap-Imoveis-Web-Scraping.git HEAD:main
