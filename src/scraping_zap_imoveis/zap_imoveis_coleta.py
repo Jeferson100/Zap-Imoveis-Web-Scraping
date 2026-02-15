@@ -7,9 +7,13 @@ from .extrair_dados_zap_imoveis_playwright_async import ZapScraperDadosImovelAsy
 from .total_pagina_zap_imovel_playwright_async import ZapScraperTotalPaginaAsync
 from .link_anuncios_zap_imoveis_playwright_async import ZapScraperLinksAsync
 from tqdm import tqdm
+import warnings
+
+warnings.filterwarnings("ignore")
 
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
+
 logger = logging.getLogger(__name__)
 
 class ZapImoveisColeta:
