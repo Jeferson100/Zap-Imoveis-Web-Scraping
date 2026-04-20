@@ -6,7 +6,7 @@ import time
 
 sys.path.append(str(Path(__file__).parent.parent))
 
-from unificando_dados import consolidar_jsons
+from unificando_dados import consolidar_jsons, consolidar_parquet
 
 import os
 
@@ -69,7 +69,7 @@ for area_min, area_max in area_ranges.items():
     
     logger.info(f"Coletando dados de {area_min} a {area_max}")
 
-    output_file   = PASTA_DADOS / f'{cidade}_zap_{now}_{area_min}_{area_max}.json' 
+    output_file   = PASTA_DADOS / f'{cidade}_zap_{now}_{area_min}_{area_max}.parquet' 
     
     logger.info(f"Arquivo de dados gerado em: {output_file}")
 
@@ -91,7 +91,8 @@ for area_min, area_max in area_ranges.items():
 
 logger.info(f"Arquivo de dados gerado em: {output_file}")
 
-consolidar_jsons('zap', cidade, PASTA_DADOS)
+#consolidar_jsons('zap', cidade, PASTA_DADOS)
+consolidar_parquet('zap', cidade, PASTA_DADOS)
 
 logger.info(f"Arquivos consolidados em: {PASTA_DADOS}")
 

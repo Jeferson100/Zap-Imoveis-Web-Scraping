@@ -200,6 +200,40 @@ def carregar_json(pasta_dados: Path, glob_pattern: str) -> tuple[pd.DataFrame, P
         logger.error(f"Erro ao carregar {arquivo.name}: {e}")
         return pd.DataFrame(), arquivo
 
+def carregar_parquet(pasta_dados: Path, glob_pattern: str) -> tuple[pd.DataFrame, Path | None]:
+    """
+    Busca o arquivo .parquet mais recente pelo padrão e retorna um DataFrame.
+    Retorna DataFrame vazio se não encontrar nenhum arquivo.
+    """
+    # Se o padrão ainda estiver como .json, trocamos para .parquet
+    if '.json' in glob_pattern:
+        glob_pattern = glob_pattern.replace('.json', '.parquet')
+
+    arquivos = list(pasta_dados.glob(glob_pattern))
+
+    if not arquivos:
+        logger.warning(f"Nenhum arquivo encontrado para o padrão: {glob_pattern}")
+        return pd.DataFrame(), None
+
+    # Mantém sua lógica de pegar o arquivo com a data mais recente no nome
+    try:
+        arquivo = max(arquivos, key=lambda f: f.stem.split('_')[-1])
+    except Exception:
+        # Fallback caso o nome do arquivo não siga o padrão de data
+        arquivo = max(arquivos, key=lambda f: f.stat().st_mtime)
+    
+    logger.info(f"Arquivo Parquet encontrado: {arquivo.name}")
+
+    try:
+        # O pandas lê o Parquet diretamente do caminho (Path ou str)
+        # Não é necessário usar 'with open' pois o formato é binário
+        df = pd.read_parquet(arquivo)
+        return df, arquivo
+
+    except Exception as e:
+        logger.error(f"Erro ao carregar {arquivo.name}: {e}")
+        return pd.DataFrame(), arquivo
+
 def deletar_arquivo(arquivo: Path | None):
     if arquivo and arquivo.exists():
         arquivo.unlink()
@@ -249,11 +283,13 @@ def limpando_dados(name_arquivo_zap : str,
 
     pasta_dados.mkdir(parents=True, exist_ok=True)
 
-    df_zap, arquivo_zap      = carregar_json(pasta_dados, name_arquivo_zap)
+    #df_zap, arquivo_zap      = carregar_json(pasta_dados, name_arquivo_zap)
+    df_zap, arquivo_zap      = carregar_parquet(pasta_dados, name_arquivo_zap)
     
-    df_vivareal, arquivo_vivareal = carregar_json(pasta_dados,name_arquivo_vivareal)
+    #df_vivareal, arquivo_vivareal = carregar_json(pasta_dados,name_arquivo_vivareal)
+    df_vivareal, arquivo_vivareal = carregar_parquet(pasta_dados, name_arquivo_vivareal)
     
-    df_chave_mao, arquivo_chave_mao = carregar_json(pasta_dados,name_arquivo_chave_mao)
+    df_chave_mao, arquivo_chave_mao = carregar_parquet(pasta_dados, name_arquivo_chave_mao)
     
     df_olx, arquivo_olx = carregar_json(pasta_dados,name_arquivo_olx)
 
@@ -328,20 +364,37 @@ def limpando_dados(name_arquivo_zap : str,
     
     data_ref    = arquivo_ref.stem.split('_')[-1]
     
-    caminho_saida = pasta_dados / f'{name_arquivo_saida}_{data_ref}.csv'
+    caminho_saida = pasta_dados / f'{name_arquivo_saida}_{data_ref}.parquet'
     
-    df_limpo.to_csv(caminho_saida, index=False, encoding='utf-8')
+    #df_limpo.to_csv(caminho_saida, index=False, encoding='utf-8')
+    
+    df_limpo.to_parquet(caminho_saida, index=False, compression='snappy')
     
     logger.info(f"Arquivo salvo: {caminho_saida.name}")
 
-    # Deleta JSONs originais
-    deletar_arquivo(arquivo_zap)
-    
-    deletar_arquivo(arquivo_vivareal)
-    
-    deletar_arquivo(arquivo_chave_mao)
-    
-    deletar_arquivo(arquivo_olx)
+    if not df_limpo.empty:
+        
+        total_registros = len(df_limpo)
+        
+        nulos_lat = df_limpo['lat'].isna().sum() + (df_limpo['lat'] == '').sum()
+        
+        porcentagem_vazio = (nulos_lat / total_registros) * 100
+        
+        logger.info(f"Validação de Latitude: {nulos_lat}/{total_registros} ({porcentagem_vazio:.2f}% vazios)")
 
-    logger.info("Processo concluído com sucesso!")
+        # 2. Só deleta se a metade (50%) ou mais da coluna ESTIVER preenchida
+        if porcentagem_vazio < 50:
+            logger.info("✅ Dados de localização validados. Procedendo com a deleção dos arquivos temporários.")
+            
+            deletar_arquivo(arquivo_zap)
+            deletar_arquivo(arquivo_vivareal)
+            deletar_arquivo(arquivo_chave_mao)
+            deletar_arquivo(arquivo_olx)
+        else:
+            logger.warning("⚠️ ALERTA: Mais de 50% da coluna 'lat' está vazia!")
+            logger.warning("Os arquivos originais foram MANTIDOS para conferência.")
+    else:
+        logger.error("❌ DataFrame limpo está vazio. Operação de deleção abortada.")
+    
+    logger.info("Processo de limpeza de dados concluído.")
 

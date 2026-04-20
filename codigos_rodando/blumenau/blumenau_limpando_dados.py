@@ -48,9 +48,9 @@ MAPA_BAIRROS_BLUMENAU = {
     'centro' : ['petropolis']
 }
 
-limpando_dados(name_arquivo_zap = f'{cidade}_zap_*.json', 
-               name_arquivo_vivareal = f'{cidade}_vivareal_*.json', 
-               name_arquivo_chave_mao = f'{cidade}_chave_mao_*.json',
+limpando_dados(name_arquivo_zap = f'{cidade}_zap_*.parquet', 
+               name_arquivo_vivareal = f'{cidade}_vivareal_*.parquet', 
+               name_arquivo_chave_mao = f'{cidade}_chave_mao_*.parquet',
                name_arquivo_olx = f'{cidade}_olx_*.json',
                name_arquivo_saida = f'{cidade}_imoveis_limpo', 
                pasta_dados = PASTA_DADOS, 

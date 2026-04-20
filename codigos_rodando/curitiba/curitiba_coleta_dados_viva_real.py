@@ -5,7 +5,7 @@ import time
 
 sys.path.append(str(Path(__file__).parent.parent))
 
-from unificando_dados import consolidar_jsons
+from unificando_dados import consolidar_jsons, consolidar_parquet
 
 import os
 
@@ -47,7 +47,7 @@ area_ranges = {
 
 total_paginas = 50
 
-output_file   = PASTA_DADOS / f'{cidade}_vivareal_{now}.json' 
+output_file   = PASTA_DADOS / f'{cidade}_vivareal_{now}.parquet' 
 
 headless = os.getenv("HEADLESS", "True").lower() == "true"
 
@@ -55,7 +55,7 @@ max_concurrency = int(os.getenv("MAX_CONCURRENCY", "3"))
 
 for area_min, area_max in area_ranges.items():
 
-    output_file   = PASTA_DADOS / f'{cidade}_vivareal_{now}_{area_min}_{area_max}.json' 
+    output_file   = PASTA_DADOS / f'{cidade}_vivareal_{now}_{area_min}_{area_max}.parquet' 
 
     URL_TEMPLATE_NEW = URL_TEMPLATE.replace(
         "{pagina}", 
@@ -75,6 +75,7 @@ for area_min, area_max in area_ranges.items():
 
 logger.info(f"Arquivo de dados gerado em: {output_file}")
 
-consolidar_jsons('vivareal', cidade, PASTA_DADOS)
+#consolidar_jsons('vivareal', cidade, PASTA_DADOS)
+consolidar_parquet('vivareal', cidade, PASTA_DADOS)
 
 logger.info(f"Arquivos consolidados em: {PASTA_DADOS}")

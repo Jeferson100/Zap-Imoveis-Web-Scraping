@@ -31,12 +31,14 @@ def gerar_pagina_analise_imoveis(cidade_pth, cidade_nome, prefixo_arquivo):
     
     try:
 
-        arquivos = list(pasta.glob(f'{prefixo_arquivo}_com_ind_local_*.csv'))
+        #arquivos = list(pasta.glob(f'{prefixo_arquivo}_com_ind_local_*.csv'))
+        arquivos = list(pasta.glob(f'{prefixo_arquivo}_imoveis_limpo_*.parquet'))
             
         arquivo_mais_recente = max(arquivos, key=lambda f: f.stem.split('_')[-1])
         
     except:
-        arquivos = list(pasta.glob(f'{prefixo_arquivo}_imoveis_limpo_*.csv'))
+        #arquivos = list(pasta.glob(f'{prefixo_arquivo}_imoveis_limpo_*.csv'))
+        arquivos = list(pasta.glob(f'{prefixo_arquivo}_imoveis_limpo_*.parquet'))
         
         print(arquivos)
             
@@ -47,7 +49,8 @@ def gerar_pagina_analise_imoveis(cidade_pth, cidade_nome, prefixo_arquivo):
     key_df = f"df_{cidade_nome.lower()}"
     
     if key_df not in st.session_state:
-        st.session_state[key_df] = pd.read_csv(arquivo_mais_recente)
+        #st.session_state[key_df] = pd.read_csv(arquivo_mais_recente)
+        st.session_state[key_df] = pd.read_parquet(arquivo_mais_recente)
         
     df = st.session_state[key_df]
 

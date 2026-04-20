@@ -29,7 +29,7 @@ now = time.strftime("%Y-%m")
 
 total_paginas = 100
 
-output_file   = PASTA_DADOS / f'{cidade}_chave_mao_{now}.json' 
+output_file   = PASTA_DADOS / f'{cidade}_chave_mao_{now}.parquet' 
 
 headless = os.getenv("HEADLESS", "True").lower() == "true"
 

@@ -8,6 +8,7 @@ from .links_anuncios_viva_real_playwright_async import VivaRealScraperLinksAsync
 from tqdm import tqdm
 import warnings
 import random
+import pandas as pd
 
 warnings.filterwarnings("ignore")
 
@@ -173,12 +174,12 @@ class VivaRealColeta:
             if res:
                 resultados.append(res)
                 # Salvar parcial para segurança
-                if len(resultados) % 50 == 0:
+                if len(resultados) % 100 == 0:
                     self.lista_dados = resultados
-                    self._save_to_json(output_file)
+                    self._save_to_parquet(output_file)
 
         self.lista_dados = resultados
-        self._save_to_json(output_file)
+        self._save_to_parquet(output_file)
 
         logger.info(f"Execução finalizada. Total de imóveis processados: {len(self.lista_dados)}")
         return self.lista_dados
@@ -188,6 +189,26 @@ class VivaRealColeta:
         with open(filename, "w", encoding="utf-8") as f:
             json.dump([d.to_dict() for d in self.lista_dados], f, indent=4, ensure_ascii=False)
         logger.info(f"Dados salvos em {filename}")
+    
+    def _save_to_parquet(self, filename):
+        # 1. Converte a lista de objetos para uma lista de dicionários
+        dados_dict = [d.to_dict() for d in self.lista_dados]
+        
+        if not dados_dict:
+            logger.warning("Nenhum dado para salvar.")
+            return
+
+        # 2. Cria um DataFrame do Pandas
+        df = pd.DataFrame(dados_dict)
+        
+        # 3. Garante que o nome do arquivo termine em .parquet
+        if not filename.endswith('.parquet'):
+            filename = filename.rsplit('.', 1)[0] + '.parquet'
+
+        # 4. Salva em Parquet com compressão snappy (equilíbrio entre velocidade e tamanho)
+        df.to_parquet(filename, index=False, compression='snappy')
+        
+        logger.info(f"Dados compactados salvos com sucesso em {filename}")
 
 if __name__ == "__main__":
 

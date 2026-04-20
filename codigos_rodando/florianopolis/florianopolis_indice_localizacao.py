@@ -26,19 +26,19 @@ cidade = os.getenv("CIDADE_PASTA")
 
 PASTA_DADOS  = Path(__file__).parent.parent.parent / 'dados'/ cidade
 
-arquivo_mais_recente = max(PASTA_DADOS.glob(f'{cidade}_imoveis_limpo_*.csv'), key=lambda f: f.stem.split('_')[-1])
+arquivo_mais_recente = max(PASTA_DADOS.glob(f'{cidade}_imoveis_limpo_*.parquet'), key=lambda f: f.stem.split('_')[-1])
 
 data_mais_recente = arquivo_mais_recente.stem.split('_')[-1]
 
-output_file   = PASTA_DADOS / f'{cidade}_com_ind_local_{data_mais_recente}.csv' 
+output_file   = PASTA_DADOS / f'{cidade}_com_ind_local_{data_mais_recente}.parquet' 
 
-pd_data = pd.read_csv(arquivo_mais_recente)
+pd_data = pd.read_parquet(arquivo_mais_recente)
 
 max_concurrent= os.getenv("MAX_CONCURRENCY_LOCALIZACAO")
 
 pd_data_com_indice = criando_indice_cidades(pd_data, max_concurrent) 
 
-pd_data_com_indice.to_csv(output_file, index=False)
+pd_data_com_indice.to_parquet(output_file, index=False)
 
 logger.info(f"Arquivo {output_file.name} criado com sucesso!")
 

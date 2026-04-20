@@ -7,6 +7,7 @@ from .link_anuncios_chave_mao_playwright_async import ChaveMaoScraperLinksAsync
 from tqdm.asyncio import tqdm  # Versão assíncrona do tqdm
 import random
 import sys
+import pandas as pd
 
 warnings.filterwarnings("ignore")
 
@@ -136,12 +137,12 @@ class ChavesMaoColeta:
             if res:
                 resultados.append(res)
                 # Salvar parcial para segurança
-                if len(resultados) % 50 == 0:
+                if len(resultados) % 100 == 0:
                     self.lista_dados = resultados
-                    self._save_to_json(output_file)
+                    self._save_to_parquet(output_file)
 
         self.lista_dados = resultados
-        self._save_to_json(output_file)
+        self._save_to_parquet(output_file)
 
         logger.info(f"Execução finalizada. Total de imóveis processados: {len(self.lista_dados)}")
         return self.lista_dados
@@ -162,6 +163,26 @@ class ChavesMaoColeta:
             data_to_save = [d.to_dict() if hasattr(d, 'to_dict') else d for d in self.lista_dados]
             json.dump(data_to_save, f, indent=4, ensure_ascii=False)
         logger.info(f"Dados salvos em {filename}. Total: {len(self.lista_dados)} imóveis.")
+    
+    def _save_to_parquet(self, filename):
+        # 1. Converte a lista de objetos para uma lista de dicionários
+        dados_dict = [d.to_dict() for d in self.lista_dados]
+        
+        if not dados_dict:
+            logger.warning("Nenhum dado para salvar.")
+            return
+
+        # 2. Cria um DataFrame do Pandas
+        df = pd.DataFrame(dados_dict)
+        
+        # 3. Garante que o nome do arquivo termine em .parquet
+        if not filename.endswith('.parquet'):
+            filename = filename.rsplit('.', 1)[0] + '.parquet'
+
+        # 4. Salva em Parquet com compressão snappy (equilíbrio entre velocidade e tamanho)
+        df.to_parquet(filename, index=False, compression='snappy')
+        
+        logger.info(f"Dados compactados salvos com sucesso em {filename}")
 
 if __name__ == "__main__":
     URL_TEMPLATE = "https://www.chavesnamao.com.br/imoveis-a-venda/sc-joinville/?pg={pagina}"
