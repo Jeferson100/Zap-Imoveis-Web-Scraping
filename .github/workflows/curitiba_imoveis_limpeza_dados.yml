@@ -1,0 +1,19 @@
+name: Rodando Limpeza Imoveis Curitiba
+on: 
+
+    workflow_run:
+        workflows: ["Rodando Coleta OLX Curitiba"]
+        types:
+            - completed
+    workflow_dispatch:
+
+jobs:
+  pipeline:
+    uses: ./.github/workflows/pipeline_cidade_rodando.yml
+    with:
+      cidade_pasta: curitiba
+      arquivo_rodando_imovel: curitiba_limpando_dados.py
+      cidade_limpeza : curitiba
+      cidade_localizacao : Curitiba
+      estado_limpeza : pr
+      estado_localizacao : PR

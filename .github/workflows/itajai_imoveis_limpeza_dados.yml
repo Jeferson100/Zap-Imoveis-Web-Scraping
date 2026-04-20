@@ -1,0 +1,19 @@
+name: Rodando Limpeza Imoveis Itajai
+on: 
+
+    workflow_run:
+        workflows: ["Rodando Coleta OLX Itajai"]
+        types:
+            - completed
+    workflow_dispatch:
+
+jobs:
+  pipeline:
+    uses: ./.github/workflows/pipeline_cidade_rodando.yml
+    with:
+      cidade_pasta: itajai
+      arquivo_rodando_imovel: itajai_limpando_dados.py
+      cidade_limpeza: itajai
+      cidade_localizacao: Itajai
+      estado_limpeza: sc
+      estado_localizacao: SC

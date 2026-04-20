@@ -1,0 +1,18 @@
+name: Rodando Criando Indice Localizacao Imoveis Jaragua do Sul
+on: 
+
+    workflow_run:
+        workflows: ["Rodando Limpeza Imoveis Jaragua do Sul"]
+        types:
+            - completed
+    workflow_dispatch:
+
+jobs:
+  pipeline:
+    uses: ./.github/workflows/pipeline_cidade_rodando.yml
+    with:
+      cidade_pasta: jaragua
+      arquivo_rodando_imovel: jaragua_indice_localizacao.py
+
+
+

@@ -1,0 +1,19 @@
+name: Rodando Limpeza Imoveis Sao Paulo
+on: 
+
+    workflow_run:
+        workflows: ["Rodando Coleta Olx Sao Paulo"]
+        types:
+            - completed
+    workflow_dispatch:
+
+jobs:
+  pipeline:
+    uses: ./.github/workflows/pipeline_cidade_rodando.yml
+    with:
+      cidade_pasta: sao_paulo
+      arquivo_rodando_imovel:  sao_paulo_limpando_dados.py
+      cidade_limpeza: sao_paulo
+      cidade_localizacao: Sao Paulo
+      estado_limpeza: sp
+      estado_localizacao: SP

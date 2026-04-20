@@ -1,0 +1,15 @@
+name: Rodando Coleta Viva Real Itapoa
+on: 
+
+    workflow_run:
+        workflows: ["Rodando Coleta Zap Imoveis Itapoa"]
+        types:
+            - completed
+    workflow_dispatch:
+
+jobs:
+  pipeline:
+    uses: ./.github/workflows/pipeline_cidade_rodando.yml
+    with:
+      cidade_pasta: itapoa
+      arquivo_rodando_imovel:  itapoa_coleta_dados_viva_real.py

@@ -1,0 +1,19 @@
+name: Rodando Limpeza Imoveis Florianopolis
+on: 
+
+    workflow_run:
+        workflows: ["Rodando Coleta OLX Florianopolis"]
+        types:
+            - completed
+    workflow_dispatch:
+
+jobs:
+  pipeline:
+    uses: ./.github/workflows/pipeline_cidade_rodando.yml
+    with:
+      cidade_pasta: florianopolis
+      arquivo_rodando_imovel: florianopolis_limpando_dados.py
+      cidade_limpeza: florianopolis
+      cidade_localizacao: Florianopolis
+      estado_limpeza: sc
+      estado_localizacao: SC

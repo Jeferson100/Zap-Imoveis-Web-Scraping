@@ -1,0 +1,19 @@
+name: Rodando Limpeza Imoveis Itapoa
+on: 
+
+    workflow_run:
+        workflows: ["Rodando Coleta OLX Itapoa"]
+        types:
+            - completed
+    workflow_dispatch:
+
+jobs:
+  pipeline:
+    uses: ./.github/workflows/pipeline_cidade_rodando.yml
+    with:
+      cidade_pasta: itapoa
+      arquivo_rodando_imovel: itapoa_limpando_dados.py
+      cidade_limpeza: itapoa
+      cidade_localizacao: Itapoa
+      estado_limpeza: sc
+      estado_localizacao: SC

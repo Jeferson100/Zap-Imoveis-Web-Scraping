@@ -1,0 +1,2 @@
+dados/florianopolis/florianopolis_zap_2026-04.json filter=lfs diff=lfs merge=lfs -text
+dados/florianopolis/florianopolis_zap_2026-04.json !text !filter !merge !diff
