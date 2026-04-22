@@ -48,7 +48,8 @@ MAPA_BAIRROS_PICARAS = {
     
     'centro':                  ['centro', 'centro picarras', 'picarras', 'balneario picarras'],
 
-    'itacolomi' : ['itacolomi', 'itacolomim', 'itacolumi', 'ponta do jacques', 'nossa senhora de fatima', 'meia praia', 'norte de picarras','itajuba ii', 'itajuba'],
+    'itacolomi' : ['itacolomi', 'itacolomim', 'itacolumi', 'ponta do jacques', 'nossa senhora de fatima', 
+                   'meia praia', 'norte de picarras','itajuba ii', 'itajuba', 'avenida nereu ramos', 'nereu ramos'],
     
     'nossa senhora da paz' : ['nossa senhora da paz', 'gaivotas', 'loteamento gaivota'],
 
@@ -71,6 +72,8 @@ MAPA_BAIRROS_PICARAS = {
     's/b':                      ['s/b']
 }
 
+padrao_cidade = r'picaras|picarras|balneario picarras|balneario picaras'
+
 
 limpando_dados(name_arquivo_zap = f'{cidade}_zap_*.parquet', 
                name_arquivo_vivareal = f'{cidade}_vivareal_*.parquet', 
@@ -84,5 +87,6 @@ limpando_dados(name_arquivo_zap = f'{cidade}_zap_*.parquet',
                cidade_localizacao=cidade_localizacao,
                estado_limpeza=estado_limpeza,
                estado_localizacao=estado_localizacao,
-               MAPA_BAIRROS=MAPA_BAIRROS_PICARAS)
+               MAPA_BAIRROS=MAPA_BAIRROS_PICARAS,
+               padrao_cidade=padrao_cidade)
 

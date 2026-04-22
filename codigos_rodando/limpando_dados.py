@@ -275,7 +275,8 @@ def limpando_dados(name_arquivo_zap : str,
          estado_limpeza: str = 'sc', 
          estado_localizacao: str = 'SC',
          pais: str = 'Brasil', 
-         MAPA_BAIRROS: dict = None,):
+         MAPA_BAIRROS: dict = None,
+         MAPA_CIDADES: str = None,):
     
     logger.info(f"Iniciando limpeza de dados de imóveis de {cidade_limpeza}...")
     
@@ -355,7 +356,10 @@ def limpando_dados(name_arquivo_zap : str,
     
     if MAPA_BAIRROS:
         df_limpo['bairro'] = df_limpo['bairro'].apply(normalizar_bairros, args=(MAPA_BAIRROS,))
-    
+        
+    if MAPA_CIDADES:
+        df_limpo.loc[df_limpo['cidade'].str.contains(MAPA_CIDADES, na=False), 'cidade'] = cidade_limpeza
+
     logger.info(f"Coluna 'bairro' corrigida...")
     
     df_limpo = df_limpo.groupby('bairro').filter(lambda x: len(x) > 1)

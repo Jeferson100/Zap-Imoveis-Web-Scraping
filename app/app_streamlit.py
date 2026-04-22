@@ -39,8 +39,6 @@ def gerar_pagina_analise_imoveis(cidade_pth, cidade_nome, prefixo_arquivo):
     except:
         #arquivos = list(pasta.glob(f'{prefixo_arquivo}_imoveis_limpo_*.csv'))
         arquivos = list(pasta.glob(f'{prefixo_arquivo}_imoveis_limpo_*.parquet'))
-        
-        print(arquivos)
             
         arquivo_mais_recente = max(arquivos, key=lambda f: f.stem.split('_')[-1])
     
@@ -49,16 +47,16 @@ def gerar_pagina_analise_imoveis(cidade_pth, cidade_nome, prefixo_arquivo):
     key_df = f"df_{cidade_nome.lower()}"
     
     if key_df not in st.session_state:
-        #st.session_state[key_df] = pd.read_csv(arquivo_mais_recente)
         st.session_state[key_df] = pd.read_parquet(arquivo_mais_recente)
         
     df = st.session_state[key_df]
-
+    
     superior = df['preco_por_m2'].quantile(0.996)
 
     df['preco_por_m2'] = df['preco_por_m2'].replace([np.inf, -np.inf], np.nan)
     
     mediana = df['preco_por_m2'].median()
+    
     preco_metro_median = int(mediana) if pd.notna(mediana) else 0
 
     #preco_metro_median= df['preco_por_m2'].median().astype(int)
@@ -71,8 +69,12 @@ def gerar_pagina_analise_imoveis(cidade_pth, cidade_nome, prefixo_arquivo):
         print("ERRO: O valor superior é NaN. Verifique se a coluna preco_por_m2 tem números válidos.")
     else:
         df = df[df['preco_por_m2'] < superior].astype({'preco_por_m2': int})
-        
+            
     df = df.rename(columns={'score': 'indice_localizacao'})
+    
+    cols_num = ['preco_por_m2', 'quartos', 'metragem', 'desvio_mediana', 'vagas']
+    
+    df[cols_num] = df[cols_num].fillna(0)
 
     st.title(f'🏠 Análise de Imóveis {cidade_nome} - Zap Imóveis')
 
@@ -182,7 +184,7 @@ def gerar_pagina_analise_imoveis(cidade_pth, cidade_nome, prefixo_arquivo):
     ]
 
     col_principal1, col_principal2 = st.columns([1.2,1.8])
-
+    
     with col_principal1:
         
         if not df_filtrado.empty:

@@ -420,8 +420,8 @@ class TratadorEnderecoOLX:
                 'rua':    self._limpar_prefixo_rua(rua),
                 'numero': 's/n', # OLX raramente fornece número nesta string
                 'bairro': self._normalizar(bairro) or "s/b",
-                'cidade': self.cidade,
-                'estado': self.estado,
+                'cidade': self._normalizar(self.cidade) or "s/c",
+                'estado': self._normalizar(self.estado) or "s/e",
                 'cep':    cep
             }
 
@@ -433,8 +433,8 @@ class TratadorEnderecoOLX:
             'rua':    's/r',
             'numero': 's/n',
             'bairro': 's/b',
-            'cidade': self.cidade,
-            'estado': self.estado,
+            'cidade': self._normalizar(self.cidade) or "s/c",
+            'estado': self._normalizar(self.estado) or "s/e",
             'cep':    's/c'
         }
 def limpa_endereco_apply_olx(endereco, cidade='joinville', estado='sc'):
