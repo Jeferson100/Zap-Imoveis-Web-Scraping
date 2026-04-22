@@ -36,7 +36,28 @@ headless = os.getenv("HEADLESS", "True").lower() == "true"
 
 max_concurrency = int(os.getenv("MAX_CONCURRENCY_OLX"))
 
-orchestrator = OLXColeta(URL_TEMPLATE, headless=headless, max_concurrency=max_concurrency)
+termos_para_ignorar_links = ['camboriu',
+                                'itajai',
+                                'itapema',
+                                'garuva',
+                                'pomerode',
+                                'navegantes',
+                                'velha',
+                                'penha',
+                                'bombinhas',
+                                'barra-velha',
+                                'itapoa',
+                                'joinville',
+                                'sao-francisco-do-sul',
+                                'praia-brava',
+                                'jaragua',
+                                'belo']
+
+orchestrator = OLXColeta(URL_TEMPLATE, 
+                         headless=headless, 
+                         max_concurrency=max_concurrency, 
+                         termos_para_ignorar_links=termos_para_ignorar_links)
+
 
 resultado = asyncio.run(orchestrator.run(
     output_file=str(output_file),
