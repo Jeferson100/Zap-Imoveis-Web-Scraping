@@ -16,7 +16,7 @@ on:
       max_concurrency_chave:
         required: false
         type: number
-        default: 3
+        default: 5
       max_concurrency_olx:
         required: false
         type: number

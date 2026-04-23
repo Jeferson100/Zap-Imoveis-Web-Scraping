@@ -53,12 +53,12 @@ class OLXScraperLinksAsync:
             try:
                 logger.info(f"Acessando listagem OLX: {url}")
                 # OLX pode ser pesada, wait_until="domcontentloaded" é uma boa escolha
-                await page.goto(url, wait_until="domcontentloaded", timeout=60000)
+                await page.goto(url, wait_until="domcontentloaded", timeout=30000)
                 
                 # 1. Espera o seletor específico dos links de anúncios da OLX
                 # O data-testid="adcard-link" é o mais estável na estrutura atual
                 seletor_link = 'a[data-testid="adcard-link"]'
-                await page.wait_for_selector(seletor_link, timeout=15000)
+                await page.wait_for_selector(seletor_link, timeout=10000)
 
                 # 2. Scroll suave para garantir que o lazy loading carregue os cards debaixo
                 await page.evaluate("window.scrollBy(0, 800)")
@@ -91,13 +91,17 @@ class OLXScraperLinksAsync:
 
 if __name__ == "__main__":
     async def main():
+        import time
         # Exemplo focado em Joinville (ajuste conforme sua busca)
         url_olx = "https://www.olx.com.br/imoveis/venda/estado-sc/norte-de-santa-catarina/joinville?q=casa&o=100"
+        
+        start = time.time()
         
         async with OLXScraperLinksAsync(headless=True) as scanner:
             links = await scanner.get_links(url_olx)
             
             print(f"Links encontrados: {len(links)}")
             print(f"Primeiro link: {links}")
-
+        end = time.time()
+        print(f"Tempo total: {end - start:.2f} segundos")
     asyncio.run(main())

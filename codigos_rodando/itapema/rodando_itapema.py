@@ -26,10 +26,10 @@ def rodar(comando, etapa):
 if __name__ == "__main__":
    
     fluxo = [
-        (f"uv run {cidade}_coleta_dados_zap_imoveis.py", "Scraper Zap Imóveis"),
-        #(f"uv run viva_real/{cidade}_rodando_vivareal.py", "Scraper Viva Real"),
+        #(f"uv run {cidade}_coleta_dados_zap_imoveis.py", "Scraper Zap Imóveis"),
+        #(f"uv run {cidade}_coleta_dados_viva_real.py", "Scraper Viva Real"),
         #(f"uv run {cidade}_coleta_dados_chave_mao.py", "Scraper Chave na Mão"),
-        #(f"uv run {cidade}_coleta_dados_olx.py", "Scraper OLX"),
+        (f"uv run {cidade}_coleta_dados_olx.py", "Scraper OLX"),
         #(f"uv run {cidade}_limpando_dados_imoveis.py", "Processamento de Dados"),
         #(f"uv run {cidade}_criando_indice_localizacao.py", "Criação do Índice de Localização")
     ]

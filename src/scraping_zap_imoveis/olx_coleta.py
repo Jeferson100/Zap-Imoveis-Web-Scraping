@@ -15,12 +15,13 @@ logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(
 logger = logging.getLogger(__name__)
 
 class OLXColeta:
-    def __init__(self, base_url_template, headless=True, max_concurrency=5, retries=1):
+    def __init__(self, base_url_template, headless=True, max_concurrency=5, retries=1, termos_para_ignorar_links: list = None):
         self.base_url_template = base_url_template
         self.headless = headless
         self.max_concurrency = max_concurrency
         self.lista_dados = []
         self.retries = retries
+        self.termos_para_ignorar_links = termos_para_ignorar_links
     
         if sys.platform == 'win32':
             asyncio.set_event_loop_policy(asyncio.WindowsProactorEventLoopPolicy())
@@ -40,106 +41,8 @@ class OLXColeta:
             except Exception as e:
                 logger.error(f"Erro ao extrair {url}: {e}")
                 return None
-
-    """async def run(self, output_file="resultados.json", total_pages: int = None):
     
-        logger.info("Determinando o total de %s páginas ", total_pages)
-        
-        semaphore = asyncio.Semaphore(self.max_concurrency)
-
-        for pagina in tqdm(range(1, total_pages + 1)):
             
-            logger.info(f"--- Processando Página {pagina}/{total_pages} ---")
-            
-            links = await self._get_links_from_page(pagina)
-            
-            if not links:
-                logger.warning("Página %s não retornou links, pulando.", pagina)
-                continue
-
-            tasks = [self._get_item_data(link, semaphore) for link in links]
-            
-            resultados_pagina = await asyncio.gather(*tasks)
-            
-            valid_results = [r for r in resultados_pagina if r is not None]
-            
-            self.lista_dados.extend(valid_results)
-            
-            logger.info("Página %s finalizada. %s imóveis processados.", pagina, len(valid_results))
-
-        self._save_to_json(output_file)
-    
-        logger.info("Execução finalizada. Total de imóveis coletados: %s", len(self.lista_dados))
-        
-        return self.lista_dados """
-    
-    """async def run(self, output_file="resultados.json", total_pages: int = None):
-        # --- ETAPA 1: DETERMINAR PÁGINAS ---
-        if total_pages is not None:
-            total_paginas = total_pages
-        else:
-            total_paginas = 10
-            
-        if not total_paginas:
-            logger.error("Não foi possível determinar o total de páginas.")
-            return
-        
-        logger.info("Iniciando coleta de links em %s páginas", total_paginas)
-        
-        todos_os_links = []
-
-        # --- ETAPA 2: COLETAR APENAS OS LINKS ---
-        for pagina in tqdm(range(1, total_paginas + 1), desc="Coletando Links"):
-            logger.info(f"--- Obtendo links da Página {pagina}/{total_paginas} ---")
-            
-            links = await self._get_links_from_page(pagina)
-            
-            if links:
-                todos_os_links.extend(links)
-                logger.info(f"Página {pagina}: {len(links)} links encontrados.")
-            else:
-                logger.warning(f"Página {pagina} não retornou links.")
-            
-            # Pequeno delay aleatório para não ser bloqueado na listagem
-            await asyncio.sleep(random.uniform(1, 3))
-
-        # Remove duplicatas de links (comum no Zap/VivaReal)
-        todos_os_links = list(set(todos_os_links))
-        logger.info(f"Total de links únicos coletados: {len(todos_os_links)}")
-
-        if not todos_os_links:
-            logger.error("Nenhum link foi encontrado. Encerrando.")
-            return
-
-        # --- ETAPA 3: PAUSA DE RESPIRO PARA O IP ---
-        logger.info("Aguardando 30 segundos antes de iniciar a extração detalhada...")
-        await asyncio.sleep(30)
-
-        # --- ETAPA 4: EXTRAIR DADOS DE CADA LINK ---
-        semaphore = asyncio.Semaphore(self.max_concurrency)
-        
-        # Criamos as tasks para todos os links coletados
-        tasks = [self._get_item_data(link, semaphore) for link in todos_os_links]
-        
-        logger.info(f"Iniciando extração de dados de {len(todos_os_links)} imóveis...")
-        
-        # Usamos tqdm aqui também para ver o progresso da extração detalhada
-        resultados = []
-        for f in tqdm(asyncio.as_completed(tasks), total=len(tasks), desc="Extraindo Dados"):
-            res = await f
-            if res:
-                resultados.append(res)
-                # Opcional: Salvar a cada 50 itens para não perder nada se o PC suspender
-                if len(resultados) % 50 == 0:
-                    self.lista_dados = resultados
-                    self._save_to_json(output_file)
-
-        self.lista_dados = resultados
-        self._save_to_json(output_file)
-
-        logger.info(f"Execução finalizada. Total de imóveis processados: {len(self.lista_dados)}")
-        return self.lista_dados"""
-    
     async def run(self, output_file="resultados.json", total_pages: int = None, limite_falhas: int = 3):
         # --- ETAPA 1: DETERMINAR PÁGINAS ---
         if total_pages is None:
@@ -183,6 +86,16 @@ class OLXColeta:
         # Remove duplicatas de links
         todos_os_links = list(set(todos_os_links))
         logger.info(f"Total de links únicos coletados: {len(todos_os_links)}")
+        
+        if self.termos_para_ignorar_links:
+            logger.info(f"Ignorando links contendo os termos: {self.termos_para_ignorar_links}")
+            len_before = len(todos_os_links)
+            todos_os_links = [
+                link for link in todos_os_links
+                if not any(termo in link.lower() for termo in self.termos_para_ignorar_links)
+            ]
+            len_after = len(todos_os_links)
+            logger.info(f"Links ignorados: {len_before - len_after}")
 
         if not todos_os_links:
             logger.error("Nenhum link foi encontrado. Encerrando.")

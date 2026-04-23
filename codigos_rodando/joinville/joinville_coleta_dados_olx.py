@@ -26,7 +26,7 @@ sys.path.append('..')
     
 now = time.strftime("%Y-%m")
 
-total_paginas = 120
+total_paginas = 100
 
 output_file   = PASTA_DADOS / f'{cidade}_olx_{now}.json' 
 

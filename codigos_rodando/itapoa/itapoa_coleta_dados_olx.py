@@ -25,7 +25,7 @@ URL_TEMPLATE = "https://www.olx.com.br/imoveis/venda/estado-sc/norte-de-santa-ca
 
 now = time.strftime("%Y-%m")
 
-total_paginas = 120
+total_paginas = 40
 
 output_file   = PASTA_DADOS / f'{cidade}_olx_{now}.json' 
 
