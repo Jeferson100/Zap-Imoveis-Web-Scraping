@@ -38,7 +38,7 @@ sys.path.append('..')
     
 now = time.strftime("%Y-%m")
 
-total_paginas = 100
+total_paginas = 99
 
 #output_file   = PASTA_DADOS / f'{cidade}_chave_mao_{now}.parquet' 
 
@@ -63,7 +63,7 @@ for min_area, max_area in area_ranges.items():
     
     logger.info(f"Arquivo de dados gerado em: {output_file}")
     
-    URL_TEMPLATE_NEW = URL_TEMPLATE.format(min=min_area, max=max_area, pagina=total_paginas)
+    URL_TEMPLATE_NEW = URL_TEMPLATE.format(min=min_area, max=max_area)
         
     
     orchestrator = ChavesMaoColeta(URL_TEMPLATE_NEW, 
