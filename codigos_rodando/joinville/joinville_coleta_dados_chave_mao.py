@@ -38,7 +38,7 @@ sys.path.append('..')
     
 now = time.strftime("%Y-%m")
 
-total_paginas = 99
+total_paginas = 100
 
 #output_file   = PASTA_DADOS / f'{cidade}_chave_mao_{now}.parquet' 
 
@@ -59,7 +59,7 @@ for min_area, max_area in area_ranges.items():
     
     logger.info(f"Coletando dados de {min_area} a {max_area}")
     
-    output_file   = PASTA_DADOS / f'{cidade}_chave_mao_{min_area}_{max_area}_{now}.parquet'
+    output_file   = PASTA_DADOS / f'{cidade}_chave_mao_{now}_{min_area}_{max_area}.parquet'
     
     logger.info(f"Arquivo de dados gerado em: {output_file}")
     
