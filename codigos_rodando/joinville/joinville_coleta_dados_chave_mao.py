@@ -63,7 +63,7 @@ for min_area, max_area in area_ranges.items():
     
     logger.info(f"Arquivo de dados gerado em: {output_file}")
     
-    URL_TEMPLATE_NEW = URL_TEMPLATE.format(min=min_area, max=max_area)
+    URL_TEMPLATE_NEW = URL_TEMPLATE.format(min=min_area, max=max_area, pagina="{pagina}")
         
     
     orchestrator = ChavesMaoColeta(URL_TEMPLATE_NEW, 
