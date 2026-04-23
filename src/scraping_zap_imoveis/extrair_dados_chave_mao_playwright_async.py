@@ -132,7 +132,6 @@ class ChavesNaMaoScraperAsync:
             try:
                 if self._page.is_closed():
                     self._page = await self._context.new_page()
-                    await stealth_async(self._page)
 
                 logger.info(f"Tentativa {tentativa}/{self.MAX_RETRIES} — {url}")
                 

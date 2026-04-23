@@ -15,12 +15,13 @@ logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(
 logger = logging.getLogger(__name__)
 
 class ChavesMaoColeta:
-    def __init__(self, base_url_template, headless=True, max_concurrency=5, retries=1):
+    def __init__(self, base_url_template, headless=True, max_concurrency=5, retries=1, item_timeout=120):
         self.base_url_template = base_url_template
         self.headless = headless
         self.max_concurrency = max_concurrency
         self.lista_dados = []
         self.retries = retries
+        self.item_timeout = item_timeout
     
         if sys.platform == 'win32':
             asyncio.set_event_loop_policy(asyncio.WindowsProactorEventLoopPolicy())
@@ -35,8 +36,14 @@ class ChavesMaoColeta:
     async def _get_item_data(self, url, semaphore):
         async with semaphore:
             try:
-                async with ChavesNaMaoScraperAsync(headless=True) as scraper:
-                    return await scraper.extrair_chave_mao(url)
+                async with ChavesNaMaoScraperAsync(headless=self.headless) as scraper:
+                    return await asyncio.wait_for(
+                        scraper.extrair_chave_mao(url),
+                        timeout=self.item_timeout
+                    )
+            except asyncio.TimeoutError:
+                logger.error("Timeout ao extrair %s após %ss", url, self.item_timeout)
+                return None
             except Exception as e:
                 logger.error(f"Erro ao extrair {url}: {e}")
                 return None
@@ -83,9 +90,9 @@ class ChavesMaoColeta:
             return
         
         logger.info("Iniciando coleta de links em %s páginas", total_pages)
+        
         logger.info("Parametros recebidos: total_pages=%s, limite_falhas=%s, max_concurrency=%s, self.retries=%s", total_pages, limite_falhas, self.max_concurrency, self.retries)
 
-        
         todos_os_links = []
         # --- Lógica de Interrupção ---
         contador_falhas = 0
@@ -120,26 +127,37 @@ class ChavesMaoColeta:
             logger.error("Nenhum link foi encontrado. Encerrando.")
             return
 
-        # --- ETAPA 3: PAUSA DE RESPIRO PARA O IP ---
-        # Se o scraper já está falhando páginas, essa pausa é obrigatória
         logger.info("Aguardando 30 segundos antes de iniciar a extração detalhada...")
+        
         await asyncio.sleep(30)
 
         # --- ETAPA 4: EXTRAIR DADOS DE CADA LINK ---
         semaphore = asyncio.Semaphore(self.max_concurrency)
-        tasks = [self._get_item_data(link, semaphore) for link in todos_os_links]
         
         logger.info(f"Iniciando extração de dados de {len(todos_os_links)} imóveis...")
         
         resultados = []
-        for f in tqdm(asyncio.as_completed(tasks), total=len(tasks), desc="Extraindo Dados"):
-            res = await f
-            if res:
-                resultados.append(res)
-                # Salvar parcial para segurança
-                if len(resultados) % 100 == 0:
-                    self.lista_dados = resultados
-                    self._save_to_parquet(output_file)
+        lote_size = max(self.max_concurrency * 10, self.max_concurrency)
+
+        for inicio in range(0, len(todos_os_links), lote_size):
+            lote = todos_os_links[inicio:inicio + lote_size]
+            logger.info(
+                "Processando lote %s-%s de %s links",
+                inicio + 1,
+                min(inicio + lote_size, len(todos_os_links)),
+                len(todos_os_links),
+            )
+
+            tasks = [self._get_item_data(link, semaphore) for link in lote]
+
+            for f in tqdm(asyncio.as_completed(tasks), total=len(tasks), desc="Extraindo Dados"):
+                res = await f
+                if res:
+                    resultados.append(res)
+                    # Salvar parcial para segurança
+                    if len(resultados) % 100 == 0:
+                        self.lista_dados = resultados
+                        self._save_to_parquet(output_file)
 
         self.lista_dados = resultados
         self._save_to_parquet(output_file)
@@ -166,7 +184,9 @@ class ChavesMaoColeta:
     
     def _save_to_parquet(self, filename):
         # 1. Converte a lista de objetos para uma lista de dicionários
-        dados_dict = [d.to_dict() for d in self.lista_dados]
+        #dados_dict = [d.to_dict() for d in self.lista_dados]
+
+        dados_dict = [d.to_dict() if hasattr(d, "to_dict") else d for d in self.lista_dados]
         
         if not dados_dict:
             logger.warning("Nenhum dado para salvar.")
