@@ -32,7 +32,7 @@ def gerar_pagina_analise_imoveis(cidade_pth, cidade_nome, prefixo_arquivo):
     try:
 
         #arquivos = list(pasta.glob(f'{prefixo_arquivo}_com_ind_local_*.csv'))
-        arquivos = list(pasta.glob(f'{prefixo_arquivo}_imoveis_limpo_*.parquet'))
+        arquivos = list(pasta.glob(f'{prefixo_arquivo}_com_ind_local_*.parquet'))
             
         arquivo_mais_recente = max(arquivos, key=lambda f: f.stem.split('_')[-1])
         

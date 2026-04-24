@@ -65,7 +65,7 @@ class OLXScraperAsync:
         if self._playwright:
             await self._playwright.stop()
             
-    async def _get_text(self, seletor: str, timeout: int = 8000) -> Optional[str]:
+    async def _get_text(self, seletor: str, timeout: int = 2500) -> Optional[str]:
         try:
             element = self._page.locator(seletor).first
             
@@ -75,11 +75,11 @@ class OLXScraperAsync:
             
             # 2. Loop de verificação de conteúdo (Retry interno)
             # Às vezes o elemento aparece, mas o texto demora 200ms para ser injetado
-            for _ in range(3): 
+            for _ in range(2): 
                 texto = (await element.inner_text()).strip()
                 if texto and len(texto) > 0:
                     return texto
-                await asyncio.sleep(0.5) # Pequena espera se o texto vier vazio
+                await asyncio.sleep(0.15) # Pequena espera se o texto vier vazio
             return None
         except Exception:
             return None
@@ -88,7 +88,7 @@ class OLXScraperAsync:
         try:
             seletor = 'span:has-text("Área útil"), span:has-text("Área construída"), span:has-text("Tamanho")'
             element = self._page.locator(seletor).locator('xpath=../span[2]')
-            await element.wait_for(state="attached", timeout=5000)
+            await element.wait_for(state="attached", timeout=2500)
             metragem = await element.inner_text()
             return metragem
         except Exception:
@@ -102,7 +102,7 @@ class OLXScraperAsync:
             container = self._page.locator("#details")
             
             # Aguarda o container existir, não um span específico
-            await container.wait_for(state="attached", timeout=3000)
+            await container.wait_for(state="attached", timeout=2000)
             
             # Pegamos todos os textos de spans dentro do container de uma vez (mais rápido)
             todos_textos = await container.locator("span").all_inner_texts()
@@ -178,7 +178,7 @@ class OLXScraperAsync:
         try:
             seletor = 'div:has(> span:has-text("Quartos"))'
             element = self._page.locator(seletor).locator('span, a').last
-            await element.wait_for(state="attached", timeout=5000)
+            await element.wait_for(state="attached", timeout=2500)
             quartos = await element.inner_text()
             return quartos
         except Exception:
@@ -191,7 +191,7 @@ class OLXScraperAsync:
             badge_venda = self._page.locator('span[data-ds-component="DS-Badge"]:has-text("Venda")').first
             
             # Garante que o elemento "Venda" carregou na tela
-            await badge_venda.wait_for(state="visible", timeout=7000)
+            await badge_venda.wait_for(state="visible", timeout=3000)
 
             # 2. Estratégia XPath: 
             # "A partir do badge Venda, suba até o pai e procure o primeiro elemento que tenha R$"
@@ -244,36 +244,39 @@ class OLXScraperAsync:
             
 
     async def _extrair_dados_da_pagina(self, url: str) -> DadosImovel:
-        # 1. Metragem (Evitando pegar a descrição)
-        metragem_raw = await self._get_metragem()
-        
-        # 2. Quartos (Usando o link de navegação que é mais estável)
-        quartos_raw = await self._get_quartos()
-
-        # 3. Banheiros e Vagas (Usando a relação de vizinhança '+' do CSS)
-        banheiros_raw = await self._get_text("span:has-text('Banheiros') + span")
-        
-        vagas_raw = await self._get_text("span:has-text('Vagas na garagem') + span")
-
-        # 4. Condomínio e IPTU (Usando XPath para precisão total nos valores)
-        condo_raw = await self._get_text("xpath=//span[normalize-space(text())='Condomínio']/following-sibling::div//span[last()]")
-        
-        iptu_raw = await self._get_text("xpath=//span[normalize-space(text())='IPTU']/following-sibling::div//span[last()]")
-
-        # 5. Localização
-        endereco = await self._get_endereco()
-
-        # 6. Imagens
-        fotos = await self._page.locator("#item-gallery-image picture img").evaluate_all(
-            "elements => elements.map(el => el.src)"
+        (
+            metragem_raw,
+            quartos_raw,
+            banheiros_raw,
+            vagas_raw,
+            condo_raw,
+            iptu_raw,
+            endereco,
+            titulo,
+            descricao,
+            data_criacao,
+            fotos,
+        ) = await asyncio.gather(
+            self._get_metragem(),
+            self._get_quartos(),
+            self._get_text("span:has-text('Banheiros') + span"),
+            self._get_text("span:has-text('Vagas na garagem') + span"),
+            self._get_text("xpath=//span[normalize-space(text())='Condomínio']/following-sibling::div//span[last()]"),
+            self._get_text("xpath=//span[normalize-space(text())='IPTU']/following-sibling::div//span[last()]"),
+            self._get_endereco(),
+            self._get_text('span[data-side-margin="false"]'),
+            self._get_text('span.typo-body-medium[style*="word-break: break-word"]'),
+            self._get_text('span.typo-caption.text-neutral-100.font-semibold'),
+            self._page.locator("#item-gallery-image picture img").evaluate_all(
+                "elements => elements.map(el => el.src)"
+            ),
         )
         
         valor_imovel = await self._get_valor_imovel()
 
         return DadosImovel(
             url=url,
-            titulo=await self._get_text('span[data-side-margin="false"]'),
-            #valor_imovel=await self._get_text('span.typo-title-large'),
+            titulo=titulo,
             valor_imovel=valor_imovel,
             metragem=metragem_raw,
             quartos=quartos_raw,
@@ -282,8 +285,8 @@ class OLXScraperAsync:
             condominio=condo_raw,
             iptu=iptu_raw,
             endereco=endereco,
-            descricao=await self._get_text('span.typo-body-medium[style*="word-break: break-word"]'),
-            data_criacao=await self._get_text('span.typo-caption.text-neutral-100.font-semibold'),
+            descricao=descricao,
+            data_criacao=data_criacao,
             fotos=fotos
         )
 
@@ -293,10 +296,10 @@ class OLXScraperAsync:
                 logger.info(f"Processando {tentativa}/{self.MAX_RETRIES}: {url}")
                 
                 # Navegação agressiva focada no DOM
-                await self._page.goto(url, wait_until="domcontentloaded", timeout=60000)
+                await self._page.goto(url, wait_until="domcontentloaded", timeout=35000)
                 
-                # Pequeno delay aleatório para simular comportamento humano
-                await asyncio.sleep(random.uniform(1.5, 3.0)) 
+                # Delay mínimo para estabilização sem penalizar throughput
+                await asyncio.sleep(random.uniform(0.1, 0.5)) 
                 
                 dados = await self._extrair_dados_da_pagina(url)
                 logger.info(f"Sucesso: {dados.titulo[:30]}...")

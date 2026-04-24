@@ -25,7 +25,7 @@ sys.path.append('..')
     
 now = time.strftime("%Y-%m")
 
-total_paginas = 100
+total_paginas = 30
 
 output_file   = PASTA_DADOS / f'{cidade}_chave_mao_{now}.parquet' 
 

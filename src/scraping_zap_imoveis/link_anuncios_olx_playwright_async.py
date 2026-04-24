@@ -62,7 +62,7 @@ class OLXScraperLinksAsync:
 
                 # 2. Scroll suave para garantir que o lazy loading carregue os cards debaixo
                 await page.evaluate("window.scrollBy(0, 800)")
-                await asyncio.sleep(1.5)
+                await asyncio.sleep(0.4)
 
                 # 3. Extração dos links via evaluate_all para performance
                 links = await page.locator(seletor_link).evaluate_all(
@@ -85,7 +85,7 @@ class OLXScraperLinksAsync:
                 await page.close()
                 
                 # Se falhou, espera um tempo maior antes de tentar de novo
-            await asyncio.sleep(random.uniform(10, 20))
+            await asyncio.sleep(random.uniform(1.5, 4.0))
             
         return []
 

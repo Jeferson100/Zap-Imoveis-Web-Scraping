@@ -32,6 +32,38 @@ class ChavesMaoColeta:
             links = await scanner.get_links(url, retries= self.retries)
             logger.info(f"Página {page_number}: {len(links)} links encontrados.")
             return links
+    
+    async def _coletar_links_em_lotes(self, total_pages: int, limite_falhas: int, concorrencia_paginas: int):
+        todos_os_links = []
+        contador_falhas = 0
+        pagina_atual = 1
+
+        while pagina_atual <= total_pages:
+            paginas_lote = list(range(pagina_atual, min(pagina_atual + concorrencia_paginas, total_pages + 1)))
+            tarefas = [self._get_links_from_page(pagina) for pagina in paginas_lote]
+            resultados_lote = await asyncio.gather(*tarefas, return_exceptions=True)
+
+            for pagina, links in zip(paginas_lote, resultados_lote):
+                if isinstance(links, Exception):
+                    logger.warning(f"Página {pagina} falhou com exceção: {links}")
+                    links = []
+
+                if links:
+                    todos_os_links.extend(links)
+                    contador_falhas = 0
+                else:
+                    contador_falhas += 1
+                    logger.warning(f"Página {pagina} não retornou links. Falhas consecutivas: {contador_falhas}")
+
+                if contador_falhas >= limite_falhas:
+                    logger.error(f"Interrompendo: {limite_falhas} páginas seguidas sem links.")
+                    return todos_os_links
+
+            pagina_atual += concorrencia_paginas
+            await asyncio.sleep(random.uniform(0.2, 1.0))
+
+        return todos_os_links
+
 
     async def _get_item_data(self, url, semaphore):
         async with semaphore:
@@ -80,7 +112,7 @@ class ChavesMaoColeta:
         
         return self.lista_dados"""
     
-    async def run(self, output_file="resultados.json", total_pages: int = None, limite_falhas: int = 3):
+    async def run(self, output_file="resultados.json", total_pages: int = None, limite_falhas: int = 1):
         # --- ETAPA 1: DETERMINAR PÁGINAS ---
         if total_pages is None:
             total_pages = 5
@@ -98,7 +130,7 @@ class ChavesMaoColeta:
         contador_falhas = 0
 
         # --- ETAPA 2: COLETAR APENAS OS LINKS ---
-        for pagina in tqdm(range(1, total_pages + 1), desc="Coletando Links"):
+        """for pagina in tqdm(range(1, total_pages + 1), desc="Coletando Links"):
             logger.info(f"--- Obtendo links da Página {pagina}/{total_pages} ---")
             
             links = await self._get_links_from_page(pagina)
@@ -117,7 +149,13 @@ class ChavesMaoColeta:
                 break
             
             # Pequeno delay aleatório para não ser bloqueado na listagem
-            await asyncio.sleep(random.uniform(1.5, 4))
+            await asyncio.sleep(random.uniform(1.5, 4))"""
+            
+        todos_os_links = await self._coletar_links_em_lotes(
+            total_pages=total_pages,
+            limite_falhas=limite_falhas,
+            concorrencia_paginas=self.max_concurrency,
+        )
 
         # Remove duplicatas de links
         todos_os_links = list(set(todos_os_links))
@@ -137,9 +175,12 @@ class ChavesMaoColeta:
         logger.info(f"Iniciando extração de dados de {len(todos_os_links)} imóveis...")
         
         resultados = []
+        
         lote_size = max(self.max_concurrency * 10, self.max_concurrency)
+        
+        logger.info(f"Processando em lotes de {lote_size} para otimizar a extração com concorrência de {self.max_concurrency}.")
 
-        for inicio in range(0, len(todos_os_links), lote_size):
+        for inicio in tqdm(range(0, len(todos_os_links), lote_size), desc="Processando Lotes"):
             lote = todos_os_links[inicio:inicio + lote_size]
             logger.info(
                 "Processando lote %s-%s de %s links",
@@ -150,7 +191,8 @@ class ChavesMaoColeta:
 
             tasks = [self._get_item_data(link, semaphore) for link in lote]
 
-            for f in tqdm(asyncio.as_completed(tasks), total=len(tasks), desc="Extraindo Dados"):
+            #for f in tqdm(asyncio.as_completed(tasks), total=len(tasks), desc="Extraindo Dados"):
+            for f in asyncio.as_completed(tasks):
                 res = await f
                 if res:
                     resultados.append(res)
@@ -158,6 +200,8 @@ class ChavesMaoColeta:
                     if len(resultados) % 100 == 0:
                         self.lista_dados = resultados
                         self._save_to_parquet(output_file)
+            
+            #logger.info(f"Lote {inicio + 1}-{min(inicio + lote_size, len(todos_os_links))} finalizado. Total de imóveis processados até agora: {len(resultados)}")
 
         self.lista_dados = resultados
         self._save_to_parquet(output_file)
