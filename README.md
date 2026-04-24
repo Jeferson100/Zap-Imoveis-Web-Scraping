@@ -152,7 +152,7 @@ Os scripts de processamento executam automaticamente:
 
 Abra [app/1_Joinville-Zap-Imoveis.py](https://github.com/Jeferson100/Zap-Imoveis-Web-Scraping/blob/main/app/1_Joinville-Zap-Imoveis.py) e execute:
 ```bash
-streamlit run app/app_streamlit.py
+streamlit run app/1_Joinville-Zap-Imoveis.py
 ```
 
 Isso inicia uma interface onde é possível filtrar bairros, ver estatísticas e visualizar gráficos de preço.
