@@ -15,12 +15,11 @@ Automatiza a extração de dados de [Zap Imóveis](https://www.zapimoveis.com.br
 
 Projeto robusto de **scraping multi-fonte e análise de preços de imóveis** cobrindo 11 cidades brasileiras. 
 
-La ideia principal é automatizar a extração de dados de 4 plataformas imobiliárias principais, processar/limpar os resultados em formatos reutilizáveis e facilitar análises avançadas, visualizações e modelagem preditiva.
+A ideia principal é automatizar a extração de dados de 4 plataformas imobiliárias principais, processar/limpar os resultados em formatos reutilizáveis e facilitar análises avançadas, visualizações e modelagem preditiva.
 
 **Características:**
-- 📍 **11 cidades** (8 em SC, 2 no Sul, 1 em SP) com coleta automática mensal
+- 📍 **11 cidades** com coleta automática mensal
 - 🏢 **4 portais** (Zap Imóveis, OLX, Viva Real, Chave Mão)
-- 🛠️ **2 métodos** de scraping (Playwright async/sync + Selenium)
 - 🔄 **Processamento automático**: limpeza, geocodificação e indexação geoespacial
 - 📊 **Análise avançada**: machine learning, estatísticas, visualizações interativas
 - 🌐 **Dashboard web** com filtros, gráficos e insights em tempo real
@@ -48,13 +47,12 @@ La ideia principal é automatizar a extração de dados de 4 plataformas imobili
 - Itajaí
 - Itapema
 - Itapoá
-- Jaragrá do Sul
+- Jaraguá do Sul
 
-**Sudeste (1 cidade):**
+**São Paulo (1 cidade):**
 - São Paulo
 
-**Sul (2 cidades):**
-- Florianópolis
+**Paraná (1 cidades):**
 - Curitiba
 
 ---
@@ -67,34 +65,12 @@ La ideia principal é automatizar a extração de dados de 4 plataformas imobili
 - [Selenium](https://selenium-python.readthedocs.io/) (alternativa de scraping)
 - [BeautifulSoup4](https://www.crummy.com/software/BeautifulSoup/) (parsing HTML)
 - [Pandas](https://pandas.pydata.org/) (manipulação e análise de dados)
-- [Crawlee](https://crawlee.dev/) (framework de scraping)
-- asyncio (programação assíncrona)
 - [Geopy](https://geopy.readthedocs.io/) (geocodificação)
-- [Google Maps API](https://googlemaps.github.io/google-maps-services-python/) (georeferenciamento)
 - [OSMNX](https://osmnx.readthedocs.io/) (dados OpenStreetMap)
 - [Streamlit](https://streamlit.io/) (dashboards web)
 - [Plotly](https://plotly.com/) (visualizações interativas)
-- [Scikit-learn](https://scikit-learn.org/) (machine learning)
 
-> Veja `requirements.txt` e `pyproject.toml` para a lista completa de pacotes.
-
----
-
-## 📦 Instalação
-
-Recomenda-se usar o [uv](https://github.com/astral-sh/uv) para gerenciamento de dependências.
-
-### Com uv (sugestão)
-```bash
-uv sync            # instala e mantém ambiente atualizado
-```
-
-### Com pip
-```bash
-python -m venv .venv
-.\.venv\Scripts\Activate.ps1  # Windows
-pip install -e .
-```
+> Veja [pyproject.toml](https://github.com/Jeferson100/Zap-Imoveis-Web-Scraping/blob/main/pyproject.toml) para a lista completa de pacotes.
 
 ---
 
@@ -104,9 +80,6 @@ pip install -e .
 preco-imoveis/
 ├── src/
 │   └── scraping_zap_imoveis/         # código Python reutilizável
-│       ├── link_anuncios_*.py        # coleta URLs de anúncios (multi-plataforma)
-│       ├── extrair_dados_*.py        # extração de detalhes do anúncio
-│       ├── total_pagina_*.py         # calcula número de páginas
 │       ├── zap_imoveis_coleta.py     # orquestrador Zap
 │       ├── olx_coleta.py             # orquestrador OLX
 │       ├── viva_real_coleta.py       # orquestrador Viva Real
@@ -146,23 +119,6 @@ preco-imoveis/
 
 ---
 
-## 🚀 Uso
-
-### Coletar dados programaticamente
-```python
-import asyncio
-from scraping_zap_imoveis import ZapImoveisColeta
-from datetime import datetime
-
-now = datetime.now().strftime("%Y-%m-%d")
-coletor = ZapImoveisColeta()
-
-# salva JSON em `dados/`
-resultado = asyncio.run(
-    coletor.run(output_file=f"dados/zap_imoveis_joinville_{now}.json")
-)
-```
-
 ## 📊 Dados Obtidos
 
 Campos registrados no conjunto final:
@@ -177,7 +133,7 @@ Campos registrados no conjunto final:
 - Características (piscina, churrasqueira, etc.)
 - Link para mapa do imóvel
 
-Os arquivos gerados estão em `dados/` e podem ser limpos em `codigos_rodando/limpando_dados.py`.
+Os arquivos gerados estão em [dados](https://github.com/Jeferson100/Zap-Imoveis-Web-Scraping/tree/main/dados).
 
 ---
 
@@ -194,23 +150,12 @@ Os scripts de processamento executam automaticamente:
 
 ## 📈 Aplicação Streamlit
 
-Abra `app/app_streamlit.py` e execute:
+Abra [app/1_Joinville-Zap-Imoveis.py](https://github.com/Jeferson100/Zap-Imoveis-Web-Scraping/blob/main/app/1_Joinville-Zap-Imoveis.py) e execute:
 ```bash
 streamlit run app/app_streamlit.py
 ```
 
 Isso inicia uma interface onde é possível filtrar bairros, ver estatísticas e visualizar gráficos de preço.
-
----
-
-## 🧪 Processamento de Dados
-
-Os scripts de processamento executam automaticamente:
-
-1. **Limpeza**: `[cidade]_limpando_dados.py` - normalização, remoção de duplicatas
-2. **Geocodificação**: `[cidade]_indice_localizacao.py` - extração de coordenadas e indexação
-3. **Unificação**: `unificando_dados.py` - fusão de dados multi-origem
-4. **Criação de Índices**: `criando_indice.py` - indexação geoespacial com OSMNX
 
 ---
 
