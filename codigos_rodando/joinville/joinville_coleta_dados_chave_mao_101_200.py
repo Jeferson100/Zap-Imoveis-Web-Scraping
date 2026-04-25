@@ -43,7 +43,7 @@ total_paginas = 100
 #output_file   = PASTA_DADOS / f'{cidade}_chave_mao_{now}.parquet' 
 
 area_ranges = {#'0': '50','51': '60','61': '65','66': '70','71': '75','76': '80','81': '90','91': '100',
-               #'101': '110', '111': '120','121': '130','131': '150','151': '175','176': '200',
+               '101': '110', '111': '120','121': '130','131': '150','151': '175','176': '200',
                #'201': '250','251': '300','301': '400','401': '500','501': '600', '601': '3000000',
                
                }
@@ -73,7 +73,3 @@ for min_area, max_area in area_ranges.items():
     ))
 
 logger.info(f"Arquivo de dados gerado em: {output_file}")
-
-consolidar_parquet('chave_mao', cidade, PASTA_DADOS)
-
-logger.info(f"Arquivos consolidados em: {PASTA_DADOS}")

@@ -1,0 +1,15 @@
+name: Rodando Coleta Viva Real Joinville 91 180
+on: 
+
+    workflow_run:
+        workflows: ["Rodando Coleta Viva Real Joinville 0 90"]
+        types:
+            - completed
+    workflow_dispatch:
+
+jobs:
+  pipeline:
+    uses: ./.github/workflows/pipeline_cidade_rodando.yml
+    with:
+      cidade_pasta: joinville
+      arquivo_rodando_imovel:  joinville_coletando_dados_viva_real_91_180.py

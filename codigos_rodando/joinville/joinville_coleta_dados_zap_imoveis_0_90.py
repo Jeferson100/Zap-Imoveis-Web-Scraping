@@ -40,8 +40,8 @@ sys.path.append('..')
 now = time.strftime("%Y-%m")
 
 area_ranges = {'0': '50','51': '60','61': '70','71': '80','81': '90',
-               '91': '100','101': '120','121': '140','141': '160','161': '180',
-               '181': '200','201': '250','251': '300','301': '400','401': '500','501': '600','601': '3000000',
+               #'91': '100','101': '120','121': '140','141': '160','161': '180',
+               #'181': '200','201': '250','251': '300','301': '400','401': '500','501': '600','601': '3000000',
                
                }
 
@@ -77,8 +77,4 @@ for area_min, area_max in area_ranges.items():
 
 logger.info(f"Arquivo de dados gerado em: {output_file}")
 
-#consolidar_jsons('zap', cidade, PASTA_DADOS)
-consolidar_parquet('zap', cidade, PASTA_DADOS)
-
-logger.info(f"Arquivos consolidados em: {PASTA_DADOS}")
 
