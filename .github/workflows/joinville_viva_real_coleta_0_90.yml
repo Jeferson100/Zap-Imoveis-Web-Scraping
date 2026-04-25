@@ -12,4 +12,4 @@ jobs:
     uses: ./.github/workflows/pipeline_cidade_rodando.yml
     with:
       cidade_pasta: joinville
-      arquivo_rodando_imovel:  joinville_coletando_dados_viva_real_0_90.py
+      arquivo_rodando_imovel:  joinville_coleta_dados_viva_real_0_90.py
