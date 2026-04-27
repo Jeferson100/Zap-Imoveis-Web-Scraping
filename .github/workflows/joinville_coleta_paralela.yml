@@ -76,26 +76,3 @@ jobs:
     with:
       cidade_pasta: joinville
       arquivo_rodando_imovel: joinville_coleta_dados_zap_imoveis_181_infinito.py
-
-  limpeza_e_indice:
-    needs:
-      - coleta_chave_mao_0_100
-      - coleta_chave_mao_101_200
-      - coleta_chave_mao_201_infinito
-      - coleta_olx_0_80
-      - coleta_olx_81_150
-      - coleta_olx_151_infinito
-      - coleta_viva_real_0_90
-      - coleta_viva_real_91_180
-      - coleta_viva_real_181_infinito
-      - coleta_zap_imoveis_0_90
-      - coleta_zap_imoveis_91_180
-      - coleta_zap_imoveis_181_infinito
-    runs-on: ubuntu-latest
-    timeout-minutes: 360
-    steps:
-      - uses: actions/checkout@v3
-      - name: Executar limpeza
-        run: python scripts/limpeza_dados.py
-      - name: Criar índices
-        run: python scripts/criar_indice.py
