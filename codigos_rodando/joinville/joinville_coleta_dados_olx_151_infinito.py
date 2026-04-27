@@ -52,9 +52,3 @@ resultado = asyncio.run(orchestrator.run(
     total_pages=total_paginas
 ))
 
-
-logger.info(f"Arquivo de dados gerado em: {output_file}")
-
-consolidar_parquet('olx', cidade, PASTA_DADOS)
-
-logger.info(f"Arquivos consolidados em: {PASTA_DADOS}")

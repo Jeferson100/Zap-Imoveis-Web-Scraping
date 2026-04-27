@@ -1,18 +1,18 @@
-name: Rodando Limpeza Imoveis Joinville
-
+name: Rodando Juncao Dados Joinville
 on: 
-  workflow_run:
-    workflows: ["Rodando Juncao Dados Joinville"]
-    types:
+
+    workflow_run:
+        workflows: ["Coleta Joinville Paralela"]
+        types:
             - completed
-  workflow_dispatch:  
+    workflow_dispatch:
 
 jobs:
   pipeline:
     uses: ./.github/workflows/pipeline_cidade_rodando.yml
     with:
       cidade_pasta: joinville
-      arquivo_rodando_imovel: joinville_limpando_dados_imoveis.py
+      arquivo_rodando_imovel: joinville_juncao_dados.py
       cidade_limpeza: joinville
       cidade_localizacao: Joinville
       estado_limpeza: sc
