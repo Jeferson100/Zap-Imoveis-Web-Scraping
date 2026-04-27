@@ -1,0 +1,18 @@
+name: Rodando Limpeza Imoveis Joinville
+
+on: 
+  workflow_dispatch:
+  schedule:
+    - cron: '0 9 2 1,2,3,4,5,6,7,8,9,10,11,12 *'
+
+
+jobs:
+  pipeline:
+    uses: ./.github/workflows/pipeline_cidade_rodando.yml
+    with:
+      cidade_pasta: joinville
+      arquivo_rodando_imovel: joinville_limpando_dados_imoveis.py
+      cidade_limpeza: joinville
+      cidade_localizacao: Joinville
+      estado_limpeza: sc
+      estado_localizacao: SC

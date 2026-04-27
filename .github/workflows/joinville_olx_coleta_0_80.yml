@@ -1,11 +1,8 @@
 name: Rodando Coleta Olx Joinville 0 80
 on: 
-
-    workflow_run:
-        workflows: ["Rodando Coleta Chave Mao Joinville 201 Infinito"]
-        types:
-            - completed
-    workflow_dispatch:    
+  workflow_dispatch:
+  schedule:
+    - cron: '0 9 1 1,2,3,4,5,6,7,8,9,10,11,12 *'   
 
 jobs:
   pipeline:
