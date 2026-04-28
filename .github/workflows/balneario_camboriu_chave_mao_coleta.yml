@@ -1,0 +1,36 @@
+name: Rodando Coleta Chave Mao Balneario Camboriu
+on: 
+  schedule:
+    - cron: '0 9 2 1,2,3,4,5,6,7,8,9,10,11,12 *'  # 09:00 no primeiro dia de cada mês
+  workflow_dispatch:
+
+jobs:
+  coleta_chave_mao_0_90:
+    uses: ./.github/workflows/pipeline_cidade_rodando.yml
+    with:
+      cidade_pasta: balneario_camboriu
+      arquivo_rodando_imovel: balneario_camboriu_coleta_dados_chave_mao_0_90.py
+
+  coleta_chave_mao_91_130:
+    uses: ./.github/workflows/pipeline_cidade_rodando.yml
+    with:
+      cidade_pasta: balneario_camboriu
+      arquivo_rodando_imovel: balneario_camboriu_coleta_dados_chave_mao_91_130.py
+  
+  coleta_chave_mao_131_165:
+    uses: ./.github/workflows/pipeline_cidade_rodando.yml
+    with:
+      cidade_pasta: balneario_camboriu
+      arquivo_rodando_imovel: balneario_camboriu_coleta_dados_chave_mao_131_165.py
+
+  coleta_chave_mao_166_250:
+    uses: ./.github/workflows/pipeline_cidade_rodando.yml
+    with:
+      cidade_pasta: balneario_camboriu
+      arquivo_rodando_imovel: balneario_camboriu_coleta_dados_chave_mao_166_250.py
+  
+  coleta_chave_mao_251_infinito:
+    uses: ./.github/workflows/pipeline_cidade_rodando.yml
+    with:
+      cidade_pasta: balneario_camboriu
+      arquivo_rodando_imovel: balneario_camboriu_coleta_dados_chave_mao_251_infinito.py

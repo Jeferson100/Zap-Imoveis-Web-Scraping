@@ -1,0 +1,39 @@
+name: Rodando Coleta Olx Balneario Camboriu
+on: 
+
+    workflow_run:
+        workflows: ["Rodando Coleta Chave Mao Balneario Camboriu"]
+        types:
+            - completed
+    workflow_dispatch:    
+
+jobs:
+  coleta_olx_0_95:
+    uses: ./.github/workflows/pipeline_cidade_rodando.yml
+    with:
+      cidade_pasta: balneario_camboriu
+      arquivo_rodando_imovel: balneario_camboriu_coleta_dados_olx_0_95.py
+
+  coleta_olx_96_130:
+    uses: ./.github/workflows/pipeline_cidade_rodando.yml
+    with:
+      cidade_pasta: balneario_camboriu
+      arquivo_rodando_imovel: balneario_camboriu_coleta_dados_olx_96_130.py
+  
+  coleta_olx_131_160:
+    uses: ./.github/workflows/pipeline_cidade_rodando.yml
+    with:
+      cidade_pasta: balneario_camboriu
+      arquivo_rodando_imovel: balneario_camboriu_coleta_dados_olx_131_160.py
+  
+  coleta_olx_161_240:
+    uses: ./.github/workflows/pipeline_cidade_rodando.yml
+    with:
+      cidade_pasta: balneario_camboriu
+      arquivo_rodando_imovel: balneario_camboriu_coleta_dados_olx_161_240.py
+  
+  coleta_olx_241_infinito:
+    uses: ./.github/workflows/pipeline_cidade_rodando.yml
+    with:
+      cidade_pasta: balneario_camboriu
+      arquivo_rodando_imovel: balneario_camboriu_coleta_dados_olx_241_infinito.py

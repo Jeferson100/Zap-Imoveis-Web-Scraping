@@ -2,7 +2,7 @@ name: Rodando Juncao Dados Balneario Camboriu
 on: 
 
     workflow_run:
-        workflows: ["Coleta Balneario Camboriu Paralela"]
+        workflows: ["Rodando Coleta Viva Real Balneario Camboriu"]
         types:
             - completed
     workflow_dispatch:

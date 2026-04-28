@@ -61,10 +61,9 @@ for area_min, area_max in area_ranges.items():
     
     logger.info(f"Arquivo de dados gerado em: {output_file}")
 
-    URL_TEMPLATE_NEW = URL_TEMPLATE.replace(
-        "{pagina}", 
-        f"{{pagina}}&areaMaxima={area_max}&areaMinima={area_min}"
-        )
+    URL_TEMPLATE_NEW = URL_TEMPLATE.replace("{pagina}", f"{{pagina}}&areaMaxima={area_max}&areaMinima={area_min}")
+    
+    #URL_TEMPLATE_NEW = URL_TEMPLATE.format(min=area_min, max=area_max, pagina="{pagina}")
     
     orchestrator = ZapImoveisColeta(URL_TEMPLATE_NEW, 
                                   headless=headless,

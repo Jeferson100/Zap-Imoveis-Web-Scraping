@@ -56,10 +56,9 @@ for area_min, area_max in area_ranges.items():
 
     output_file   = PASTA_DADOS / f'{cidade}_vivareal_{now}_{area_min}_{area_max}.parquet' 
 
-    URL_TEMPLATE_NEW = URL_TEMPLATE.replace(
-        "{pagina}", 
-        f"{{pagina}}&areaMaxima={area_max}&areaMinima={area_min}"
-        )
+    URL_TEMPLATE_NEW = URL_TEMPLATE.replace("{pagina}", f"{{pagina}}&areaMaxima={area_max}&areaMinima={area_min}")
+    
+    #URL_TEMPLATE_NEW = URL_TEMPLATE.format(min=area_min, max=area_max, pagina="{pagina}")
     
     orchestrator = VivaRealColeta(URL_TEMPLATE_NEW, 
                                   headless=headless,
