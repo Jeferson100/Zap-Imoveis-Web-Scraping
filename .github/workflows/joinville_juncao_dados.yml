@@ -2,7 +2,7 @@ name: Rodando Juncao Dados Joinville
 on: 
 
     workflow_run:
-        workflows: ["Coleta Joinville Paralela"]
+        workflows: ["Rodando Coleta Viva Real Joinville"]
         types:
             - completed
     workflow_dispatch:

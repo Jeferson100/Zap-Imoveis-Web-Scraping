@@ -1,0 +1,34 @@
+name: Rodando Coleta Olx Joinville
+on: 
+
+    workflow_run:
+        workflows: ["Rodando Coleta Chave Mao Joinville"]
+        types:
+            - completed
+    workflow_dispatch:    
+
+jobs:
+  coleta_olx_0_70:
+    uses: ./.github/workflows/pipeline_cidade_rodando.yml
+    with:
+      cidade_pasta: joinville
+      arquivo_rodando_imovel: joinville_coleta_dados_olx_0_70.py
+
+  coleta_olx_71_110:
+    uses: ./.github/workflows/pipeline_cidade_rodando.yml
+    with:
+      cidade_pasta: joinville
+      arquivo_rodando_imovel: joinville_coleta_dados_olx_71_110.py
+  
+  coleta_olx_111_170:
+    uses: ./.github/workflows/pipeline_cidade_rodando.yml
+    with:
+      cidade_pasta: joinville
+      arquivo_rodando_imovel: joinville_coleta_dados_olx_111_170.py
+
+  coleta_olx_171_infinito:
+    uses: ./.github/workflows/pipeline_cidade_rodando.yml
+    with:
+      cidade_pasta: joinville
+      arquivo_rodando_imovel: joinville_coleta_dados_olx_171_infinito.py
+  
