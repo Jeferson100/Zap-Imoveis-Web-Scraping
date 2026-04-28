@@ -1,0 +1,40 @@
+name: Rodando Coleta Viva Real Joinville
+on: 
+  workflow_run:
+        workflows: ["Rodando Coleta Zap Imoveis Joinville"]
+        types:
+            - completed
+  workflow_dispatch:  
+
+jobs:
+  coleta_zap_imoveis_0_70:
+    uses: ./.github/workflows/pipeline_cidade_rodando.yml
+    with:
+      cidade_pasta: joinville
+      arquivo_rodando_imovel: joinville_coleta_dados_viva_real_0_70.py
+
+  coleta_zap_imoveis_71_105:
+    uses: ./.github/workflows/pipeline_cidade_rodando.yml
+    with:
+      cidade_pasta: joinville
+      arquivo_rodando_imovel: joinville_coleta_dados_viva_real_71_105.py
+  
+  coleta_zap_imoveis_106_160:
+    uses: ./.github/workflows/pipeline_cidade_rodando.yml
+    with:
+      cidade_pasta: joinville
+      arquivo_rodando_imovel: joinville_coleta_dados_viva_real_106_160.py
+  
+  coleta_zap_imoveis_161_300:
+    uses: ./.github/workflows/pipeline_cidade_rodando.yml
+    with:
+      cidade_pasta: joinville
+      arquivo_rodando_imovel: joinville_coleta_dados_viva_real_161_300.py
+
+  coleta_zap_imoveis_301_infinito:
+    uses: ./.github/workflows/pipeline_cidade_rodando.yml
+    with:
+      cidade_pasta: joinville
+      arquivo_rodando_imovel: joinville_coleta_dados_viva_real_301_infinito.py
+
+  
