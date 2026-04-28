@@ -1,0 +1,18 @@
+name: Rodando Coleta Chave Mao Balneario Picaras
+on:
+  schedule:
+    - cron: '0 9 3 1,2,3,4,5,6,7,8,9,10,11,12 *'  # 09:00 no primeiro dia de cada mês
+  workflow_dispatch:  
+
+jobs:
+  coleta_chave_mao_0_110:
+    uses: ./.github/workflows/pipeline_cidade_rodando.yml
+    with:
+      cidade_pasta: balneario_picaras
+      arquivo_rodando_imovel:  balneario_picaras_coleta_dados_chave_mao_0_110.py
+
+  coleta_chave_mao_111_infinito:
+    uses: ./.github/workflows/pipeline_cidade_rodando.yml
+    with:
+      cidade_pasta: balneario_picaras
+      arquivo_rodando_imovel:  balneario_picaras_coleta_dados_chave_mao_111_infinito.py
