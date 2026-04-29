@@ -5,26 +5,32 @@ on:
   workflow_dispatch:
 
 jobs:
-  coleta_chave_mao_0_75:
+  coleta_chave_mao_0_70:
     uses: ./.github/workflows/pipeline_cidade_rodando.yml
     with:
       cidade_pasta: joinville
-      arquivo_rodando_imovel: joinville_coleta_dados_chave_mao_0_75.py
+      arquivo_rodando_imovel: joinville_coleta_dados_chave_mao_0_70.py
 
-  coleta_chave_mao_76_120:
+  coleta_chave_mao_71_100:
     uses: ./.github/workflows/pipeline_cidade_rodando.yml
     with:
       cidade_pasta: joinville
-      arquivo_rodando_imovel: joinville_coleta_dados_chave_mao_76_120.py
+      arquivo_rodando_imovel: joinville_coleta_dados_chave_mao_71_100.py
 
-  coleta_chave_mao_121_240:
+  coleta_chave_mao_101_150:
     uses: ./.github/workflows/pipeline_cidade_rodando.yml
     with:
       cidade_pasta: joinville
-      arquivo_rodando_imovel: joinville_coleta_dados_chave_mao_121_240.py
+      arquivo_rodando_imovel: joinville_coleta_dados_chave_mao_101_150.py
   
-  coleta_chave_mao_241_infinito:
+  coleta_chave_mao_151_270:
     uses: ./.github/workflows/pipeline_cidade_rodando.yml
     with:
       cidade_pasta: joinville
-      arquivo_rodando_imovel: joinville_coleta_dados_chave_mao_241_infinito.py
+      arquivo_rodando_imovel: joinville_coleta_dados_chave_mao_151_270.py
+  
+  coleta_chave_mao_271_infinito:
+    uses: ./.github/workflows/pipeline_cidade_rodando.yml
+    with:
+      cidade_pasta: joinville
+      arquivo_rodando_imovel: joinville_coleta_dados_chave_mao_271_infinito.py

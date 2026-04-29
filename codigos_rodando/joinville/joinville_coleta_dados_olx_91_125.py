@@ -21,7 +21,7 @@ sys.path.append(str(Path(__file__).parent.parent))
 from scraping_zap_imoveis import OLXColeta
 
 #URL_TEMPLATE = "https://www.olx.com.br/imoveis/venda/estado-sc/norte-de-santa-catarina/joinville?q=casa&o={pagina}"
-URL_TEMPLATE = "https://www.olx.com.br/imoveis/venda/estado-sc?q=joinville&ss=71&se=110&o={pagina}"
+URL_TEMPLATE = "https://www.olx.com.br/imoveis/venda/estado-sc?q=joinville&ss=91&se=125&o={pagina}"
 
 sys.path.append('..')
     
@@ -29,7 +29,7 @@ now = time.strftime("%Y-%m")
 
 total_paginas = 100
 
-output_file   = PASTA_DADOS / f'{cidade}_olx_{now}_71_110.json' 
+output_file   = PASTA_DADOS / f'{cidade}_olx_{now}_91_125.json' 
 
 headless = os.getenv("HEADLESS", "True").lower() == "true"
 
