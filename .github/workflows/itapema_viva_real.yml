@@ -1,0 +1,21 @@
+name: Rodando Coleta Viva Real Itapema
+on: 
+
+    workflow_run:
+        workflows: ["Rodando Coleta Zap Imoveis Itapema"]
+        types:
+            - completed
+    workflow_dispatch:
+
+jobs:
+   rodando_coleta_viva_real_itapema_0_130:
+    uses: ./.github/workflows/pipeline_cidade_rodando.yml
+    with:
+      cidade_pasta: itapema
+      arquivo_rodando_imovel:  itapema_coleta_dados_viva_real_0_130.py
+
+   rodando_coleta_viva_real_itapema_131_infinito:
+    uses: ./.github/workflows/pipeline_cidade_rodando.yml
+    with:
+      cidade_pasta: itapema
+      arquivo_rodando_imovel:  itapema_coleta_dados_viva_real_131_infinito.py
