@@ -1,0 +1,21 @@
+name: Rodando Coleta Viva Real Itajai
+on: 
+
+    workflow_run:
+        workflows: ["Rodando Coleta Zap Imoveis Itajai"]
+        types:
+            - completed
+    workflow_dispatch:
+
+jobs:
+  coleta_viva_real_itajai_0_100:
+    uses: ./.github/workflows/pipeline_cidade_rodando.yml
+    with:
+      cidade_pasta: itajai
+      arquivo_rodando_imovel:  itajai_coleta_dados_viva_real_0_100.py
+  
+  coleta_viva_real_itajai_101_infinito:
+    uses: ./.github/workflows/pipeline_cidade_rodando.yml
+    with:
+      cidade_pasta: itajai
+      arquivo_rodando_imovel:  itajai_coleta_dados_viva_real_101_infinito.py  

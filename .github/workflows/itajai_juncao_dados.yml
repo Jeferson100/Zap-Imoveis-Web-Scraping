@@ -1,0 +1,19 @@
+name: Rodando Juncao Dados Itajai
+on: 
+
+    workflow_run:
+        workflows: ["Rodando Coleta Viva Real Itajai"]
+        types:
+            - completed
+    workflow_dispatch:
+
+jobs:
+  pipeline:
+    uses: ./.github/workflows/pipeline_cidade_rodando.yml
+    with:
+      cidade_pasta: itajai
+      arquivo_rodando_imovel: itajai_juncao_dados.py
+      cidade_limpeza: itajai
+      cidade_localizacao: Itajai
+      estado_limpeza: sc
+      estado_localizacao: SC

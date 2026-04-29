@@ -1,0 +1,27 @@
+name: Rodando Coleta Zap Imoveis Blumenau
+on: 
+
+    workflow_run:
+        workflows: ["Rodando Coleta OLX Blumenau"]
+        types:
+            - completed
+    workflow_dispatch:
+
+jobs:
+  coleta_zap_imoveis_blumenau_0_100:
+    uses: ./.github/workflows/pipeline_cidade_rodando.yml
+    with:
+      cidade_pasta: blumenau
+      arquivo_rodando_imovel:   blumenau_coleta_dados_zap_imoveis_0_100.py
+  
+  coleta_zap_imoveis_blumenau_101_270:
+    uses: ./.github/workflows/pipeline_cidade_rodando.yml
+    with:
+      cidade_pasta: blumenau
+      arquivo_rodando_imovel:   blumenau_coleta_dados_zap_imoveis_101_270.py
+  
+  coleta_zap_imoveis_blumenau_271_infinito:
+    uses: ./.github/workflows/pipeline_cidade_rodando.yml
+    with:
+      cidade_pasta: blumenau
+      arquivo_rodando_imovel:   blumenau_coleta_dados_zap_imoveis_271_infinito.py
