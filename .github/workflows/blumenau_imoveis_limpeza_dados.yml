@@ -2,7 +2,7 @@ name: Rodando Limpeza Imoveis Blumenau
 on: 
 
     workflow_run:
-        workflows: ["Rodando Coleta OLX Blumenau"]
+        workflows: ["Rodando Juncao Dados Blumenau"]
         types:
             - completed
     workflow_dispatch:

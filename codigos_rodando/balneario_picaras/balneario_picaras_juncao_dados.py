@@ -40,7 +40,7 @@ consolidar_parquet('zap', cidade, PASTA_DADOS)
 
 logger.info(f"Dados consolidados para Zap.")
 
-consolidar_parquet('olx', cidade, PASTA_DADOS)
+consolidar_jsons('olx', cidade, PASTA_DADOS)
 
 logger.info(f"Dados consolidados para Olx.")
 

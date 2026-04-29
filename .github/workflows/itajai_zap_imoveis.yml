@@ -1,0 +1,22 @@
+name: Rodando Coleta Zap Imoveis Itajai
+
+on: 
+
+    workflow_run:
+        workflows: ["Rodando Coleta OLX Itajai"]
+        types:
+            - completed
+    workflow_dispatch:  
+
+jobs:
+   coleta_zap_imoveis_itajai_0_100:
+    uses: ./.github/workflows/pipeline_cidade_rodando.yml
+    with:
+      cidade_pasta: itajai
+      arquivo_rodando_imovel: itajai_coleta_dados_zap_imoveis_0_100.py
+
+   coleta_zap_imoveis_itajai_101_infinito:
+    uses: ./.github/workflows/pipeline_cidade_rodando.yml
+    with:
+      cidade_pasta: itajai
+      arquivo_rodando_imovel: itajai_coleta_dados_zap_imoveis_101_infinito.py
