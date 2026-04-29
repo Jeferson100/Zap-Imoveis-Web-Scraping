@@ -20,7 +20,7 @@ on:
       max_concurrency_olx:
         required: false
         type: number
-        default: 10
+        default: 5
       max_concurrency_zap:
         required: false
         type: number

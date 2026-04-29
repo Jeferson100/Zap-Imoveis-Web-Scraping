@@ -30,7 +30,7 @@ warnings.filterwarnings("ignore")
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
 logger = logging.getLogger(__name__)
 
-class OLXColeta:
+"""class OLXColeta:
     def __init__(self, base_url_template, headless=True, max_concurrency=5, retries=1, termos_para_ignorar_links: list = None):
         self.base_url_template = base_url_template
         self.headless = headless
@@ -182,7 +182,8 @@ class OLXColeta:
         
         logger.info(f"Dados compactados salvos com sucesso em {filename}")
 
-"""class OLXColeta:
+"""
+class OLXColeta:
     def __init__(self, base_url_template, headless=True, max_concurrency=5, retries=1, termos_para_ignorar_links: list = None):
         self.base_url_template = base_url_template
         self.headless = headless
@@ -371,7 +372,7 @@ class OLXColeta:
         df.to_parquet(filename, index=False, compression='snappy')
         
         logger.info(f"Dados compactados salvos com sucesso em {filename}")
-"""
+
 
 if __name__ == "__main__":
     URL_TEMPLATE = "https://www.olx.com.br/imoveis/venda/estado-sc/norte-de-santa-catarina/joinville?q=casa&o={pagina}"
