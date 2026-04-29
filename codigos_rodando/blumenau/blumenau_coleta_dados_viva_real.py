@@ -37,8 +37,7 @@ sys.path.append('..')
     
 now = time.strftime("%Y-%m")
 
-area_ranges = {'0': '60',
-               '61': '89',
+area_ranges = {'0': '60','61': '89',
                '90': '140',
                '141': '220',
                '221': '350',
