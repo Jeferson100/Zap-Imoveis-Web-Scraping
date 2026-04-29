@@ -8,27 +8,33 @@ on:
     workflow_dispatch:    
 
 jobs:
-  coleta_olx_0_70:
+  coleta_olx_0_67:
     uses: ./.github/workflows/pipeline_cidade_rodando.yml
     with:
       cidade_pasta: joinville
-      arquivo_rodando_imovel: joinville_coleta_dados_olx_0_70.py
+      arquivo_rodando_imovel: joinville_coleta_dados_olx_0_67.py
 
-  coleta_olx_71_110:
+  coleta_olx_68_90:
     uses: ./.github/workflows/pipeline_cidade_rodando.yml
     with:
       cidade_pasta: joinville
-      arquivo_rodando_imovel: joinville_coleta_dados_olx_71_110.py
-  
-  coleta_olx_111_170:
-    uses: ./.github/workflows/pipeline_cidade_rodando.yml
-    with:
-      cidade_pasta: joinville
-      arquivo_rodando_imovel: joinville_coleta_dados_olx_111_170.py
+      arquivo_rodando_imovel: joinville_coleta_dados_olx_68_90.py
 
-  coleta_olx_171_infinito:
+  coleta_olx_91_125:
     uses: ./.github/workflows/pipeline_cidade_rodando.yml
     with:
       cidade_pasta: joinville
-      arquivo_rodando_imovel: joinville_coleta_dados_olx_171_infinito.py
+      arquivo_rodando_imovel: joinville_coleta_dados_olx_91_125.py
+
+  coleta_olx_126_195:
+    uses: ./.github/workflows/pipeline_cidade_rodando.yml
+    with:
+      cidade_pasta: joinville
+      arquivo_rodando_imovel: joinville_coleta_dados_olx_126_195.py
+
+  coleta_olx_196_infinito:
+    uses: ./.github/workflows/pipeline_cidade_rodando.yml
+    with:
+      cidade_pasta: joinville
+      arquivo_rodando_imovel: joinville_coleta_dados_olx_196_infinito.py
   
