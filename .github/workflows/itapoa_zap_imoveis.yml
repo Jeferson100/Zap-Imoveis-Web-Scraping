@@ -1,8 +1,10 @@
 name: Rodando Coleta Zap Imoveis Itapoa
 on: 
-  workflow_dispatch:
-  schedule:
-    - cron: '0 9 1 1,2,3,4,5,6,7,8,9,10,11,12 *'  
+    workflow_run:
+        workflows: ["Rodando Coleta OLX Itapoa"]
+        types:
+            - completed
+    workflow_dispatch:
 
 jobs:
   pipeline:
