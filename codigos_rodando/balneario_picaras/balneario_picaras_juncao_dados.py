@@ -28,20 +28,20 @@ PASTA_DADOS.mkdir(parents=True, exist_ok=True)
 
 logger.info(f"Diretório de dados: {PASTA_DADOS}")
 
-consolidar_parquet('vivareal', cidade, PASTA_DADOS)
+#consolidar_parquet('vivareal', cidade, PASTA_DADOS)
 
-logger.info(f"Dados consolidados para Viva Real.")
+#logger.info(f"Dados consolidados para Viva Real.")
 
 consolidar_parquet('chave_mao', cidade, PASTA_DADOS)
 
 logger.info(f"Dados consolidados para Chave na Mão.")
 
-consolidar_parquet('zap', cidade, PASTA_DADOS)
+#consolidar_parquet('zap', cidade, PASTA_DADOS)
 
-logger.info(f"Dados consolidados para Zap.")
+#logger.info(f"Dados consolidados para Zap.")
 
-consolidar_jsons('olx', cidade, PASTA_DADOS)
+#consolidar_jsons('olx', cidade, PASTA_DADOS)
 
-logger.info(f"Dados consolidados para Olx.")
+#logger.info(f"Dados consolidados para Olx.")
 
-logger.info(f"Arquivos consolidados em: {PASTA_DADOS}")
+#logger.info(f"Arquivos consolidados em: {PASTA_DADOS}")
