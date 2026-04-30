@@ -67,7 +67,8 @@ def consolidar_jsons(fonte, cidade, PASTA_DADOS):
                 except Exception as e:
                     print(f"   Erro ao excluir {arquivo_velho}: {e}")
         
-        
+            with open(caminho_final, 'w', encoding='utf-8') as f_out:
+                json.dump(dados_consolidados, f_out, indent=4, ensure_ascii=False)
             
             print("✨ Limpeza concluída com sucesso!")
         else:
@@ -141,8 +142,12 @@ def consolidar_parquet(fonte, cidade, PASTA_DADOS):
                         print(f"   Erro ao excluir {arquivo_velho}: {e}")
             
             print("✨ Limpeza concluída com sucesso!")
+            
+            df_consolidado.to_parquet(caminho_final, index=False, compression='snappy')
+        
         else:
             print("⚠️ Erro crítico: O arquivo final parece estar vazio. Abortando exclusão.")
+        
 
     except Exception as e:
         print(f"❌ Erro na união ou salvamento: {e}")
