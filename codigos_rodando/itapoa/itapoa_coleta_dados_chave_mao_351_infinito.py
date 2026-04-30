@@ -27,15 +27,19 @@ sys.path.append(str(Path(__file__).parent.parent))
 from scraping_zap_imoveis import ChavesMaoColeta
 
 
-URL_TEMPLATE = "https://www.chavesnamao.com.br/imoveis-a-venda/sc-itapoa/?pg={pagina}"
+#URL_TEMPLATE = "https://www.chavesnamao.com.br/imoveis-a-venda/sc-itapoa/?pg={pagina}"
+
+URL_TEMPLATE = "https://www.chavesnamao.com.br/imoveis/sc-itapoa/?filtro=amin%3A{min}%2Camax%3A{max}%2Camax%3A&pg={pagina}"
+
 
 now = time.strftime("%Y-%m")
 
 total_paginas = 100
 
-area_ranges = {'0': '60','61': '90',
-               '71': '90','91': '110','111': '120','121': '130','131': '150','151': '180',
-               '181': '210','211': '30000000'
+area_ranges = {#'0': '60','61': '90',
+               #'71': '90','91': '110',
+               #'111': '120','121': '130','131': '150','151': '180',
+               '351': '500','501': '300000000'
                }
 
 headless = os.getenv("HEADLESS", "True").lower() == "true"
