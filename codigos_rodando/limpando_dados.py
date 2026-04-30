@@ -331,9 +331,15 @@ def limpando_dados(name_arquivo_zap : str,
                    axis=0, ignore_index=True)
     
     logger.info(f"Total de registros carregados: {len(df)} (zap: {len(df_zap)} | vivareal: {len(df_vivareal)} | chave_mao: {len(df_chave_mao)} | olx: {len(df_olx)})")
-
+    
+    logger.info(f"Filtrando por cidade: {cidade_limpeza}...")
+    
+    df_cidade = df[df['cidade'].isin([cidade_limpeza])]
+    
+    logger.info(f"Registros após filtro de cidade: {len(df_cidade)} | Registros removidos: {len(df) - len(df_cidade)}")
+    
     # Limpeza
-    df_limpo = asyncio.run(limpando_dados_cidades(df, 
+    df_limpo = asyncio.run(limpando_dados_cidades(df_cidade, 
                                         batch = batch, 
                                         cidade_limpeza= cidade_limpeza, 
                                         cidade_localizacao= cidade_localizacao,

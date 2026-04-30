@@ -381,7 +381,7 @@ class TratadorEnderecoOLX:
         
         return self._normalizar(rua_limpa) or "s/r"
 
-    def tratar(self, endereco_raw: str) -> dict:
+    """def tratar(self, endereco_raw: str) -> dict:
         if not endereco_raw:
             return self._vazio()
 
@@ -424,8 +424,63 @@ class TratadorEnderecoOLX:
                 'estado': self._normalizar(self.estado) or "s/e",
                 'cep':    cep
             }
+            
+            
 
         except Exception:
+            return self._vazio()
+    
+        """
+    
+    def tratar(self, endereco_raw: str) -> dict:
+        if not endereco_raw:
+            return self._vazio()
+
+        # Split por vírgula e limpeza de espaços
+        partes = [p.strip() for p in endereco_raw.split(',') if p.strip()]
+        
+        rua = "s/r"
+        bairro = "s/b"
+        cidade = "s/c"
+        estado = "s/e"
+        cep = "s/c"
+
+        try:
+            # 1. Extrair CEP (sempre o último se tiver 8 dígitos)
+            if partes and partes[-1].isdigit() and len(partes[-1]) == 8:
+                cep = partes.pop(-1)
+
+            # 2. Extrair Estado (agora é o último após tirar o CEP)
+            if partes and len(partes[-1]) == 2: # Ex: SC, PR
+                estado = partes.pop(-1)
+
+            # 3. Extrair Cidade (o que sobrou por último agora)
+            if partes:
+                cidade = partes.pop(-1)
+
+            # 4. O que sobrou na lista agora é [Rua, Bairro] ou apenas [Bairro]
+            if len(partes) >= 2:
+                # Caso: ['Rua 904', 'Centro']
+                rua = partes[0]
+                bairro = partes[-1]
+            elif len(partes) == 1:
+                # Caso: ['Centro']
+                bairro = partes[0]
+                rua = "s/r"
+
+            # Limpeza de parênteses extras no bairro (comum na OLX)
+            bairro = re.sub(r'\s*\(.*\)', '', bairro)
+
+            return {
+                'rua':    self._limpar_prefixo_rua(rua),
+                'numero': 's/n',
+                'bairro': self._normalizar(bairro) or "s/b",
+                'cidade': self._normalizar(cidade) or "s/c",
+                'estado': self._normalizar(estado) or "s/e",
+                'cep':    cep
+            }
+        except Exception as e:
+            logger.error(f"Erro ao tratar endereço '{endereco_raw}': {e}")
             return self._vazio()
 
     def _vazio(self) -> dict:

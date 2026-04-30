@@ -21,7 +21,7 @@ warnings.filterwarnings("ignore")
 
 cidade = os.getenv("CIDADE_PASTA")
 
-cidade_limpeza      =  os.getenv("BATCH_LIMPEZA")
+cidade_limpeza      =  os.getenv("CIDADE_LIMPEZA")
 
 cidade_localizacao  =  os.getenv("CIDADE_LOCALIZACAO")
 

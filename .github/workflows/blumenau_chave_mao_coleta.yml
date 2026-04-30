@@ -5,20 +5,26 @@ on:
   workflow_dispatch: 
 
 jobs:
-  coleta_chave_mao_blumenau_0_100:
+  coleta_chave_mao_blumenau_0_75:
     uses: ./.github/workflows/pipeline_cidade_rodando.yml
     with:
       cidade_pasta: blumenau
-      arquivo_rodando_imovel: blumenau_coleta_dados_chave_mao_0_100.py
+      arquivo_rodando_imovel: blumenau_coleta_dados_chave_mao_0_75.py
   
-  coleta_chave_mao_blumenau_101_220:
+  coleta_chave_mao_blumenau_76_140:
     uses: ./.github/workflows/pipeline_cidade_rodando.yml
     with:
       cidade_pasta: blumenau
-      arquivo_rodando_imovel: blumenau_coleta_dados_chave_mao_101_220.py
+      arquivo_rodando_imovel: blumenau_coleta_dados_chave_mao_76_140.py
 
-  coleta_chave_mao_blumenau_221_infinito:
+  coleta_chave_mao_blumenau_141_350:
     uses: ./.github/workflows/pipeline_cidade_rodando.yml
     with:
       cidade_pasta: blumenau
-      arquivo_rodando_imovel: blumenau_coleta_dados_chave_mao_221_infinito.py
+      arquivo_rodando_imovel: blumenau_coleta_dados_chave_mao_141_350.py
+
+  coleta_chave_mao_blumenau_351_infinito:
+    uses: ./.github/workflows/pipeline_cidade_rodando.yml
+    with:
+      cidade_pasta: blumenau
+      arquivo_rodando_imovel: blumenau_coleta_dados_chave_mao_351_infinito.py
