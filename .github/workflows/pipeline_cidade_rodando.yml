@@ -40,7 +40,7 @@ on:
       max_concurrency_localizacao:
         required: false
         type: number
-        default: 40
+        default: 20
       batch_limpeza:
         required: false
         type: number
