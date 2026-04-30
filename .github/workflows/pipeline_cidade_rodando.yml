@@ -44,7 +44,7 @@ on:
       batch_limpeza:
         required: false
         type: number
-        default: 20
+        default: 10
       tipo_async:
         required: false
         type: boolean
