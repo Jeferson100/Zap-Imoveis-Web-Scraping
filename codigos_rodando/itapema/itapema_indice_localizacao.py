@@ -34,7 +34,9 @@ output_file   = PASTA_DADOS / f'{cidade}_com_ind_local_{data_mais_recente}.parqu
 
 pd_data = pd.read_parquet(arquivo_mais_recente)
 
-max_concurrent= os.getenv("MAX_CONCURRENCY_LOCALIZACAO")
+#max_concurrent= os.getenv("MAX_CONCURRENCY_LOCALIZACAO")
+
+max_concurrent=int(os.getenv("MAX_CONCURRENCY", "100"))
 
 pd_data_com_indice = criando_indice_cidades(pd_data, max_concurrent) 
 
