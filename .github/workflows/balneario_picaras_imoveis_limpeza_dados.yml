@@ -13,7 +13,7 @@ jobs:
     with:
       cidade_pasta: balneario_picaras
       arquivo_rodando_imovel: balneario_picaras_limpando_dados.py
-      cidade_limpeza: balneario_picaras
-      cidade_localizacao: Balneario Picaras
+      cidade_limpeza: balneario picarras
+      cidade_localizacao: Balneario Picarras
       estado_limpeza: sc
       estado_localizacao: SC
