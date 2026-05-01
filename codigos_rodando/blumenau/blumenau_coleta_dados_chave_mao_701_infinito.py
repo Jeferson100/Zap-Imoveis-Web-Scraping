@@ -4,17 +4,17 @@ from pathlib import Path
 import time
 import os
 
-import logging
-
-logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
-
-logger = logging.getLogger(__name__)
-
 from dotenv import load_dotenv
 
 load_dotenv()
 
 BASE_DIR    = Path(__file__).parent.parent.parent  
+
+import logging
+
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+
+logger = logging.getLogger(__name__)
 
 cidade = os.getenv("CIDADE_PASTA")
 
@@ -26,23 +26,20 @@ sys.path.append(str(Path(__file__).parent.parent))
 
 from scraping_zap_imoveis import ChavesMaoColeta
 
-#URL_TEMPLATE = "https://www.chavesnamao.com.br/imoveis-a-venda/sc-jaragua-do-sul/?pg={pagina}"
-
-URL_TEMPLATE = "https://www.chavesnamao.com.br/imoveis/sc-jaragua-do-sul/?filtro=amin%3A{min}%2Camax%3A{max}&pg={pagina}"
+#URL_TEMPLATE = "https://www.chavesnamao.com.br/imoveis-a-venda/sc-blumenau/?pg={pagina}"
+URL_TEMPLATE = "https://www.chavesnamao.com.br/imoveis/sc-blumenau/?filtro=amin%3A{min}%2Camax%3A{max}&pg={pagina}"
 
 now = time.strftime("%Y-%m")
 
 total_paginas = 100
 
-area_ranges = {'0': '65',
-               '66': '100',
-               '101': '200',
-               '201': '300',
-               '301': '400',
-               '401': '500',
-               '501': '600',
-               '601': '3000000'
+area_ranges = { #'0': '50','51': '65','66': '80','81': '100',
+               #'101': '130','131': '170','171' : '220',
+               #'221': '300',
+               #'351': '400','401': '600',
+               '701': '1600','1601': '300000000',
                }
+
 
 headless = os.getenv("HEADLESS", "True").lower() == "true"
 
