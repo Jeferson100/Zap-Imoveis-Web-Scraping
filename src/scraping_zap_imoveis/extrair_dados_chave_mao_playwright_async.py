@@ -1,4 +1,3 @@
-from matplotlib import use
 import asyncio
 import re
 import logging
