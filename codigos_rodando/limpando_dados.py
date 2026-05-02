@@ -407,4 +407,43 @@ def limpando_dados(name_arquivo_zap : str,
         logger.error("❌ DataFrame limpo está vazio. Operação de deleção abortada.")
     
     logger.info("Processo de limpeza de dados concluído.")
+    
+    
+
+def criar_area_ranges(inicio_total: int, fim_total: int, regras_intervalo: list):
+    """
+    Cria dicionário de ranges seguindo a lógica: inicio = fim_anterior + 1.
+    
+    regras_intervalo: Lista de tuplas (ate_qual_area, tamanho_do_passo)
+    Ex: [(100, 5), (500, 50)] -> Ate 100m² pula de 5 em 5. Ate 500m² pula de 50 em 50.
+    """
+    ranges = {}
+    atual = inicio_total
+    
+    # Ordena as regras pelo limite de área para garantir a lógica
+    regras_intervalo.sort(key=lambda x: x[0])
+    
+    for limite, passo in regras_intervalo:
+        while atual <= limite and atual < fim_total:
+            inicio = atual
+            fim = atual + passo
+            
+            # Garante que não ultrapasse o limite atual da regra nem o fim total
+            if fim > limite:
+                fim = limite
+            if fim > fim_total:
+                fim = fim_total
+                
+            ranges[str(inicio)] = str(fim)
+            
+            # Regra: Próximo inicio = fim anterior + 1
+            atual = fim + 1
+            
+    # Caso o fim_total seja muito grande (o "infinito" da busca)
+    # Adicionamos o último range manualmente se ainda não chegamos lá
+    if atual <= fim_total:
+        ranges[str(atual)] = str(fim_total)
+        
+    return ranges
+
 
