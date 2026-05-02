@@ -14,22 +14,6 @@ warnings.filterwarnings("ignore")
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
 logger = logging.getLogger(__name__)
 
-import asyncio
-import logging
-import json
-import warnings
-from .extrair_dados_olx_playwright_async import OLXScraperAsync
-from .link_anuncios_olx_playwright_async import OLXScraperLinksAsync
-from tqdm.asyncio import tqdm  # Versão assíncrona do tqdm
-import sys
-import random
-import pandas as pd
-
-warnings.filterwarnings("ignore")
-
-logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
-logger = logging.getLogger(__name__)
-
 """class OLXColeta:
     def __init__(self, base_url_template, headless=True, max_concurrency=5, retries=1, termos_para_ignorar_links: list = None):
         self.base_url_template = base_url_template

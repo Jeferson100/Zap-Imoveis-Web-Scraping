@@ -1,4 +1,4 @@
-from pycurl import URL
+#from pycurl import URL
 import asyncio
 import sys
 from pathlib import Path
