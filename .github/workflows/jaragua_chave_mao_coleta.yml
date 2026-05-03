@@ -1,0 +1,19 @@
+name: Rodando Coleta Chave Mao Jaragua
+on:
+  schedule:
+    - cron: '0 9 1 1,2,3,4,5,6,7,8,9,10,11,12 *'  # 09:00 no primeiro dia de cada mês
+  workflow_dispatch:
+
+jobs:
+  coleta_chave_mao_0_200:
+    uses: ./.github/workflows/pipeline_cidade_rodando.yml
+    with:
+      cidade_pasta: jaragua
+      arquivo_rodando_imovel: jaragua_coleta_dados_chave_mao_0_200.py
+
+  
+  coleta_chave_mao_201_infinito:
+    uses: ./.github/workflows/pipeline_cidade_rodando.yml
+    with:
+      cidade_pasta: jaragua
+      arquivo_rodando_imovel: jaragua_coleta_dados_chave_mao_201_infinito.py
