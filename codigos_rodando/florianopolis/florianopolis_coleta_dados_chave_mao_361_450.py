@@ -35,10 +35,10 @@ from scraping_zap_imoveis import ChavesMaoColeta
 URL_TEMPLATE = "https://www.chavesnamao.com.br/imoveis/sc-florianopolis/?filtro=amin%3A{min}%2Camax%3A{max}&pg={pagina}"
 
 area_ranges = criar_area_ranges(
-    inicio_total=551,
-    fim_total=30000000,
+    inicio_total=361,
+    fim_total=450,
     regras_intervalo=[
-        (2000, 100),
+        (450, 20),
     ]
 )
 
