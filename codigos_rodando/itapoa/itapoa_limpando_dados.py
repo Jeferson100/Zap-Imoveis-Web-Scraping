@@ -43,6 +43,38 @@ PASTA_DADOS.mkdir(parents=True, exist_ok=True)
 logger.info(f"Os parametros de limpeza são: cidade_limpeza={cidade_limpeza}, cidade_localizacao={cidade_localizacao}, estado_limpeza={estado_limpeza}, estado_localizacao={estado_localizacao}, BATCH={BATCH}")
 
 MAPA_BAIRROS = {
+    'rainha' : ['rainha do mar', 'rainha'],
+    'cambiju': ['cambiju'],
+    'continental': ['continental'],
+    's/b' : ['itapoa', 'localizacao'],
+    'pontal': [
+        'pontal', 'pontal do norte', 'figueira do pontal', 
+        'figueira de itapoa ii', 'farol de itapoa', 'recanto do farol', 
+        'rosa dos ventos', 'balneario rosa dos ventos', 'ipacaray','balneario tomazelli',
+    'tomazelli'
+    ],
+    'itapema do norte': [
+        'itapema do norte', 'brasilia', 'balneario brasilia', 
+        'balneario londrina', 'praia das palmeiras', '1 de julho', 'estrela', 'balneario do principe', 'santa clara'
+    ],
+    'paese': [
+        'paese', 'volta ao mundo', 'volta ao mundo i', 
+        'balneario do parque', 'parque i', 'bahamas i', 'bahamas iii'
+    ],
+    'barra_do_sai': [
+        'barra do sai', 'itapema do sai', 'sai mirim', 
+        'jardim da barra', 'balneario diamantina', 'diamantina', 'balneario nascimento', 'praia dos veleiros'
+    ],
+    'jardim perola do atlantico' : ['perola do atlantico'],
+    
+    'jardim verdes mares' : ['verdes mares'],
+    
+    'centro': [
+        'centro', 'anexo b1', 'rio gracioso'
+    ],
+    'alvorada' : ['alvorada'], 
+    'bamerindus':['uirapuru'],
+    'princesa do mar' : ['princesa do mar']
 
 }
 
