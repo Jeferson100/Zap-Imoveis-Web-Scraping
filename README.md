@@ -1,6 +1,6 @@
 # Preço Imóveis 🏠
 
-[![Streamlit](https://img.shields.io/badge/Streamlit-100000?style=for-the-badge&logo=streamlit&logoColor=white)](https://santa-catarina-zap-imoveis.streamlit.app/) 
+[![Streamlit](https://img.shields.io/badge/Streamlit-100000?style=for-the-badge&logo=streamlit&logoColor=white)](https://preco-imoveis.streamlit.app/) 
 [![Python](https://img.shields.io/badge/Python-3.12+-3776ab?style=for-the-badge&logo=python&logoColor=white)](https://python.org)
 [![License](https://img.shields.io/badge/License-MIT-green?style=for-the-badge)](LICENSE)
 [![Playwright](https://img.shields.io/badge/Playwright-45B7D1?style=for-the-badge&logo=microsoft&logoColor=white)](https://playwright.dev/python/)
