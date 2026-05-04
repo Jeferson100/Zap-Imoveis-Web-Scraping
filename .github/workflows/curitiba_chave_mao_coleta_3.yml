@@ -1,0 +1,39 @@
+name: Rodando Coleta Chave Mao Curitiba 3
+on: 
+  workflow_run:
+        workflows: ["Rodando Coleta Chave Mao Curitiba 2"]
+        types:
+            - completed
+  workflow_dispatch:
+
+jobs:
+  coleta_chave_mao_191_250:
+    uses: ./.github/workflows/pipeline_cidade_rodando.yml
+    with:
+      cidade_pasta: curitiba
+      arquivo_rodando_imovel: curitiba_coleta_dados_chave_mao_191_250.py
+
+  coleta_chave_mao_251_360:
+    uses: ./.github/workflows/pipeline_cidade_rodando.yml
+    with:
+      cidade_pasta: curitiba
+      arquivo_rodando_imovel: curitiba_coleta_dados_chave_mao_251_360.py
+  
+  coleta_chave_mao_361_450:
+    uses: ./.github/workflows/pipeline_cidade_rodando.yml
+    with:
+      cidade_pasta: curitiba
+      arquivo_rodando_imovel: curitiba_coleta_dados_chave_mao_361_450.py
+
+  coleta_chave_mao_451_700:
+    uses: ./.github/workflows/pipeline_cidade_rodando.yml
+    with:
+      cidade_pasta: curitiba
+      arquivo_rodando_imovel: curitiba_coleta_dados_chave_mao_451_700.py
+
+  coleta_chave_mao_701_infinito:
+    uses: ./.github/workflows/pipeline_cidade_rodando.yml
+    with:
+      cidade_pasta: curitiba
+      arquivo_rodando_imovel: curitiba_coleta_dados_chave_mao_701_infinito.py
+ 
