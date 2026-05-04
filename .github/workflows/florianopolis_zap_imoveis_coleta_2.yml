@@ -7,27 +7,27 @@ on:
   workflow_dispatch:
 
 jobs:
-  coleta_chave_mao_131_180:
+  coleta_zap_imoveis_131_180:
     uses: ./.github/workflows/pipeline_cidade_rodando.yml
     with:
       cidade_pasta: florianopolis
-      arquivo_rodando_imovel: florianopolis_coleta_dados_chave_mao_131_180.py
+      arquivo_rodando_imovel: florianopolis_coleta_dados_zap_imoveis_131_180.py
 
-  coleta_chave_mao_181_250:
+  coleta_zap_imoveis_181_250:
     uses: ./.github/workflows/pipeline_cidade_rodando.yml
     with:
       cidade_pasta: florianopolis
-      arquivo_rodando_imovel: florianopolis_coleta_dados_chave_mao_181_250.py
+      arquivo_rodando_imovel: florianopolis_coleta_dados_zap_imoveis_181_250.py
   
-  coleta_chave_mao_251_400:
+  coleta_zap_imoveis_251_400:
     uses: ./.github/workflows/pipeline_cidade_rodando.yml
     with:
       cidade_pasta: florianopolis
-      arquivo_rodando_imovel: florianopolis_coleta_dados_chave_mao_251_400.py
+      arquivo_rodando_imovel: florianopolis_coleta_dados_zap_imoveis_251_400.py
 
-  coleta_chave_mao_401_infinito:
+  coleta_zap_imoveis_401_infinito:
     uses: ./.github/workflows/pipeline_cidade_rodando.yml
     with:
       cidade_pasta: florianopolis
-      arquivo_rodando_imovel: florianopolis_coleta_dados_chave_mao_401_infinito.py
+      arquivo_rodando_imovel: florianopolis_coleta_dados_zap_imoveis_401_infinito.py
 
