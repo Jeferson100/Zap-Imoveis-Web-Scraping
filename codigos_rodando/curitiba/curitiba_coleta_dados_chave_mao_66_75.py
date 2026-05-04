@@ -1,6 +1,9 @@
 import asyncio
 import sys
 from pathlib import Path
+import asyncio
+import sys
+from pathlib import Path
 import time
 import os
 
@@ -32,13 +35,15 @@ sys.path.append(str(Path(__file__).parent.parent))
 
 from scraping_zap_imoveis import ChavesMaoColeta
 
-URL_TEMPLATE = "https://www.chavesnamao.com.br/imoveis/sc-florianopolis/?filtro=amin%3A{min}%2Camax%3A{max}&pg={pagina}"
+#URL_TEMPLATE = "https://www.chavesnamao.com.br/imoveis-a-venda/pr-curitiba/?pg={pagina}"
+
+URL_TEMPLATE = "https://www.chavesnamao.com.br/imoveis-a-venda/pr-curitiba/?filtro=amin%3A{min}%2Camax%3A{max}&pg={pagina}"
 
 area_ranges = criar_area_ranges(
-    inicio_total=361,
-    fim_total=550,
+    inicio_total=66,
+    fim_total=75,
     regras_intervalo=[
-        (550, 20),
+        (75, 2),
     ]
 )
 
