@@ -1,0 +1,16 @@
+name: Rodando Limpeza Imoveis Florianopolis
+on: 
+  schedule:
+    - cron: '0 9 13 1,2,3,4,5,6,7,8,9,10,11,12 *'  # 09:00 no primeiro dia de cada mês
+  workflow_dispatch:
+
+jobs:
+  coleta_limpando_dados_itajai:
+    uses: ./.github/workflows/pipeline_cidade_rodando.yml
+    with:
+      cidade_pasta: florianopolis
+      arquivo_rodando_imovel: florianopolis_limpando_dados.py
+      cidade_limpeza: florianopolis
+      cidade_localizacao: Florianopolis
+      estado_limpeza: sc
+      estado_localizacao: SC

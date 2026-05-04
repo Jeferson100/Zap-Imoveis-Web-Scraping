@@ -43,6 +43,11 @@ logger.info(f"Os parametros de limpeza são: cidade_limpeza={cidade_limpeza}, c
 PASTA_DADOS.mkdir(parents=True, exist_ok=True)
 
 MAPA_BAIRROS = {
+    
+    'meia praia' : ['meia praia', 'meia-praia'],
+    'morretes': ['morretes', 'loteamento morretes'],
+    'jardim praia mar' : ['jardim praia mar', 'jardim-praia-mar'],
+    'centro' : ['centro'],
 
 }
 limpando_dados(name_arquivo_zap = f'{cidade}_zap_*.parquet', 

@@ -19,15 +19,21 @@ jobs:
       cidade_pasta: florianopolis
       arquivo_rodando_imovel: florianopolis_coleta_dados_chave_mao_251_360.py
   
-  coleta_chave_mao_361_550:
+  coleta_chave_mao_361_450:
     uses: ./.github/workflows/pipeline_cidade_rodando.yml
     with:
       cidade_pasta: florianopolis
-      arquivo_rodando_imovel: florianopolis_coleta_dados_chave_mao_361_550.py
+      arquivo_rodando_imovel: florianopolis_coleta_dados_chave_mao_361_450.py
 
-  coleta_chave_mao_551_infinito:
+  coleta_chave_mao_451_700:
     uses: ./.github/workflows/pipeline_cidade_rodando.yml
     with:
       cidade_pasta: florianopolis
-      arquivo_rodando_imovel: florianopolis_coleta_dados_chave_mao_551_infinito.py
+      arquivo_rodando_imovel: florianopolis_coleta_dados_chave_mao_451_700.py
+
+  coleta_chave_mao_701_infinito:
+    uses: ./.github/workflows/pipeline_cidade_rodando.yml
+    with:
+      cidade_pasta: florianopolis
+      arquivo_rodando_imovel: florianopolis_coleta_dados_chave_mao_701_infinito.py
  

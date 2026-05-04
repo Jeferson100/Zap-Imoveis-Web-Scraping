@@ -81,6 +81,6 @@ for area_min, area_max in area_ranges.items():
 logger.info(f"Arquivo de dados gerado em: {output_file}")
 
 #consolidar_jsons('vivareal', cidade, PASTA_DADOS)
-consolidar_parquet('vivareal', cidade, PASTA_DADOS)
+#consolidar_parquet('vivareal', cidade, PASTA_DADOS)
 
 logger.info(f"Arquivos consolidados em: {PASTA_DADOS}")
