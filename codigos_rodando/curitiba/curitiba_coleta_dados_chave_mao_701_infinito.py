@@ -39,16 +39,14 @@ from scraping_zap_imoveis import ChavesMaoColeta
 
 URL_TEMPLATE = "https://www.chavesnamao.com.br/imoveis-a-venda/pr-curitiba/?filtro=amin%3A{min}%2Camax%3A{max}&pg={pagina}"
 
-
 area_ranges = criar_area_ranges(
-    inicio_total=0,
+    inicio_total=701,
     fim_total=30000000,
     regras_intervalo=[
-        (200, 2),
-        (500, 10),
-        (2000, 100)
+        (2000, 100),
     ]
 )
+
 
 headless = os.getenv("HEADLESS", "True").lower() == "true"
 
@@ -80,6 +78,6 @@ for min_area, max_area in area_ranges.items():
 
 logger.info(f"Arquivo de dados gerado em: {output_file}")
 
-consolidar_parquet('chave_mao', cidade, PASTA_DADOS)
+#consolidar_parquet('chave_mao', cidade, PASTA_DADOS)
 
 logger.info(f"Arquivos consolidados em: {PASTA_DADOS}")
