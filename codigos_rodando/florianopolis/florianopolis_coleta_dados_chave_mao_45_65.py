@@ -72,6 +72,4 @@ for min_area, max_area in area_ranges.items():
 
 logger.info(f"Arquivo de dados gerado em: {output_file}")
 
-consolidar_parquet('chave_mao', cidade, PASTA_DADOS)
 
-logger.info(f"Arquivos consolidados em: {PASTA_DADOS}")
