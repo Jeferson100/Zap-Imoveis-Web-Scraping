@@ -1,3 +1,4 @@
+
 import asyncio
 import sys
 from pathlib import Path
@@ -21,59 +22,56 @@ logger = logging.getLogger(__name__)
 
 load_dotenv()
 
-BASE_DIR    = Path(__file__).parent.parent.parent  
+BASE_DIR  = Path(__file__).parent.parent.parent
+
 
 cidade = os.getenv("CIDADE_PASTA")
 
-
 PASTA_DADOS = BASE_DIR / 'dados' / cidade
+
 PASTA_DADOS.mkdir(parents=True, exist_ok=True)   
 
 sys.path.append(str(Path(__file__).parent.parent))
 
-from scraping_zap_imoveis import VivaRealColeta
+from scraping_zap_imoveis import ZapImoveisColeta
 
-URL_TEMPLATE = "https://www.vivareal.com.br/venda/parana/curitiba/?onde=%2CParan%C3%A1%2CCuritiba%2C%2C%2C%2C%2Ccity%2CBR%3EParana%3ENULL%3ECuritiba%2C-25.437238%2C-49.269973%2C&pagina={pagina}"
+URL_TEMPLATE = "https://www.zapimoveis.com.br/venda/imoveis/pr+curitiba/?pagina={pagina}"
 
 sys.path.append('..')
     
 now = time.strftime("%Y-%m")
 
-config_intervalos = [
-    (60, 5),
-    (150,2),
-    (300, 10),
-    (500, 20),
-    (1000, 50),
-    (2000, 1000),
-   
-]
-
 area_ranges = criar_area_ranges(
-    inicio_total=0, 
-    fim_total=30000000, 
-    regras_intervalo=config_intervalos
+    inicio_total=141, 
+    fim_total=180, 
+    regras_intervalo=[(150, 2),
+                      (180,10)]
 )
-total_paginas = 50
 
-output_file   = PASTA_DADOS / f'{cidade}_vivareal_{now}.parquet' 
+total_paginas = 50
 
 headless = os.getenv("HEADLESS", "True").lower() == "true"
 
 max_concurrency = int(os.getenv("MAX_CONCURRENCY", "3"))
 
 for area_min, area_max in area_ranges.items():
+    
+    logger.info(f"Coletando dados de {area_min} a {area_max}")
 
-    output_file   = PASTA_DADOS / f'{cidade}_vivareal_{now}_{area_min}_{area_max}.parquet' 
+    output_file   = PASTA_DADOS / f'{cidade}_zap_{now}_{area_min}_{area_max}.parquet' 
+    
+    logger.info(f"Arquivo de dados gerado em: {output_file}")
 
     URL_TEMPLATE_NEW = URL_TEMPLATE.replace(
         "{pagina}", 
         f"{{pagina}}&areaMaxima={area_max}&areaMinima={area_min}"
         )
     
-    orchestrator = VivaRealColeta(URL_TEMPLATE_NEW, 
+    orchestrator = ZapImoveisColeta(URL_TEMPLATE_NEW, 
                                   headless=headless,
-                                  max_concurrency=max_concurrency
+                                  max_concurrency=max_concurrency,
+                                  retries=1,
+                                  max_concurrency_links=1
                                   )
 
     resultado = asyncio.run(orchestrator.run(
@@ -81,10 +79,9 @@ for area_min, area_max in area_ranges.items():
         total_pages=total_paginas,
     ))
 
-
 logger.info(f"Arquivo de dados gerado em: {output_file}")
 
-#consolidar_jsons('vivareal', cidade, PASTA_DADOS)
-consolidar_parquet('vivareal', cidade, PASTA_DADOS)
+#consolidar_jsons('zap', cidade, PASTA_DADOS)
+#consolidar_parquet('zap', cidade, PASTA_DADOS)
 
 logger.info(f"Arquivos consolidados em: {PASTA_DADOS}")

@@ -39,21 +39,13 @@ sys.path.append('..')
     
 now = time.strftime("%Y-%m")
 
-config_intervalos = [
-    (60, 5),
-    (150,2),
-    (300, 10),
-    (500, 20),
-    (1000, 50),
-    (2000, 1000),
-   
-]
 
 area_ranges = criar_area_ranges(
     inicio_total=0, 
-    fim_total=30000000, 
-    regras_intervalo=config_intervalos
+    fim_total=50, 
+    regras_intervalo=[(50, 5)]
 )
+
 total_paginas = 50
 
 output_file   = PASTA_DADOS / f'{cidade}_vivareal_{now}.parquet' 
@@ -85,6 +77,6 @@ for area_min, area_max in area_ranges.items():
 logger.info(f"Arquivo de dados gerado em: {output_file}")
 
 #consolidar_jsons('vivareal', cidade, PASTA_DADOS)
-consolidar_parquet('vivareal', cidade, PASTA_DADOS)
+#consolidar_parquet('vivareal', cidade, PASTA_DADOS)
 
 logger.info(f"Arquivos consolidados em: {PASTA_DADOS}")
