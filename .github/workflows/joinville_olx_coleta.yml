@@ -1,6 +1,5 @@
 name: Rodando Coleta Olx Joinville
 on: 
-
     workflow_run:
         workflows: ["Rodando Coleta Chave Mao Joinville"]
         types:

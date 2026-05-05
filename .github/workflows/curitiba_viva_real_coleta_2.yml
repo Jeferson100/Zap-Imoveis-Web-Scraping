@@ -1,0 +1,33 @@
+name: Rodando Coleta Viva Real Curitiba 2
+on: 
+  workflow_run:
+        workflows: ["Rodando Coleta Viva Real Curitiba 1"]
+        types:
+            - completed
+  workflow_dispatch:
+
+jobs:
+  coleta_viva_real_141_180:
+    uses: ./.github/workflows/pipeline_cidade_rodando.yml
+    with:
+      cidade_pasta: curitiba
+      arquivo_rodando_imovel: curitiba_coleta_dados_viva_real_141_180.py
+
+  coleta_viva_real_181_250:
+    uses: ./.github/workflows/pipeline_cidade_rodando.yml
+    with:
+      cidade_pasta: curitiba
+      arquivo_rodando_imovel: curitiba_coleta_dados_viva_real_181_250.py
+  
+  coleta_viva_real_251_430:
+    uses: ./.github/workflows/pipeline_cidade_rodando.yml
+    with:
+      cidade_pasta: curitiba
+      arquivo_rodando_imovel: curitiba_coleta_dados_viva_real_251_430.py
+
+  coleta_viva_real_431_infinito:
+    uses: ./.github/workflows/pipeline_cidade_rodando.yml
+    with:
+      cidade_pasta: curitiba
+      arquivo_rodando_imovel: curitiba_coleta_dados_viva_real_431_infinito.py
+
