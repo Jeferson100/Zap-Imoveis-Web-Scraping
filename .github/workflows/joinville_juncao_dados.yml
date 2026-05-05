@@ -1,11 +1,8 @@
 name: Rodando Juncao Dados Joinville
 on: 
-
-    workflow_run:
-        workflows: ["Rodando Coleta Viva Real Joinville"]
-        types:
-            - completed
-    workflow_dispatch:
+  schedule:
+    - cron: '0 9 2 1,2,3,4,5,6,7,8,9,10,11,12 *'  # 09:00 no primeiro dia de cada mês
+  workflow_dispatch:
 
 jobs:
   pipeline:
