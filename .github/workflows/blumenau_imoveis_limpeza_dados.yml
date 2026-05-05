@@ -17,3 +17,4 @@ jobs:
       cidade_localizacao: Blumenau
       estado_limpeza: sc
       estado_localizacao: SC
+      tipo_async : true
