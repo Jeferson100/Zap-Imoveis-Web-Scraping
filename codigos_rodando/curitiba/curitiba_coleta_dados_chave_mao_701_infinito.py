@@ -43,7 +43,8 @@ area_ranges = criar_area_ranges(
     inicio_total=701,
     fim_total=30000000,
     regras_intervalo=[
-        (2000, 100),
+        (1500, 150),
+        (10000, 1000),
     ]
 )
 
