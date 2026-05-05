@@ -7,6 +7,8 @@ sys.path.append(str(Path(__file__).parent.parent))
 
 from unificando_dados import consolidar_jsons, consolidar_parquet
 
+from limpando_dados import criar_area_ranges
+
 import os
 
 from dotenv import load_dotenv
@@ -37,14 +39,21 @@ sys.path.append('..')
     
 now = time.strftime("%Y-%m")
 
-area_ranges = {
-               '0': '25','26': '34','35': '43','44': '50', '51': '55','56': '60','61': '64','65': '68','69': '70','71': '74','75': '77','78': '80',
-               '81': '84','88': '89','90': '94','95': '99','100': '104','105': '110','111': '116','117': '122','123': '129','130': '135','136': '145',
-               '146': '155','156': '165','166': '177','178': '190',
-               '191': '205','206': '220','221': '240','241': '265','266': '295','296': '320','321': '355','356': '390',
-               '391': '440','441': '490','491': '600','601': '900','901': '2000','2001': '3000000'
-               }
+config_intervalos = [
+    (60, 5),
+    (150,2),
+    (300, 10),
+    (500, 20),
+    (1000, 50),
+    (2000, 1000),
+   
+]
 
+area_ranges = criar_area_ranges(
+    inicio_total=0, 
+    fim_total=30000000, 
+    regras_intervalo=config_intervalos
+)
 total_paginas = 50
 
 output_file   = PASTA_DADOS / f'{cidade}_vivareal_{now}.parquet' 
