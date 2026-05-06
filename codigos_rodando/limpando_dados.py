@@ -262,12 +262,13 @@ def normalizar_bairros(bairro, mapeamento):
             
     return bairro 
         
-def limpando_dados(name_arquivo_zap : str, 
-         name_arquivo_vivareal: str, 
-         name_arquivo_chave_mao: str,
-         name_arquivo_olx: str,
+def limpando_dados(
          name_arquivo_saida: str,
-         pasta_dados : Path, 
+         pasta_dados : Path,
+         name_arquivo_zap : str = None, 
+         name_arquivo_vivareal: str = None, 
+         name_arquivo_chave_mao: str = None,
+         name_arquivo_olx: str = None, 
          batch: int = 1,
          tipo_async: bool = False,
          cidade_localizacao: str = 'Joinville', 
@@ -284,53 +285,62 @@ def limpando_dados(name_arquivo_zap : str,
 
     pasta_dados.mkdir(parents=True, exist_ok=True)
 
-    #df_zap, arquivo_zap      = carregar_json(pasta_dados, name_arquivo_zap)
-    df_zap, arquivo_zap      = carregar_parquet(pasta_dados, name_arquivo_zap)
-    
-    #df_vivareal, arquivo_vivareal = carregar_json(pasta_dados,name_arquivo_vivareal)
-    df_vivareal, arquivo_vivareal = carregar_parquet(pasta_dados, name_arquivo_vivareal)
-    
-    df_chave_mao, arquivo_chave_mao = carregar_parquet(pasta_dados, name_arquivo_chave_mao)
-    
-    df_olx, arquivo_olx = carregar_json(pasta_dados,name_arquivo_olx)
+    if name_arquivo_zap is not None:
+        df_zap, arquivo_zap      = carregar_parquet(pasta_dados, name_arquivo_zap)
+        if not df_zap.empty:
+            df_zap['fonte'] = 'zap_imoveis'
+        df_zap_endereco_limpo = df_zap['endereco'].apply(lambda x: limpa_endereco_apply_zap(x, cidade_limpeza, estado_limpeza))
+        df_zap_endereco =  pd.concat([df_zap, df_zap_endereco_limpo], axis=1)
+        logger.info(f"Quantidade de dados ZAP: {len(df_zap)}")
 
-    if not df_zap.empty:
-        df_zap['fonte'] = 'zap_imoveis'
-    if not df_vivareal.empty:
-        df_vivareal['fonte'] = 'viva_real'
-
-    if not df_chave_mao.empty:
-        df_chave_mao['fonte'] = 'chave_mao'
+        
+    if name_arquivo_vivareal is not None:
+        df_vivareal, arquivo_vivareal = carregar_parquet(pasta_dados, name_arquivo_vivareal)
+        if not df_vivareal.empty:
+            df_vivareal['fonte'] = 'viva_real'
+        df_vivareal_endereco_limpo = df_vivareal['endereco'].apply(lambda x: limpa_endereco_apply_zap(x, cidade_limpeza, estado_limpeza))
+        df_vivareal_endereco =  pd.concat([df_vivareal, df_vivareal_endereco_limpo], axis=1)
+        logger.info(f"Quantidade de dados Vivareal: {len(df_vivareal)}")
     
-    if not df_olx.empty:
-        df_olx['fonte'] = 'olx'
+    if name_arquivo_chave_mao is not None:
+        df_chave_mao, arquivo_chave_mao = carregar_parquet(pasta_dados, name_arquivo_chave_mao)
+        if not df_chave_mao.empty:
+            df_chave_mao['fonte'] = 'chave_mao'
+        df_chave_mao_endereco_limpo = df_chave_mao['endereco'].apply(lambda x: limpa_endereco_apply_chave_mao(x, cidade_limpeza, estado_limpeza))
+        df_chave_mao_endereco =  pd.concat([df_chave_mao, df_chave_mao_endereco_limpo], axis=1)
+        logger.info(f"Quantidade de dados Chave Mao: {len(df_chave_mao)}")
+    
+    if name_arquivo_olx is not None:
+        df_olx, arquivo_olx = carregar_json(pasta_dados,name_arquivo_olx)
+        if not df_olx.empty:
+            df_olx['fonte'] = 'olx'
+        df_olx_endereco_limpo = df_olx['endereco'].apply(lambda x: limpa_endereco_apply_olx(x, cidade_limpeza, estado_limpeza))
+        df_olx_endereco =  pd.concat([df_olx, df_olx_endereco_limpo], axis=1)
+        logger.info(f"Quantidade de dados OLX: {len(df_olx)}")
+    else:
+        logger.info("Arquivo de OLX não encontrado.")
 
     if df_zap.empty and df_vivareal.empty and df_chave_mao.empty and df_olx.empty:
         logger.error("Nenhum dado encontrado em nenhuma das fontes — abortando.")
         return
+    #df_zap_endereco_limpo = df_zap['endereco'].apply(lambda x: limpa_endereco_apply_zap(x, cidade_limpeza, estado_limpeza))
+    #df_vivareal_endereco_limpo = df_vivareal['endereco'].apply(lambda x: limpa_endereco_apply_zap(x, cidade_limpeza, estado_limpeza))
+    #df_chave_mao_endereco_limpo = df_chave_mao['endereco'].apply(lambda x: limpa_endereco_apply_chave_mao(x, cidade_limpeza, estado_limpeza))
+    #df_olx_endereco_limpo = df_olx['endereco'].apply(lambda x: limpa_endereco_apply_olx(x, cidade_limpeza, estado_limpeza))
     
-    #df_zap_endereco_limpo = df_zap['endereco'].apply(limpa_endereco_apply_zap)
-    #df_vivareal_endereco_limpo = df_vivareal['endereco'].apply(limpa_endereco_apply_zap)
-    #df_chave_mao_endereco_limpo = df_chave_mao['endereco'].apply(limpa_endereco_apply_chave_mao)
-    #df_olx_endereco_limpo = df_olx['endereco'].apply(limpa_endereco_apply_olx)
-    
-    df_zap_endereco_limpo = df_zap['endereco'].apply(lambda x: limpa_endereco_apply_zap(x, cidade_limpeza, estado_limpeza))
-    df_vivareal_endereco_limpo = df_vivareal['endereco'].apply(lambda x: limpa_endereco_apply_zap(x, cidade_limpeza, estado_limpeza))
-    df_chave_mao_endereco_limpo = df_chave_mao['endereco'].apply(lambda x: limpa_endereco_apply_chave_mao(x, cidade_limpeza, estado_limpeza))
-    df_olx_endereco_limpo = df_olx['endereco'].apply(lambda x: limpa_endereco_apply_olx(x, cidade_limpeza, estado_limpeza))
-    
-    df_zap_endereco =  pd.concat([df_zap, df_zap_endereco_limpo], axis=1)
-    df_vivareal_endereco =  pd.concat([df_vivareal, df_vivareal_endereco_limpo], axis=1)
-    df_chave_mao_endereco =  pd.concat([df_chave_mao, df_chave_mao_endereco_limpo], axis=1)
-    df_olx_endereco =  pd.concat([df_olx, df_olx_endereco_limpo], axis=1)
+    #df_zap_endereco =  pd.concat([df_zap, df_zap_endereco_limpo], axis=1)
+    #df_vivareal_endereco =  pd.concat([df_vivareal, df_vivareal_endereco_limpo], axis=1)
+    #df_chave_mao_endereco =  pd.concat([df_chave_mao, df_chave_mao_endereco_limpo], axis=1)
+    #df_olx_endereco =  pd.concat([df_olx, df_olx_endereco_limpo], axis=1)
 
-    df = pd.concat([df_zap_endereco if not df_zap_endereco.empty else pd.DataFrame(), 
-                    df_vivareal_endereco if not df_vivareal_endereco.empty else pd.DataFrame(),
-                    df_chave_mao_endereco if not df_chave_mao_endereco.empty else pd.DataFrame(),
-                    df_olx_endereco if not df_olx_endereco.empty else pd.DataFrame()], 
+    df = pd.concat([
+                    df_zap_endereco if name_arquivo_zap is not None else pd.DataFrame(), 
+                    df_vivareal_endereco if name_arquivo_vivareal is not None else pd.DataFrame(),
+                    df_chave_mao_endereco if name_arquivo_chave_mao is not None else pd.DataFrame(),
+                    df_olx_endereco if name_arquivo_olx is not None else pd.DataFrame()], 
                    axis=0, ignore_index=True)
     
-    logger.info(f"Total de registros carregados: {len(df)} (zap: {len(df_zap)} | vivareal: {len(df_vivareal)} | chave_mao: {len(df_chave_mao)} | olx: {len(df_olx)})")
+    #logger.info(f"Total de registros carregados: {len(df)} (zap: {len(df_zap)} | vivareal: {len(df_vivareal)} | chave_mao: {len(df_chave_mao)} | olx: {len(df_olx)})")
     
     logger.info(f"Filtrando por cidade: {cidade_limpeza}...")
     
