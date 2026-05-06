@@ -291,6 +291,8 @@ def limpando_dados(
             df_zap['fonte'] = 'zap_imoveis'
         df_zap_endereco_limpo = df_zap['endereco'].apply(lambda x: limpa_endereco_apply_zap(x, cidade_limpeza, estado_limpeza))
         df_zap_endereco =  pd.concat([df_zap, df_zap_endereco_limpo], axis=1)
+        
+        arquivo_ref = arquivo_zap
         logger.info(f"Quantidade de dados ZAP: {len(df_zap)}")
 
         
@@ -300,6 +302,8 @@ def limpando_dados(
             df_vivareal['fonte'] = 'viva_real'
         df_vivareal_endereco_limpo = df_vivareal['endereco'].apply(lambda x: limpa_endereco_apply_zap(x, cidade_limpeza, estado_limpeza))
         df_vivareal_endereco =  pd.concat([df_vivareal, df_vivareal_endereco_limpo], axis=1)
+        
+        arquivo_ref = arquivo_vivareal
         logger.info(f"Quantidade de dados Vivareal: {len(df_vivareal)}")
     
     if name_arquivo_chave_mao is not None:
@@ -308,6 +312,8 @@ def limpando_dados(
             df_chave_mao['fonte'] = 'chave_mao'
         df_chave_mao_endereco_limpo = df_chave_mao['endereco'].apply(lambda x: limpa_endereco_apply_chave_mao(x, cidade_limpeza, estado_limpeza))
         df_chave_mao_endereco =  pd.concat([df_chave_mao, df_chave_mao_endereco_limpo], axis=1)
+        
+        arquivo_ref = arquivo_chave_mao
         logger.info(f"Quantidade de dados Chave Mao: {len(df_chave_mao)}")
     
     if name_arquivo_olx is not None:
@@ -316,13 +322,12 @@ def limpando_dados(
             df_olx['fonte'] = 'olx'
         df_olx_endereco_limpo = df_olx['endereco'].apply(lambda x: limpa_endereco_apply_olx(x, cidade_limpeza, estado_limpeza))
         df_olx_endereco =  pd.concat([df_olx, df_olx_endereco_limpo], axis=1)
+        
+        arquivo_ref = arquivo_olx
         logger.info(f"Quantidade de dados OLX: {len(df_olx)}")
     else:
         logger.info("Arquivo de OLX não encontrado.")
-
-    if df_zap.empty and df_vivareal.empty and df_chave_mao.empty and df_olx.empty:
-        logger.error("Nenhum dado encontrado em nenhuma das fontes — abortando.")
-        return
+        
     #df_zap_endereco_limpo = df_zap['endereco'].apply(lambda x: limpa_endereco_apply_zap(x, cidade_limpeza, estado_limpeza))
     #df_vivareal_endereco_limpo = df_vivareal['endereco'].apply(lambda x: limpa_endereco_apply_zap(x, cidade_limpeza, estado_limpeza))
     #df_chave_mao_endereco_limpo = df_chave_mao['endereco'].apply(lambda x: limpa_endereco_apply_chave_mao(x, cidade_limpeza, estado_limpeza))
@@ -379,8 +384,6 @@ def limpando_dados(
     logger.info(f"Coluna 'bairro' corrigida...")
     
     df_limpo = df_limpo.groupby('bairro').filter(lambda x: len(x) > 1)
-
-    arquivo_ref = arquivo_zap or arquivo_vivareal
     
     data_ref    = arquivo_ref.stem.split('_')[-1]
     
@@ -406,10 +409,23 @@ def limpando_dados(
         if porcentagem_vazio < 50:
             logger.info("✅ Dados de localização validados. Procedendo com a deleção dos arquivos temporários.")
             
-            deletar_arquivo(arquivo_zap)
-            deletar_arquivo(arquivo_vivareal)
-            deletar_arquivo(arquivo_chave_mao)
-            deletar_arquivo(arquivo_olx)
+            if name_arquivo_zap is not None:
+                deletar_arquivo(arquivo_zap)
+                logger.info("✅ Arquivo Zap deletado.")
+            
+            if name_arquivo_vivareal is not None:
+                deletar_arquivo(arquivo_vivareal)
+                logger.info("✅ Arquivo Vivareal deletado.")
+            
+            if name_arquivo_chave_mao is not None:
+                deletar_arquivo(arquivo_chave_mao)
+                logger.info("✅ Arquivo Chave Mao deletado.")
+            
+            if name_arquivo_olx is not None:
+                deletar_arquivo(arquivo_olx)
+                logger.info("✅ Arquivo OLX deletado.")
+            
+            logger.info("✅ Arquivos originais deletados.")
         else:
             logger.warning("⚠️ ALERTA: Mais de 50% da coluna 'lat' está vazia!")
             logger.warning("Os arquivos originais foram MANTIDOS para conferência.")
