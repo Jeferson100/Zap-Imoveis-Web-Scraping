@@ -12,22 +12,26 @@ jobs:
     with:
       cidade_pasta: florianopolis
       arquivo_rodando_imovel: florianopolis_coleta_dados_chave_mao_91_105.py
+      URL_TEMPLATE_CHAVES : "https://www.chavesnamao.com.br/imoveis-a-venda/sc-florianopolis/?filtro=amin%3A{min}%2Camax%3A{max}&pg={pagina}"
 
   coleta_chave_mao_106_125:
     uses: ./.github/workflows/pipeline_cidade_rodando.yml
     with:
       cidade_pasta: florianopolis
       arquivo_rodando_imovel: florianopolis_coleta_dados_chave_mao_106_125.py
+      URL_TEMPLATE_CHAVES : "https://www.chavesnamao.com.br/imoveis-a-venda/sc-florianopolis/?filtro=amin%3A{min}%2Camax%3A{max}&pg={pagina}"
   
   coleta_chave_mao_126_150:
     uses: ./.github/workflows/pipeline_cidade_rodando.yml
     with:
       cidade_pasta: florianopolis
       arquivo_rodando_imovel: florianopolis_coleta_dados_chave_mao_126_150.py
+      URL_TEMPLATE_CHAVES : "https://www.chavesnamao.com.br/imoveis-a-venda/sc-florianopolis/?filtro=amin%3A{min}%2Camax%3A{max}&pg={pagina}"
 
   coleta_chave_mao_151_190:
     uses: ./.github/workflows/pipeline_cidade_rodando.yml
     with:
       cidade_pasta: florianopolis
       arquivo_rodando_imovel: florianopolis_coleta_dados_chave_mao_151_190.py
+      URL_TEMPLATE_CHAVES : "https://www.chavesnamao.com.br/imoveis-a-venda/sc-florianopolis/?filtro=amin%3A{min}%2Camax%3A{max}&pg={pagina}"
  

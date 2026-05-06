@@ -49,6 +49,9 @@ on:
         required: false
         type: boolean
         default: true
+      URL_TEMPLATE_CHAVES:
+        required: false
+        type: string
 
 jobs:
   build:
@@ -106,6 +109,7 @@ jobs:
           CIDADE_LOCALIZACAO: ${{ inputs.cidade_localizacao }}
           ESTADO_LIMPEZA: ${{ inputs.estado_limpeza }}
           ESTADO_LOCALIZACAO: ${{ inputs.estado_localizacao }}
+          URL_TEMPLATE_CHAVES: ${{ inputs.URL_TEMPLATE_CHAVES }}
 
       - name: Commit e Push
         run: |

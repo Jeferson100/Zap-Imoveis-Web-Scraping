@@ -32,7 +32,9 @@ sys.path.append(str(Path(__file__).parent.parent))
 
 from scraping_zap_imoveis import ChavesMaoColeta
 
-URL_TEMPLATE = "https://www.chavesnamao.com.br/imoveis/sc-florianopolis/?filtro=amin%3A{min}%2Camax%3A{max}&pg={pagina}"
+#URL_TEMPLATE = "https://www.chavesnamao.com.br/imoveis/sc-florianopolis/?filtro=amin%3A{min}%2Camax%3A{max}&pg={pagina}"
+
+URL_TEMPLATE = os.getenv("URL_TEMPLATE_CHAVES")
 
 area_ranges = criar_area_ranges(
     inicio_total=251,
