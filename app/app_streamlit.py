@@ -8,7 +8,8 @@ from pathlib import Path
 import numpy as np
 from scipy.stats import pearsonr, spearmanr
 
-def gerar_pagina_analise_imoveis(cidade_pth, cidade_nome, prefixo_arquivo):
+
+def gerar_pagina_analise_imoveis(cidade_pth, cidade_nome, prefixo_arquivo, df=None, data_mais_recente=None):
     """
     Função para gerar automaticamente a estrutura da página de análise.
     cidade_nome: Ex: "Joinville"
@@ -24,30 +25,35 @@ def gerar_pagina_analise_imoveis(cidade_pth, cidade_nome, prefixo_arquivo):
         }
         </style>
         """, unsafe_allow_html=True)
-
-    BASE_DIR = Path(__file__).resolve().parent.parent
-
-    pasta = BASE_DIR / 'dados' / cidade_pth
     
-    try:
+    if df is not None:
+        key_df = f"df_{cidade_nome.lower()}"
+        if key_df not in st.session_state:
+            st.session_state[key_df] = df
+        st.title(f"Análise de Imóveis {cidade_nome}")
+    else:
+        st.title(f"Análise de Imóveis {cidade_nome}")
 
-        #arquivos = list(pasta.glob(f'{prefixo_arquivo}_com_ind_local_*.csv'))
-        arquivos = list(pasta.glob(f'{prefixo_arquivo}_com_ind_local_*.parquet'))
-            
-        arquivo_mais_recente = max(arquivos, key=lambda f: f.stem.split('_')[-1])
+        BASE_DIR = Path(__file__).resolve().parent.parent
+
+        pasta = BASE_DIR / 'dados' / cidade_pth
         
-    except:
-        #arquivos = list(pasta.glob(f'{prefixo_arquivo}_imoveis_limpo_*.csv'))
-        arquivos = list(pasta.glob(f'{prefixo_arquivo}_imoveis_limpo_*.parquet'))
+        try:
+            arquivos = list(pasta.glob(f'{prefixo_arquivo}_com_ind_local_*.parquet'))
+                
+            arquivo_mais_recente = max(arquivos, key=lambda f: f.stem.split('_')[-1])
             
-        arquivo_mais_recente = max(arquivos, key=lambda f: f.stem.split('_')[-1])
-    
-    data_mais_recente = arquivo_mais_recente.stem.split('_')[-1]
-            
-    key_df = f"df_{cidade_nome.lower()}"
-    
-    if key_df not in st.session_state:
-        st.session_state[key_df] = pd.read_parquet(arquivo_mais_recente)
+        except:
+            arquivos = list(pasta.glob(f'{prefixo_arquivo}_imoveis_limpo_*.parquet'))
+                
+            arquivo_mais_recente = max(arquivos, key=lambda f: f.stem.split('_')[-1])
+        
+            data_mais_recente = arquivo_mais_recente.stem.split('_')[-1]
+                
+        key_df = f"df_{cidade_nome.lower()}"
+        
+        if key_df not in st.session_state:
+            st.session_state[key_df] = pd.read_parquet(arquivo_mais_recente)
         
     df = st.session_state[key_df]
     
