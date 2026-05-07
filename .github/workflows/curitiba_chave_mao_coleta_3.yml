@@ -31,9 +31,15 @@ jobs:
       cidade_pasta: curitiba
       arquivo_rodando_imovel: curitiba_coleta_dados_chave_mao_451_700.py
 
-  coleta_chave_mao_701_infinito:
+  coleta_chave_mao_701_1500:
     uses: ./.github/workflows/pipeline_cidade_rodando.yml
     with:
       cidade_pasta: curitiba
-      arquivo_rodando_imovel: curitiba_coleta_dados_chave_mao_701_infinito.py
+      arquivo_rodando_imovel: curitiba_coleta_dados_chave_mao_701_1500.py
+  
+  coleta_chave_mao_1501_infinito:
+    uses: ./.github/workflows/pipeline_cidade_rodando.yml
+    with:
+      cidade_pasta: curitiba
+      arquivo_rodando_imovel: curitiba_coleta_dados_chave_mao_1501_infinito.py
  

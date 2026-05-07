@@ -41,10 +41,9 @@ URL_TEMPLATE = "https://www.chavesnamao.com.br/imoveis-a-venda/pr-curitiba/?filt
 
 area_ranges = criar_area_ranges(
     inicio_total=701,
-    fim_total=30000000,
+    fim_total=1500,
     regras_intervalo=[
         (1500, 150),
-        (20000, 1000),
     ]
 )
 
