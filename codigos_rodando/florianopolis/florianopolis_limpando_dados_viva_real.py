@@ -46,15 +46,26 @@ MAPA_BAIRROS = {
         'jurere internacional': ['jurere internacional', 'forte'],
         'jurere': ['jurere tradicional', 'jurere'],
         'ingleses do rio vermelho': ['praia dos ingleses', 'ingleses norte', 'sc 403 km 1'],
-        'pantano do sul': ['acores', 'pantano do sul'],
+        'pantano do sul': ['acores', 'pantano do sul', 'praia da solidao'],
         'estreito': ['canto', 'balneario do estreito'],
         'centro': ['centro', 'beira mar','monte cristo'],
-        'lagoa da conceicao': ['porto da lagoa', 'canto da lagoa'],
+        'lagoa da conceicao': ['porto da lagoa', 'canto da lagoa','costa da lagoa', 'lagoa'],
         'ribeirao da ilha' : ['portal do ribeirao', 'ribeirao da ilha'],
         'itacorubi' : ['parque sao jorge', 'itacorubi'],
         'canasvieiras' : ['canajure'],
         'barra da lagoa' : ['praia mole'],
+        'vargem grande': ['vargem pequena', 'vargem do bom jesus', 'real parque'],
+        'rio vermelho': ['sao joao do rio vermelho', 'moenda', 'muquem', 'rio vermelho', 'praia mocambique'],
+        'corrego grande' : ['jardim anchieta'],
+        'jose mendes' : ['prainha'],
+        'balneario' : ['ponta do leal'],
+        'ponta das canas' : ['praia da lagoinha', 'lagoinha do norte'],
+        'coqueiros' : ['coqueiros'],
+        'joao paulo' : ['joao paulo'],
+        'agronomica' :['morro da cruz']
     }
+
+
 
 limpando_dados(
                 #name_arquivo_zap = f'{cidade}_zap_*.parquet', 
