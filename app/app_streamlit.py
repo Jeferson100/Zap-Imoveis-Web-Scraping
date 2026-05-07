@@ -4,9 +4,55 @@ import plotly.express as px
 import plotly.graph_objects as go
 import os
 import numpy as np
-from pathlib import Path
 import numpy as np
 from scipy.stats import pearsonr, spearmanr
+from pathlib import Path
+
+def carregar_mais_recentes_por_fonte(cidade_path: str, prefixo_name: str, base_dir: Path | None = None):
+    if base_dir is None:
+        base_dir = Path.cwd().parent
+
+    pasta = base_dir / 'dados' / cidade_path
+    arquivos = list(pasta.glob(f'{prefixo_name}_imoveis_limpo_*.parquet'))
+
+    mais_recentes_por_fonte = {}
+    for arquivo in arquivos:
+        partes = arquivo.stem.split('_')
+        portal = partes[-2]
+        data = partes[-1]
+
+        anterior = mais_recentes_por_fonte.get(portal)
+        if anterior is None or data > anterior.stem.split('_')[-1]:
+            mais_recentes_por_fonte[portal] = arquivo
+
+    dfs = []
+    for portal, caminho in mais_recentes_por_fonte.items():
+        try:
+            df_temp = pd.read_parquet(caminho)
+            dfs.append(df_temp)
+            print(f"Carregado {portal} mais recente: {caminho.name}")
+        except Exception as e:
+            print(f"Erro ao ler {caminho.name}: {e}")
+
+    if not dfs:
+        raise FileNotFoundError(f"Nenhum arquivo encontrado em {pasta} com prefixo {prefixo_name}")
+
+    df = pd.concat(dfs, ignore_index=True)
+
+    colunas_dedup = [
+        'valor_imovel', 'rua', 'bairro', 'metragem',
+        'quartos', 'preco_por_m2', 'banheiros', 'lat', 'lng'
+    ]
+    colunas_dedup = [c for c in colunas_dedup if c in df.columns]
+
+    df_limpo = df.drop_duplicates(subset=colunas_dedup, keep='first').reset_index(drop=True)
+
+    data_mais_recente = max(
+        arquivo.stem.split('_')[-1]
+        for arquivo in mais_recentes_por_fonte.values()
+    )
+
+    return df_limpo, data_mais_recente
 
 
 def gerar_pagina_analise_imoveis(cidade_pth, cidade_nome, prefixo_arquivo, df=None, data_mais_recente=None):
