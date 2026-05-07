@@ -45,12 +45,12 @@ logger.info(f"Os parametros de limpeza são: cidade_limpeza={cidade_limpeza}, c
 MAPA_BAIRROS = {
         'jurere internacional': ['jurere internacional', 'forte'],
         'jurere': ['jurere tradicional', 'jurere'],
-        'ingleses do rio vermelho': ['praia dos ingleses', 'ingleses norte', 'sc 403 km 1'],
+        'ingleses': ['praia dos ingleses', 'ingleses norte', 'sc 403 km 1', 'ingleses'],
         'pantano do sul': ['acores', 'pantano do sul', 'praia da solidao'],
         'estreito': ['canto', 'balneario do estreito'],
-        'centro': ['centro', 'beira mar','monte cristo'],
+        'centro': ['centro', 'beira mar','monte cristo', 'campinas'],
         'lagoa da conceicao': ['porto da lagoa', 'canto da lagoa','costa da lagoa', 'lagoa'],
-        'ribeirao da ilha' : ['portal do ribeirao', 'ribeirao da ilha'],
+        'ribeirao da ilha' : ['portal do ribeirao', 'ribeirao da ilha', 'alto ribeirao'],
         'itacorubi' : ['parque sao jorge', 'itacorubi'],
         'canasvieiras' : ['canajure'],
         'barra da lagoa' : ['praia mole'],
@@ -62,9 +62,9 @@ MAPA_BAIRROS = {
         'ponta das canas' : ['praia da lagoinha', 'lagoinha do norte'],
         'coqueiros' : ['coqueiros'],
         'joao paulo' : ['joao paulo'],
-        'agronomica' :['morro da cruz']
+        'agronomica' :['morro da cruz'],
+        'tapera da base' : ['tapera']
     }
-
 
 
 limpando_dados(

@@ -28,7 +28,7 @@ from scraping_zap_imoveis import ChavesMaoColeta
 
 #URL_TEMPLATE = "https://www.chavesnamao.com.br/imoveis-a-venda/sc-jaragua-do-sul/?pg={pagina}"
 
-URL_TEMPLATE = "https://www.chavesnamao.com.br/imoveis/sc-jaragua-do-sul/?filtro=amin%3A{min}%2Camax%3A{max}&pg={pagina}"
+URL_TEMPLATE = "https://www.chavesnamao.com.br/imoveis-a-venda/sc-jaragua-do-sul/?filtro=amin%3A{min}%2Camax%3A{max}&pg={pagina}"
 
 now = time.strftime("%Y-%m")
 

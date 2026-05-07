@@ -29,7 +29,7 @@ from scraping_zap_imoveis import ChavesMaoColeta
 
 #URL_TEMPLATE = "https://www.chavesnamao.com.br/imoveis-a-venda/sc-itapoa/?pg={pagina}"
 
-URL_TEMPLATE = "https://www.chavesnamao.com.br/imoveis/sc-itapoa/?filtro=amin%3A{min}%2Camax%3A{max}%2Camax%3A&pg={pagina}"
+URL_TEMPLATE = "https://www.chavesnamao.com.br/imoveis-a-venda/sc-itapoa/?filtro=amin%3A{min}%2Camax%3A{max}%2Camax%3A&pg={pagina}"
 
 
 now = time.strftime("%Y-%m")

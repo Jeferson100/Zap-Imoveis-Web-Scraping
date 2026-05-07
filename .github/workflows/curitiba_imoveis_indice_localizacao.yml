@@ -8,8 +8,32 @@ on:
     workflow_dispatch:
 
 jobs:
-  pipeline:
+  adicionando_indice_curitiba_zap:
     uses: ./.github/workflows/pipeline_cidade_rodando.yml
     with:
       cidade_pasta: curitiba
-      arquivo_rodando_imovel: curitiba_criando_indice_localizacao.py
+      arquivo_rodando_imovel: curitiba_indice_localizacao_zap.py
+      cidade_limpeza: curitiba
+      cidade_localizacao: Curitiba
+      estado_limpeza: pr
+      estado_localizacao: PR
+
+  adicionando_indice_curitiba_viva_real:
+    uses: ./.github/workflows/pipeline_cidade_rodando.yml
+    with:
+      cidade_pasta: curitiba
+      arquivo_rodando_imovel: curitiba_indice_localizacao_viva_real.py
+      cidade_limpeza: curitiba
+      cidade_localizacao: Curitiba
+      estado_limpeza: pr
+      estado_localizacao: PR
+
+  adicionando_indice_curitiba_chave_mao:
+    uses: ./.github/workflows/pipeline_cidade_rodando.yml
+    with:
+      cidade_pasta: curitiba
+      arquivo_rodando_imovel: curitiba_indice_localizacao_chave_mao.py
+      cidade_limpeza: curitiba
+      cidade_localizacao: Curitiba
+      estado_limpeza: pr
+      estado_localizacao: PR

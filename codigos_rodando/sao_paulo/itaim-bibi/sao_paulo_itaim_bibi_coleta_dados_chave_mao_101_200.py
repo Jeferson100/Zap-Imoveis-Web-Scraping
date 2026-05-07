@@ -34,11 +34,9 @@ sys.path.append(str(Path(__file__).parent.parent))
 
 from scraping_zap_imoveis import ChavesMaoColeta
 
-#URL_TEMPLATE = "https://www.chavesnamao.com.br/imoveis-a-venda/sc-joinville/?pg={pagina}"
+#URL_TEMPLATE = "https://www.chavesnamao.com.br/apartamentos-a-venda/sp-sao-paulo/itaim-bibi/?filtro=amin%3A{min}%2Camax%3A{max}&pg={pagina}"
 
-#URL_TEMPLATE = "https://www.chavesnamao.com.br/imoveis-a-venda/sc-joinville/?filtro=amin%3A{min}%2Camax%3A{max}&pg={pagina}"
-
-URL_TEMPLATE = "https://www.chavesnamao.com.br/apartamentos-a-venda/sp-sao-paulo/itaim-bibi/?filtro=amin%3A{min}%2Camax%3A{max}&pg={pagina}"
+URL_TEMPLATE  = str(os.getenv("URL_TEMPLATE_CHAVES"))
 
 sys.path.append('..')
     

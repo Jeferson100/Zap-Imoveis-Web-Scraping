@@ -34,9 +34,10 @@ sys.path.append(str(Path(__file__).parent.parent))
 
 from scraping_zap_imoveis import ZapImoveisColeta
 
-#URL_TEMPLATE = "https://www.zapimoveis.com.br/venda/imoveis/sp+sao-paulo/?pagina={pagina}"
+#URL_TEMPLATE = "https://www.zapimoveis.com.br/venda/apartamentos/sp+sao-paulo+zona-sul+itaim-bibi/?onde=%2CS%C3%A3o+Paulo%2CS%C3%A3o+Paulo%2CZona+Sul%2CItaim+Bibi%2C%2C%2Cneighborhood%2CBR%3ESao+Paulo%3ENULL%3ESao+Paulo%3EZona+Sul%3EItaim+Bibi%2C-23.583748%2C-46.678074%2C&tipos=apartamento_residencial&pagina={pagina}"
 
-URL_TEMPLATE = "https://www.zapimoveis.com.br/venda/apartamentos/sp+sao-paulo+zona-sul+itaim-bibi/?onde=%2CS%C3%A3o+Paulo%2CS%C3%A3o+Paulo%2CZona+Sul%2CItaim+Bibi%2C%2C%2Cneighborhood%2CBR%3ESao+Paulo%3ENULL%3ESao+Paulo%3EZona+Sul%3EItaim+Bibi%2C-23.583748%2C-46.678074%2C&tipos=apartamento_residencial&pagina={pagina}"
+
+URL_TEMPLATE = str(os.getenv("URL_TEMPLATE_ZAP"))
 
 sys.path.append('..')
     
