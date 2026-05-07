@@ -1,20 +1,29 @@
 import asyncio
 import sys
 from pathlib import Path
+import asyncio
+import sys
+from pathlib import Path
 import time
 import os
-
-from dotenv import load_dotenv
-
-load_dotenv()
-
-BASE_DIR    = Path(__file__).parent.parent.parent  
 
 import logging
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
 logger = logging.getLogger(__name__)
+
+sys.path.append(str(Path(__file__).parent.parent))
+
+from unificando_dados import consolidar_jsons, consolidar_parquet
+
+from limpando_dados import criar_area_ranges
+
+from dotenv import load_dotenv
+
+load_dotenv()
+
+BASE_DIR    = Path(__file__).parent.parent.parent  
 
 cidade = os.getenv("CIDADE_PASTA")
 
@@ -26,22 +35,26 @@ sys.path.append(str(Path(__file__).parent.parent))
 
 from scraping_zap_imoveis import ChavesMaoColeta
 
-#URL_TEMPLATE = "https://www.chavesnamao.com.br/imoveis-a-venda/sc-blumenau/?pg={pagina}"
-URL_TEMPLATE = "https://www.chavesnamao.com.br/imoveis-a-venda/sc-blumenau/?filtro=amin%3A{min}%2Camax%3A{max}&pg={pagina}"
+#URL_TEMPLATE = "https://www.chavesnamao.com.br/imoveis-a-venda/pr-curitiba/?pg={pagina}"
 
-now = time.strftime("%Y-%m")
+URL_TEMPLATE = "https://www.chavesnamao.com.br/imoveis-a-venda/pr-curitiba/?filtro=amin%3A{min}%2Camax%3A{max}&pg={pagina}"
 
-total_paginas = 100
+area_ranges = criar_area_ranges(
+    inicio_total=1501,
+    fim_total=30000000,
+    regras_intervalo=[
+        (20000, 1000),
+    ]
+)
 
-area_ranges = { '0': '50','51': '65','66': '75',
-               #'81': '100',
-               #'101': '130','131': '170','171' : '220','221': '300',
-               #'301': '400','401': '600','601': '1600','1601': '300000000',
-               }
 
 headless = os.getenv("HEADLESS", "True").lower() == "true"
 
 max_concurrency = int(os.getenv("MAX_CONCURRENCY", "3"))
+
+total_paginas = 100
+
+now = time.strftime("%Y-%m")
 
 for min_area, max_area in area_ranges.items():
     
@@ -64,3 +77,7 @@ for min_area, max_area in area_ranges.items():
     ))
 
 logger.info(f"Arquivo de dados gerado em: {output_file}")
+
+#consolidar_parquet('chave_mao', cidade, PASTA_DADOS)
+
+logger.info(f"Arquivos consolidados em: {PASTA_DADOS}")
