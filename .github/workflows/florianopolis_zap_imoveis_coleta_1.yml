@@ -17,11 +17,17 @@ jobs:
       cidade_pasta: florianopolis
       arquivo_rodando_imovel: florianopolis_coleta_dados_zap_imoveis_61_80.py
   
-  coleta_zap_imoveis_81_100:
+  coleta_zap_imoveis_81_90:
     uses: ./.github/workflows/pipeline_cidade_rodando.yml
     with:
       cidade_pasta: florianopolis
-      arquivo_rodando_imovel: florianopolis_coleta_dados_zap_imoveis_81_100.py
+      arquivo_rodando_imovel: florianopolis_coleta_dados_zap_imoveis_81_90.py
+  
+  coleta_zap_imoveis_91_100:
+    uses: ./.github/workflows/pipeline_cidade_rodando.yml
+    with:
+      cidade_pasta: florianopolis
+      arquivo_rodando_imovel: florianopolis_coleta_dados_zap_imoveis_91_100.py
 
   coleta_zap_imoveis_101_130:
     uses: ./.github/workflows/pipeline_cidade_rodando.yml

@@ -44,9 +44,9 @@ now = time.strftime("%Y-%m")
 
 area_ranges = criar_area_ranges(
     inicio_total=81,
-    fim_total=100,
+    fim_total=90,
     regras_intervalo=[
-        (100, 2),
+        (90, 2),
     ]
 )
 
