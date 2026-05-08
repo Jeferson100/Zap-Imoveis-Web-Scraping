@@ -108,7 +108,13 @@ jobs:
 
       - name: Rodar o código do imóvel
         if: ${{ inputs.arquivo_rodando_imovel != '' }}
-        run: uv run codigos_rodando/${{ inputs.cidade_pasta }}/${{ inputs.arquivo_rodando_imovel }}
+        #run: uv run codigos_rodando/${{ inputs.cidade_pasta }}/${{ inputs.arquivo_rodando_imovel }}
+        run: |
+          # Define o caminho base: se BAIRRO existir, inclui na rota, senão usa apenas cidade_pasta
+          CAMINHO_EXECUCAO="codigos_rodando/${{ inputs.cidade_pasta }}/${{ inputs.BAIRRO != '' && format('{0}/', inputs.BAIRRO) || '' }}${{ inputs.arquivo_rodando_imovel }}"
+          
+          echo "Executando: $CAMINHO_EXECUCAO"
+          uv run $CAMINHO_EXECUCAO
         env:
           CIDADE_PASTA: ${{ inputs.cidade_pasta }}
           HEADLESS: ${{ inputs.headless }}
