@@ -8,7 +8,7 @@ jobs:
   coleta_chave_mao_0_100:
     uses: ./.github/workflows/pipeline_cidade_rodando.yml
     with:
-      cidade_pasta: sao_paulo/itaim-bibi
+      cidade_pasta: sao_paulo
       arquivo_rodando_imovel: sao_paulo_itaim_bibi_coleta_dados_chave_mao_0_100.py
       URL_TEMPLATE_CHAVES : "https://www.chavesnamao.com.br/apartamentos-a-venda/sp-sao-paulo/itaim-bibi/?filtro=amin%3A{min}%2Camax%3A{max}&pg={pagina}"
       BAIRRO : itaim-bibi
@@ -16,7 +16,7 @@ jobs:
   coleta_chave_mao_101_200:
     uses: ./.github/workflows/pipeline_cidade_rodando.yml
     with:
-      cidade_pasta: sao_paulo/itaim-bibi
+      cidade_pasta: sao_paulo
       arquivo_rodando_imovel: sao_paulo_itaim_bibi_coleta_dados_chave_mao_101_200.py
       URL_TEMPLATE_CHAVES : "https://www.chavesnamao.com.br/apartamentos-a-venda/sp-sao-paulo/itaim-bibi/?filtro=amin%3A{min}%2Camax%3A{max}&pg={pagina}"
       BAIRRO : itaim-bibi
@@ -24,7 +24,7 @@ jobs:
   coleta_chave_mao_201_infinito:
     uses: ./.github/workflows/pipeline_cidade_rodando.yml
     with:
-      cidade_pasta: sao_paulo/itaim-bibi
+      cidade_pasta: sao_paulo
       arquivo_rodando_imovel: sao_paulo_itaim_bibi_coleta_dados_chave_mao_201_infinito.py
       URL_TEMPLATE_CHAVES : "https://www.chavesnamao.com.br/apartamentos-a-venda/sp-sao-paulo/itaim-bibi/?filtro=amin%3A{min}%2Camax%3A{max}&pg={pagina}"
       BAIRRO : itaim-bibi

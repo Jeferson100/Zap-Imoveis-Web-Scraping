@@ -11,6 +11,6 @@ jobs:
   pipeline:
     uses: ./.github/workflows/pipeline_cidade_rodando.yml
     with:
-      cidade_pasta: sao_paulo/itaim-bibi
+      cidade_pasta: sao_paulo
       arquivo_rodando_imovel: sao_paulo_itaim_bibi_criando_indice_localizacao.py
       BAIRRO : itaim-bibi
