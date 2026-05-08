@@ -209,9 +209,5 @@ __marimo__/
 #dados/*.csv
 #!dados/resultado_final_indice.csv
 codigos_rodando/cache/
-dados/zap_imoveis_joinville_limpo.csv
-dados/florianopolis/florianopolis_zap_2026-04.json
-dados/florianopolis/florianopolis_vivareal_2026-04.json
-dados/sao_paulo
-dados/florianopolis/florianopolis_imoveis_limpo_2026-05.parquet
+
 
