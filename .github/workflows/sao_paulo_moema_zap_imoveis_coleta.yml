@@ -1,0 +1,36 @@
+name: Rodando Coleta Zap Imoveis Sao Paulo Moema
+on: 
+  workflow_run:
+        workflows: ["Rodando Coleta Olx Sao Paulo Moema"]
+        types:
+            - completed
+  workflow_dispatch:  
+
+jobs:
+  coleta_zap_imoveis_0_70:
+    uses: ./.github/workflows/pipeline_cidade_rodando.yml
+    with:
+      cidade_pasta: sao_paulo
+      arquivo_rodando_imovel: sao_paulo_moema_coleta_dados_zap_imoveis_0_70.py
+      BAIRRO : moema
+      URL_TEMPLATE_ZAP : "https://www.zapimoveis.com.br/venda/apartamentos/sp+sao-paulo+zona-sul+moema/?onde=%2CS%C3%A3o+Paulo%2CS%C3%A3o+Paulo%2CZona+Sul%2CMoema%2C%2C%2Cneighborhood%2CBR%3ESao+Paulo%3ENULL%3ESao+Paulo%3EZona+Sul%3EMoema%2C-23.612476%2C-46.661547%2C&tipos=apartamento_residencial&pagina={pagina}"
+
+  coleta_zap_imoveis_71_150:
+    uses: ./.github/workflows/pipeline_cidade_rodando.yml
+    with:
+      cidade_pasta: sao_paulo
+      arquivo_rodando_imovel: sao_paulo_moema_coleta_dados_zap_imoveis_71_150.py
+      BAIRRO : moema
+      URL_TEMPLATE_ZAP : "https://www.zapimoveis.com.br/venda/apartamentos/sp+sao-paulo+zona-sul+moema/?onde=%2CS%C3%A3o+Paulo%2CS%C3%A3o+Paulo%2CZona+Sul%2CMoema%2C%2C%2Cneighborhood%2CBR%3ESao+Paulo%3ENULL%3ESao+Paulo%3EZona+Sul%3EMoema%2C-23.612476%2C-46.661547%2C&tipos=apartamento_residencial&pagina={pagina}"
+
+
+  coleta_zap_imoveis_151_infinito:
+    uses: ./.github/workflows/pipeline_cidade_rodando.yml
+    with:
+      cidade_pasta: sao_paulo
+      arquivo_rodando_imovel: sao_paulo_moema_coleta_dados_zap_imoveis_151_infinito.py
+      BAIRRO : moema
+      URL_TEMPLATE_ZAP : "https://www.zapimoveis.com.br/venda/apartamentos/sp+sao-paulo+zona-sul+moema/?onde=%2CS%C3%A3o+Paulo%2CS%C3%A3o+Paulo%2CZona+Sul%2CMoema%2C%2C%2Cneighborhood%2CBR%3ESao+Paulo%3ENULL%3ESao+Paulo%3EZona+Sul%3EMoema%2C-23.612476%2C-46.661547%2C&tipos=apartamento_residencial&pagina={pagina}"
+
+
+  
