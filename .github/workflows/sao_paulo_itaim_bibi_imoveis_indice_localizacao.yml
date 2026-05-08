@@ -1,0 +1,15 @@
+name: Rodando Criando Indice Localizacao Imoveis Sao Paulo Itaim Bibi
+on: 
+
+    workflow_run:
+        workflows: ["Rodando Limpeza Imoveis Sao Paulo Itaim Bibi"]
+        types:
+            - completed
+    workflow_dispatch:
+
+jobs:
+  pipeline:
+    uses: ./.github/workflows/pipeline_cidade_rodando.yml
+    with:
+      cidade_pasta: sao_paulo/itaim_bibi
+      arquivo_rodando_imovel: sao_paulo_itaim_bibi_criando_indice_localizacao.py

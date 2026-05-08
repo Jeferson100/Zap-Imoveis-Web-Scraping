@@ -9,11 +9,16 @@ import pandas as pd
 
 load_dotenv()
 
-def consolidar_jsons(fonte, cidade, PASTA_DADOS):
+def consolidar_jsons(fonte, cidade, PASTA_DADOS, bairro = None):
     
     now = time.strftime("%Y-%m")
     
-    padrao_busca = str(PASTA_DADOS / f'{cidade}_{fonte}_*.json')
+    if bairro is not None:
+        padrao_busca = str(PASTA_DADOS / f'{cidade}_{bairro}_{fonte}_*.json')
+    
+    else:
+    
+        padrao_busca = str(PASTA_DADOS / f'{cidade}_{fonte}_*.json')
     
     arquivos_json = glob.glob(padrao_busca)
     
@@ -41,8 +46,10 @@ def consolidar_jsons(fonte, cidade, PASTA_DADOS):
             except Exception as e:
                 print(f"Erro ao ler {nome_base}: {e}")
 
-    # 2. Salva o arquivo final consolidado
-    nome_final = f'{cidade}_{fonte}_{now}.json'
+    if bairro is not None:
+        nome_final = f'{cidade}_{bairro}_{fonte}_{now}.json'
+    else:
+        nome_final = f'{cidade}_{fonte}_{now}.json'
     
     caminho_final = PASTA_DADOS / nome_final
 
@@ -79,11 +86,14 @@ def consolidar_jsons(fonte, cidade, PASTA_DADOS):
         
 
 
-def consolidar_parquet(fonte, cidade, PASTA_DADOS):
+def consolidar_parquet(fonte, cidade, PASTA_DADOS, bairro = None):
     now = time.strftime("%Y-%m")
     
-    # Busca arquivos .parquet
-    padrao_busca = str(PASTA_DADOS / f'{cidade}_{fonte}_*.parquet')
+    if bairro is not None:
+        padrao_busca = str(PASTA_DADOS / f'{cidade}_{bairro}_{fonte}_*.parquet')
+    else:
+        padrao_busca = str(PASTA_DADOS / f'{cidade}_{fonte}_*.parquet')
+    
     arquivos_parquet = glob.glob(padrao_busca)
     
     if not arquivos_parquet:
@@ -116,8 +126,11 @@ def consolidar_parquet(fonte, cidade, PASTA_DADOS):
         # 2. Une todos os DataFrames em um só
         df_consolidado = pd.concat(lista_dfs, ignore_index=True)
 
-        # 3. Salva o arquivo final consolidado
-        nome_final = f'{cidade}_{fonte}_{now}.parquet'
+        if bairro is not None:
+            nome_final = f'{cidade}_{bairro}_{fonte}_{now}.parquet'
+        else:
+            nome_final = f'{cidade}_{fonte}_{now}.parquet'
+            
         caminho_final = PASTA_DADOS / nome_final
 
         # Salva usando compressão snappy (muito mais leve)

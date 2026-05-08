@@ -865,7 +865,7 @@ def classificar_tipo_imovel(descricao) -> str:
         'casa': [
             'casa', 'sobrado', 'geminado', 'germinado', 'triplex', 'duplex', 
             'residência', 'villa', 'mansion', 'mansão', 'casa de condomínio',
-            'casa comercial', 'casa de vila'
+            'casa comercial', 'casa de vila', 'residencia'
         ],
         'terreno': [
             'terreno', 'lote', 'loteamento', 'área urbana', 'propriedade exclusiva'
