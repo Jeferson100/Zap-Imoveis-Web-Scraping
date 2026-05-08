@@ -11,7 +11,7 @@ jobs:
       cidade_pasta: sao_paulo/itaim-bibi
       arquivo_rodando_imovel: sao_paulo_itaim_bibi_coleta_dados_chave_mao_0_100.py
       URL_TEMPLATE_CHAVES : "https://www.chavesnamao.com.br/apartamentos-a-venda/sp-sao-paulo/itaim-bibi/?filtro=amin%3A{min}%2Camax%3A{max}&pg={pagina}"
-      bairro : itaim-bibi
+      BAIRRO : itaim-bibi
 
   coleta_chave_mao_101_200:
     uses: ./.github/workflows/pipeline_cidade_rodando.yml
@@ -19,7 +19,7 @@ jobs:
       cidade_pasta: sao_paulo/itaim-bibi
       arquivo_rodando_imovel: sao_paulo_itaim_bibi_coleta_dados_chave_mao_101_200.py
       URL_TEMPLATE_CHAVES : "https://www.chavesnamao.com.br/apartamentos-a-venda/sp-sao-paulo/itaim-bibi/?filtro=amin%3A{min}%2Camax%3A{max}&pg={pagina}"
-      bairro : itaim-bibi
+      BAIRRO : itaim-bibi
 
   coleta_chave_mao_201_infinito:
     uses: ./.github/workflows/pipeline_cidade_rodando.yml
@@ -27,6 +27,6 @@ jobs:
       cidade_pasta: sao_paulo/itaim-bibi
       arquivo_rodando_imovel: sao_paulo_itaim_bibi_coleta_dados_chave_mao_201_infinito.py
       URL_TEMPLATE_CHAVES : "https://www.chavesnamao.com.br/apartamentos-a-venda/sp-sao-paulo/itaim-bibi/?filtro=amin%3A{min}%2Camax%3A{max}&pg={pagina}"
-      bairro : itaim-bibi
+      BAIRRO : itaim-bibi
 
   
