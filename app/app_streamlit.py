@@ -10,7 +10,8 @@ from pathlib import Path
 
 def carregar_mais_recentes_por_fonte(cidade_path: str, prefixo_name: str, base_dir: Path | None = None):
     if base_dir is None:
-        base_dir = Path.cwd().parent
+        #base_dir = Path.cwd().parent
+        base_dir = Path(__file__).resolve().parent.parent
 
     pasta = base_dir / 'dados' / cidade_path
     arquivos = list(pasta.glob(f'{prefixo_name}_imoveis_limpo_*.parquet'))
