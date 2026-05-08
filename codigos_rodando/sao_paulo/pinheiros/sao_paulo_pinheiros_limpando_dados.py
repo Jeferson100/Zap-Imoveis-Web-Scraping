@@ -14,7 +14,6 @@ from limpando_dados import limpando_dados
 
 from unificando_dados import consolidar_jsons, consolidar_parquet
 
-
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
 logger = logging.getLogger(__name__)
