@@ -8,19 +8,19 @@ jobs:
   coleta_chave_mao_0_100:
     uses: ./.github/workflows/pipeline_cidade_rodando.yml
     with:
-      cidade_pasta: sao_paulo/itaim_bibi
+      cidade_pasta: sao_paulo/itaim-bibi
       arquivo_rodando_imovel: sao_paulo_itaim_bibi_coleta_dados_chave_mao_0_100.py
 
   coleta_chave_mao_101_200:
     uses: ./.github/workflows/pipeline_cidade_rodando.yml
     with:
-      cidade_pasta: sao_paulo/itaim_bibi
+      cidade_pasta: sao_paulo/itaim-bibi
       arquivo_rodando_imovel: sao_paulo_itaim_bibi_coleta_dados_chave_mao_101_200.py
 
   coleta_chave_mao_201_infinito:
     uses: ./.github/workflows/pipeline_cidade_rodando.yml
     with:
-      cidade_pasta: sao_paulo/itaim_bibi
+      cidade_pasta: sao_paulo/itaim-bibi
       arquivo_rodando_imovel: sao_paulo_itaim_bibi_coleta_dados_chave_mao_201_infinito.py
 
   
