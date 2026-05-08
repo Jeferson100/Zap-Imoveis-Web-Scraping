@@ -15,3 +15,4 @@ jobs:
       cidade_localizacao: Sao Paulo
       estado_limpeza: sp
       estado_localizacao: SP
+      bairro : itaim-bibi

@@ -1,7 +1,7 @@
 name: Rodando Coleta Olx Sao Paulo Itaim Bibi
 on: 
     workflow_run:
-        workflows: ["odando Coleta Chave Mao Sao Paulo Itaim Bibi"]
+        workflows: ["Rodando Coleta Chave Mao Sao Paulo Itaim Bibi"]
         types:
             - completed
     workflow_dispatch:    
@@ -12,24 +12,36 @@ jobs:
     with:
       cidade_pasta: sao_paulo/itaim-bibi
       arquivo_rodando_imovel: sao_paulo_itaim_bibi_coleta_dados_olx_0_50.py
+      bairro : itaim-bibi
+      URL_TEMPLATE_OLX : "https://www.olx.com.br/imoveis/venda/estado-sp?q=sao+paulo+itaim+bibi&ss={min}&se={max}&o={pagina}"
+
 
   coleta_olx_51_90:
     uses: ./.github/workflows/pipeline_cidade_rodando.yml
     with:
       cidade_pasta: sao_paulo/itaim-bibi
       arquivo_rodando_imovel: sao_paulo_itaim_bibi_coleta_dados_olx_51_90.py
+      bairro : itaim-bibi
+      URL_TEMPLATE_OLX : "https://www.olx.com.br/imoveis/venda/estado-sp?q=sao+paulo+itaim+bibi&ss={min}&se={max}&o={pagina}"
+
 
   coleta_olx_91_130:
     uses: ./.github/workflows/pipeline_cidade_rodando.yml
     with:
       cidade_pasta: sao_paulo/itaim-bibi
       arquivo_rodando_imovel: sao_paulo_itaim_bibi_coleta_dados_olx_91_130.py
+      bairro : itaim-bibi
+      URL_TEMPLATE_OLX : "https://www.olx.com.br/imoveis/venda/estado-sp?q=sao+paulo+itaim+bibi&ss={min}&se={max}&o={pagina}"
+
 
   coleta_olx_131_180:
     uses: ./.github/workflows/pipeline_cidade_rodando.yml
     with:
       cidade_pasta: sao_paulo/itaim-bibi
       arquivo_rodando_imovel: sao_paulo_itaim_bibi_coleta_dados_olx_131_180.py
+      bairro : itaim-bibi
+      URL_TEMPLATE_OLX : "https://www.olx.com.br/imoveis/venda/estado-sp?q=sao+paulo+itaim+bibi&ss={min}&se={max}&o={pagina}"
+
       
 
   coleta_olx_181_300:
@@ -37,10 +49,16 @@ jobs:
     with:
       cidade_pasta: sao_paulo/itaim-bibi
       arquivo_rodando_imovel: sao_paulo_itaim_bibi_coleta_dados_olx_181_300.py
+      bairro : itaim-bibi
+      URL_TEMPLATE_OLX : "https://www.olx.com.br/imoveis/venda/estado-sp?q=sao+paulo+itaim+bibi&ss={min}&se={max}&o={pagina}"
+
   
   coleta_olx_301_infinito:
     uses: ./.github/workflows/pipeline_cidade_rodando.yml
     with:
       cidade_pasta: sao_paulo/itaim-bibi
       arquivo_rodando_imovel: sao_paulo_itaim_bibi_coleta_dados_olx_301_infinito.py
+      bairro : itaim-bibi
+      URL_TEMPLATE_OLX : "https://www.olx.com.br/imoveis/venda/estado-sp?q=sao+paulo+itaim+bibi&ss={min}&se={max}&o={pagina}"
+
   

@@ -12,12 +12,20 @@ jobs:
     with:
       cidade_pasta: sao_paulo/itaim-bibi
       arquivo_rodando_imovel: sao_paulo_itaim_bibi_coleta_dados_zap_imoveis_0_100.py
+      bairro : itaim-bibi
+      URL_TEMPLATE_ZAP : "https://www.zapimoveis.com.br/venda/apartamentos/sp+sao-paulo+zona-sul+itaim-bibi/?onde=%2CS%C3%A3o+Paulo%2CS%C3%A3o+Paulo%2CZona+Sul%2CItaim+Bibi%2C%2C%2Cneighborhood%2CBR%3ESao+Paulo%3ENULL%3ESao+Paulo%3EZona+Sul%3EItaim+Bibi%2C-23.583748%2C-46.678074%2C&tipos=apartamento_residencial&pagina={pagina}"
+
+
 
   coleta_zap_imoveis_101_200:
     uses: ./.github/workflows/pipeline_cidade_rodando.yml
     with:
       cidade_pasta: sao_paulo/itaim-bibi
       arquivo_rodando_imovel: sao_paulo_itaim_bibi_coleta_dados_zap_imoveis_101_200.py
+      bairro : itaim-bibi
+      URL_TEMPLATE_ZAP : "https://www.zapimoveis.com.br/venda/apartamentos/sp+sao-paulo+zona-sul+itaim-bibi/?onde=%2CS%C3%A3o+Paulo%2CS%C3%A3o+Paulo%2CZona+Sul%2CItaim+Bibi%2C%2C%2Cneighborhood%2CBR%3ESao+Paulo%3ENULL%3ESao+Paulo%3EZona+Sul%3EItaim+Bibi%2C-23.583748%2C-46.678074%2C&tipos=apartamento_residencial&pagina={pagina}"
+
+
    
   
   coleta_zap_imoveis_201_infinito:
@@ -25,5 +33,8 @@ jobs:
     with:
       cidade_pasta: sao_paulo/itaim-bibi
       arquivo_rodando_imovel: sao_paulo_itaim_bibi_coleta_dados_zap_imoveis_201_infinito.py
+      bairro : itaim-bibi
+      URL_TEMPLATE_ZAP : "https://www.zapimoveis.com.br/venda/apartamentos/sp+sao-paulo+zona-sul+itaim-bibi/?onde=%2CS%C3%A3o+Paulo%2CS%C3%A3o+Paulo%2CZona+Sul%2CItaim+Bibi%2C%2C%2Cneighborhood%2CBR%3ESao+Paulo%3ENULL%3ESao+Paulo%3EZona+Sul%3EItaim+Bibi%2C-23.583748%2C-46.678074%2C&tipos=apartamento_residencial&pagina={pagina}"
+
 
   

@@ -49,9 +49,22 @@ on:
         required: false
         type: boolean
         default: true
+      bairro:
+        required: false
+        type: string
       URL_TEMPLATE_CHAVES:
         required: false
         type: string
+      URL_TEMPLATE_VIVAREAL:
+        required: false
+        type: string
+      URL_TEMPLATE_OLX:
+        required: false
+        type: string
+      URL_TEMPLATE_ZAP:
+        required: false
+        type: string
+
 
 jobs:
   build:
@@ -109,7 +122,12 @@ jobs:
           CIDADE_LOCALIZACAO: ${{ inputs.cidade_localizacao }}
           ESTADO_LIMPEZA: ${{ inputs.estado_limpeza }}
           ESTADO_LOCALIZACAO: ${{ inputs.estado_localizacao }}
+          bairro : ${{ inputs.bairro }}
+          URL_TEMPLATE_VIVAREAL: ${{ inputs.URL_TEMPLATE_VIVAREAL }}
+          URL_TEMPLATE_OLX: ${{ inputs.URL_TEMPLATE_OLX }}
+          URL_TEMPLATE_ZAP: ${{ inputs.URL_TEMPLATE_ZAP }}
           URL_TEMPLATE_CHAVES: ${{ inputs.URL_TEMPLATE_CHAVES }}
+
 
       - name: Commit e Push
         run: |
