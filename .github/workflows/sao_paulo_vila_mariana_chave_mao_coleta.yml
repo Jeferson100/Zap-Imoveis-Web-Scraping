@@ -1,0 +1,40 @@
+name: Rodando Coleta Chave Mao Sao Paulo Vila Mariana
+on:
+  schedule:
+    - cron: '0 16 17 1,2,3,4,5,6,7,8,9,10,11,12 *'  # 09:00 no primeiro dia de cada mês
+  workflow_dispatch:
+
+jobs:
+  coleta_chave_mao_0_60:
+    uses: ./.github/workflows/pipeline_cidade_rodando.yml
+    with:
+      cidade_pasta: sao_paulo
+      arquivo_rodando_imovel: sao_paulo_vila_mariana_coleta_dados_chave_mao_0_60.py
+      URL_TEMPLATE_CHAVES : "https://www.chavesnamao.com.br/apartamentos-a-venda/sp-sao-paulo/vila-mariana/?filtro=amin%3A{min}%2Camax%3A{max}&pg={pagina}"
+      BAIRRO : vila-mariana
+
+  coleta_chave_mao_61_90:
+    uses: ./.github/workflows/pipeline_cidade_rodando.yml
+    with:
+      cidade_pasta: sao_paulo
+      arquivo_rodando_imovel: sao_paulo_vila_mariana_coleta_dados_chave_mao_61_90.py
+      URL_TEMPLATE_CHAVES : "https://www.chavesnamao.com.br/apartamentos-a-venda/sp-sao-paulo/vila-mariana/?filtro=amin%3A{min}%2Camax%3A{max}&pg={pagina}"
+      BAIRRO : vila-mariana
+  
+  coleta_chave_mao_101_150:
+    uses: ./.github/workflows/pipeline_cidade_rodando.yml
+    with:
+      cidade_pasta: sao_paulo
+      arquivo_rodando_imovel: sao_paulo_vila_mariana_coleta_dados_chave_mao_91_150.py
+      URL_TEMPLATE_CHAVES : "https://www.chavesnamao.com.br/apartamentos-a-venda/sp-sao-paulo/vila-mariana/?filtro=amin%3A{min}%2Camax%3A{max}&pg={pagina}"
+      BAIRRO : vila-mariana
+
+  coleta_chave_mao_151_infinito:
+    uses: ./.github/workflows/pipeline_cidade_rodando.yml
+    with:
+      cidade_pasta: sao_paulo
+      arquivo_rodando_imovel: sao_paulo_vila_mariana_coleta_dados_chave_mao_151_infinito.py
+      URL_TEMPLATE_CHAVES : "https://www.chavesnamao.com.br/apartamentos-a-venda/sp-sao-paulo/vila-mariana/?filtro=amin%3A{min}%2Camax%3A{max}&pg={pagina}"
+      BAIRRO : vila-mariana
+
+  
