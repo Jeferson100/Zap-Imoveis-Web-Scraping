@@ -8,8 +8,14 @@ on:
     workflow_dispatch:
 
 jobs:
-  pipeline:
+  coleta_viva_real_jaragua_0_100:
     uses: ./.github/workflows/pipeline_cidade_rodando.yml
     with:
       cidade_pasta: jaragua
-      arquivo_rodando_imovel: jaragua_coleta_dados_viva_real.py
+      arquivo_rodando_imovel: jaragua_coleta_dados_viva_real_0_100.py
+  
+  coleta_viva_real_jaragua_101_infinito:
+    uses: ./.github/workflows/pipeline_cidade_rodando.yml
+    with:
+      cidade_pasta: jaragua
+      arquivo_rodando_imovel: jaragua_coleta_dados_viva_real_101_infinito.py

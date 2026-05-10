@@ -7,9 +7,15 @@ on:
     workflow_dispatch:
 
 jobs:
-  pipeline:
+  coleta_zap_imoveis_jaragua_0_100:
     uses: ./.github/workflows/pipeline_cidade_rodando.yml
     with:
       cidade_pasta: jaragua
-      arquivo_rodando_imovel:   jaragua_coleta_dados_zap_imoveis.py
+      arquivo_rodando_imovel:   jaragua_coleta_dados_zap_imoveis_0_100.py
+  
+  coleta_zap_imoveis_jaragua_101_infinito:
+    uses: ./.github/workflows/pipeline_cidade_rodando.yml
+    with:
+      cidade_pasta: jaragua
+      arquivo_rodando_imovel:   jaragua_coleta_dados_zap_imoveis_101_infinito.py
   

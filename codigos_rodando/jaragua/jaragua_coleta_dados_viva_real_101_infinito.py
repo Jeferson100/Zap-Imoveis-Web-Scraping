@@ -8,6 +8,9 @@ sys.path.append(str(Path(__file__).parent.parent))
 
 from unificando_dados import consolidar_jsons, consolidar_parquet
 
+from limpando_dados import criar_area_ranges
+
+
 import os
 
 from dotenv import load_dotenv
@@ -40,9 +43,13 @@ sys.path.append('..')
     
 now = time.strftime("%Y-%m")
 
-area_ranges = {'0': '130',
-               '131': '3000000'
-               }
+area_ranges = criar_area_ranges(
+    inicio_total=101,
+    fim_total=400,
+    regras_intervalo=[
+        (100, 50),
+    ]
+)
 
 total_paginas = 50
 
