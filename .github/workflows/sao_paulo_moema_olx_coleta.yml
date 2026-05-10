@@ -29,7 +29,7 @@ jobs:
     uses: ./.github/workflows/pipeline_cidade_rodando.yml
     with:
       cidade_pasta: sao_paulo
-      arquivo_rodando_imovel: sao_paulo_jardins_coleta_dados_olx_71_100.py
+      arquivo_rodando_imovel: sao_paulo_moema_coleta_dados_olx_71_100.py
       BAIRRO : moema
       URL_TEMPLATE_OLX : "https://www.olx.com.br/imoveis/venda/apartamentos/estado-sp?q=sao%20paulo%20moema&ss={min}&se={max}&o={pagina}"
 
@@ -38,7 +38,7 @@ jobs:
     uses: ./.github/workflows/pipeline_cidade_rodando.yml
     with:
       cidade_pasta: sao_paulo
-      arquivo_rodando_imovel: sao_paulo_jardins_coleta_dados_olx_101_145.py
+      arquivo_rodando_imovel: sao_paulo_moema_coleta_dados_olx_101_145.py
       BAIRRO : moema
       URL_TEMPLATE_OLX : "https://www.olx.com.br/imoveis/venda/apartamentos/estado-sp?q=sao%20paulo%20moema&ss={min}&se={max}&o={pagina}"
 
@@ -47,7 +47,7 @@ jobs:
     uses: ./.github/workflows/pipeline_cidade_rodando.yml
     with:
       cidade_pasta: sao_paulo
-      arquivo_rodando_imovel: sao_paulo_jardins_coleta_dados_olx_146_190.py
+      arquivo_rodando_imovel: sao_paulo_moema_coleta_dados_olx_146_190.py
       BAIRRO : moema
       URL_TEMPLATE_OLX : "https://www.olx.com.br/imoveis/venda/apartamentos/estado-sp?q=sao%20paulo%20moema&ss={min}&se={max}&o={pagina}"
   
@@ -55,7 +55,7 @@ jobs:
     uses: ./.github/workflows/pipeline_cidade_rodando.yml
     with:
       cidade_pasta: sao_paulo
-      arquivo_rodando_imovel: sao_paulo_jardins_coleta_dados_olx_191_260.py
+      arquivo_rodando_imovel: sao_paulo_moema_coleta_dados_olx_191_260.py
       BAIRRO : moema
       URL_TEMPLATE_OLX : "https://www.olx.com.br/imoveis/venda/apartamentos/estado-sp?q=sao%20paulo%20moema&ss={min}&se={max}&o={pagina}"
 
@@ -63,7 +63,7 @@ jobs:
     uses: ./.github/workflows/pipeline_cidade_rodando.yml
     with:
       cidade_pasta: sao_paulo
-      arquivo_rodando_imovel: sao_paulo_jardins_coleta_dados_olx_261_infinito.py
+      arquivo_rodando_imovel: sao_paulo_moema_coleta_dados_olx_261_infinito.py
       BAIRRO : moema
       URL_TEMPLATE_OLX : "https://www.olx.com.br/imoveis/venda/apartamentos/estado-sp?q=sao%20paulo%20moema&ss={min}&se={max}&o={pagina}"
 
