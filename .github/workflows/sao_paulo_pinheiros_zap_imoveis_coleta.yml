@@ -1,0 +1,35 @@
+name: Rodando Coleta Zap Imoveis Sao Paulo Pinheiros
+on: 
+  workflow_run:
+        workflows: ["Rodando Coleta Olx Sao Paulo Pinheiros"]
+        types:
+            - completed
+  workflow_dispatch:  
+
+jobs:
+  coleta_zap_imoveis_0_100:
+    uses: ./.github/workflows/pipeline_cidade_rodando.yml
+    with:
+      cidade_pasta: sao_paulo
+      arquivo_rodando_imovel: sao_paulo_pinheiros_coleta_dados_zap_imoveis_0_100.py
+      BAIRRO : pinheiros
+      URL_TEMPLATE_ZAP : "https://www.zapimoveis.com.br/venda/imoveis/sp+sao-paulo+zona-oeste+pinheiros/?onde=%2CS%C3%A3o+Paulo%2CS%C3%A3o+Paulo%2CZona+Oeste%2CPinheiros%2C%2C%2Cneighborhood%2CBR%3ESao+Paulo%3ENULL%3ESao+Paulo%3EZona+Oeste%3EPinheiros%2C-23.563579%2C-46.691607%2C&pagina={pagina}"
+
+
+  coleta_zap_imoveis_101_200:
+    uses: ./.github/workflows/pipeline_cidade_rodando.yml
+    with:
+      cidade_pasta: sao_paulo
+      arquivo_rodando_imovel: sao_paulo_pinheiros_coleta_dados_zap_imoveis_101_200.py
+      BAIRRO : pinheiros
+      URL_TEMPLATE_ZAP : "https://www.zapimoveis.com.br/venda/imoveis/sp+sao-paulo+zona-oeste+pinheiros/?onde=%2CS%C3%A3o+Paulo%2CS%C3%A3o+Paulo%2CZona+Oeste%2CPinheiros%2C%2C%2Cneighborhood%2CBR%3ESao+Paulo%3ENULL%3ESao+Paulo%3EZona+Oeste%3EPinheiros%2C-23.563579%2C-46.691607%2C&pagina={pagina}"
+  
+  coleta_zap_imoveis_201_infinito:
+    uses: ./.github/workflows/pipeline_cidade_rodando.yml
+    with:
+      cidade_pasta: sao_paulo
+      arquivo_rodando_imovel: sao_paulo_pinheiros_coleta_dados_zap_imoveis_201_infinito.py
+      BAIRRO : pinheiros
+      URL_TEMPLATE_ZAP : "https://www.zapimoveis.com.br/venda/imoveis/sp+sao-paulo+zona-oeste+pinheiros/?onde=%2CS%C3%A3o+Paulo%2CS%C3%A3o+Paulo%2CZona+Oeste%2CPinheiros%2C%2C%2Cneighborhood%2CBR%3ESao+Paulo%3ENULL%3ESao+Paulo%3EZona+Oeste%3EPinheiros%2C-23.563579%2C-46.691607%2C&pagina={pagina}"
+
+  
