@@ -1,0 +1,40 @@
+name: Rodando Coleta Chave Mao Sao Paulo Bela Vista
+on:
+  schedule:
+    - cron: '0 13 22 1,2,3,4,5,6,7,8,9,10,11,12 *'  # 09:00 no primeiro dia de cada mês
+  workflow_dispatch:
+
+jobs:
+  coleta_chave_mao_0_38:
+    uses: ./.github/workflows/pipeline_cidade_rodando.yml
+    with:
+      cidade_pasta: sao_paulo
+      arquivo_rodando_imovel: sao_paulo_bela_vista_coleta_dados_chave_mao_0_38.py
+      URL_TEMPLATE_CHAVES : "https://www.chavesnamao.com.br/apartamentos-a-venda/sp-sao-paulo/bela-vista/?filtro=amin%3A{min}%2Camax%3A{max}&pg={pagina}"
+      BAIRRO : bela-vista
+
+  coleta_chave_mao_39_60:
+    uses: ./.github/workflows/pipeline_cidade_rodando.yml
+    with:
+      cidade_pasta: sao_paulo
+      arquivo_rodando_imovel: sao_paulo_bela_vista_coleta_dados_chave_mao_39_60.py
+      URL_TEMPLATE_CHAVES : "https://www.chavesnamao.com.br/apartamentos-a-venda/sp-sao-paulo/bela-vista/?filtro=amin%3A{min}%2Camax%3A{max}&pg={pagina}"
+      BAIRRO : bela-vista
+  
+  coleta_chave_mao_61_120:
+    uses: ./.github/workflows/pipeline_cidade_rodando.yml
+    with:
+      cidade_pasta: sao_paulo
+      arquivo_rodando_imovel: sao_paulo_bela_vista_coleta_dados_chave_mao_61_120.py
+      URL_TEMPLATE_CHAVES : "https://www.chavesnamao.com.br/apartamentos-a-venda/sp-sao-paulo/bela-vista/?filtro=amin%3A{min}%2Camax%3A{max}&pg={pagina}"
+      BAIRRO : bela-vista
+
+  coleta_chave_mao_121_infinito:
+    uses: ./.github/workflows/pipeline_cidade_rodando.yml
+    with:
+      cidade_pasta: sao_paulo
+      arquivo_rodando_imovel: sao_paulo_itaim_bibi_coleta_dados_chave_mao_121_infinito.py
+      URL_TEMPLATE_CHAVES : "https://www.chavesnamao.com.br/apartamentos-a-venda/sp-sao-paulo/bela-vista/?filtro=amin%3A{min}%2Camax%3A{max}&pg={pagina}"
+      BAIRRO : bela-vista
+
+  

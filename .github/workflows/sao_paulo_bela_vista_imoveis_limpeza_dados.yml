@@ -1,0 +1,18 @@
+name: Rodando Limpeza Imoveis Sao Paulo Bela Vista
+
+on: 
+  schedule:
+    - cron: '0 9 23 1,2,3,4,5,6,7,8,9,10,11,12 *'  # 09:00 no primeiro dia de cada mês
+  workflow_dispatch: 
+
+jobs:
+  pipeline:
+    uses: ./.github/workflows/pipeline_cidade_rodando.yml
+    with:
+      cidade_pasta: sao_paulo
+      arquivo_rodando_imovel: sao_paulo_bela_vista_limpando_dados_imoveis.py
+      cidade_limpeza: sao paulo
+      cidade_localizacao: Sao Paulo
+      estado_limpeza: sp
+      estado_localizacao: SP
+      BAIRRO : bela-vista

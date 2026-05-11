@@ -1,0 +1,45 @@
+name: Rodando Coleta Zap Imoveis Sao Paulo Bela Vista
+on: 
+  workflow_run:
+        workflows: ["Rodando Coleta Olx Sao Paulo Bela Vista"]
+        types:
+            - completed
+  workflow_dispatch:  
+
+jobs:
+  coleta_zap_imoveis_0_40:
+    uses: ./.github/workflows/pipeline_cidade_rodando.yml
+    with:
+      cidade_pasta: sao_paulo
+      arquivo_rodando_imovel: sao_paulo_bela_vista_coleta_dados_zap_imoveis_0_40.py
+      BAIRRO : bela-vista
+      URL_TEMPLATE_ZAP : "https://www.zapimoveis.com.br/venda/imoveis/sp+sao-paulo+centro+bela-vista/?onde=%2CS%C3%A3o+Paulo%2CS%C3%A3o+Paulo%2CCentro%2CBela+Vista%2C%2C%2Cneighborhood%2CBR%3ESao+Paulo%3ENULL%3ESao+Paulo%3ECentro%3EBela+Vista%2C-23.555405%2C-46.645643%2C&pagina={pagina}"
+
+
+
+  coleta_zap_imoveis_41_70:
+    uses: ./.github/workflows/pipeline_cidade_rodando.yml
+    with:
+      cidade_pasta: sao_paulo
+      arquivo_rodando_imovel: sao_paulo_bela_vista_coleta_dados_zap_imoveis_41_70.py
+      BAIRRO : bela-vista
+      URL_TEMPLATE_ZAP : "https://www.zapimoveis.com.br/venda/imoveis/sp+sao-paulo+centro+bela-vista/?onde=%2CS%C3%A3o+Paulo%2CS%C3%A3o+Paulo%2CCentro%2CBela+Vista%2C%2C%2Cneighborhood%2CBR%3ESao+Paulo%3ENULL%3ESao+Paulo%3ECentro%3EBela+Vista%2C-23.555405%2C-46.645643%2C&pagina={pagina}"
+
+  coleta_zap_imoveis_71_150:
+    uses: ./.github/workflows/pipeline_cidade_rodando.yml
+    with:
+      cidade_pasta: sao_paulo
+      arquivo_rodando_imovel: sao_paulo_bela_vista_coleta_dados_zap_imoveis_71_150.py
+      BAIRRO : bela-vista
+      URL_TEMPLATE_ZAP : "https://www.zapimoveis.com.br/venda/imoveis/sp+sao-paulo+centro+bela-vista/?onde=%2CS%C3%A3o+Paulo%2CS%C3%A3o+Paulo%2CCentro%2CBela+Vista%2C%2C%2Cneighborhood%2CBR%3ESao+Paulo%3ENULL%3ESao+Paulo%3ECentro%3EBela+Vista%2C-23.555405%2C-46.645643%2C&pagina={pagina}"
+
+  coleta_zap_imoveis_151_infinito:
+    uses: ./.github/workflows/pipeline_cidade_rodando.yml
+    with:
+      cidade_pasta: sao_paulo
+      arquivo_rodando_imovel: sao_paulo_bela_vista_coleta_dados_zap_imoveis_151_infinito.py
+      BAIRRO : bela-vista
+      URL_TEMPLATE_ZAP : "https://www.zapimoveis.com.br/venda/imoveis/sp+sao-paulo+centro+bela-vista/?onde=%2CS%C3%A3o+Paulo%2CS%C3%A3o+Paulo%2CCentro%2CBela+Vista%2C%2C%2Cneighborhood%2CBR%3ESao+Paulo%3ENULL%3ESao+Paulo%3ECentro%3EBela+Vista%2C-23.555405%2C-46.645643%2C&pagina={pagina}"
+
+
+  

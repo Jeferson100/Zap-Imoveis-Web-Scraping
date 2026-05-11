@@ -1,0 +1,64 @@
+name: Rodando Coleta Olx Sao Paulo Bela Vista
+on: 
+    workflow_run:
+        workflows: ["Rodando Coleta Chave Mao Sao Paulo Bela Vista"]
+        types:
+            - completed
+    workflow_dispatch:    
+
+jobs:
+  coleta_olx_0_35:
+    uses: ./.github/workflows/pipeline_cidade_rodando.yml
+    with:
+      cidade_pasta: sao_paulo
+      arquivo_rodando_imovel: sao_paulo_bela_vista_coleta_dados_olx_0_35.py
+      BAIRRO : bela-vista
+      URL_TEMPLATE_OLX : "https://www.olx.com.br/imoveis/venda/apartamentos/estado-sp?q=sao%20paulo%20bela%20vista&ss={min}&se={max}&o={pagina}"
+
+
+  coleta_olx_36_50:
+    uses: ./.github/workflows/pipeline_cidade_rodando.yml
+    with:
+      cidade_pasta: sao_paulo
+      arquivo_rodando_imovel: sao_paulo_bela_vista_coleta_dados_olx_36_50.py
+      BAIRRO : bela-vista
+      URL_TEMPLATE_OLX : "https://www.olx.com.br/imoveis/venda/apartamentos/estado-sp?q=sao%20paulo%20bela%20vista&ss={min}&se={max}&o={pagina}"
+
+
+  coleta_olx_51_70:
+    uses: ./.github/workflows/pipeline_cidade_rodando.yml
+    with:
+      cidade_pasta: sao_paulo
+      arquivo_rodando_imovel: sao_paulo_bela_vista_coleta_dados_olx_51_70.py
+      BAIRRO : bela-vista
+      URL_TEMPLATE_OLX : "https://www.olx.com.br/imoveis/venda/apartamentos/estado-sp?q=sao%20paulo%20bela%20vista&ss={min}&se={max}&o={pagina}"
+
+
+  coleta_olx_71_100:
+    uses: ./.github/workflows/pipeline_cidade_rodando.yml
+    with:
+      cidade_pasta: sao_paulo
+      arquivo_rodando_imovel: sao_paulo_bela_vista_coleta_dados_olx_71_100.py
+      BAIRRO : bela-vista
+      URL_TEMPLATE_OLX : "https://www.olx.com.br/imoveis/venda/apartamentos/estado-sp?q=sao%20paulo%20bela%20vista&ss={min}&se={max}&o={pagina}"
+
+      
+
+  coleta_olx_101_150:
+    uses: ./.github/workflows/pipeline_cidade_rodando.yml
+    with:
+      cidade_pasta: sao_paulo
+      arquivo_rodando_imovel: sao_paulo_bela_vista_coleta_dados_olx_101_150.py
+      BAIRRO : bela-vista
+      URL_TEMPLATE_OLX : "https://www.olx.com.br/imoveis/venda/apartamentos/estado-sp?q=sao%20paulo%20bela%20vista&ss={min}&se={max}&o={pagina}"
+
+  
+  coleta_olx_151_infinito:
+    uses: ./.github/workflows/pipeline_cidade_rodando.yml
+    with:
+      cidade_pasta: sao_paulo
+      arquivo_rodando_imovel: sao_paulo_bela_vista_coleta_dados_olx_151_infinito.py
+      BAIRRO : bela-vista
+      URL_TEMPLATE_OLX : "https://www.olx.com.br/imoveis/venda/apartamentos/estado-sp?q=sao%20paulo%20bela%20vista&ss={min}&se={max}&o={pagina}"
+
+  
