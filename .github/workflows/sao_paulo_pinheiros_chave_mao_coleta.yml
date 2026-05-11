@@ -5,27 +5,43 @@ on:
   workflow_dispatch:
 
 jobs:
-  coleta_chave_mao_0_100:
+  coleta_chave_mao_0_40:
     uses: ./.github/workflows/pipeline_cidade_rodando.yml
     with:
       cidade_pasta: sao_paulo
-      arquivo_rodando_imovel: sao_paulo_pinheiros_coleta_dados_chave_mao_0_100.py
+      arquivo_rodando_imovel: sao_paulo_pinheiros_coleta_dados_chave_mao_0_40.py
       URL_TEMPLATE_CHAVES : "https://www.chavesnamao.com.br/apartamentos-a-venda/sp-sao-paulo/pinheiros/?filtro=amin%3A{min}%2Camax%3A{max}&pg={pagina}"
       BAIRRO : pinheiros
 
-  coleta_chave_mao_101_200:
+  coleta_chave_mao_41_70:
     uses: ./.github/workflows/pipeline_cidade_rodando.yml
     with:
       cidade_pasta: sao_paulo
-      arquivo_rodando_imovel: sao_paulo_pinheiros_coleta_dados_chave_mao_101_200.py
+      arquivo_rodando_imovel: sao_paulo_pinheiros_coleta_dados_chave_mao_41_70.py
       URL_TEMPLATE_CHAVES : "https://www.chavesnamao.com.br/apartamentos-a-venda/sp-sao-paulo/pinheiros/?filtro=amin%3A{min}%2Camax%3A{max}&pg={pagina}"
       BAIRRO : pinheiros
 
-  coleta_chave_mao_201_infinito:
+  coleta_chave_mao_71_90:
     uses: ./.github/workflows/pipeline_cidade_rodando.yml
     with:
       cidade_pasta: sao_paulo
-      arquivo_rodando_imovel: sao_paulo_pinheiros_coleta_dados_chave_mao_201_infinito.py
+      arquivo_rodando_imovel: sao_paulo_pinheiros_coleta_dados_chave_mao_71_90.py
+      URL_TEMPLATE_CHAVES : "https://www.chavesnamao.com.br/apartamentos-a-venda/sp-sao-paulo/pinheiros/?filtro=amin%3A{min}%2Camax%3A{max}&pg={pagina}"
+      BAIRRO : pinheiros
+  
+  coleta_chave_mao_91_120:
+    uses: ./.github/workflows/pipeline_cidade_rodando.yml
+    with:
+      cidade_pasta: sao_paulo
+      arquivo_rodando_imovel: sao_paulo_pinheiros_coleta_dados_chave_mao_91_120.py
+      URL_TEMPLATE_CHAVES : "https://www.chavesnamao.com.br/apartamentos-a-venda/sp-sao-paulo/pinheiros/?filtro=amin%3A{min}%2Camax%3A{max}&pg={pagina}"
+      BAIRRO : pinheiros
+
+  coleta_chave_mao_121_infinito:
+    uses: ./.github/workflows/pipeline_cidade_rodando.yml
+    with:
+      cidade_pasta: sao_paulo
+      arquivo_rodando_imovel: sao_paulo_pinheiros_coleta_dados_chave_mao_121_infinito.py
       URL_TEMPLATE_CHAVES : "https://www.chavesnamao.com.br/apartamentos-a-venda/sp-sao-paulo/pinheiros/?filtro=amin%3A{min}%2Camax%3A{max}&pg={pagina}"
       BAIRRO : pinheiros
 
