@@ -31,6 +31,8 @@ estado_limpeza      =  os.getenv("ESTADO_LIMPEZA")
 
 estado_localizacao  =  os.getenv("ESTADO_LOCALIZACAO")
 
+filtro_bairro = os.getenv("FILTRO_BAIRRO")
+
 bairro = os.getenv("BAIRRO")
 
 BASE_DIR    = Path(__file__).parent.parent.parent.parent
@@ -69,6 +71,11 @@ logger.info(f"Dados consolidados para Olx.")
 
 logger.info(f"Arquivos consolidados em: {PASTA_DADOS}")
 
+
+MAPA_BAIRROS = {
+    "itaim bibi" :["chacara itaim"]
+}
+
 limpando_dados(name_arquivo_zap = f'{cidade}_{bairro}_zap_*.parquet', 
                name_arquivo_vivareal = f'{cidade}_{bairro}_vivareal_*.parquet', 
                name_arquivo_chave_mao = f'{cidade}_{bairro}_chave_mao_*.parquet',
@@ -81,5 +88,6 @@ limpando_dados(name_arquivo_zap = f'{cidade}_{bairro}_zap_*.parquet',
                cidade_localizacao=cidade_localizacao,
                estado_limpeza=estado_limpeza,
                estado_localizacao=estado_localizacao, 
-               #MAPA_BAIRROS=MAPA_BAIRROS,
+               MAPA_BAIRROS=MAPA_BAIRROS,
+               filtra_bairro=filtro_bairro
                )
