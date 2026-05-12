@@ -13,8 +13,7 @@ jobs:
       cidade_pasta: sao_paulo
       arquivo_rodando_imovel: sao_paulo_bela_vista_coleta_dados_olx_0_35.py
       BAIRRO : bela-vista
-      URL_TEMPLATE_OLX : "https://www.olx.com.br/imoveis/venda/apartamentos/estado-sp?q=sao%20paulo%20bela%20vista&ss={min}&se={max}&o={pagina}"
-
+      URL_TEMPLATE_OLX : "https://www.olx.com.br/imoveis/venda/estado-sp/sao-paulo-e-regiao/centro/bela-vista?ss={min}&se={max}&o={pagina}"
 
   coleta_olx_36_50:
     uses: ./.github/workflows/pipeline_cidade_rodando.yml
@@ -22,7 +21,7 @@ jobs:
       cidade_pasta: sao_paulo
       arquivo_rodando_imovel: sao_paulo_bela_vista_coleta_dados_olx_36_50.py
       BAIRRO : bela-vista
-      URL_TEMPLATE_OLX : "https://www.olx.com.br/imoveis/venda/apartamentos/estado-sp?q=sao%20paulo%20bela%20vista&ss={min}&se={max}&o={pagina}"
+      URL_TEMPLATE_OLX : "https://www.olx.com.br/imoveis/venda/estado-sp/sao-paulo-e-regiao/centro/bela-vista?ss={min}&se={max}&o={pagina}"
 
 
   coleta_olx_51_70:
@@ -31,7 +30,7 @@ jobs:
       cidade_pasta: sao_paulo
       arquivo_rodando_imovel: sao_paulo_bela_vista_coleta_dados_olx_51_70.py
       BAIRRO : bela-vista
-      URL_TEMPLATE_OLX : "https://www.olx.com.br/imoveis/venda/apartamentos/estado-sp?q=sao%20paulo%20bela%20vista&ss={min}&se={max}&o={pagina}"
+      URL_TEMPLATE_OLX : "https://www.olx.com.br/imoveis/venda/estado-sp/sao-paulo-e-regiao/centro/bela-vista?ss={min}&se={max}&o={pagina}"
 
 
   coleta_olx_71_100:
@@ -40,7 +39,7 @@ jobs:
       cidade_pasta: sao_paulo
       arquivo_rodando_imovel: sao_paulo_bela_vista_coleta_dados_olx_71_100.py
       BAIRRO : bela-vista
-      URL_TEMPLATE_OLX : "https://www.olx.com.br/imoveis/venda/apartamentos/estado-sp?q=sao%20paulo%20bela%20vista&ss={min}&se={max}&o={pagina}"
+      URL_TEMPLATE_OLX : "https://www.olx.com.br/imoveis/venda/estado-sp/sao-paulo-e-regiao/centro/bela-vista?ss={min}&se={max}&o={pagina}"
 
       
 
@@ -50,7 +49,7 @@ jobs:
       cidade_pasta: sao_paulo
       arquivo_rodando_imovel: sao_paulo_bela_vista_coleta_dados_olx_101_150.py
       BAIRRO : bela-vista
-      URL_TEMPLATE_OLX : "https://www.olx.com.br/imoveis/venda/apartamentos/estado-sp?q=sao%20paulo%20bela%20vista&ss={min}&se={max}&o={pagina}"
+      URL_TEMPLATE_OLX : "https://www.olx.com.br/imoveis/venda/estado-sp/sao-paulo-e-regiao/centro/bela-vista?ss={min}&se={max}&o={pagina}"
 
   
   coleta_olx_151_infinito:
@@ -59,6 +58,6 @@ jobs:
       cidade_pasta: sao_paulo
       arquivo_rodando_imovel: sao_paulo_bela_vista_coleta_dados_olx_151_infinito.py
       BAIRRO : bela-vista
-      URL_TEMPLATE_OLX : "https://www.olx.com.br/imoveis/venda/apartamentos/estado-sp?q=sao%20paulo%20bela%20vista&ss={min}&se={max}&o={pagina}"
+      URL_TEMPLATE_OLX : "https://www.olx.com.br/imoveis/venda/estado-sp/sao-paulo-e-regiao/centro/bela-vista?ss={min}&se={max}&o={pagina}"
 
   

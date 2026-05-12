@@ -13,7 +13,7 @@ jobs:
       cidade_pasta: sao_paulo
       arquivo_rodando_imovel: sao_paulo_jardins_coleta_dados_olx_0_50.py
       BAIRRO : jardins
-      URL_TEMPLATE_OLX : "https://www.olx.com.br/imoveis/venda/apartamentos/estado-sp?q=sao%20paulo%20jardins&ss={min}&se={max}&o={pagina}"
+      URL_TEMPLATE_OLX : "https://www.olx.com.br/imoveis/venda/apartamentos/estado-sp/sao-paulo-e-regiao/zona-sul/jardins?ss={min}&se={max}&o={pagina}"
 
 
   coleta_olx_51_90:
@@ -22,7 +22,7 @@ jobs:
       cidade_pasta: sao_paulo
       arquivo_rodando_imovel: sao_paulo_jardins_coleta_dados_olx_51_90.py
       BAIRRO : jardins
-      URL_TEMPLATE_OLX : "https://www.olx.com.br/imoveis/venda/apartamentos/estado-sp?q=sao%20paulo%20jardins&ss={min}&se={max}&o={pagina}"
+      URL_TEMPLATE_OLX : "https://www.olx.com.br/imoveis/venda/apartamentos/estado-sp/sao-paulo-e-regiao/zona-sul/jardins?ss={min}&se={max}&o={pagina}"
 
 
   coleta_olx_91_130:
@@ -31,7 +31,7 @@ jobs:
       cidade_pasta: sao_paulo
       arquivo_rodando_imovel: sao_paulo_jardins_coleta_dados_olx_91_130.py
       BAIRRO : jardins
-      URL_TEMPLATE_OLX : "https://www.olx.com.br/imoveis/venda/apartamentos/estado-sp?q=sao%20paulo%20jardins&ss={min}&se={max}&o={pagina}"
+      URL_TEMPLATE_OLX : "https://www.olx.com.br/imoveis/venda/apartamentos/estado-sp/sao-paulo-e-regiao/zona-sul/jardins?ss={min}&se={max}&o={pagina}"
 
 
   coleta_olx_131_180:
@@ -40,7 +40,7 @@ jobs:
       cidade_pasta: sao_paulo
       arquivo_rodando_imovel: sao_paulo_jardins_coleta_dados_olx_131_180.py
       BAIRRO : jardins
-      URL_TEMPLATE_OLX : "https://www.olx.com.br/imoveis/venda/apartamentos/estado-sp?q=sao%20paulo%20jardins&ss={min}&se={max}&o={pagina}"
+      URL_TEMPLATE_OLX : "https://www.olx.com.br/imoveis/venda/apartamentos/estado-sp/sao-paulo-e-regiao/zona-sul/jardins?ss={min}&se={max}&o={pagina}"
 
       
 
@@ -50,7 +50,7 @@ jobs:
       cidade_pasta: sao_paulo
       arquivo_rodando_imovel: sao_paulo_jardins_coleta_dados_olx_181_300.py
       BAIRRO : jardins
-      URL_TEMPLATE_OLX : "https://www.olx.com.br/imoveis/venda/apartamentos/estado-sp?q=sao%20paulo%20jardins&ss={min}&se={max}&o={pagina}"
+      URL_TEMPLATE_OLX : "https://www.olx.com.br/imoveis/venda/apartamentos/estado-sp/sao-paulo-e-regiao/zona-sul/jardins?ss={min}&se={max}&o={pagina}"
 
   
   coleta_olx_301_infinito:
@@ -59,6 +59,6 @@ jobs:
       cidade_pasta: sao_paulo
       arquivo_rodando_imovel: sao_paulo_jardins_coleta_dados_olx_301_infinito.py
       BAIRRO : jardins
-      URL_TEMPLATE_OLX : "https://www.olx.com.br/imoveis/venda/apartamentos/estado-sp?q=sao%20paulo%20jardins&ss={min}&se={max}&o={pagina}"
+      URL_TEMPLATE_OLX : "https://www.olx.com.br/imoveis/venda/apartamentos/estado-sp/sao-paulo-e-regiao/zona-sul/jardins?ss={min}&se={max}&o={pagina}"
 
   
