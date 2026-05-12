@@ -13,8 +13,7 @@ jobs:
       cidade_pasta: sao_paulo
       arquivo_rodando_imovel: sao_paulo_moema_coleta_dados_olx_0_40.py
       BAIRRO : moema
-      URL_TEMPLATE_OLX : "https://www.olx.com.br/imoveis/venda/apartamentos/estado-sp?q=sao%20paulo%20moema&ss={min}&se={max}&o={pagina}"
-
+      URL_TEMPLATE_OLX : "https://www.olx.com.br/imoveis/venda/estado-sp/sao-paulo-e-regiao/zona-sul/moema?ss={min}&se={max}&o={pagina}"
 
   coleta_olx_41_70:
     uses: ./.github/workflows/pipeline_cidade_rodando.yml
@@ -22,8 +21,7 @@ jobs:
       cidade_pasta: sao_paulo
       arquivo_rodando_imovel: sao_paulo_moema_coleta_dados_olx_41_70.py
       BAIRRO : moema
-      URL_TEMPLATE_OLX : "https://www.olx.com.br/imoveis/venda/apartamentos/estado-sp?q=sao%20paulo%20moema&ss={min}&se={max}&o={pagina}"
-
+      URL_TEMPLATE_OLX : "https://www.olx.com.br/imoveis/venda/estado-sp/sao-paulo-e-regiao/zona-sul/moema?ss={min}&se={max}&o={pagina}"
 
   coleta_olx_71_100:
     uses: ./.github/workflows/pipeline_cidade_rodando.yml
@@ -31,8 +29,7 @@ jobs:
       cidade_pasta: sao_paulo
       arquivo_rodando_imovel: sao_paulo_moema_coleta_dados_olx_71_100.py
       BAIRRO : moema
-      URL_TEMPLATE_OLX : "https://www.olx.com.br/imoveis/venda/apartamentos/estado-sp?q=sao%20paulo%20moema&ss={min}&se={max}&o={pagina}"
-
+      URL_TEMPLATE_OLX : "https://www.olx.com.br/imoveis/venda/estado-sp/sao-paulo-e-regiao/zona-sul/moema?ss={min}&se={max}&o={pagina}"
 
   coleta_olx_101_145:
     uses: ./.github/workflows/pipeline_cidade_rodando.yml
@@ -40,8 +37,7 @@ jobs:
       cidade_pasta: sao_paulo
       arquivo_rodando_imovel: sao_paulo_moema_coleta_dados_olx_101_145.py
       BAIRRO : moema
-      URL_TEMPLATE_OLX : "https://www.olx.com.br/imoveis/venda/apartamentos/estado-sp?q=sao%20paulo%20moema&ss={min}&se={max}&o={pagina}"
-
+      URL_TEMPLATE_OLX : "https://www.olx.com.br/imoveis/venda/estado-sp/sao-paulo-e-regiao/zona-sul/moema?ss={min}&se={max}&o={pagina}"
       
   coleta_olx_146_190:
     uses: ./.github/workflows/pipeline_cidade_rodando.yml
@@ -49,15 +45,15 @@ jobs:
       cidade_pasta: sao_paulo
       arquivo_rodando_imovel: sao_paulo_moema_coleta_dados_olx_146_190.py
       BAIRRO : moema
-      URL_TEMPLATE_OLX : "https://www.olx.com.br/imoveis/venda/apartamentos/estado-sp?q=sao%20paulo%20moema&ss={min}&se={max}&o={pagina}"
-  
+      URL_TEMPLATE_OLX : "https://www.olx.com.br/imoveis/venda/estado-sp/sao-paulo-e-regiao/zona-sul/moema?ss={min}&se={max}&o={pagina}"
+
   coleta_olx_191_260:
     uses: ./.github/workflows/pipeline_cidade_rodando.yml
     with:
       cidade_pasta: sao_paulo
       arquivo_rodando_imovel: sao_paulo_moema_coleta_dados_olx_191_260.py
       BAIRRO : moema
-      URL_TEMPLATE_OLX : "https://www.olx.com.br/imoveis/venda/apartamentos/estado-sp?q=sao%20paulo%20moema&ss={min}&se={max}&o={pagina}"
+      URL_TEMPLATE_OLX : "https://www.olx.com.br/imoveis/venda/estado-sp/sao-paulo-e-regiao/zona-sul/moema?ss={min}&se={max}&o={pagina}"
 
   coleta_olx_261_infinito:
     uses: ./.github/workflows/pipeline_cidade_rodando.yml
@@ -65,6 +61,4 @@ jobs:
       cidade_pasta: sao_paulo
       arquivo_rodando_imovel: sao_paulo_moema_coleta_dados_olx_261_infinito.py
       BAIRRO : moema
-      URL_TEMPLATE_OLX : "https://www.olx.com.br/imoveis/venda/apartamentos/estado-sp?q=sao%20paulo%20moema&ss={min}&se={max}&o={pagina}"
-
-  
+      URL_TEMPLATE_OLX : "https://www.olx.com.br/imoveis/venda/estado-sp/sao-paulo-e-regiao/zona-sul/moema?ss={min}&se={max}&o={pagina}"

@@ -13,9 +13,7 @@ jobs:
       cidade_pasta: sao_paulo
       arquivo_rodando_imovel: sao_paulo_perdizes_coleta_dados_olx_0_50.py
       BAIRRO : perdizes
-      URL_TEMPLATE_OLX : "https://www.olx.com.br/imoveis/venda/apartamentos/estado-sp?q=sao%20paulo%20perdizes&ss={min}&se={max}&o={pagina}"
-
-
+      URL_TEMPLATE_OLX : "https://www.olx.com.br/imoveis/venda/estado-sp/sao-paulo-e-regiao/zona-oeste/perdizes?ss={min}&se={max}&o={pagina}"
 
   coleta_olx_51_90:
     uses: ./.github/workflows/pipeline_cidade_rodando.yml
@@ -23,8 +21,7 @@ jobs:
       cidade_pasta: sao_paulo
       arquivo_rodando_imovel: sao_paulo_perdizes_coleta_dados_olx_51_90.py
       BAIRRO : perdizes
-      URL_TEMPLATE_OLX : "https://www.olx.com.br/imoveis/venda/apartamentos/estado-sp?q=sao%20paulo%20perdizes&ss={min}&se={max}&o={pagina}"
-
+      URL_TEMPLATE_OLX : "https://www.olx.com.br/imoveis/venda/estado-sp/sao-paulo-e-regiao/zona-oeste/perdizes?ss={min}&se={max}&o={pagina}"
 
   coleta_olx_91_130:
     uses: ./.github/workflows/pipeline_cidade_rodando.yml
@@ -32,8 +29,7 @@ jobs:
       cidade_pasta: sao_paulo
       arquivo_rodando_imovel: sao_paulo_perdizes_coleta_dados_olx_91_130.py
       BAIRRO : perdizes
-      URL_TEMPLATE_OLX : "https://www.olx.com.br/imoveis/venda/apartamentos/estado-sp?q=sao%20paulo%20perdizes&ss={min}&se={max}&o={pagina}"
-
+      URL_TEMPLATE_OLX : "https://www.olx.com.br/imoveis/venda/estado-sp/sao-paulo-e-regiao/zona-oeste/perdizes?ss={min}&se={max}&o={pagina}"
 
   coleta_olx_131_180:
     uses: ./.github/workflows/pipeline_cidade_rodando.yml
@@ -41,8 +37,7 @@ jobs:
       cidade_pasta: sao_paulo
       arquivo_rodando_imovel: sao_paulo_perdizes_coleta_dados_olx_131_180.py
       BAIRRO : perdizes
-      URL_TEMPLATE_OLX : "https://www.olx.com.br/imoveis/venda/apartamentos/estado-sp?q=sao%20paulo%20perdizes&ss={min}&se={max}&o={pagina}"
-
+      URL_TEMPLATE_OLX : "https://www.olx.com.br/imoveis/venda/estado-sp/sao-paulo-e-regiao/zona-oeste/perdizes?ss={min}&se={max}&o={pagina}"
       
   coleta_olx_181_300:
     uses: ./.github/workflows/pipeline_cidade_rodando.yml
@@ -50,14 +45,12 @@ jobs:
       cidade_pasta: sao_paulo
       arquivo_rodando_imovel: sao_paulo_perdizes_coleta_dados_olx_181_300.py
       BAIRRO : perdizes
-      URL_TEMPLATE_OLX : "https://www.olx.com.br/imoveis/venda/apartamentos/estado-sp?q=sao%20paulo%20perdizes&ss={min}&se={max}&o={pagina}"
-  
+      URL_TEMPLATE_OLX : "https://www.olx.com.br/imoveis/venda/estado-sp/sao-paulo-e-regiao/zona-oeste/perdizes?ss={min}&se={max}&o={pagina}"
+
   coleta_olx_301_infinito:
     uses: ./.github/workflows/pipeline_cidade_rodando.yml
     with:
       cidade_pasta: sao_paulo
       arquivo_rodando_imovel: sao_paulo_perdizes_coleta_dados_olx_301_infinito.py
       BAIRRO : perdizes
-      URL_TEMPLATE_OLX : "https://www.olx.com.br/imoveis/venda/apartamentos/estado-sp?q=sao%20paulo%20perdizes&ss={min}&se={max}&o={pagina}"
-
-  
+      URL_TEMPLATE_OLX : "https://www.olx.com.br/imoveis/venda/estado-sp/sao-paulo-e-regiao/zona-oeste/perdizes?ss={min}&se={max}&o={pagina}"

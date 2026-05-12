@@ -13,8 +13,7 @@ jobs:
       cidade_pasta: sao_paulo
       arquivo_rodando_imovel: sao_paulo_vila_mariana_coleta_dados_olx_0_35.py
       BAIRRO : vila-mariana
-      URL_TEMPLATE_OLX : "https://www.olx.com.br/imoveis/venda/apartamentos/estado-sp?q=sao%20paulo%20vila%20mariana&ss={min}&se={max}&o={pagina}"
-
+      URL_TEMPLATE_OLX : "https://www.olx.com.br/imoveis/venda/estado-sp/sao-paulo-e-regiao/zona-sul/vila-mariana?ss={min}&se={max}&o={pagina}"
 
   coleta_olx_36_60:
     uses: ./.github/workflows/pipeline_cidade_rodando.yml
@@ -22,8 +21,7 @@ jobs:
       cidade_pasta: sao_paulo
       arquivo_rodando_imovel: sao_paulo_vila_mariana_coleta_dados_olx_36_60.py
       BAIRRO : vila-mariana
-      URL_TEMPLATE_OLX : "https://www.olx.com.br/imoveis/venda/apartamentos/estado-sp?q=sao%20paulo%20vila%20mariana&ss={min}&se={max}&o={pagina}"
-
+      URL_TEMPLATE_OLX : "https://www.olx.com.br/imoveis/venda/estado-sp/sao-paulo-e-regiao/zona-sul/vila-mariana?ss={min}&se={max}&o={pagina}"
 
   coleta_olx_61_80:
     uses: ./.github/workflows/pipeline_cidade_rodando.yml
@@ -31,8 +29,7 @@ jobs:
       cidade_pasta: sao_paulo
       arquivo_rodando_imovel: sao_paulo_vila_mariana_coleta_dados_olx_61_80.py
       BAIRRO : vila-mariana
-      URL_TEMPLATE_OLX : "https://www.olx.com.br/imoveis/venda/apartamentos/estado-sp?q=sao%20paulo%20vila%20mariana&ss={min}&se={max}&o={pagina}"
-
+      URL_TEMPLATE_OLX : "https://www.olx.com.br/imoveis/venda/estado-sp/sao-paulo-e-regiao/zona-sul/vila-mariana?ss={min}&se={max}&o={pagina}"
 
   coleta_olx_81_100:
     uses: ./.github/workflows/pipeline_cidade_rodando.yml
@@ -40,8 +37,7 @@ jobs:
       cidade_pasta: sao_paulo
       arquivo_rodando_imovel: sao_paulo_vila_mariana_coleta_dados_olx_81_100.py
       BAIRRO : vila-mariana
-      URL_TEMPLATE_OLX : "https://www.olx.com.br/imoveis/venda/apartamentos/estado-sp?q=sao%20paulo%20vila%20mariana&ss={min}&se={max}&o={pagina}"
-
+      URL_TEMPLATE_OLX : "https://www.olx.com.br/imoveis/venda/estado-sp/sao-paulo-e-regiao/zona-sul/vila-mariana?ss={min}&se={max}&o={pagina}"
       
   coleta_olx_101_130:
     uses: ./.github/workflows/pipeline_cidade_rodando.yml
@@ -49,22 +45,20 @@ jobs:
       cidade_pasta: sao_paulo
       arquivo_rodando_imovel: sao_paulo_vila_mariana_coleta_dados_olx_101_130.py
       BAIRRO : vila-mariana
-      URL_TEMPLATE_OLX : "https://www.olx.com.br/imoveis/venda/apartamentos/estado-sp?q=sao%20paulo%20vila%20mariana&ss={min}&se={max}&o={pagina}"
-  
+      URL_TEMPLATE_OLX : "https://www.olx.com.br/imoveis/venda/estado-sp/sao-paulo-e-regiao/zona-sul/vila-mariana?ss={min}&se={max}&o={pagina}"
+
   coleta_olx_131_180:
     uses: ./.github/workflows/pipeline_cidade_rodando.yml
     with:
       cidade_pasta: sao_paulo
       arquivo_rodando_imovel: sao_paulo_vila_mariana_coleta_dados_olx_131_180.py
       BAIRRO : vila-mariana
-      URL_TEMPLATE_OLX : "https://www.olx.com.br/imoveis/venda/apartamentos/estado-sp?q=sao%20paulo%20vila%20mariana&ss={min}&se={max}&o={pagina}"
-  
+      URL_TEMPLATE_OLX : "https://www.olx.com.br/imoveis/venda/estado-sp/sao-paulo-e-regiao/zona-sul/vila-mariana?ss={min}&se={max}&o={pagina}"
+
   coleta_olx_181_infinito:
     uses: ./.github/workflows/pipeline_cidade_rodando.yml
     with:
       cidade_pasta: sao_paulo
       arquivo_rodando_imovel: sao_paulo_vila_mariana_coleta_dados_olx_181_infinito.py
       BAIRRO : vila-mariana
-      URL_TEMPLATE_OLX : "https://www.olx.com.br/imoveis/venda/apartamentos/estado-sp?q=sao%20paulo%20vila%20mariana&ss={min}&se={max}&o={pagina}"
-
-  
+      URL_TEMPLATE_OLX : "https://www.olx.com.br/imoveis/venda/estado-sp/sao-paulo-e-regiao/zona-sul/vila-mariana?ss={min}&se={max}&o={pagina}"
