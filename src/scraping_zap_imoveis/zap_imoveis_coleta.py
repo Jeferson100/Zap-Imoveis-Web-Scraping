@@ -4,7 +4,7 @@ import logging
 import json
 import sys
 from .extrair_dados_zap_imoveis_playwright_async import ZapScraperDadosImovelAsync
-from .total_pagina_zap_imovel_playwright_async import ZapScraperTotalPaginaAsync
+from .total_page_zap import TotalPageZap
 from .link_anuncios_zap_imoveis_playwright_async import ZapScraperLinksAsync
 from tqdm import tqdm
 import warnings
@@ -28,13 +28,22 @@ class ZapImoveisColeta:
     
         if sys.platform == 'win32':
             asyncio.set_event_loop_policy(asyncio.WindowsProactorEventLoopPolicy())
-
-    async def _get_total_pages(self):
-        url_inicial = self.base_url_template.format(pagina=1)
-        logger.info(f"Obtendo total de páginas para: {url_inicial}")
-        async with ZapScraperTotalPaginaAsync(headless=self.headless) as scanner:
-            return await scanner.get_total_pages(url_inicial)
-
+            
+    async def _total_pages(self):
+        """Usa a classe TotalPageOLX para detectar o limite real de páginas"""
+        try:
+            url_primeira_pag = self.base_url_template.format(pagina=1)
+            
+            scraper_paginas = TotalPageZap()
+            total = await scraper_paginas.get_total_pages(url_primeira_pag)
+            
+            logger.info(f"Total de páginas detectado automaticamente: {total}")
+            return total
+        except Exception as e:
+            logger.error(f"Erro ao extrair total de páginas: {e}")
+            logger.info("Retornando total de páginas padrão: 50.")
+            return 50
+        
     async def _get_links_from_page(self, page_number):
         url = self.base_url_template.format(pagina=page_number)
         async with ZapScraperLinksAsync(headless=self.headless) as scanner:
@@ -183,8 +192,10 @@ class ZapImoveisColeta:
     
     async def run(self, output_file="resultados.json", total_pages: int = None, limite_falhas: int = 3):
         # --- ETAPA 1: DETERMINAR PÁGINAS ---
+        # --- ETAPA 1: DETERMINAR PÁGINAS ---
         if total_pages is None:
-            total_pages = 5
+            logger.info("Total de páginas não definido. Iniciando detecção automática...")
+            total_pages = await self._total_pages()
             
         if not total_pages:
             logger.error("Não foi possível determinar o total de páginas.")

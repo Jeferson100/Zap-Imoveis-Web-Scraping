@@ -61,5 +61,5 @@ orchestrator = OLXColeta(URL_TEMPLATE,
 
 resultado = asyncio.run(orchestrator.run(
     output_file=str(output_file),
-    total_pages=total_paginas
+    #total_pages=total_paginas
 ))

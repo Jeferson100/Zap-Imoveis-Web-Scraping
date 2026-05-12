@@ -102,71 +102,64 @@ import asyncio
 import re
 from playwright.async_api import async_playwright
 
-class TotalPageOLX:
-    def __init__(self, user_agent: str = None):
-        self.user_agent = user_agent or (
-            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
-            "AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36"
+import math
+from playwright.async_api import async_playwright
+
+
+import asyncio
+import re
+import math
+from playwright.async_api import async_playwright
+
+async def get_total_pages_by_count(url):
+    async with async_playwright() as p:
+        browser = await p.chromium.launch(headless=True)
+        # Contexto com User-Agent para evitar bloqueios
+        context = await browser.new_context(
+            user_agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36"
         )
+        page = await context.new_page()
+        
+        try:
+            # O Zap exige um tempo para carregar os dados dinâmicos
+            await page.goto(url, wait_until="networkidle", timeout=60000)
 
-    async def get_total_pages(self, url: str) -> int:
-        """
-        Retorna o número total de páginas para uma dada URL da OLX.
-        Se não encontrar paginação, retorna 1.
-        """
-        async with async_playwright() as p:
-            browser = await p.chromium.launch(headless=True)
-            context = await browser.new_context(user_agent=self.user_agent)
-            page = await context.new_page()
-
-            try:
-                # Aumentamos o timeout de carregamento para 60s devido à lentidão da OLX
-                await page.goto(url, wait_until="domcontentloaded", timeout=60000)
-
-                # Estratégia 1: Procurar pelo botão "Última página"
-                # Usamos um timeout curto (5s) para não travar o script
-                last_page_button = page.get_by_role("link", name="Última página")
+            # ESTRATÉGIA: Usar o atributo 'data-cy' que você postou no HTML
+            # Este é o seletor mais forte disponível
+            locator_total = page.locator('[data-cy="rp-searchTitle-txt"]')
+            
+            # Espera o elemento ficar visível
+            await locator_total.wait_for(state="visible", timeout=15000)
+            
+            texto_total = await locator_total.inner_text()
+            print(f"Texto capturado: {texto_total}") # Debug
+            
+            # Limpa o texto: remove pontos de milhar e pega apenas os números
+            # "288 Imóveis para alugar..." -> 288
+            numeros = re.findall(r'\d+', texto_total.replace('.', '').replace(',', ''))
+            
+            print(f"Total de imóveis: {numeros[0]}")
+            
+            if numeros:
+                total_imoveis = int(numeros[0])
                 
-                try:
-                    href = await last_page_button.get_attribute("href", timeout=5000)
-                    if href:
-                        match = re.search(r'[?&]o=(\d+)', href)
-                        if match:
-                            total = int(match.group(1))
-                            return total
-                except Exception:
-                    # Se não achou o botão "Última página", tentamos a Estratégia 2
-                    pass
-
-                # Estratégia 2: Pegar o maior número da lista de paginação comum
-                # Isso resolve casos onde a busca tem poucas páginas (ex: 3 ou 4)
-                pagination_items = await page.locator('a[data-lurker-detail="pagination_page"]').all_text_contents()
+                # Cálculo de páginas (Zap costuma usar 24 anúncios por página)
+                imoveis_por_pagina = 30 
+                total_paginas = math.ceil(total_imoveis / imoveis_por_pagina)
                 
-                if not pagination_items:
-                    # Seletor alternativo caso a OLX mude as classes
-                    pagination_items = await page.locator('ul.olx-pagination a').all_text_contents()
+                print(f"Total de imóveis: {total_imoveis} -> Páginas: {total_paginas}")
+                return min(total_paginas, 100)
+            
+            return 50
 
-                if pagination_items:
-                    numeros = [int(n) for n in pagination_items if n.isdigit()]
-                    if numeros:
-                        return max(numeros)
+        except Exception as e:
+            print(f"Erro na captura: {e}")
+            return 1
+        finally:
+            await browser.close()
 
-                return 1
-
-            except Exception as e:
-                print(f"Erro ao obter total de páginas: {e}")
-                return 1
-            finally:
-                await browser.close()
-
-# --- Exemplo de uso no seu Notebook ou Script ---
 if __name__ == "__main__":
-    async def main():
-        url_teste = "https://www.olx.com.br/imoveis/venda/estado-sp/sao-paulo-e-regiao/zona-oeste/pinheiros?se=40"
-        
-        scraper_paginas = TotalPageOLX()
-        total = await scraper_paginas.get_total_pages(url_teste)
-        
-        print(f"Resultado final: {total} páginas.")
-
-    asyncio.run(main())
+    # Teste com a URL de Joinville
+    url = "https://www.zapimoveis.com.br/aluguel/imoveis/sc+joinville/?onde=%2CSanta+Catarina%2CJoinville%2C%2C%2C%2C%2Ccity%2CBR%3ESanta+Catarina%3ENULL%3EJoinville%2C-26.304376%2C-48.846374%2C&areaMaxima=100&areaMinima=10"
+    total = asyncio.run(get_total_pages_by_count(url))
+    print(f"Resultado Final: {total}")
