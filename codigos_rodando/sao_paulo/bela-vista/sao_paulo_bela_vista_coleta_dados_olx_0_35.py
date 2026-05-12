@@ -39,7 +39,7 @@ URL_TEMPLATE = os.getenv("URL_TEMPLATE_OLX")
 
 now = time.strftime("%Y-%m")
 
-total_paginas = 50
+#total_paginas = 50
 
 headless = os.getenv("HEADLESS", "True").lower() == "true"
 
@@ -68,6 +68,6 @@ for min_area, max_area in area_ranges.items():
 
     resultado = asyncio.run(orchestrator.run(
         output_file=str(output_file),
-        total_pages=total_paginas
+        #total_pages=total_paginas
     ))
 logger.info(f"Arquivo de dados gerado em: {output_file}")

@@ -4,6 +4,7 @@ import json
 import warnings
 from .extrair_dados_olx_playwright_async import OLXScraperAsync
 from .link_anuncios_olx_playwright_async import OLXScraperLinksAsync
+from .total_page_olx import TotalPageOLX
 from tqdm.asyncio import tqdm  # Versão assíncrona do tqdm
 import sys
 import random
@@ -178,6 +179,22 @@ class OLXColeta:
     
         if sys.platform == 'win32':
             asyncio.set_event_loop_policy(asyncio.WindowsProactorEventLoopPolicy())
+    
+    
+    async def _total_pages(self):
+        """Usa a classe TotalPageOLX para detectar o limite real de páginas"""
+        try:
+            url_primeira_pag = self.base_url_template.format(pagina=1)
+            
+            scraper_paginas = TotalPageOLX()
+            total = await scraper_paginas.get_total_pages(url_primeira_pag)
+            
+            logger.info(f"Total de páginas detectado automaticamente: {total}")
+            return total
+        except Exception as e:
+            logger.error(f"Erro ao extrair total de páginas: {e}")
+            logger.info("Retornando total de páginas padrão: 50.")
+            return 50
 
     async def _get_links_from_page(self, page_number):
         url = self.base_url_template.format(pagina=page_number)
@@ -245,7 +262,8 @@ class OLXColeta:
     ):
         # --- ETAPA 1: DETERMINAR PÁGINAS ---
         if total_pages is None:
-            total_pages = 5
+            logger.info("Total de páginas não definido. Iniciando detecção automática...")
+            total_pages = await self._total_pages()
             
         if not total_pages:
             logger.error("Não foi possível determinar o total de páginas.")
