@@ -194,7 +194,7 @@ class OLXColeta:
         except Exception as e:
             logger.error(f"Erro ao extrair total de páginas: {e}")
             logger.info("Retornando total de páginas padrão: 50.")
-            return 50
+            return 100
 
     async def _get_links_from_page(self, page_number):
         url = self.base_url_template.format(pagina=page_number)

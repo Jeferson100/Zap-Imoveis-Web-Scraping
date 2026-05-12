@@ -63,7 +63,7 @@ for min_area, max_area in area_ranges.items():
 
     resultado = asyncio.run(orchestrator.run(
         output_file=str(output_file),
-        total_pages=total_paginas
+        #total_pages=total_paginas
     ))
 
 logger.info(f"Arquivo de dados gerado em: {output_file}")

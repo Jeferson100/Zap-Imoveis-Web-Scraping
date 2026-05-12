@@ -61,11 +61,11 @@ class TotalPageZap:
                     return min(total_paginas, 100)
                 
                 logger.warning("Nenhum número encontrado no título. Retornando padrão 1.")
-                return 1
+                return 50
 
             except Exception as e:
                 logger.error(f"Erro ao capturar total de páginas: {e}")
-                return 1 # Retorno seguro para não quebrar o loop principal
+                return 50 
             finally:
                 await browser.close()
 

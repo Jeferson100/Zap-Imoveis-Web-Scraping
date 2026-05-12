@@ -5,6 +5,7 @@ import json
 import sys
 from .extrair_dados_vivareal_playwright_async import VivaRealDadosImovelAsync
 from .links_anuncios_viva_real_playwright_async import VivaRealScraperLinksAsync
+from .total_page_zap import TotalPageZap
 from tqdm import tqdm
 import warnings
 import random
@@ -27,6 +28,21 @@ class VivaRealColeta:
     
         if sys.platform == 'win32':
             asyncio.set_event_loop_policy(asyncio.WindowsProactorEventLoopPolicy())
+            
+    async def _total_pages(self):
+        """Usa a classe TotalPageOLX para detectar o limite real de páginas"""
+        try:
+            url_primeira_pag = self.base_url_template.format(pagina=1)
+            
+            scraper_paginas = TotalPageZap()
+            total = await scraper_paginas.get_total_pages(url_primeira_pag)
+            
+            logger.info(f"Total de páginas detectado automaticamente: {total}")
+            return total
+        except Exception as e:
+            logger.error(f"Erro ao extrair total de páginas: {e}")
+            logger.info("Retornando total de páginas padrão: 50.")
+            return 50
 
     async def _get_links_from_page(self, page_number):
         url = self.base_url_template.format(pagina=page_number)
@@ -113,16 +129,17 @@ class VivaRealColeta:
     async def run(self, output_file="resultados.json", total_pages: int = None, limite_falhas: int = 3):
         # --- ETAPA 1: DETERMINAR PÁGINAS ---
         if total_pages is None:
-            total_pages = 5
+            logger.info("Total de páginas não definido. Iniciando detecção automática...")
+            total_pages = await self._total_pages()
             
         if not total_pages:
             logger.error("Não foi possível determinar o total de páginas.")
             return
         
         logger.info("Iniciando coleta de links em %s páginas", total_pages)
+        
         logger.info("Parametros recebidos: total_pages=%s, limite_falhas=%s, max_concurrency=%s, self.retries=%s", total_pages, limite_falhas, self.max_concurrency, self.retries)
 
-        
         todos_os_links = []
         # --- Lógica de Interrupção ---
         contador_falhas = 0

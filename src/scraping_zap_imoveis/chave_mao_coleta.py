@@ -4,6 +4,7 @@ import json
 import warnings
 from .extrair_dados_chave_mao_playwright_async import ChavesNaMaoScraperAsync
 from .link_anuncios_chave_mao_playwright_async import ChaveMaoScraperLinksAsync
+from .total_page_chaves import TotalPageChavesNaMao
 from tqdm.asyncio import tqdm  # Versão assíncrona do tqdm
 import random
 import sys
@@ -25,6 +26,21 @@ class ChavesMaoColeta:
     
         if sys.platform == 'win32':
             asyncio.set_event_loop_policy(asyncio.WindowsProactorEventLoopPolicy())
+    
+    async def _total_pages(self):
+        """Usa a classe TotalPageOLX para detectar o limite real de páginas"""
+        try:
+            url_primeira_pag = self.base_url_template.format(pagina=1)
+            
+            scraper_paginas = TotalPageChavesNaMao()
+            total = await scraper_paginas.get_total_pages(url_primeira_pag)
+            
+            logger.info(f"Total de páginas detectado automaticamente: {total}")
+            return total
+        except Exception as e:
+            logger.error(f"Erro ao extrair total de páginas: {e}")
+            logger.info("Retornando total de páginas padrão: 50.")
+            return 100
 
     async def _get_links_from_page(self, page_number):
         url = self.base_url_template.format(pagina=page_number)
@@ -115,7 +131,8 @@ class ChavesMaoColeta:
     async def run(self, output_file="resultados.json", total_pages: int = None, limite_falhas: int = 1):
         # --- ETAPA 1: DETERMINAR PÁGINAS ---
         if total_pages is None:
-            total_pages = 5
+            logger.info("Total de páginas não definido. Iniciando detecção automática...")
+            total_pages = await self._total_pages()
             
         if not total_pages:
             logger.error("Não foi possível determinar o total de páginas.")

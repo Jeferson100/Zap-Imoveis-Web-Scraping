@@ -16,6 +16,7 @@ from .extrair_dados_vivareal_playwright_async import VivaRealDadosImovelAsync
 from .links_anuncios_viva_real_playwright_async import VivaRealScraperLinksAsync
 from .viva_real_coleta import VivaRealColeta
 from .total_page_olx import TotalPageOLX
+from .total_page_chaves import TotalPageChavesNaMao
 
 __all__ = ["ZapScraperTotalPagina",
             "ZapScraperLinks",

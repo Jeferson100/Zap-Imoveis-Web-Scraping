@@ -51,11 +51,11 @@ class TotalPageOLX:
                     if numeros:
                         return max(numeros)
 
-                return 1
+                return 50
 
             except Exception as e:
                 print(f"Erro ao obter total de páginas: {e}")
-                return 1
+                return 50
             finally:
                 await browser.close()
 
