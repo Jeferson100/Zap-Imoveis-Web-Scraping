@@ -16,3 +16,4 @@ jobs:
       estado_limpeza: sp
       estado_localizacao: SP
       BAIRRO : moema
+      FILTRO_BAIRRO : "moema"

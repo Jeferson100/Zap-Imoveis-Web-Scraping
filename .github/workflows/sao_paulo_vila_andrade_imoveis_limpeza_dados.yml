@@ -1,8 +1,8 @@
-name: Rodando Limpeza Imoveis Sao Paulo Vila Mariana
+name: Rodando Limpeza Imoveis Sao Paulo Vila Andrade
 
 on: 
   schedule:
-    - cron: '0 9 19 1,2,3,4,5,6,7,8,9,10,11,12 *'  # 09:00 no primeiro dia de cada mês
+    - cron: '0 9 24 1,2,3,4,5,6,7,8,9,10,11,12 *'  # 09:00 no primeiro dia de cada mês
   workflow_dispatch: 
 
 jobs:
@@ -10,10 +10,10 @@ jobs:
     uses: ./.github/workflows/pipeline_cidade_rodando.yml
     with:
       cidade_pasta: sao_paulo
-      arquivo_rodando_imovel: sao_paulo_vila_mariana_limpando_dados_imoveis.py
+      arquivo_rodando_imovel: sao_paulo_vila_andrade_limpando_dados_imoveis.py
       cidade_limpeza: sao paulo
       cidade_localizacao: Sao Paulo
       estado_limpeza: sp
       estado_localizacao: SP
-      BAIRRO : vila-mariana
-      FILTRO_BAIRRO : "vila mariana"
+      BAIRRO : vila-andrade
+      FILTRO_BAIRRO : "vila andrade"

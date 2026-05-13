@@ -16,3 +16,4 @@ jobs:
       estado_limpeza: sp
       estado_localizacao: SP
       BAIRRO : itaim-bibi
+      FILTRO_BAIRRO : "itaim bibi"

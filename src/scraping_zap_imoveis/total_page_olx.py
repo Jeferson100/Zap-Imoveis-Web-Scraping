@@ -51,7 +51,7 @@ class TotalPageOLX:
                     if numeros:
                         return max(numeros)
 
-                return 50
+                return 1
 
             except Exception as e:
                 print(f"Erro ao obter total de páginas: {e}")

@@ -64,6 +64,9 @@ on:
       URL_TEMPLATE_ZAP:
         required: false
         type: string
+      FILTRO_BAIRRO:
+        required: false
+        type: string
 
 
 jobs:
@@ -133,6 +136,7 @@ jobs:
           URL_TEMPLATE_OLX: ${{ inputs.URL_TEMPLATE_OLX }}
           URL_TEMPLATE_ZAP: ${{ inputs.URL_TEMPLATE_ZAP }}
           URL_TEMPLATE_CHAVES: ${{ inputs.URL_TEMPLATE_CHAVES }}
+          FILTRO_BAIRRO: ${{ inputs.FILTRO_BAIRRO }}
 
 
       - name: Commit e Push

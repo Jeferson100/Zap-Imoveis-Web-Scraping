@@ -1,0 +1,36 @@
+name: Rodando Coleta Viva Real Sao Paulo Vila Andrade
+on: 
+  workflow_run:
+        workflows: ["Rodando Coleta Zap Imoveis Sao Paulo Vila Andrade"]
+        types:
+            - completed
+  workflow_dispatch:  
+
+jobs:
+  coleta_viva_real_0_80:
+    uses: ./.github/workflows/pipeline_cidade_rodando.yml
+    with:
+      cidade_pasta: sao_paulo
+      arquivo_rodando_imovel: sao_paulo_vila_andrade_coleta_dados_viva_real_0_80.py
+      BAIRRO : vila-andrade
+      URL_TEMPLATE_VIVAREAL : "https://www.vivareal.com.br/venda/sp/sao-paulo/zona-sul/vila-andrade/?onde=%2CS%C3%A3o+Paulo%2CS%C3%A3o+Paulo%2CZona+Sul%2CVila+Andrade%2C%2C%2Cneighborhood%2CBR%3ESao+Paulo%3ENULL%3ESao+Paulo%3EZona+Sul%3EVILA+ANDRADE%2C-23.631509%2C-46.736743%2C&pagina={pagina}"
+
+
+  coleta_viva_real_81_150:
+    uses: ./.github/workflows/pipeline_cidade_rodando.yml
+    with:
+      cidade_pasta: sao_paulo
+      arquivo_rodando_imovel: sao_paulo_vila_andrade_coleta_dados_viva_real_81_150.py
+      BAIRRO : vila-andrade
+      URL_TEMPLATE_VIVAREAL : "https://www.vivareal.com.br/venda/sp/sao-paulo/zona-sul/vila-andrade/?onde=%2CS%C3%A3o+Paulo%2CS%C3%A3o+Paulo%2CZona+Sul%2CVila+Andrade%2C%2C%2Cneighborhood%2CBR%3ESao+Paulo%3ENULL%3ESao+Paulo%3EZona+Sul%3EVILA+ANDRADE%2C-23.631509%2C-46.736743%2C&pagina={pagina}"
+    
+  coleta_viva_real_151_infinito:
+    uses: ./.github/workflows/pipeline_cidade_rodando.yml
+    with:
+      cidade_pasta: sao_paulo
+      arquivo_rodando_imovel: sao_paulo_vila_andrade_coleta_dados_viva_real_151_infinito.py
+      BAIRRO : vila-andrade
+      URL_TEMPLATE_VIVAREAL : "https://www.vivareal.com.br/venda/sp/sao-paulo/zona-sul/vila-andrade/?onde=%2CS%C3%A3o+Paulo%2CS%C3%A3o+Paulo%2CZona+Sul%2CVila+Andrade%2C%2C%2Cneighborhood%2CBR%3ESao+Paulo%3ENULL%3ESao+Paulo%3EZona+Sul%3EVILA+ANDRADE%2C-23.631509%2C-46.736743%2C&pagina={pagina}"
+
+
+  
