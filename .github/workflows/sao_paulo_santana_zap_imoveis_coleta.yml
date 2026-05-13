@@ -1,0 +1,44 @@
+name: Rodando Coleta Zap Imoveis Sao Paulo Santana
+on: 
+  workflow_run:
+        workflows: ["Rodando Coleta Olx Sao Paulo Santana"]
+        types:
+            - completed
+  workflow_dispatch:  
+
+jobs:
+  coleta_zap_imoveis_0_70:
+    uses: ./.github/workflows/pipeline_cidade_rodando.yml
+    with:
+      cidade_pasta: sao_paulo
+      arquivo_rodando_imovel: sao_paulo_santana_coleta_dados_zap_imoveis_0_70.py
+      BAIRRO : santana
+      URL_TEMPLATE_ZAP : "https://www.zapimoveis.com.br/venda/imoveis/sp+sao-paulo+zona-norte+santana/?onde=%2CS%C3%A3o+Paulo%2CS%C3%A3o+Paulo%2CZona+Norte%2CSantana%2C%2C%2Cneighborhood%2CBR%3ESao+Paulo%3ENULL%3ESao+Paulo%3EZona+Norte%3ESantana%2C-23.498996%2C-46.625592%2C&pagina={pagina}"
+
+  coleta_zap_imoveis_71_120:
+    uses: ./.github/workflows/pipeline_cidade_rodando.yml
+    with:
+      cidade_pasta: sao_paulo
+      arquivo_rodando_imovel: sao_paulo_santana_coleta_dados_zap_imoveis_71_120.py
+      BAIRRO : santana
+      URL_TEMPLATE_ZAP : "https://www.zapimoveis.com.br/venda/imoveis/sp+sao-paulo+zona-norte+santana/?onde=%2CS%C3%A3o+Paulo%2CS%C3%A3o+Paulo%2CZona+Norte%2CSantana%2C%2C%2Cneighborhood%2CBR%3ESao+Paulo%3ENULL%3ESao+Paulo%3EZona+Norte%3ESantana%2C-23.498996%2C-46.625592%2C&pagina={pagina}"
+  
+  
+  coleta_zap_imoveis_121_220:
+    uses: ./.github/workflows/pipeline_cidade_rodando.yml
+    with:
+      cidade_pasta: sao_paulo
+      arquivo_rodando_imovel: sao_paulo_santana_coleta_dados_zap_imoveis_121_220.py
+      BAIRRO : santana
+      URL_TEMPLATE_ZAP : "https://www.zapimoveis.com.br/venda/imoveis/sp+sao-paulo+zona-norte+santana/?onde=%2CS%C3%A3o+Paulo%2CS%C3%A3o+Paulo%2CZona+Norte%2CSantana%2C%2C%2Cneighborhood%2CBR%3ESao+Paulo%3ENULL%3ESao+Paulo%3EZona+Norte%3ESantana%2C-23.498996%2C-46.625592%2C&pagina={pagina}"
+  
+  coleta_zap_imoveis_221_infinito:
+    uses: ./.github/workflows/pipeline_cidade_rodando.yml
+    with:
+      cidade_pasta: sao_paulo
+      arquivo_rodando_imovel: sao_paulo_santana_coleta_dados_zap_imoveis_221_infinito.py
+      BAIRRO : santana
+      URL_TEMPLATE_ZAP : "https://www.zapimoveis.com.br/venda/imoveis/sp+sao-paulo+zona-norte+santana/?onde=%2CS%C3%A3o+Paulo%2CS%C3%A3o+Paulo%2CZona+Norte%2CSantana%2C%2C%2Cneighborhood%2CBR%3ESao+Paulo%3ENULL%3ESao+Paulo%3EZona+Norte%3ESantana%2C-23.498996%2C-46.625592%2C&pagina={pagina}"
+
+  
+  

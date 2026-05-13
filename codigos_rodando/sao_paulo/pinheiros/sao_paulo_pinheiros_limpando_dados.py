@@ -32,6 +32,8 @@ estado_localizacao  =  os.getenv("ESTADO_LOCALIZACAO")
 
 bairro = os.getenv("BAIRRO")
 
+filtro_bairro = os.getenv("FILTRO_BAIRRO")
+
 BASE_DIR    = Path(__file__).parent.parent.parent.parent
  
 PASTA_DADOS = BASE_DIR / 'dados' / cidade  / bairro
@@ -81,4 +83,5 @@ limpando_dados(name_arquivo_zap = f'{cidade}_{bairro}_zap_*.parquet',
                estado_limpeza=estado_limpeza,
                estado_localizacao=estado_localizacao, 
                #MAPA_BAIRROS=MAPA_BAIRROS,
+               filtro_bairro=filtro_bairro
                )

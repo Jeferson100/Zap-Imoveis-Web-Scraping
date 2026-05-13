@@ -38,6 +38,8 @@ PASTA_DADOS = BASE_DIR / 'dados' / cidade  / bairro
 
 BATCH        =  os.getenv("BATCH_LIMPEZA")
 
+filtro_bairro = os.getenv("FILTRO_BAIRRO")
+
 BATCH = int(BATCH) if BATCH and BATCH.isdigit() else 100
 
 logger.info(f"Iniciando limpeza de dados de imóveis de {cidade_limpeza}...")
@@ -81,4 +83,5 @@ limpando_dados(name_arquivo_zap = f'{cidade}_{bairro}_zap_*.parquet',
                estado_limpeza=estado_limpeza,
                estado_localizacao=estado_localizacao, 
                #MAPA_BAIRROS=MAPA_BAIRROS,
+               filtro_bairro=filtro_bairro
                )
