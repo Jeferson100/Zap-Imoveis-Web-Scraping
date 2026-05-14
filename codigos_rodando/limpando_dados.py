@@ -278,7 +278,7 @@ def limpando_dados(
          pais: str = 'Brasil', 
          MAPA_BAIRROS: dict = None,
          MAPA_CIDADES: str = None,
-         filtra_bairro: bool = False,):
+         filtro_bairro: bool = False,):
     
     logger.info(f"Iniciando limpeza de dados de imóveis de {cidade_limpeza}...")
     
@@ -382,8 +382,8 @@ def limpando_dados(
     if MAPA_CIDADES:
         df_limpo.loc[df_limpo['cidade'].str.contains(MAPA_CIDADES, na=False), 'cidade'] = cidade_limpeza
         
-    if filtra_bairro:
-        df_limpo = df_limpo[df_limpo['bairro'].isin([filtra_bairro])]
+    if filtro_bairro:
+        df_limpo = df_limpo[df_limpo['bairro'].isin([filtro_bairro])]
 
     logger.info(f"Coluna 'bairro' corrigida...")
     

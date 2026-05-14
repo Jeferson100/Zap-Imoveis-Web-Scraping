@@ -89,5 +89,5 @@ limpando_dados(name_arquivo_zap = f'{cidade}_{bairro}_zap_*.parquet',
                estado_limpeza=estado_limpeza,
                estado_localizacao=estado_localizacao, 
                MAPA_BAIRROS=MAPA_BAIRROS,
-               filtra_bairro=filtro_bairro
+               filtro_bairro=filtro_bairro
                )
