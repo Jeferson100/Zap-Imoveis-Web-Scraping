@@ -12,7 +12,7 @@ jobs:
     with:
       cidade_pasta: rio_janeiro
       arquivo_rodando_imovel: rio_janeiro_leblon_limpando_dados.py
-      cidade_limpeza: Rio de Janeiro
+      cidade_limpeza: rio de janeiro
       cidade_localizacao: Rio de Janeiro
       estado_limpeza: rj
       estado_localizacao: RJ
