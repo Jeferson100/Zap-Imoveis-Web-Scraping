@@ -1,0 +1,48 @@
+name: Rodando Coleta Rio Janeiro Barra Tijuca ZAP
+on: 
+  workflow_run:
+        workflows: ["Rodando Coleta Rio Janeiro Barra Tijuca OLX"]
+        types:
+            - completed
+  workflow_dispatch:
+jobs:
+  coleta_barra_zap_0_85:
+    uses: ./.github/workflows/pipeline_cidade_rodando.yml
+    with:
+      cidade_pasta: rio_janeiro
+      arquivo_rodando_imovel: rio_janeiro_barra_tijuca_coleta_dados_zap_imoveis_0_85.py
+      URL_TEMPLATE_ZAP : "https://www.zapimoveis.com.br/venda/imoveis/rj+rio-de-janeiro+zona-oeste+barra-da-tijuca/?onde=%2CRio+de+Janeiro%2CRio+de+Janeiro%2CZona+Oeste%2CBarra+da+Tijuca%2C%2C%2Cneighborhood%2CBR%3ERio+de+Janeiro%3ENULL%3ERio+de+Janeiro%3EZona+Oeste%3EBarra+da+Tijuca%2C-23.004019%2C-43.366107%2C&pagina={pagina}"
+      BAIRRO : barra-tijuca
+  
+  coleta_barra_zap_86_140:
+    uses: ./.github/workflows/pipeline_cidade_rodando.yml
+    with:
+      cidade_pasta: rio_janeiro
+      arquivo_rodando_imovel: rio_janeiro_barra_tijuca_coleta_dados_zap_imoveis_86_140.py
+      URL_TEMPLATE_ZAP : "https://www.zapimoveis.com.br/venda/imoveis/rj+rio-de-janeiro+zona-oeste+barra-da-tijuca/?onde=%2CRio+de+Janeiro%2CRio+de+Janeiro%2CZona+Oeste%2CBarra+da+Tijuca%2C%2C%2Cneighborhood%2CBR%3ERio+de+Janeiro%3ENULL%3ERio+de+Janeiro%3EZona+Oeste%3EBarra+da+Tijuca%2C-23.004019%2C-43.366107%2C&pagina={pagina}"
+      BAIRRO : barra-tijuca
+  
+  coleta_barra_zap_141_250:
+    uses: ./.github/workflows/pipeline_cidade_rodando.yml
+    with:
+      cidade_pasta: rio_janeiro
+      arquivo_rodando_imovel: rio_janeiro_barra_tijuca_coleta_dados_zap_imoveis_141_250.py
+      URL_TEMPLATE_ZAP : "https://www.zapimoveis.com.br/venda/imoveis/rj+rio-de-janeiro+zona-oeste+barra-da-tijuca/?onde=%2CRio+de+Janeiro%2CRio+de+Janeiro%2CZona+Oeste%2CBarra+da+Tijuca%2C%2C%2Cneighborhood%2CBR%3ERio+de+Janeiro%3ENULL%3ERio+de+Janeiro%3EZona+Oeste%3EBarra+da+Tijuca%2C-23.004019%2C-43.366107%2C&pagina={pagina}"
+      BAIRRO : barra-tijuca
+  
+  coleta_barra_zap_251_450:
+    uses: ./.github/workflows/pipeline_cidade_rodando.yml
+    with:
+      cidade_pasta: rio_janeiro
+      arquivo_rodando_imovel: rio_janeiro_barra_tijuca_coleta_dados_zap_imoveis_251_450.py
+      URL_TEMPLATE_ZAP : "https://www.zapimoveis.com.br/venda/imoveis/rj+rio-de-janeiro+zona-oeste+barra-da-tijuca/?onde=%2CRio+de+Janeiro%2CRio+de+Janeiro%2CZona+Oeste%2CBarra+da+Tijuca%2C%2C%2Cneighborhood%2CBR%3ERio+de+Janeiro%3ENULL%3ERio+de+Janeiro%3EZona+Oeste%3EBarra+da+Tijuca%2C-23.004019%2C-43.366107%2C&pagina={pagina}"
+      BAIRRO : barra-tijuca
+      
+  coleta_barra_zap_451_infinito:
+    uses: ./.github/workflows/pipeline_cidade_rodando.yml
+    with:
+      cidade_pasta: rio_janeiro
+      arquivo_rodando_imovel: rio_janeiro_barra_tijuca_coleta_dados_zap_imoveis_251_450.py
+      URL_TEMPLATE_ZAP : "https://www.zapimoveis.com.br/venda/imoveis/rj+rio-de-janeiro+zona-oeste+barra-da-tijuca/?onde=%2CRio+de+Janeiro%2CRio+de+Janeiro%2CZona+Oeste%2CBarra+da+Tijuca%2C%2C%2Cneighborhood%2CBR%3ERio+de+Janeiro%3ENULL%3ERio+de+Janeiro%3EZona+Oeste%3EBarra+da+Tijuca%2C-23.004019%2C-43.366107%2C&pagina={pagina}"
+      BAIRRO : barra-tijuca
+  

@@ -1,0 +1,58 @@
+name: Rodando Coleta Rio Janeiro Barra Tijuca OLX
+on: 
+  workflow_run:
+        workflows: ["Rodando Coleta Mao Rio Janeiro Barra Tijuca Chaves"]
+        types:
+            - completed
+  workflow_dispatch:
+
+jobs:  
+  coleta_leblon_olx_0_78:
+    uses: ./.github/workflows/pipeline_cidade_rodando.yml
+    with:
+      cidade_pasta: rio_janeiro
+      arquivo_rodando_imovel: rio_janeiro_barra_tijuca_coleta_dados_olx_0_78.py
+      URL_TEMPLATE_OLX : "https://www.olx.com.br/imoveis/venda/apartamentos/estado-rj/rio-de-janeiro-e-regiao/zona-oeste/barra-da-tijuca?ss={min}&se={max}&o={pagina}"
+      BAIRRO : barra-tijuca
+
+  coleta_leblon_olx_79_110:
+    uses: ./.github/workflows/pipeline_cidade_rodando.yml
+    with:
+      cidade_pasta: rio_janeiro
+      arquivo_rodando_imovel: rio_janeiro_barra_tijuca_coleta_dados_olx_79_110.py
+      URL_TEMPLATE_OLX : "https://www.olx.com.br/imoveis/venda/apartamentos/estado-rj/rio-de-janeiro-e-regiao/zona-oeste/barra-da-tijuca?ss={min}&se={max}&o={pagina}"
+      BAIRRO : barra-tijuca
+
+  coleta_leblon_olx_111_140:
+    uses: ./.github/workflows/pipeline_cidade_rodando.yml
+    with:
+      cidade_pasta: rio_janeiro
+      arquivo_rodando_imovel: rio_janeiro_barra_tijuca_coleta_dados_olx_111_140.py
+      URL_TEMPLATE_OLX : "https://www.olx.com.br/imoveis/venda/apartamentos/estado-rj/rio-de-janeiro-e-regiao/zona-oeste/barra-da-tijuca?ss={min}&se={max}&o={pagina}"
+      BAIRRO : barra-tijuca
+
+  coleta_leblon_olx_141_190:
+    uses: ./.github/workflows/pipeline_cidade_rodando.yml
+    with:
+      cidade_pasta: rio_janeiro
+      arquivo_rodando_imovel: rio_janeiro_barra_tijuca_coleta_dados_olx_141_190.py
+      URL_TEMPLATE_OLX : "https://www.olx.com.br/imoveis/venda/apartamentos/estado-rj/rio-de-janeiro-e-regiao/zona-oeste/barra-da-tijuca?ss={min}&se={max}&o={pagina}"
+      BAIRRO : barra-tijuca
+  
+  coleta_leblon_olx_191_290:
+    uses: ./.github/workflows/pipeline_cidade_rodando.yml
+    with:
+      cidade_pasta: rio_janeiro
+      arquivo_rodando_imovel: rio_janeiro_barra_tijuca_coleta_dados_olx_191_290.py
+      URL_TEMPLATE_OLX : "https://www.olx.com.br/imoveis/venda/apartamentos/estado-rj/rio-de-janeiro-e-regiao/zona-oeste/barra-da-tijuca?ss={min}&se={max}&o={pagina}"
+      BAIRRO : barra-tijuca
+  
+  coleta_leblon_olx_291_infinito:
+    uses: ./.github/workflows/pipeline_cidade_rodando.yml
+    with:
+      cidade_pasta: rio_janeiro
+      arquivo_rodando_imovel: rio_janeiro_barra_tijuca_coleta_dados_olx_291_infinito.py
+      URL_TEMPLATE_OLX : "https://www.olx.com.br/imoveis/venda/apartamentos/estado-rj/rio-de-janeiro-e-regiao/zona-oeste/barra-da-tijuca?ss={min}&se={max}&o={pagina}"
+      BAIRRO : barra-tijuca
+
+  

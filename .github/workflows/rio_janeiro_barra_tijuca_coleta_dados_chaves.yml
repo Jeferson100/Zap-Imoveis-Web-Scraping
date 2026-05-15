@@ -1,0 +1,32 @@
+name: Rodando Coleta Mao Rio Janeiro Barra Tijuca Chaves
+on: 
+  schedule:
+    - cron: '0 9 26 1,2,3,4,5,6,7,8,9,10,11,12 *'  # 09:00 no primeiro dia de cada mês
+  workflow_dispatch: 
+
+jobs:
+  coleta_barra_chave_mao_0_110:
+    uses: ./.github/workflows/pipeline_cidade_rodando.yml
+    with:
+      cidade_pasta: rio_janeiro
+      arquivo_rodando_imovel: rio_janeiro_barra_tijuca_coleta_dados_chave_mao_0_110.py
+      URL_TEMPLATE_CHAVES : "https://www.olx.com.br/imoveis/venda/estado-rj/rio-de-janeiro-e-regiao/zona-oeste/barra-da-tijuca/?filtro=amin%3A{min}%2Camax%3A{max}&pg={pagina}"
+      BAIRRO : barra-tijuca
+
+  coleta_barra_chave_mao_111_250:
+    uses: ./.github/workflows/pipeline_cidade_rodando.yml
+    with:
+      cidade_pasta: rio_janeiro
+      arquivo_rodando_imovel: rio_janeiro_barra_tijuca_coleta_dados_chave_mao_111_250.py
+      URL_TEMPLATE_CHAVES : "https://www.olx.com.br/imoveis/venda/estado-rj/rio-de-janeiro-e-regiao/zona-oeste/barra-da-tijuca/?filtro=amin%3A{min}%2Camax%3A{max}&pg={pagina}"
+      BAIRRO : barra-tijuca
+  
+  coleta_barra_chave_mao_251_infinito:
+    uses: ./.github/workflows/pipeline_cidade_rodando.yml
+    with:
+      cidade_pasta: rio_janeiro
+      arquivo_rodando_imovel: rio_janeiro_barra_tijuca_coleta_dados_chave_mao_251_infinito.py
+      URL_TEMPLATE_CHAVES : "https://www.olx.com.br/imoveis/venda/estado-rj/rio-de-janeiro-e-regiao/zona-oeste/barra-da-tijuca/?filtro=amin%3A{min}%2Camax%3A{max}&pg={pagina}"
+      BAIRRO : barra-tijuca
+    
+  
