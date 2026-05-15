@@ -45,11 +45,10 @@ total_paginas = 100
 #output_file   = PASTA_DADOS / f'{cidade}_chave_mao_{now}.parquet' 
 
 area_ranges = criar_area_ranges(
-    inicio_total=121,
-    fim_total=1000000000,
+    inicio_total=0,
+    fim_total=110,
     regras_intervalo=[
-        (300, 10),
-        (500, 50),    
+        (110, 10),
     ]
 )
 

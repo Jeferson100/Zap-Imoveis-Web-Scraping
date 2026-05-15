@@ -71,6 +71,8 @@ logger.info(f"Dados consolidados para Olx.")
 
 logger.info(f"Arquivos consolidados em: {PASTA_DADOS}")
 
+MAPA_BAIRROS = {'jardins' :['jardins', 'jardim']}
+
 limpando_dados(name_arquivo_zap = f'{cidade}_{bairro}_zap_*.parquet', 
                name_arquivo_vivareal = f'{cidade}_{bairro}_vivareal_*.parquet', 
                name_arquivo_chave_mao = f'{cidade}_{bairro}_chave_mao_*.parquet',
@@ -83,6 +85,6 @@ limpando_dados(name_arquivo_zap = f'{cidade}_{bairro}_zap_*.parquet',
                cidade_localizacao=cidade_localizacao,
                estado_limpeza=estado_limpeza,
                estado_localizacao=estado_localizacao, 
-               #MAPA_BAIRROS=MAPA_BAIRROS,
+               MAPA_BAIRROS=MAPA_BAIRROS,
                filtro_bairro=filtro_bairro
                )

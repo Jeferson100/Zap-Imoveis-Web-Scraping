@@ -34,8 +34,6 @@ sys.path.append(str(Path(__file__).parent.parent))
 
 from scraping_zap_imoveis import ChavesMaoColeta
 
-#URL_TEMPLATE = "https://www.chavesnamao.com.br/apartamentos-a-venda/sp-sao-paulo/itaim-bibi/?filtro=amin%3A{min}%2Camax%3A{max}&pg={pagina}"
-
 URL_TEMPLATE  = str(os.getenv("URL_TEMPLATE_CHAVES"))
 
 sys.path.append('..')
@@ -47,11 +45,12 @@ total_paginas = 100
 #output_file   = PASTA_DADOS / f'{cidade}_chave_mao_{now}.parquet' 
 
 area_ranges = criar_area_ranges(
-    inicio_total=241,
-    fim_total=10000000,
+    inicio_total=251,
+    fim_total=1000000000,
     regras_intervalo=[
         (300, 10),
-        (1000, 50),
+        (500, 50),    
+        (1000, 100),
     ]
 )
 

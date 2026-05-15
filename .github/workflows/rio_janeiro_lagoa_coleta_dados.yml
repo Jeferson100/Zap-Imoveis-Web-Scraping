@@ -10,7 +10,7 @@ jobs:
     with:
       cidade_pasta: rio_janeiro
       arquivo_rodando_imovel: rio_janeiro_lagoa_coleta_dados_chave_mao.py
-      URL_TEMPLATE_CHAVES : "https://www.chavesnamao.com.br/imoveis-a-venda/rj-rio-de-janeiro/lagoa/leblon/?filtro=amin%3A{min}%2Camax%3A{max}&pg={pagina}"
+      URL_TEMPLATE_CHAVES : "https://www.chavesnamao.com.br/imoveis-a-venda/rj-rio-de-janeiro/lagoa/?filtro=amin%3A{min}%2Camax%3A{max}&pg={pagina}"
       BAIRRO : lagoa
     
   coleta_leblon_olx_0_150:
