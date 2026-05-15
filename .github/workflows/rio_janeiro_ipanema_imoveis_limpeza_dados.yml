@@ -1,0 +1,20 @@
+name: Rodando Limpeza Imoveis Rio Janeiro Ipanema
+on: 
+  workflow_run:
+        workflows: ["Rodando Coleta Rio Janeiro Ipanema"]
+        types:
+            - completed
+  workflow_dispatch:  
+
+jobs:
+  pipeline:
+    uses: ./.github/workflows/pipeline_cidade_rodando.yml
+    with:
+      cidade_pasta: rio_janeiro
+      arquivo_rodando_imovel: rio_janeiro_ipanema_limpando_dados.py
+      cidade_limpeza: rio de janeiro
+      cidade_localizacao: Rio de Janeiro
+      estado_limpeza: rj
+      estado_localizacao: RJ
+      BAIRRO : ipanema
+      FILTRO_BAIRRO : "ipanema"
