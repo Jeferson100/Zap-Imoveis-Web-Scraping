@@ -1,7 +1,7 @@
 name: Rodando Coleta Rio Janeiro Barra Tijuca OLX
 on: 
   workflow_run:
-        workflows: ["Rodando Coleta Mao Rio Janeiro Barra Tijuca Chaves"]
+        workflows: ["Rodando Coleta Rio Janeiro Barra Tijuca Chaves"]
         types:
             - completed
   workflow_dispatch:
