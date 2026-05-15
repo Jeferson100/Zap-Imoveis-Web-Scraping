@@ -10,7 +10,7 @@ jobs:
     with:
       cidade_pasta: rio_janeiro
       arquivo_rodando_imovel: rio_janeiro_barra_tijuca_coleta_dados_chave_mao_0_110.py
-      URL_TEMPLATE_CHAVES : "https://www.olx.com.br/imoveis/venda/estado-rj/rio-de-janeiro-e-regiao/zona-oeste/barra-da-tijuca/?filtro=amin%3A{min}%2Camax%3A{max}&pg={pagina}"
+      URL_TEMPLATE_CHAVES : "https://www.chavesnamao.com.br/imoveis/rj-rio-de-janeiro/barra-da-tijuca/?filtro=amin%3A{min}%2Camax%3A{max}&pg={pagina}"
       BAIRRO : barra-tijuca
 
   coleta_barra_chave_mao_111_250:
@@ -18,7 +18,7 @@ jobs:
     with:
       cidade_pasta: rio_janeiro
       arquivo_rodando_imovel: rio_janeiro_barra_tijuca_coleta_dados_chave_mao_111_250.py
-      URL_TEMPLATE_CHAVES : "https://www.olx.com.br/imoveis/venda/estado-rj/rio-de-janeiro-e-regiao/zona-oeste/barra-da-tijuca/?filtro=amin%3A{min}%2Camax%3A{max}&pg={pagina}"
+      URL_TEMPLATE_CHAVES : "https://www.chavesnamao.com.br/imoveis/rj-rio-de-janeiro/barra-da-tijuca/?filtro=amin%3A{min}%2Camax%3A{max}&pg={pagina}"
       BAIRRO : barra-tijuca
   
   coleta_barra_chave_mao_251_infinito:
@@ -26,7 +26,7 @@ jobs:
     with:
       cidade_pasta: rio_janeiro
       arquivo_rodando_imovel: rio_janeiro_barra_tijuca_coleta_dados_chave_mao_251_infinito.py
-      URL_TEMPLATE_CHAVES : "https://www.olx.com.br/imoveis/venda/estado-rj/rio-de-janeiro-e-regiao/zona-oeste/barra-da-tijuca/?filtro=amin%3A{min}%2Camax%3A{max}&pg={pagina}"
+      URL_TEMPLATE_CHAVES : "https://www.chavesnamao.com.br/imoveis/rj-rio-de-janeiro/barra-da-tijuca/?filtro=amin%3A{min}%2Camax%3A{max}&pg={pagina}"
       BAIRRO : barra-tijuca
     
   
