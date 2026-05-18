@@ -7,11 +7,17 @@ on:
   workflow_dispatch:
 
 jobs:
-  coleta_zap_imoveis_141_180:
+  coleta_zap_imoveis_141_160:
     uses: ./.github/workflows/pipeline_cidade_rodando.yml
     with:
       cidade_pasta: curitiba
-      arquivo_rodando_imovel: curitiba_coleta_dados_zap_imoveis_141_180.py
+      arquivo_rodando_imovel: curitiba_coleta_dados_zap_imoveis_141_160.py
+  
+  coleta_zap_imoveis_161_180:
+    uses: ./.github/workflows/pipeline_cidade_rodando.yml
+    with:
+      cidade_pasta: curitiba
+      arquivo_rodando_imovel: curitiba_coleta_dados_zap_imoveis_161_180.py
 
   coleta_zap_imoveis_181_250:
     uses: ./.github/workflows/pipeline_cidade_rodando.yml
