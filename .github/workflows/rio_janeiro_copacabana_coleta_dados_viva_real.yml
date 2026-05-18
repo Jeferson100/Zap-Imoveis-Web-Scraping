@@ -1,0 +1,47 @@
+name: Rodando Coleta Rio Janeiro Copacabana Viva Real
+on: 
+  workflow_run:
+        workflows: ["Rodando Coleta Rio Janeiro Copacabana ZAP"]
+        types:
+            - completed
+  workflow_dispatch:
+jobs:
+  coleta_barra_viva_real_0_50:
+    uses: ./.github/workflows/pipeline_cidade_rodando.yml
+    with:
+      cidade_pasta: rio_janeiro
+      arquivo_rodando_imovel: rio_janeiro_copacabana_coleta_dados_viva_real_0_50.py
+      URL_TEMPLATE_VIVAREAL : "https://www.vivareal.com.br/venda/rj/rio-de-janeiro/zona-sul/copacabana/?onde=%2CRio+de+Janeiro%2CRio+de+Janeiro%2CZona+Sul%2CCopacabana%2C%2C%2Cneighborhood%2CBR%3ERio+de+Janeiro%3ENULL%3ERio+de+Janeiro%3EZona+Sul%3ECopacabana%2C-22.969281%2C-43.186794%2C&pagina={pagina}"
+      BAIRRO : copacabana
+  
+  coleta_barra_viva_real_51_90:
+    uses: ./.github/workflows/pipeline_cidade_rodando.yml
+    with:
+      cidade_pasta: rio_janeiro
+      arquivo_rodando_imovel: rio_janeiro_copacabana_coleta_dados_viva_real_51_90.py
+      URL_TEMPLATE_VIVAREAL : "https://www.vivareal.com.br/venda/rj/rio-de-janeiro/zona-sul/copacabana/?onde=%2CRio+de+Janeiro%2CRio+de+Janeiro%2CZona+Sul%2CCopacabana%2C%2C%2Cneighborhood%2CBR%3ERio+de+Janeiro%3ENULL%3ERio+de+Janeiro%3EZona+Sul%3ECopacabana%2C-22.969281%2C-43.186794%2C&pagina={pagina}"
+      BAIRRO : copacabana
+  
+  coleta_barra_viva_real_91_130:
+    uses: ./.github/workflows/pipeline_cidade_rodando.yml
+    with:
+      cidade_pasta: rio_janeiro
+      arquivo_rodando_imovel: rio_janeiro_copacabana_coleta_dados_viva_real_91_130.py
+      URL_TEMPLATE_VIVAREAL : "https://www.vivareal.com.br/venda/rj/rio-de-janeiro/zona-sul/copacabana/?onde=%2CRio+de+Janeiro%2CRio+de+Janeiro%2CZona+Sul%2CCopacabana%2C%2C%2Cneighborhood%2CBR%3ERio+de+Janeiro%3ENULL%3ERio+de+Janeiro%3EZona+Sul%3ECopacabana%2C-22.969281%2C-43.186794%2C&pagina={pagina}"
+      BAIRRO : copacabana
+  
+  coleta_barra_viva_real_131_200:
+    uses: ./.github/workflows/pipeline_cidade_rodando.yml
+    with:
+      cidade_pasta: rio_janeiro
+      arquivo_rodando_imovel: rio_janeiro_copacabana_coleta_dados_viva_real_131_200.py
+      URL_TEMPLATE_VIVAREAL : "https://www.vivareal.com.br/venda/rj/rio-de-janeiro/zona-sul/copacabana/?onde=%2CRio+de+Janeiro%2CRio+de+Janeiro%2CZona+Sul%2CCopacabana%2C%2C%2Cneighborhood%2CBR%3ERio+de+Janeiro%3ENULL%3ERio+de+Janeiro%3EZona+Sul%3ECopacabana%2C-22.969281%2C-43.186794%2C&pagina={pagina}"
+      BAIRRO : copacabana
+  
+  coleta_barra_viva_real_201_infinito:
+    uses: ./.github/workflows/pipeline_cidade_rodando.yml
+    with:
+      cidade_pasta: rio_janeiro
+      arquivo_rodando_imovel: rio_janeiro_copacabana_coleta_dados_viva_real_201_infinito.py
+      URL_TEMPLATE_VIVAREAL : "https://www.vivareal.com.br/venda/rj/rio-de-janeiro/zona-sul/copacabana/?onde=%2CRio+de+Janeiro%2CRio+de+Janeiro%2CZona+Sul%2CCopacabana%2C%2C%2Cneighborhood%2CBR%3ERio+de+Janeiro%3ENULL%3ERio+de+Janeiro%3EZona+Sul%3ECopacabana%2C-22.969281%2C-43.186794%2C&pagina={pagina}"
+      BAIRRO : copacabana

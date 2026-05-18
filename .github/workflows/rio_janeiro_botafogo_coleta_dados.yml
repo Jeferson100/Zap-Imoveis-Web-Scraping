@@ -1,0 +1,62 @@
+name: Rodando Coleta Rio Janeiro Botafogo
+on: 
+  schedule:
+    - cron: '0 9 27 1,2,3,4,5,6,7,8,9,10,11,12 *'  # 09:00 no primeiro dia de cada mês
+  workflow_dispatch: 
+
+jobs:
+  coleta_botafogo_chave_mao:
+    uses: ./.github/workflows/pipeline_cidade_rodando.yml
+    with:
+      cidade_pasta: rio_janeiro
+      arquivo_rodando_imovel: rio_janeiro_botafogo_coleta_dados_chave_mao.py
+      URL_TEMPLATE_CHAVES : "https://www.chavesnamao.com.br/imoveis/rj-rio-de-janeiro/botafogo/?filtro=amin%3A{min}%2Camax%3A{max}&pg={pagina}"
+      BAIRRO : botafogo
+    
+  coleta_botafogo_olx_0_95:
+    uses: ./.github/workflows/pipeline_cidade_rodando.yml
+    with:
+      cidade_pasta: rio_janeiro
+      arquivo_rodando_imovel: rio_janeiro_botafogo_coleta_dados_olx_0_95.py
+      URL_TEMPLATE_OLX : "https://www.olx.com.br/imoveis/venda/estado-rj/rio-de-janeiro-e-regiao/zona-sul/botafogo?ss={min}&se={max}&o={pagina}"
+      BAIRRO : botafogo
+
+  coleta_botafogo_olx_96_infinito:
+    uses: ./.github/workflows/pipeline_cidade_rodando.yml
+    with:
+      cidade_pasta: rio_janeiro
+      arquivo_rodando_imovel: rio_janeiro_botafogo_coleta_dados_olx_96_infinito.py
+      URL_TEMPLATE_OLX : "https://www.olx.com.br/imoveis/venda/estado-rj/rio-de-janeiro-e-regiao/zona-sul/botafogo?ss={min}&se={max}&o={pagina}"
+      BAIRRO : botafogo
+  
+  coleta_botafogo_zap_0_100:
+    uses: ./.github/workflows/pipeline_cidade_rodando.yml
+    with:
+      cidade_pasta: rio_janeiro
+      arquivo_rodando_imovel: rio_janeiro_botafogo_coleta_dados_zap_imoveis_0_100.py
+      URL_TEMPLATE_ZAP : "https://www.zapimoveis.com.br/venda/imoveis/rj+rio-de-janeiro+zona-sul+botafogo/?onde=%2CRio+de+Janeiro%2CRio+de+Janeiro%2CZona+Sul%2CBotafogo%2C%2C%2Cneighborhood%2CBR%3ERio+de+Janeiro%3ENULL%3ERio+de+Janeiro%3EZona+Sul%3EBotafogo%2C-22.947439%2C-43.182741%2C&pagina={pagina}"
+      BAIRRO : botafogo
+  
+  coleta_botafogo_zap_101_infinito:
+    uses: ./.github/workflows/pipeline_cidade_rodando.yml
+    with:
+      cidade_pasta: rio_janeiro
+      arquivo_rodando_imovel: rio_janeiro_botafogo_coleta_dados_zap_imoveis_101_infinito.py
+      URL_TEMPLATE_ZAP : "https://www.zapimoveis.com.br/venda/imoveis/rj+rio-de-janeiro+zona-sul+botafogo/?onde=%2CRio+de+Janeiro%2CRio+de+Janeiro%2CZona+Sul%2CBotafogo%2C%2C%2Cneighborhood%2CBR%3ERio+de+Janeiro%3ENULL%3ERio+de+Janeiro%3EZona+Sul%3EBotafogo%2C-22.947439%2C-43.182741%2C&pagina={pagina}"
+      BAIRRO : botafogo
+  
+  coleta_botafogo_viva_real_0_100:
+    uses: ./.github/workflows/pipeline_cidade_rodando.yml
+    with:
+      cidade_pasta: rio_janeiro
+      arquivo_rodando_imovel: rio_janeiro_botafogo_coleta_dados_viva_real_0_100.py
+      URL_TEMPLATE_VIVAREAL: "https://www.vivareal.com.br/venda/rj/rio-de-janeiro/zona-sul/botafogo/?onde=%2CRio+de+Janeiro%2CRio+de+Janeiro%2CZona+Sul%2CBotafogo%2C%2C%2Cneighborhood%2CBR%3ERio+de+Janeiro%3ENULL%3ERio+de+Janeiro%3EZona+Sul%3EBotafogo%2C-22.951098%2C-43.180746%2C&pagina={pagina}"
+      BAIRRO : botafogo
+
+  coleta_botafogo_viva_real_101_infinito:
+    uses: ./.github/workflows/pipeline_cidade_rodando.yml
+    with:
+      cidade_pasta: rio_janeiro
+      arquivo_rodando_imovel: rio_janeiro_botafogo_coleta_dados_viva_real_101_infinito.py
+      URL_TEMPLATE_VIVAREAL: "https://www.vivareal.com.br/venda/rj/rio-de-janeiro/zona-sul/botafogo/?onde=%2CRio+de+Janeiro%2CRio+de+Janeiro%2CZona+Sul%2CBotafogo%2C%2C%2Cneighborhood%2CBR%3ERio+de+Janeiro%3ENULL%3ERio+de+Janeiro%3EZona+Sul%3EBotafogo%2C-22.951098%2C-43.180746%2C&pagina={pagina}"
+      BAIRRO : botafogo

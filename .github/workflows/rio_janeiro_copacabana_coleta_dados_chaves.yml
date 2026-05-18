@@ -1,0 +1,32 @@
+name: Rodando Coleta Rio Janeiro Copacabana Chaves
+on: 
+  schedule:
+    - cron: '0 9 27 1,2,3,4,5,6,7,8,9,10,11,12 *'  # 09:00 no primeiro dia de cada mês
+  workflow_dispatch: 
+
+jobs:
+  coleta_copacabana_chave_mao_0_85:
+    uses: ./.github/workflows/pipeline_cidade_rodando.yml
+    with:
+      cidade_pasta: rio_janeiro
+      arquivo_rodando_imovel: rio_janeiro_copacabana_coleta_dados_chave_mao_0_85.py
+      URL_TEMPLATE_CHAVES : "https://www.chavesnamao.com.br/imoveis-a-venda/rj-rio-de-janeiro/copacabana/?filtro=amin%3A{min}%2Camax%3A{max}&pg={pagina}"
+      BAIRRO : copacabana
+
+  coleta_copacabana_chave_mao_86_160:
+    uses: ./.github/workflows/pipeline_cidade_rodando.yml
+    with:
+      cidade_pasta: rio_janeiro
+      arquivo_rodando_imovel: rio_janeiro_copacabana_coleta_dados_chave_mao_86_160.py
+      URL_TEMPLATE_CHAVES : "https://www.chavesnamao.com.br/imoveis-a-venda/rj-rio-de-janeiro/copacabana/?filtro=amin%3A{min}%2Camax%3A{max}&pg={pagina}"
+      BAIRRO : copacabana
+  
+  coleta_copacabana_chave_mao_161_infinito:
+    uses: ./.github/workflows/pipeline_cidade_rodando.yml
+    with:
+      cidade_pasta: rio_janeiro
+      arquivo_rodando_imovel: rio_janeiro_copacabana_coleta_dados_chave_mao_161_infinito.py
+      URL_TEMPLATE_CHAVES : "https://www.chavesnamao.com.br/imoveis-a-venda/rj-rio-de-janeiro/copacabana/?filtro=amin%3A{min}%2Camax%3A{max}&pg={pagina}"
+      BAIRRO : copacabana
+    
+  

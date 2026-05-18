@@ -1,0 +1,58 @@
+name: Rodando Coleta Rio Janeiro Copacabana OLX
+on: 
+  workflow_run:
+        workflows: ["Rodando Coleta Rio Janeiro Copacabana Chaves"]
+        types:
+            - completed
+  workflow_dispatch:
+
+jobs:  
+  coleta_copacabana_olx_0_55:
+    uses: ./.github/workflows/pipeline_cidade_rodando.yml
+    with:
+      cidade_pasta: rio_janeiro
+      arquivo_rodando_imovel: rio_janeiro_copacabana_coleta_dados_olx_0_55.py
+      URL_TEMPLATE_OLX : "https://www.olx.com.br/imoveis/venda/estado-rj/rio-de-janeiro-e-regiao/zona-sul/copacabana?ss={min}&se={max}&o={pagina}"
+      BAIRRO : copacabana
+
+  coleta_copacabana_olx_56_90:
+    uses: ./.github/workflows/pipeline_cidade_rodando.yml
+    with:
+      cidade_pasta: rio_janeiro
+      arquivo_rodando_imovel: rio_janeiro_copacabana_coleta_dados_olx_56_90.py
+      URL_TEMPLATE_OLX : "https://www.olx.com.br/imoveis/venda/estado-rj/rio-de-janeiro-e-regiao/zona-sul/copacabana?ss={min}&se={max}&o={pagina}"
+      BAIRRO : copacabana
+
+  coleta_copacabana_olx_91_120:
+    uses: ./.github/workflows/pipeline_cidade_rodando.yml
+    with:
+      cidade_pasta: rio_janeiro
+      arquivo_rodando_imovel: rio_janeiro_copacabana_coleta_dados_olx_91_120.py
+      URL_TEMPLATE_OLX : "https://www.olx.com.br/imoveis/venda/estado-rj/rio-de-janeiro-e-regiao/zona-sul/copacabana?ss={min}&se={max}&o={pagina}"
+      BAIRRO : copacabana
+
+  coleta_copacabana_olx_121_170:
+    uses: ./.github/workflows/pipeline_cidade_rodando.yml
+    with:
+      cidade_pasta: rio_janeiro
+      arquivo_rodando_imovel: rio_janeiro_copacabana_coleta_dados_olx_121_170.py
+      URL_TEMPLATE_OLX : "https://www.olx.com.br/imoveis/venda/estado-rj/rio-de-janeiro-e-regiao/zona-sul/copacabana?ss={min}&se={max}&o={pagina}"
+      BAIRRO : copacabana
+  
+  coleta_copacabana_olx_171_240:
+    uses: ./.github/workflows/pipeline_cidade_rodando.yml
+    with:
+      cidade_pasta: rio_janeiro
+      arquivo_rodando_imovel: rio_janeiro_copacabana_coleta_dados_olx_171_240.py
+      URL_TEMPLATE_OLX : "https://www.olx.com.br/imoveis/venda/estado-rj/rio-de-janeiro-e-regiao/zona-sul/copacabana?ss={min}&se={max}&o={pagina}"
+      BAIRRO : copacabana
+  
+  coleta_copacabana_olx_241_infinito:
+    uses: ./.github/workflows/pipeline_cidade_rodando.yml
+    with:
+      cidade_pasta: rio_janeiro
+      arquivo_rodando_imovel: rio_janeiro_copacabana_coleta_dados_olx_241_infinito.py
+      URL_TEMPLATE_OLX : "https://www.olx.com.br/imoveis/venda/estado-rj/rio-de-janeiro-e-regiao/zona-sul/copacabana?ss={min}&se={max}&o={pagina}"
+      BAIRRO : copacabana
+
+  
