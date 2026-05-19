@@ -1,0 +1,20 @@
+name: Rodando Limpeza Imoveis Rio Janeiro Laranjeiras
+on: 
+  workflow_run:
+        workflows: ["Rodando Coleta Rio Janeiro Laranjeiras"]
+        types:
+            - completed
+  workflow_dispatch:  
+
+jobs:
+  pipeline:
+    uses: ./.github/workflows/pipeline_cidade_rodando.yml
+    with:
+      cidade_pasta: rio_janeiro
+      arquivo_rodando_imovel: rio_janeiro_laranjeiras_limpando_dados.py
+      cidade_limpeza: rio de janeiro
+      cidade_localizacao: Rio de Janeiro
+      estado_limpeza: rj
+      estado_localizacao: RJ
+      BAIRRO : laranjeiras
+      FILTRO_BAIRRO : "laranjeiras"

@@ -1,0 +1,48 @@
+name: Rodando Coleta Rio Janeiro Laranjeiras
+on: 
+  schedule:
+    - cron: '0 21 28 1,2,3,4,5,6,7,8,9,10,11,12 *'  # 09:00 no primeiro dia de cada mês
+  workflow_dispatch: 
+
+jobs:
+  coleta_laranjeiras_chave_mao:
+    uses: ./.github/workflows/pipeline_cidade_rodando.yml
+    with:
+      cidade_pasta: rio_janeiro
+      arquivo_rodando_imovel: rio_janeiro_laranjeiras_coleta_dados_chave_mao.py
+      URL_TEMPLATE_CHAVES : "https://www.chavesnamao.com.br/imoveis-a-venda/rj-rio-de-janeiro/laranjeiras/?filtro=amin%3A{min}%2Camax%3A{max}&pg={pagina}"
+      BAIRRO : laranjeiras
+    
+  coleta_laranjeiras_olx_0_100:
+    uses: ./.github/workflows/pipeline_cidade_rodando.yml
+    with:
+      cidade_pasta: rio_janeiro
+      arquivo_rodando_imovel: rio_janeiro_laranjeiras_coleta_dados_olx_0_100.py
+      URL_TEMPLATE_OLX : "https://www.olx.com.br/imoveis/venda/estado-rj/rio-de-janeiro-e-regiao/zona-sul/laranjeiras?ss={min}&se={max}&o={pagina}"
+      BAIRRO : laranjeiras
+
+  coleta_laranjeiras_olx_101_infinito:
+    uses: ./.github/workflows/pipeline_cidade_rodando.yml
+    with:
+      cidade_pasta: rio_janeiro
+      arquivo_rodando_imovel: rio_janeiro_laranjeiras_coleta_dados_olx_101_infinito.py
+      URL_TEMPLATE_OLX : "https://www.olx.com.br/imoveis/venda/estado-rj/rio-de-janeiro-e-regiao/zona-sul/laranjeiras?ss={min}&se={max}&o={pagina}"
+      BAIRRO : laranjeiras
+  
+  coleta_laranjeiras_zap:
+    uses: ./.github/workflows/pipeline_cidade_rodando.yml
+    with:
+      cidade_pasta: rio_janeiro
+      arquivo_rodando_imovel: rio_janeiro_laranjeiras_coleta_dados_zap_imoveis.py
+      URL_TEMPLATE_ZAP : "https://www.zapimoveis.com.br/venda/imoveis/rj+rio-de-janeiro+zona-sul+laranjeiras/?onde=%2CRio+de+Janeiro%2CRio+de+Janeiro%2CZona+Sul%2CLaranjeiras%2C%2C%2Cneighborhood%2CBR%3ERio+de+Janeiro%3ENULL%3ERio+de+Janeiro%3EZona+Sul%3ELaranjeiras%2C-22.933263%2C-43.185007%2C&pagina={pagina}"
+      BAIRRO : laranjeiras
+
+  coleta_laranjeiras_viva_real:
+    uses: ./.github/workflows/pipeline_cidade_rodando.yml
+    with:
+      cidade_pasta: rio_janeiro
+      arquivo_rodando_imovel: rio_janeiro_laranjeiras_coleta_dados_viva_real.py
+      URL_TEMPLATE_VIVAREAL: "https://www.vivareal.com.br/venda/rj/rio-de-janeiro/zona-sul/laranjeiras/?onde=%2CRio+de+Janeiro%2CRio+de+Janeiro%2CZona+Sul%2CLaranjeiras%2C%2C%2Cneighborhood%2CBR%3ERio+de+Janeiro%3ENULL%3ERio+de+Janeiro%3EZona+Sul%3ELaranjeiras%2C-22.933263%2C-43.185007%2C&pagina={pagina}"
+      BAIRRO : laranjeiras
+
+ 
