@@ -1,0 +1,40 @@
+name: Rodando Coleta Rio Janeiro Tijuca ZAP
+on: 
+  workflow_run:
+        workflows: ["Rodando Coleta Rio Janeiro Tijuca Chaves e OLX"]
+        types:
+            - completed
+  workflow_dispatch:
+jobs:
+  coleta_tijuca_zap_0_74:
+    uses: ./.github/workflows/pipeline_cidade_rodando.yml
+    with:
+      cidade_pasta: rio_janeiro
+      arquivo_rodando_imovel: rio_janeiro_tijuca_coleta_dados_zap_imoveis_0_74.py
+      URL_TEMPLATE_ZAP : "https://www.zapimoveis.com.br/venda/imoveis/rj+rio-de-janeiro+zona-norte+tijuca/?onde=%2CRio+de+Janeiro%2CRio+de+Janeiro%2CZona+Norte%2CTijuca%2C%2C%2Cneighborhood%2CBR%3ERio+de+Janeiro%3ENULL%3ERio+de+Janeiro%3EZona+Norte%3ETijuca%2C-22.932443%2C-43.241107%2C&pagina={pagina}"
+      BAIRRO : tijuca
+  
+  coleta_tijuca_zap_75_110:
+    uses: ./.github/workflows/pipeline_cidade_rodando.yml
+    with:
+      cidade_pasta: rio_janeiro
+      arquivo_rodando_imovel: rio_janeiro_tijuca_coleta_dados_zap_imoveis_75_110.py
+      URL_TEMPLATE_ZAP : "https://www.zapimoveis.com.br/venda/imoveis/rj+rio-de-janeiro+zona-norte+tijuca/?onde=%2CRio+de+Janeiro%2CRio+de+Janeiro%2CZona+Norte%2CTijuca%2C%2C%2Cneighborhood%2CBR%3ERio+de+Janeiro%3ENULL%3ERio+de+Janeiro%3EZona+Norte%3ETijuca%2C-22.932443%2C-43.241107%2C&pagina={pagina}"
+      BAIRRO : tijuca
+  
+  coleta_tijuca_zap_111_180:
+    uses: ./.github/workflows/pipeline_cidade_rodando.yml
+    with:
+      cidade_pasta: rio_janeiro
+      arquivo_rodando_imovel: rio_janeiro_tijuca_coleta_dados_zap_imoveis_111_180.py
+      URL_TEMPLATE_ZAP : "https://www.zapimoveis.com.br/venda/imoveis/rj+rio-de-janeiro+zona-norte+tijuca/?onde=%2CRio+de+Janeiro%2CRio+de+Janeiro%2CZona+Norte%2CTijuca%2C%2C%2Cneighborhood%2CBR%3ERio+de+Janeiro%3ENULL%3ERio+de+Janeiro%3EZona+Norte%3ETijuca%2C-22.932443%2C-43.241107%2C&pagina={pagina}"
+      BAIRRO : tijuca
+  
+  coleta_tijuca_zap_181_infinito:
+    uses: ./.github/workflows/pipeline_cidade_rodando.yml
+    with:
+      cidade_pasta: rio_janeiro
+      arquivo_rodando_imovel: rio_janeiro_tijuca_coleta_dados_zap_imoveis_181_infinito.py
+      URL_TEMPLATE_ZAP : "https://www.zapimoveis.com.br/venda/imoveis/rj+rio-de-janeiro+zona-norte+tijuca/?onde=%2CRio+de+Janeiro%2CRio+de+Janeiro%2CZona+Norte%2CTijuca%2C%2C%2Cneighborhood%2CBR%3ERio+de+Janeiro%3ENULL%3ERio+de+Janeiro%3EZona+Norte%3ETijuca%2C-22.932443%2C-43.241107%2C&pagina={pagina}"
+      BAIRRO : tijuca
+      

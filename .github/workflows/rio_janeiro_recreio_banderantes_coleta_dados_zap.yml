@@ -1,7 +1,7 @@
 name: Rodando Coleta Rio Janeiro Recreio Banderantes ZAP
 on: 
   workflow_run:
-        workflows: ["Rodando Coleta Rio Janeiro Recreio Banderantes Chaves e OLX "]
+        workflows: ["Rodando Coleta Rio Janeiro Recreio Banderantes Chaves e OLX"]
         types:
             - completed
   workflow_dispatch:

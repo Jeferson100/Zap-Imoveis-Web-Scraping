@@ -1,0 +1,62 @@
+name: Rodando Coleta Rio Janeiro Tijuca Chaves e OLX 
+on: 
+  schedule:
+    - cron: '0 9 30 1,3,4,5,6,7,8,9,10,11,12 *'  # 09:00 no primeiro dia de cada mês
+  workflow_dispatch: 
+
+jobs:
+  coleta_tijuca_chave_mao_0_100:
+    uses: ./.github/workflows/pipeline_cidade_rodando.yml
+    with:
+      cidade_pasta: rio_janeiro
+      arquivo_rodando_imovel: rio_janeiro_tijuca_coleta_dados_chave_mao_0_100.py
+      URL_TEMPLATE_CHAVES : "https://www.chavesnamao.com.br/imoveis-a-venda/rj-rio-de-janeiro/tijuca/?filtro=amin%3A{min}%2Camax%3A{max}&pg={pagina}"
+      BAIRRO : tijuca
+
+  coleta_tijuca_chave_mao_101_infinito:
+    uses: ./.github/workflows/pipeline_cidade_rodando.yml
+    with:
+      cidade_pasta: rio_janeiro
+      arquivo_rodando_imovel: rio_janeiro_tijuca_coleta_dados_chave_mao_101_infinito.py
+      URL_TEMPLATE_CHAVES : "https://www.chavesnamao.com.br/imoveis-a-venda/rj-rio-de-janeiro/tijuca/?filtro=amin%3A{min}%2Camax%3A{max}&pg={pagina}"
+      BAIRRO : tijuca
+  
+  coleta_tijuca_olx_0_70:
+    uses: ./.github/workflows/pipeline_cidade_rodando.yml
+    with:
+      cidade_pasta: rio_janeiro
+      arquivo_rodando_imovel: rio_janeiro_tijuca_coleta_dados_olx_0_70.py
+      URL_TEMPLATE_OLX : "https://www.olx.com.br/imoveis/venda/estado-rj/rio-de-janeiro-e-regiao/zona-norte/tijuca-e-regiao?ss={min}&se={max}&o={pagina}"
+      BAIRRO : tijuca
+
+  coleta_tijuca_olx_71_90:
+    uses: ./.github/workflows/pipeline_cidade_rodando.yml
+    with:
+      cidade_pasta: rio_janeiro
+      arquivo_rodando_imovel: rio_janeiro_tijuca_coleta_dados_olx_71_90.py
+      URL_TEMPLATE_OLX : "https://www.olx.com.br/imoveis/venda/estado-rj/rio-de-janeiro-e-regiao/zona-norte/tijuca-e-regiao?ss={min}&se={max}&o={pagina}"
+      BAIRRO : tijuca
+
+  coleta_tijuca_olx_91_120:
+    uses: ./.github/workflows/pipeline_cidade_rodando.yml
+    with:
+      cidade_pasta: rio_janeiro
+      arquivo_rodando_imovel: rio_janeiro_tijuca_coleta_dados_olx_91_120.py
+      URL_TEMPLATE_OLX : "https://www.olx.com.br/imoveis/venda/estado-rj/rio-de-janeiro-e-regiao/zona-norte/tijuca-e-regiao?ss={min}&se={max}&o={pagina}"
+      BAIRRO : tijuca
+  
+  coleta_tijuca_olx_121_190:
+    uses: ./.github/workflows/pipeline_cidade_rodando.yml
+    with:
+      cidade_pasta: rio_janeiro
+      arquivo_rodando_imovel: rio_janeiro_tijuca_coleta_dados_olx_121_190.py
+      URL_TEMPLATE_OLX : "https://www.olx.com.br/imoveis/venda/estado-rj/rio-de-janeiro-e-regiao/zona-norte/tijuca-e-regiao?ss={min}&se={max}&o={pagina}"
+      BAIRRO : tijuca
+  
+  coleta_tijuca_olx_191_infinito:
+    uses: ./.github/workflows/pipeline_cidade_rodando.yml
+    with:
+      cidade_pasta: rio_janeiro
+      arquivo_rodando_imovel: rio_janeiro_tijuca_coleta_dados_olx_191_infinito.py
+      URL_TEMPLATE_OLX : "https://www.olx.com.br/imoveis/venda/estado-rj/rio-de-janeiro-e-regiao/zona-norte/tijuca-e-regiao?ss={min}&se={max}&o={pagina}"
+      BAIRRO : tijuca
