@@ -1,0 +1,47 @@
+name: Rodando Coleta Rio Janeiro Recreio Banderantes Viva Real
+on: 
+  workflow_run:
+        workflows: ["Rodando Coleta Rio Janeiro Recreio Banderantes ZAP"]
+        types:
+            - completed
+  workflow_dispatch:
+jobs:
+  coleta_recreio_viva_real_0_85:
+    uses: ./.github/workflows/pipeline_cidade_rodando.yml
+    with:
+      cidade_pasta: rio_janeiro
+      arquivo_rodando_imovel: rio_janeiro_recreio_banderantes_coleta_dados_viva_real_0_85.py
+      URL_TEMPLATE_VIVAREAL : "https://www.vivareal.com.br/venda/rj/rio-de-janeiro/zona-oeste/recreio-dos-bandeirantes/?onde=%2CRio+de+Janeiro%2CRio+de+Janeiro%2CZona+Oeste%2CRecreio+Dos+Bandeirantes%2C%2C%2Cneighborhood%2CBR%3ERio+de+Janeiro%3ENULL%3ERio+de+Janeiro%3EZona+Oeste%3ERecreio+Dos+Bandeirantes%2C-23.017871%2C-43.464748%2C&pagina={pagina}"
+      BAIRRO : recreio-bandeirantes
+  
+  coleta_recreio_viva_real_86_130:
+    uses: ./.github/workflows/pipeline_cidade_rodando.yml
+    with:
+      cidade_pasta: rio_janeiro
+      arquivo_rodando_imovel: rio_janeiro_recreio_banderantes_coleta_dados_viva_real_86_130.py
+      URL_TEMPLATE_VIVAREAL : "https://www.vivareal.com.br/venda/rj/rio-de-janeiro/zona-oeste/recreio-dos-bandeirantes/?onde=%2CRio+de+Janeiro%2CRio+de+Janeiro%2CZona+Oeste%2CRecreio+Dos+Bandeirantes%2C%2C%2Cneighborhood%2CBR%3ERio+de+Janeiro%3ENULL%3ERio+de+Janeiro%3EZona+Oeste%3ERecreio+Dos+Bandeirantes%2C-23.017871%2C-43.464748%2C&pagina={pagina}"
+      BAIRRO : recreio-bandeirantes
+  
+  coleta_recreio_viva_real_131_190:
+    uses: ./.github/workflows/pipeline_cidade_rodando.yml
+    with:
+      cidade_pasta: rio_janeiro
+      arquivo_rodando_imovel: rio_janeiro_recreio_banderantes_coleta_dados_viva_real_131_190.py
+      URL_TEMPLATE_VIVAREAL : "https://www.vivareal.com.br/venda/rj/rio-de-janeiro/zona-oeste/recreio-dos-bandeirantes/?onde=%2CRio+de+Janeiro%2CRio+de+Janeiro%2CZona+Oeste%2CRecreio+Dos+Bandeirantes%2C%2C%2Cneighborhood%2CBR%3ERio+de+Janeiro%3ENULL%3ERio+de+Janeiro%3EZona+Oeste%3ERecreio+Dos+Bandeirantes%2C-23.017871%2C-43.464748%2C&pagina={pagina}"
+      BAIRRO : recreio-bandeirantes
+  
+  coleta_recreio_viva_real_191_300:
+    uses: ./.github/workflows/pipeline_cidade_rodando.yml
+    with:
+      cidade_pasta: rio_janeiro
+      arquivo_rodando_imovel: rio_janeiro_recreio_banderantes_coleta_dados_viva_real_191_300.py
+      URL_TEMPLATE_VIVAREAL : "https://www.vivareal.com.br/venda/rj/rio-de-janeiro/zona-oeste/recreio-dos-bandeirantes/?onde=%2CRio+de+Janeiro%2CRio+de+Janeiro%2CZona+Oeste%2CRecreio+Dos+Bandeirantes%2C%2C%2Cneighborhood%2CBR%3ERio+de+Janeiro%3ENULL%3ERio+de+Janeiro%3EZona+Oeste%3ERecreio+Dos+Bandeirantes%2C-23.017871%2C-43.464748%2C&pagina={pagina}"
+      BAIRRO : recreio-bandeirantes
+      
+  coleta_recreio_viva_real_301_infinito:
+    uses: ./.github/workflows/pipeline_cidade_rodando.yml
+    with:
+      cidade_pasta: rio_janeiro
+      arquivo_rodando_imovel: rio_janeiro_recreio_banderantes_coleta_dados_viva_real_301_infinito.py
+      URL_TEMPLATE_VIVAREAL : "https://www.vivareal.com.br/venda/rj/rio-de-janeiro/zona-oeste/recreio-dos-bandeirantes/?onde=%2CRio+de+Janeiro%2CRio+de+Janeiro%2CZona+Oeste%2CRecreio+Dos+Bandeirantes%2C%2C%2Cneighborhood%2CBR%3ERio+de+Janeiro%3ENULL%3ERio+de+Janeiro%3EZona+Oeste%3ERecreio+Dos+Bandeirantes%2C-23.017871%2C-43.464748%2C&pagina={pagina}"
+      BAIRRO : recreio-bandeirantes

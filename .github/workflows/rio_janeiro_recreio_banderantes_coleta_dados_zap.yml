@@ -1,0 +1,48 @@
+name: Rodando Coleta Rio Janeiro Recreio Banderantes ZAP
+on: 
+  workflow_run:
+        workflows: ["Rodando Coleta Rio Janeiro Recreio Banderantes Chaves e OLX "]
+        types:
+            - completed
+  workflow_dispatch:
+jobs:
+  coleta_recreio_zap_0_85:
+    uses: ./.github/workflows/pipeline_cidade_rodando.yml
+    with:
+      cidade_pasta: rio_janeiro
+      arquivo_rodando_imovel: rio_janeiro_recreio_bandeirantes_coleta_dados_zap_imoveis_0_85.py
+      URL_TEMPLATE_ZAP : "https://www.zapimoveis.com.br/venda/imoveis/rj+rio-de-janeiro+zona-oeste+recreio-dos-bandeirantes/?onde=%2CRio+de+Janeiro%2CRio+de+Janeiro%2CZona+Oeste%2CRecreio+Dos+Bandeirantes%2C%2C%2Cneighborhood%2CBR%3ERio+de+Janeiro%3ENULL%3ERio+de+Janeiro%3EZona+Oeste%3ERecreio+Dos+Bandeirantes%2C-23.017871%2C-43.464748%2C&pagina={pagina}"
+      BAIRRO : recreio-bandeirantes
+  
+  coleta_recreio_zap_86_140:
+    uses: ./.github/workflows/pipeline_cidade_rodando.yml
+    with:
+      cidade_pasta: rio_janeiro
+      arquivo_rodando_imovel: rio_janeiro_recreio_bandeirantes_coleta_dados_zap_imoveis_86_130.py
+      URL_TEMPLATE_ZAP : "https://www.zapimoveis.com.br/venda/imoveis/rj+rio-de-janeiro+zona-oeste+recreio-dos-bandeirantes/?onde=%2CRio+de+Janeiro%2CRio+de+Janeiro%2CZona+Oeste%2CRecreio+Dos+Bandeirantes%2C%2C%2Cneighborhood%2CBR%3ERio+de+Janeiro%3ENULL%3ERio+de+Janeiro%3EZona+Oeste%3ERecreio+Dos+Bandeirantes%2C-23.017871%2C-43.464748%2C&pagina={pagina}"
+      BAIRRO : recreio-bandeirantes
+  
+  coleta_recreio_zap_131_190:
+    uses: ./.github/workflows/pipeline_cidade_rodando.yml
+    with:
+      cidade_pasta: rio_janeiro
+      arquivo_rodando_imovel: rio_janeiro_recreio_bandeirantes_coleta_dados_zap_imoveis_131_190.py
+      URL_TEMPLATE_ZAP : "https://www.zapimoveis.com.br/venda/imoveis/rj+rio-de-janeiro+zona-oeste+recreio-dos-bandeirantes/?onde=%2CRio+de+Janeiro%2CRio+de+Janeiro%2CZona+Oeste%2CRecreio+Dos+Bandeirantes%2C%2C%2Cneighborhood%2CBR%3ERio+de+Janeiro%3ENULL%3ERio+de+Janeiro%3EZona+Oeste%3ERecreio+Dos+Bandeirantes%2C-23.017871%2C-43.464748%2C&pagina={pagina}"
+      BAIRRO : recreio-bandeirantes
+  
+  coleta_recreio_zap_191_300:
+    uses: ./.github/workflows/pipeline_cidade_rodando.yml
+    with:
+      cidade_pasta: rio_janeiro
+      arquivo_rodando_imovel: rio_janeiro_recreio_bandeirantes_coleta_dados_zap_imoveis_191_300.py
+      URL_TEMPLATE_ZAP : "https://www.zapimoveis.com.br/venda/imoveis/rj+rio-de-janeiro+zona-oeste+recreio-dos-bandeirantes/?onde=%2CRio+de+Janeiro%2CRio+de+Janeiro%2CZona+Oeste%2CRecreio+Dos+Bandeirantes%2C%2C%2Cneighborhood%2CBR%3ERio+de+Janeiro%3ENULL%3ERio+de+Janeiro%3EZona+Oeste%3ERecreio+Dos+Bandeirantes%2C-23.017871%2C-43.464748%2C&pagina={pagina}"
+      BAIRRO : recreio-bandeirantes
+      
+  coleta_recreio_zap_301_infinito:
+    uses: ./.github/workflows/pipeline_cidade_rodando.yml
+    with:
+      cidade_pasta: rio_janeiro
+      arquivo_rodando_imovel: rio_janeiro_recreio_bandeirantes_coleta_dados_zap_imoveis_301_infinito.py
+      URL_TEMPLATE_ZAP : "https://www.zapimoveis.com.br/venda/imoveis/rj+rio-de-janeiro+zona-oeste+recreio-dos-bandeirantes/?onde=%2CRio+de+Janeiro%2CRio+de+Janeiro%2CZona+Oeste%2CRecreio+Dos+Bandeirantes%2C%2C%2Cneighborhood%2CBR%3ERio+de+Janeiro%3ENULL%3ERio+de+Janeiro%3EZona+Oeste%3ERecreio+Dos+Bandeirantes%2C-23.017871%2C-43.464748%2C&pagina={pagina}"
+      BAIRRO : recreio-bandeirantes
+  
