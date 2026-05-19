@@ -15,13 +15,22 @@ jobs:
       BAIRRO : vila-mariana
       URL_TEMPLATE_VIVAREAL : "https://www.vivareal.com.br/venda/sp/sao-paulo/zona-sul/vila-mariana/apartamento_residencial/?onde=%2CS%C3%A3o+Paulo%2CS%C3%A3o+Paulo%2CZona+Sul%2CVila+Mariana%2C%2C%2Cneighborhood%2CBR%3ESao+Paulo%3ENULL%3ESao+Paulo%3EZona+Sul%3EVila+Mariana%2C-23.589702%2C-46.634638%2C&tipos=apartamento_residencial&pagina={pagina}"
 
-  coleta_viva_real_61_110:
+  coleta_viva_real_61_90:
     uses: ./.github/workflows/pipeline_cidade_rodando.yml
     with:
       cidade_pasta: sao_paulo
-      arquivo_rodando_imovel: sao_paulo_vila_mariana_coleta_dados_viva_real_61_110.py
+      arquivo_rodando_imovel: sao_paulo_vila_mariana_coleta_dados_viva_real_61_90.py
       BAIRRO : vila-mariana
       URL_TEMPLATE_VIVAREAL : "https://www.vivareal.com.br/venda/sp/sao-paulo/zona-sul/vila-mariana/apartamento_residencial/?onde=%2CS%C3%A3o+Paulo%2CS%C3%A3o+Paulo%2CZona+Sul%2CVila+Mariana%2C%2C%2Cneighborhood%2CBR%3ESao+Paulo%3ENULL%3ESao+Paulo%3EZona+Sul%3EVila+Mariana%2C-23.589702%2C-46.634638%2C&tipos=apartamento_residencial&pagina={pagina}"
+  
+  coleta_viva_real_91_110:
+    uses: ./.github/workflows/pipeline_cidade_rodando.yml
+    with:
+      cidade_pasta: sao_paulo
+      arquivo_rodando_imovel: sao_paulo_vila_mariana_coleta_dados_viva_real_91_110.py
+      BAIRRO : vila-mariana
+      URL_TEMPLATE_VIVAREAL : "https://www.vivareal.com.br/venda/sp/sao-paulo/zona-sul/vila-mariana/apartamento_residencial/?onde=%2CS%C3%A3o+Paulo%2CS%C3%A3o+Paulo%2CZona+Sul%2CVila+Mariana%2C%2C%2Cneighborhood%2CBR%3ESao+Paulo%3ENULL%3ESao+Paulo%3EZona+Sul%3EVila+Mariana%2C-23.589702%2C-46.634638%2C&tipos=apartamento_residencial&pagina={pagina}"
+  
   
   coleta_viva_real_111_infinito:
     uses: ./.github/workflows/pipeline_cidade_rodando.yml

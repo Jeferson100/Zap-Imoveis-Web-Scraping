@@ -41,7 +41,7 @@ sys.path.append('..')
 now = time.strftime("%Y-%m")
 
 area_ranges = criar_area_ranges(
-    inicio_total=61,
+    inicio_total=91,
     fim_total=110,
     regras_intervalo=[
         (110, 5),
