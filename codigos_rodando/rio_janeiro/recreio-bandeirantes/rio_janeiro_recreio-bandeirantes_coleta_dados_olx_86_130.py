@@ -46,10 +46,10 @@ headless = os.getenv("HEADLESS", "True").lower() == "true"
 max_concurrency = int(os.getenv("MAX_CONCURRENCY_OLX"))
 
 area_ranges = criar_area_ranges(
-    inicio_total=79,
-    fim_total=110,
+    inicio_total=86,
+    fim_total=130,
     regras_intervalo=[
-        (79, 10),
+        (130, 10),
     ]
 )
 

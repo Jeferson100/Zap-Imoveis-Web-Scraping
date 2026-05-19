@@ -39,17 +39,18 @@ URL_TEMPLATE = os.getenv("URL_TEMPLATE_OLX")
 
 now = time.strftime("%Y-%m")
 
-total_paginas = 50
+#total_paginas = 50
 
 headless = os.getenv("HEADLESS", "True").lower() == "true"
 
 max_concurrency = int(os.getenv("MAX_CONCURRENCY_OLX"))
 
 area_ranges = criar_area_ranges(
-    inicio_total=111,
-    fim_total=140,
+    inicio_total=0,
+    fim_total=85,
     regras_intervalo=[
-        (140, 5),
+        (85, 10),
+        
     ]
 )
 
