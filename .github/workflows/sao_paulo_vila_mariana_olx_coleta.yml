@@ -55,10 +55,18 @@ jobs:
       BAIRRO : vila-mariana
       URL_TEMPLATE_OLX : "https://www.olx.com.br/imoveis/venda/estado-sp/sao-paulo-e-regiao/zona-sul/vila-mariana?ss={min}&se={max}&o={pagina}"
 
-  coleta_olx_181_infinito:
+  coleta_olx_181_240:
     uses: ./.github/workflows/pipeline_cidade_rodando.yml
     with:
       cidade_pasta: sao_paulo
-      arquivo_rodando_imovel: sao_paulo_vila_mariana_coleta_dados_olx_181_infinito.py
+      arquivo_rodando_imovel: sao_paulo_vila_mariana_coleta_dados_olx_181_240.py
+      BAIRRO : vila-mariana
+      URL_TEMPLATE_OLX : "https://www.olx.com.br/imoveis/venda/estado-sp/sao-paulo-e-regiao/zona-sul/vila-mariana?ss={min}&se={max}&o={pagina}"
+  
+  coleta_olx_241_infinito:
+    uses: ./.github/workflows/pipeline_cidade_rodando.yml
+    with:
+      cidade_pasta: sao_paulo
+      arquivo_rodando_imovel: sao_paulo_vila_mariana_coleta_dados_olx_241_infinito.py
       BAIRRO : vila-mariana
       URL_TEMPLATE_OLX : "https://www.olx.com.br/imoveis/venda/estado-sp/sao-paulo-e-regiao/zona-sul/vila-mariana?ss={min}&se={max}&o={pagina}"
