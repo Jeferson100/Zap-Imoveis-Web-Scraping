@@ -1,0 +1,48 @@
+name: Rodando Coleta Rio Janeiro Flamengo
+on: 
+  schedule:
+    - cron: '0 9 28 1,2,3,4,5,6,7,8,9,10,11,12 *'  # 09:00 no primeiro dia de cada mês
+  workflow_dispatch: 
+
+jobs:
+  coleta_flamengo_chave_mao:
+    uses: ./.github/workflows/pipeline_cidade_rodando.yml
+    with:
+      cidade_pasta: rio_janeiro
+      arquivo_rodando_imovel: rio_janeiro_flamengo_coleta_dados_chave_mao.py
+      URL_TEMPLATE_CHAVES : "https://www.chavesnamao.com.br/imoveis-a-venda/rj-rio-de-janeiro/flamengo/?filtro=amin%3A{min}%2Camax%3A{max}&pg={pagina}"
+      BAIRRO : flamengo
+
+  coleta_flamengo_olx_0_100:
+    uses: ./.github/workflows/pipeline_cidade_rodando.yml
+    with:
+      cidade_pasta: rio_janeiro
+      arquivo_rodando_imovel: rio_janeiro_flamengo_coleta_dados_olx_0_100.py
+      URL_TEMPLATE_OLX : "https://www.olx.com.br/imoveis/venda/estado-rj/rio-de-janeiro-e-regiao/zona-sul/flamengo?ss={min}&se={max}&o={pagina}"
+      BAIRRO : flamengo
+
+  coleta_flamengo_olx_101_infinito:
+    uses: ./.github/workflows/pipeline_cidade_rodando.yml
+    with:
+      cidade_pasta: rio_janeiro
+      arquivo_rodando_imovel: rio_janeiro_flamengo_coleta_dados_olx_101_infinito.py
+      URL_TEMPLATE_OLX : "https://www.olx.com.br/imoveis/venda/estado-rj/rio-de-janeiro-e-regiao/zona-sul/flamengo?ss={min}&se={max}&o={pagina}"
+      BAIRRO : flamengo
+  
+  coleta_flamengo_zap:
+    uses: ./.github/workflows/pipeline_cidade_rodando.yml
+    with:
+      cidade_pasta: rio_janeiro
+      arquivo_rodando_imovel: rio_janeiro_flamengo_coleta_dados_zap_imoveis.py
+      URL_TEMPLATE_ZAP : "https://www.zapimoveis.com.br/venda/imoveis/rj+rio-de-janeiro+zona-sul+flamengo/?onde=%2CRio+de+Janeiro%2CRio+de+Janeiro%2CZona+Sul%2CFlamengo%2C%2C%2Cneighborhood%2CBR%3ERio+de+Janeiro%3ENULL%3ERio+de+Janeiro%3EZona+Sul%3EFlamengo%2C-22.933236%2C-43.174695%2C&pagina={pagina}"
+      BAIRRO : flamengo
+  
+  coleta_flamengo_viva_real:
+    uses: ./.github/workflows/pipeline_cidade_rodando.yml
+    with:
+      cidade_pasta: rio_janeiro
+      arquivo_rodando_imovel: rio_janeiro_flamengo_coleta_dados_viva_real.py
+      URL_TEMPLATE_VIVAREAL: "https://www.vivareal.com.br/venda/rj/rio-de-janeiro/zona-sul/flamengo/?onde=%2CRio+de+Janeiro%2CRio+de+Janeiro%2CZona+Sul%2CFlamengo%2C%2C%2Cneighborhood%2CBR%3ERio+de+Janeiro%3ENULL%3ERio+de+Janeiro%3EZona+Sul%3EFlamengo%2C-22.933236%2C-43.174695%2C&pagina={pagina}"
+      BAIRRO : flamengo
+
+  
