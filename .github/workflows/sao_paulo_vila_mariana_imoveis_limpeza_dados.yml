@@ -10,7 +10,7 @@ jobs:
     uses: ./.github/workflows/pipeline_cidade_rodando.yml
     with:
       cidade_pasta: sao_paulo
-      arquivo_rodando_imovel: sao_paulo_vila_mariana_limpando_dados_imoveis.py
+      arquivo_rodando_imovel: sao_paulo_vila_mariana_limpando_dados.py
       cidade_limpeza: sao paulo
       cidade_localizacao: Sao Paulo
       estado_limpeza: sp
