@@ -7,27 +7,59 @@ on:
   workflow_dispatch:  
 
 jobs:
-  coleta_viva_real_0_100:
+  coleta_viva_real_0_33:
     uses: ./.github/workflows/pipeline_cidade_rodando.yml
     with:
       cidade_pasta: sao_paulo
-      arquivo_rodando_imovel: sao_paulo_pinheiros_coleta_dados_viva_real_0_100.py
-      BAIRRO : pinheiros
-      URL_TEMPLATE_VIVAREAL : "https://www.vivareal.com.br/venda/sp/sao-paulo/zona-oeste/pinheiros/?onde=%2CS%C3%A3o+Paulo%2CS%C3%A3o+Paulo%2CZona+Oeste%2CPinheiros%2C%2C%2Cneighborhood%2CBR%3ESao+Paulo%3ENULL%3ESao+Paulo%3EZona+Oeste%3EPinheiros%2C-23.563579%2C-46.691607%2C&pagina={pagina}"
-
-  coleta_viva_real_101_200:
-    uses: ./.github/workflows/pipeline_cidade_rodando.yml
-    with:
-      cidade_pasta: sao_paulo
-      arquivo_rodando_imovel: sao_paulo_pinheiros_coleta_dados_viva_real_101_200.py
+      arquivo_rodando_imovel: sao_paulo_pinheiros_coleta_dados_viva_real_0_33.py
       BAIRRO : pinheiros
       URL_TEMPLATE_VIVAREAL : "https://www.vivareal.com.br/venda/sp/sao-paulo/zona-oeste/pinheiros/?onde=%2CS%C3%A3o+Paulo%2CS%C3%A3o+Paulo%2CZona+Oeste%2CPinheiros%2C%2C%2Cneighborhood%2CBR%3ESao+Paulo%3ENULL%3ESao+Paulo%3EZona+Oeste%3EPinheiros%2C-23.563579%2C-46.691607%2C&pagina={pagina}"
   
-  coleta_viva_real_201_infinito:
+  coleta_viva_real_34_60:
     uses: ./.github/workflows/pipeline_cidade_rodando.yml
     with:
       cidade_pasta: sao_paulo
-      arquivo_rodando_imovel: sao_paulo_pinheiros_coleta_dados_viva_real_201_infinito.py
+      arquivo_rodando_imovel: sao_paulo_pinheiros_coleta_dados_viva_real_34_60.py
+      BAIRRO : pinheiros
+      URL_TEMPLATE_VIVAREAL : "https://www.vivareal.com.br/venda/sp/sao-paulo/zona-oeste/pinheiros/?onde=%2CS%C3%A3o+Paulo%2CS%C3%A3o+Paulo%2CZona+Oeste%2CPinheiros%2C%2C%2Cneighborhood%2CBR%3ESao+Paulo%3ENULL%3ESao+Paulo%3EZona+Oeste%3EPinheiros%2C-23.563579%2C-46.691607%2C&pagina={pagina}"
+  
+  coleta_viva_real_61_85:
+    uses: ./.github/workflows/pipeline_cidade_rodando.yml
+    with:
+      cidade_pasta: sao_paulo
+      arquivo_rodando_imovel: sao_paulo_pinheiros_coleta_dados_viva_real_61_85.py
+      BAIRRO : pinheiros
+      URL_TEMPLATE_VIVAREAL : "https://www.vivareal.com.br/venda/sp/sao-paulo/zona-oeste/pinheiros/?onde=%2CS%C3%A3o+Paulo%2CS%C3%A3o+Paulo%2CZona+Oeste%2CPinheiros%2C%2C%2Cneighborhood%2CBR%3ESao+Paulo%3ENULL%3ESao+Paulo%3EZona+Oeste%3EPinheiros%2C-23.563579%2C-46.691607%2C&pagina={pagina}"
+
+  coleta_viva_real_86_115:
+    uses: ./.github/workflows/pipeline_cidade_rodando.yml
+    with:
+      cidade_pasta: sao_paulo
+      arquivo_rodando_imovel: sao_paulo_pinheiros_coleta_dados_viva_real_86_115.py
+      BAIRRO : pinheiros
+      URL_TEMPLATE_VIVAREAL : "https://www.vivareal.com.br/venda/sp/sao-paulo/zona-oeste/pinheiros/?onde=%2CS%C3%A3o+Paulo%2CS%C3%A3o+Paulo%2CZona+Oeste%2CPinheiros%2C%2C%2Cneighborhood%2CBR%3ESao+Paulo%3ENULL%3ESao+Paulo%3EZona+Oeste%3EPinheiros%2C-23.563579%2C-46.691607%2C&pagina={pagina}"
+  
+  coleta_viva_real_116_170:
+    uses: ./.github/workflows/pipeline_cidade_rodando.yml
+    with:
+      cidade_pasta: sao_paulo
+      arquivo_rodando_imovel: sao_paulo_pinheiros_coleta_dados_viva_real_116_170.py
+      BAIRRO : pinheiros
+      URL_TEMPLATE_VIVAREAL : "https://www.vivareal.com.br/venda/sp/sao-paulo/zona-oeste/pinheiros/?onde=%2CS%C3%A3o+Paulo%2CS%C3%A3o+Paulo%2CZona+Oeste%2CPinheiros%2C%2C%2Cneighborhood%2CBR%3ESao+Paulo%3ENULL%3ESao+Paulo%3EZona+Oeste%3EPinheiros%2C-23.563579%2C-46.691607%2C&pagina={pagina}"
+  
+  coleta_viva_real_171_300:
+    uses: ./.github/workflows/pipeline_cidade_rodando.yml
+    with:
+      cidade_pasta: sao_paulo
+      arquivo_rodando_imovel: sao_paulo_pinheiros_coleta_dados_viva_real_171_300.py
+      BAIRRO : pinheiros
+      URL_TEMPLATE_VIVAREAL : "https://www.vivareal.com.br/venda/sp/sao-paulo/zona-oeste/pinheiros/?onde=%2CS%C3%A3o+Paulo%2CS%C3%A3o+Paulo%2CZona+Oeste%2CPinheiros%2C%2C%2Cneighborhood%2CBR%3ESao+Paulo%3ENULL%3ESao+Paulo%3EZona+Oeste%3EPinheiros%2C-23.563579%2C-46.691607%2C&pagina={pagina}"
+  
+  coleta_viva_real_301_infinito:
+    uses: ./.github/workflows/pipeline_cidade_rodando.yml
+    with:
+      cidade_pasta: sao_paulo
+      arquivo_rodando_imovel: sao_paulo_pinheiros_coleta_dados_viva_real_301_infinito.py
       BAIRRO : pinheiros
       URL_TEMPLATE_VIVAREAL : "https://www.vivareal.com.br/venda/sp/sao-paulo/zona-oeste/pinheiros/?onde=%2CS%C3%A3o+Paulo%2CS%C3%A3o+Paulo%2CZona+Oeste%2CPinheiros%2C%2C%2Cneighborhood%2CBR%3ESao+Paulo%3ENULL%3ESao+Paulo%3EZona+Oeste%3EPinheiros%2C-23.563579%2C-46.691607%2C&pagina={pagina}"
 

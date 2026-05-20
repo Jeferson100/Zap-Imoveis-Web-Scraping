@@ -32,40 +32,42 @@ PASTA_DADOS.mkdir(parents=True, exist_ok=True)
 
 sys.path.append(str(Path(__file__).parent.parent))
 
-from scraping_zap_imoveis import VivaRealColeta
+from scraping_zap_imoveis import ZapImoveisColeta
 
-URL_TEMPLATE = str(os.getenv("URL_TEMPLATE_VIVAREAL"))
+URL_TEMPLATE = str(os.getenv("URL_TEMPLATE_ZAP"))
 
 sys.path.append('..')
     
 now = time.strftime("%Y-%m")
 
 area_ranges = criar_area_ranges(
-    inicio_total=201,
-    fim_total=1000000000,
+    inicio_total=86,
+    fim_total=115,
     regras_intervalo=[
-        (300, 50),
+        (115, 5),
     ]
 )
 
 total_paginas = 50
-
-output_file   = PASTA_DADOS / f'{cidade}_vivareal_{now}.parquet' 
 
 headless = os.getenv("HEADLESS", "True").lower() == "true"
 
 max_concurrency = int(os.getenv("MAX_CONCURRENCY", "3"))
 
 for area_min, area_max in area_ranges.items():
+    
+    logger.info(f"Coletando dados de {area_min} a {area_max}")
 
-    output_file   = PASTA_DADOS / f'{cidade}_{bairro}_vivareal_{now}_{area_min}_{area_max}.parquet' 
+    output_file   = PASTA_DADOS / f'{cidade}_{bairro}_zap_{now}_{area_min}_{area_max}.parquet' 
+    
+    logger.info(f"Arquivo de dados gerado em: {output_file}")
 
     URL_TEMPLATE_NEW = URL_TEMPLATE.replace(
         "{pagina}", 
         f"{{pagina}}&areaMaxima={area_max}&areaMinima={area_min}"
         )
     
-    orchestrator = VivaRealColeta(URL_TEMPLATE_NEW, 
+    orchestrator = ZapImoveisColeta(URL_TEMPLATE_NEW, 
                                   headless=headless,
                                   max_concurrency=max_concurrency,
                                   retries=1
@@ -74,13 +76,13 @@ for area_min, area_max in area_ranges.items():
     resultado = asyncio.run(orchestrator.run(
         output_file=str(output_file),
         #total_pages=total_paginas,
+
     ))
-    
 
 logger.info(f"Arquivo de dados gerado em: {output_file}")
 
-#consolidar_jsons('vivareal', cidade, PASTA_DADOS)
-#consolidar_parquet('vivareal', cidade, PASTA_DADOS)
+#consolidar_jsons('zap', cidade, PASTA_DADOS)
+#consolidar_parquet('zap', cidade, PASTA_DADOS)
 
 logger.info(f"Arquivos consolidados em: {PASTA_DADOS}")
 

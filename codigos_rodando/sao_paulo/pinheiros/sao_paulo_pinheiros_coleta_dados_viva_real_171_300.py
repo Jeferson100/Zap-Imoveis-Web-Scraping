@@ -34,8 +34,6 @@ sys.path.append(str(Path(__file__).parent.parent))
 
 from scraping_zap_imoveis import VivaRealColeta
 
-#URL_TEMPLATE = "https://www.vivareal.com.br/venda/sp/sao-paulo/zona-sul/itaim-bibi/apartamento_residencial/?onde=%2CS%C3%A3o+Paulo%2CS%C3%A3o+Paulo%2CZona+Sul%2CItaim+Bibi%2C%2C%2Cneighborhood%2CBR%3ESao+Paulo%3ENULL%3ESao+Paulo%3EZona+Sul%3EItaim+Bibi%2C-23.583748%2C-46.678074%2C&tipos=apartamento_residencial&pagina={pagina}"
-
 URL_TEMPLATE = str(os.getenv("URL_TEMPLATE_VIVAREAL"))
 
 sys.path.append('..')
@@ -43,10 +41,10 @@ sys.path.append('..')
 now = time.strftime("%Y-%m")
 
 area_ranges = criar_area_ranges(
-    inicio_total=0,
-    fim_total=100,
+    inicio_total=171,
+    fim_total=300,
     regras_intervalo=[
-        (100, 10),
+        (300, 5),
     ]
 )
 
