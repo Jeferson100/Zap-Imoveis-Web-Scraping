@@ -1,11 +1,11 @@
 # Preço Imóveis 🏠
 
-[![Streamlit](https://img.shields.io/badge/Streamlit-100000?style=for-the-badge&logo=streamlit&logoColor=white)](https://preco-imoveis.streamlit.app/) 
+[![Streamlit](https://img.shields.io/badge/Streamlit-100000?style=for-the-badge&logo=streamlit&logoColor=white)](https://precos-imoveis.streamlit.app/) 
 [![Python](https://img.shields.io/badge/Python-3.12+-3776ab?style=for-the-badge&logo=python&logoColor=white)](https://python.org)
 [![License](https://img.shields.io/badge/License-MIT-green?style=for-the-badge)](LICENSE)
 [![Playwright](https://img.shields.io/badge/Playwright-45B7D1?style=for-the-badge&logo=microsoft&logoColor=white)](https://playwright.dev/python/)
 
-**Coleta multi-plataforma e análise de preços de imóveis** em 11 cidades do Brasil utilizando **4 portais imobiliários** principais.
+**Coleta multi-plataforma e análise de preços de imóveis** em varias cidades do Brasil utilizando **4 portais imobiliários** principais.
 
 Automatiza a extração de dados de [Zap Imóveis](https://www.zapimoveis.com.br), [OLX](https://www.olx.com.br), [Viva Real](https://www.vivareal.com.br) e [Chave Mão](https://www.chavemao.com.br), com limpeza automática, geocodificação e dashboards interativos em Streamlit.
 
@@ -18,7 +18,7 @@ Projeto robusto de **scraping multi-fonte e análise de preços de imóveis** co
 A ideia principal é automatizar a extração de dados de 4 plataformas imobiliárias principais, processar/limpar os resultados em formatos reutilizáveis e facilitar análises avançadas, visualizações e modelagem preditiva.
 
 **Características:**
-- 📍 **11 cidades** com coleta automática mensal
+- 📍 **Varias Cidades** com coleta automática mensal
 - 🏢 **4 portais** (Zap Imóveis, OLX, Viva Real, Chave Mão)
 - 🔄 **Processamento automático**: limpeza, geocodificação e indexação geoespacial
 - 📊 **Análise avançada**: machine learning, estatísticas, visualizações interativas
@@ -39,18 +39,40 @@ A ideia principal é automatizar a extração de dados de 4 plataformas imobili�
 
 ## 📍 Cidades Coletadas
 
-**Santa Catarina (8 cidades):**
+**Santa Catarina (9 cidades):**
 - Joinville
 - Balneário Camboriú
 - Balneário Piçarras
+- Florianópolis
 - Blumenau
 - Itajaí
 - Itapema
 - Itapoá
 - Jaraguá do Sul
 
-**São Paulo (1 cidade):**
-- São Paulo
+**Cidade do Rio de Janeiro por bairros:**
+- barra da tijuca
+- botafogo
+- copacabana
+- flamengo
+- ipanema
+- lagoa
+- laranjeiras
+- leblon
+- tijuca
+- recreio dos bandeirantes
+
+**Cidade de São Paulo por bairros:**
+- bela vista
+- itaim bibi
+- jardins
+- moema
+- paraiso
+- perdizes
+- pinheiros
+- santana
+- vila andrade
+- vila mariana
 
 **Paraná (1 cidades):**
 - Curitiba
@@ -150,7 +172,8 @@ Os scripts de processamento executam automaticamente:
 
 ## 📈 Aplicação Streamlit
 
-Abra [app/1_Joinville-Zap-Imoveis.py](https://github.com/Jeferson100/Zap-Imoveis-Web-Scraping/blob/main/app/1_Joinville-Zap-Imoveis.py) e execute:
+Abra [app/1_Joinville-Zap-Imoveis.py](https://github.com/Jeferson100/Zap-Imoveis-Web-Scraping/blob/main/app/1_Joinville-Imoveis.py) e execute:
+
 ```bash
 streamlit run app/1_Joinville-Zap-Imoveis.py
 ```
