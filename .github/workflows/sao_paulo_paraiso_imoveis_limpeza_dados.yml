@@ -17,3 +17,4 @@ jobs:
       estado_localizacao: SP
       BAIRRO : paraiso
       FILTRO_BAIRRO : "paraiso"
+      tipo_async: true
