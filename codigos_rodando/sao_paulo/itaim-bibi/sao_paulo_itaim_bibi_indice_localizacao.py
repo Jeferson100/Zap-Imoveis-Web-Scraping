@@ -27,17 +27,17 @@ start_time = time.time()
 
 cidade = os.getenv("CIDADE_PASTA")
 
-PASTA_DADOS  = Path(__file__).parent.parent.parent / 'dados'/ cidade
-
-arquivo_mais_recente = max(PASTA_DADOS.glob(f'{cidade}_{bairro}_imoveis_limpo_*.parquet'), key=lambda f: f.stem.split('_')[-1])
-
-data_mais_recente = arquivo_mais_recente.stem.split('_')[-1]
-
 bairro = os.getenv("BAIRRO")
+
+cidade = os.getenv("CIDADE_PASTA")
 
 BASE_DIR    = Path(__file__).parent.parent.parent.parent
  
 PASTA_DADOS = BASE_DIR / 'dados' / cidade  / bairro
+
+arquivo_mais_recente = max(PASTA_DADOS.glob(f'{cidade}_{bairro}_imoveis_limpo_*.parquet'), key=lambda f: f.stem.split('_')[-1])
+
+data_mais_recente = arquivo_mais_recente.stem.split('_')[-1]
 
 output_file   = PASTA_DADOS / f'{cidade}_{bairro}_imoveis_com_ind_local_{data_mais_recente}.parquet' 
 

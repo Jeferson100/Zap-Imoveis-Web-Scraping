@@ -22,89 +22,95 @@
   "modelo_selecionado": "random_forest",
   "hiperparametros_optuna": {
     "catboost": {
-      "iterations": 650,
-      "depth": 4,
-      "learning_rate": 0.01380893862236554,
-      "l2_leaf_reg": 8.777697188918673,
-      "subsample": 0.9285921192330308
+      "iterations": 600,
+      "depth": 5,
+      "learning_rate": 0.014933552281409624,
+      "l2_leaf_reg": 9.925514059564259,
+      "subsample": 0.7222166140630476
     },
     "lightgbm": {
-      "n_estimators": 400,
-      "max_depth": 9,
-      "learning_rate": 0.011745953021854992,
-      "num_leaves": 99,
-      "subsample": 0.6973643772319758,
-      "colsample_bytree": 0.9330143454882178,
-      "reg_alpha": 2.5179721062701965,
-      "reg_lambda": 8.684833453400284
+      "n_estimators": 300,
+      "max_depth": 14,
+      "learning_rate": 0.01280123590403721,
+      "num_leaves": 110,
+      "subsample": 0.8774817488052687,
+      "colsample_bytree": 0.670068072977317,
+      "reg_alpha": 0.03051194988897563,
+      "reg_lambda": 0.007583400613080623
     },
     "random_forest": {
-      "n_estimators": 200,
-      "max_depth": 23,
-      "min_samples_leaf": 5,
+      "n_estimators": 100,
+      "max_depth": 28,
+      "min_samples_leaf": 8,
       "min_samples_split": 9,
-      "max_features": "sqrt"
+      "max_features": 0.7
     },
     "hist_gradient_boosting": {
-      "max_iter": 750,
-      "max_depth": 14,
-      "learning_rate": 0.020116116019557734,
-      "min_samples_leaf": 50,
-      "l2_regularization": 3.7321568871319935
+      "max_iter": 250,
+      "max_depth": 6,
+      "learning_rate": 0.03992551012732815,
+      "min_samples_leaf": 32,
+      "l2_regularization": 0.15433400003982187
     }
   },
   "rmse_cv_optuna": {
-    "catboost": 4216.438686914076,
-    "lightgbm": 4161.629539501151,
-    "random_forest": 4141.528682346368,
-    "hist_gradient_boosting": 4183.268281417569
+    "catboost": 4236.563912677538,
+    "lightgbm": 4165.789858713163,
+    "random_forest": 4167.378756367019,
+    "hist_gradient_boosting": 4195.447896687555
   },
   "metricas_todos_modelos": {
     "linear_regression": {
-      "rmse": 2381.9902069998943,
-      "mae": 1610.660968399838,
-      "mape": 46.634881154644,
-      "r2": 0.48867574545815196
+      "rmse": 2464.89902226257,
+      "mae": 1617.474813785099,
+      "mape": 46.1340465966038,
+      "r2": 0.4990932362115018
     },
     "catboost": {
-      "rmse": 2312.1933229511224,
-      "mae": 1578.3358837687185,
-      "mape": 46.77906336445167,
-      "r2": 0.5182022849523349
+      "rmse": 2361.1212655188892,
+      "mae": 1566.9509739677324,
+      "mape": 47.83680709090828,
+      "r2": 0.5403839179069282
     },
     "lightgbm": {
-      "rmse": 2223.303034026694,
-      "mae": 1464.9418183724858,
-      "mape": 44.051035553128976,
-      "r2": 0.5545348107693764
+      "rmse": 2299.1726375985045,
+      "mae": 1455.8316614536893,
+      "mape": 47.98943391039199,
+      "r2": 0.5641853796266915
     },
     "random_forest": {
-      "rmse": 2208.510738956892,
-      "mae": 1460.1627873022,
-      "mape": 44.48075445885149,
-      "r2": 0.5604427159267577
+      "rmse": 2205.295830137935,
+      "mae": 1405.839971971664,
+      "mape": 42.198575098727744,
+      "r2": 0.5990480374920195
     },
     "hist_gradient_boosting": {
-      "rmse": 2242.3097692974457,
-      "mae": 1481.0213171308412,
-      "mape": 43.71154377972075,
-      "r2": 0.5468858040804738
+      "rmse": 2319.468067044951,
+      "mae": 1507.1477014399263,
+      "mape": 49.865063197359724,
+      "r2": 0.5564573094882561
     },
     "keras_mlp": {
-      "rmse": 70810545577790.56,
-      "mae": 971478221454.6909,
-      "mape": 8242834343.190982,
-      "r2": -4.518687748408902e+20
+      "rmse": 384610435313.5547,
+      "mae": 7461490986.637167,
+      "mape": 63309648.170429096,
+      "r2": -1.2195532215720484e+16
+    },
+    "keras_mlp_melhor": {
+      "rmse": 7439.504715094735,
+      "mae": 6573.927042590165,
+      "mape": 99.99229904258627,
+      "r2": -3.5629601681875496
     }
   },
   "metricas_teste": {
-    "rmse": 2208.510738956892,
-    "mae": 1460.1627873022,
-    "mape": 44.48075445885149,
-    "r2": 0.5604427159267577
+    "rmse": 2205.295830137935,
+    "mae": 1405.839971971664,
+    "mape": 42.198575098727744,
+    "r2": 0.5990480374920195
   },
-  "n_treino": 21252,
-  "n_teste": 5313,
+  "n_treino": 19923,
+  "n_teste": 2657,
   "arquivos_modelo": [
     "c:\\Users\\jefer\\Documents\\Ciencia-de-dados\\Preco-Imoveis\\models\\joinville\\pipeline_preco_imoveis.pkl"
   ]

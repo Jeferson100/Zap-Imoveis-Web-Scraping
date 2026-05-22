@@ -12,5 +12,5 @@ jobs:
     uses: ./.github/workflows/pipeline_cidade_rodando.yml
     with:
       cidade_pasta: sao_paulo
-      arquivo_rodando_imovel: sao_paulo_jardins_criando_indice_localizacao.py
+      arquivo_rodando_imovel: sao_paulo_jardins_indice_localizacao.py
       BAIRRO : jardins
