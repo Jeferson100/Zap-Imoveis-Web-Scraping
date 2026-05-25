@@ -210,4 +210,7 @@ __marimo__/
 #!dados/resultado_final_indice.csv
 codigos_rodando/cache/
 
+# MLflow experiment tracking
+mlruns/
+
 

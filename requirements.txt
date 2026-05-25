@@ -2,3 +2,4 @@ streamlit==1.54.0
 pandas==2.3.3
 plotly>=6.5.2
 matplotlib>=3.10.8
+mlflow>=3.12.0
