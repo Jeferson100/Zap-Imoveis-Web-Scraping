@@ -260,6 +260,25 @@ wheels = [
 ]
 
 [[package]]
+name = "balltree"
+version = "1.1.1"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "numpy" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/c7/fc/be47d9e46adcd655c0e80127b9de9d6c13f4825a38656d000f506df04aef/balltree-1.1.1.tar.gz", hash = "sha256:51c7eb55f01e9c2cf63e6b1c42b5850a9b7d8a90297d9812955eca68a5b6a24c", size = 42349 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/4c/78/85a69007e44a2af329659e34181106d42eccb7b5eea03cbf00b53927f816/balltree-1.1.1-cp312-cp312-macosx_10_9_x86_64.whl", hash = "sha256:dcabf4a410c19cd6100b718576c20c9948a3c135b8f4fe6ea5ad407cb493e545", size = 66258 },
+    { url = "https://files.pythonhosted.org/packages/76/48/3bb1084eb47fd16b5981f4710a5903962451c0941f9add9805dc9fb28256/balltree-1.1.1-cp312-cp312-macosx_11_0_arm64.whl", hash = "sha256:a7afbafd8ef752698c23dca6b26e2ae30e5fe47f8a4a302c4a2be8e51248736d", size = 66101 },
+    { url = "https://files.pythonhosted.org/packages/a2/c6/9dc07ac0838a6be348003a793f124eb0dd8f628ff18f3732f43927e82dfc/balltree-1.1.1-cp312-cp312-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:83c48955a175437565e4c40bec42c01f4161594de1f16333e6857ac87f169366", size = 137833 },
+    { url = "https://files.pythonhosted.org/packages/29/1e/9c4ba7ae3748c3557d1f79b5d724e1545e5b72344a05bdc6c48cf4320de9/balltree-1.1.1-cp312-cp312-manylinux_2_5_i686.manylinux1_i686.manylinux_2_17_i686.manylinux2014_i686.whl", hash = "sha256:2b8cbf4c59e0f96e24df2b21207dbef981682e7763a92a5adc11456115f78b8f", size = 134772 },
+    { url = "https://files.pythonhosted.org/packages/c0/ff/7b89a426a7decfb7ca8b98e086841e9af46cc0bd18b66c00dcaa34eff2ef/balltree-1.1.1-cp312-cp312-musllinux_1_1_i686.whl", hash = "sha256:353006ce3a6bd230d6ab4ec36d5ff6a4dd823c838f640cdccb006d057a0220a8", size = 153213 },
+    { url = "https://files.pythonhosted.org/packages/bb/90/1f497c851382151fdb4f2274190e72c783e2c063773a72f573ea48b4081b/balltree-1.1.1-cp312-cp312-musllinux_1_1_x86_64.whl", hash = "sha256:a998ce13beca6c41ad16146014184e864890d0103712433e5547c63db0270f84", size = 157583 },
+    { url = "https://files.pythonhosted.org/packages/35/b7/7617f59e012560d9b11082ad23cd0a11ec4c11df57b883a18878831838d6/balltree-1.1.1-cp312-cp312-win32.whl", hash = "sha256:e1b49e5a65f6c181ab08a4dabcb0d0a21d26c16d38b26f190c2e624df40ac17c", size = 64987 },
+    { url = "https://files.pythonhosted.org/packages/7d/b7/d446682984fb03d83f5eeb65858584b6d400de162dd7b55351bfa300b85b/balltree-1.1.1-cp312-cp312-win_amd64.whl", hash = "sha256:ec22f62136fe0cc0f6f06cb34925be3bdf91ba6df51634204bce3fb3327e0b62", size = 67776 },
+]
+
+[[package]]
 name = "beautifulsoup4"
 version = "4.14.3"
 source = { registry = "https://pypi.org/simple" }
@@ -2810,10 +2829,12 @@ source = { editable = "." }
 dependencies = [
     { name = "aiohttp" },
     { name = "apify-fingerprint-datapoints" },
+    { name = "balltree" },
     { name = "browserforge" },
     { name = "bs4" },
     { name = "catboost" },
     { name = "crawlee" },
+    { name = "databricks-sdk" },
     { name = "distutils-pytest" },
     { name = "geopy" },
     { name = "googlemaps" },
@@ -2855,10 +2876,12 @@ dependencies = [
 requires-dist = [
     { name = "aiohttp", specifier = ">=3.13.3" },
     { name = "apify-fingerprint-datapoints", specifier = ">=0.10.0" },
+    { name = "balltree", specifier = ">=1.1.1" },
     { name = "browserforge", specifier = ">=1.2.4" },
     { name = "bs4", specifier = ">=0.0.2" },
     { name = "catboost", specifier = ">=1.2.10" },
     { name = "crawlee", specifier = ">=1.3.1" },
+    { name = "databricks-sdk", specifier = ">=0.110.0" },
     { name = "distutils-pytest", specifier = ">=0.2.1" },
     { name = "geopy", specifier = ">=2.4.1" },
     { name = "googlemaps", specifier = ">=4.10.0" },

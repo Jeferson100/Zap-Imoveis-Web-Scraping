@@ -211,6 +211,6 @@ __marimo__/
 codigos_rodando/cache/
 
 # MLflow experiment tracking
-mlruns/
+#mlruns/
 
 
