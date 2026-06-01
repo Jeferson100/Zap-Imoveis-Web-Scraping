@@ -31,6 +31,7 @@ from funcoes_limpando_dados_imoveis import (limpar_metragem,
                                             limpa_endereco_apply_zap,
                                             limpa_endereco_apply_chave_mao,
                                             limpa_endereco_apply_olx)
+from .preco_imoveis_model_analysis import PrecoImoveisModelAnalyzer
 
 __all__ = [#"ZapScraperTotalPagina",
             "ZapScraperLinks",
@@ -56,6 +57,7 @@ __all__ = [#"ZapScraperTotalPagina",
             "pirabeiraba_dona_francisca",
             "geocodificar_dataframe",
             "processar_todos_scores_localizacao",
+            "PrecoImoveisModelAnalyzer",
             "ChavesMaoColeta",
             "ChavesNaMaoScraperAsync",
             "ChaveMaoScraperLinksAsync",
