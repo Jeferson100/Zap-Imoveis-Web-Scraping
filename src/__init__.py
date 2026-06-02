@@ -32,6 +32,12 @@ from funcoes_limpando_dados_imoveis import (limpar_metragem,
                                             limpa_endereco_apply_chave_mao,
                                             limpa_endereco_apply_olx)
 from .preco_imoveis_model_analysis import PrecoImoveisModelAnalyzer
+from .predicao_preco_imoveis import (
+    listar_experimentos_mlflow,
+    comparar_modelos_mlflow,
+    treinar_pipeline_com_mlflow,
+    otimizar_mlp_com_mlflow,
+)
 
 __all__ = [#"ZapScraperTotalPagina",
             "ZapScraperLinks",
@@ -58,6 +64,10 @@ __all__ = [#"ZapScraperTotalPagina",
             "geocodificar_dataframe",
             "processar_todos_scores_localizacao",
             "PrecoImoveisModelAnalyzer",
+            "listar_experimentos_mlflow",
+            "comparar_modelos_mlflow",
+            "treinar_pipeline_com_mlflow",
+            "otimizar_mlp_com_mlflow",
             "ChavesMaoColeta",
             "ChavesNaMaoScraperAsync",
             "ChaveMaoScraperLinksAsync",

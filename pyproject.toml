@@ -8,6 +8,7 @@ dependencies = [
     "aiohttp>=3.13.3",
     "apify-fingerprint-datapoints>=0.10.0",
     "balltree>=1.1.1",
+    "boruta>=0.4.3",
     "browserforge>=1.2.4",
     "bs4>=0.0.2",
     "catboost>=1.2.10",
