@@ -17,13 +17,15 @@ from sklearn.impute import SimpleImputer
 from sklearn.pipeline import Pipeline
 from sklearn.model_selection import train_test_split
 
-from .preprocessador import PreprocessadorFactory, Avaliador
-from .mlflow_manager import MLflowManager
-from .otimizador_optuna import (
+from preprocessador import PreprocessadorFactory, Avaliador
+from mlflow_manager import MLflowManager
+from otimizador_optuna import (
     OtimizadorOptuna,
     FactoryModelos,
     OtimizadorMLP,
 )
+
+import time
 
 warnings.filterwarnings("ignore")
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
@@ -48,7 +50,7 @@ TRATAMENTOS = [
 # ─── Modelos que serao otimizados com Optuna ────────────────────
 MODELOS_OTIMIZAVEIS = {
     "Ridge_opt":        FactoryModelos().ridge,
-    "DecisionTree_opt": FactoryModelos().decision_tree,
+    #"DecisionTree_opt": FactoryModelos().decision_tree,
     "RandomForest_opt": FactoryModelos().random_forest,
     "GradientBoosting_opt": FactoryModelos().gradient_boosting,
     "KNN_opt":          FactoryModelos().knn,
@@ -63,6 +65,7 @@ MODELOS_SIMPLES_TRAT = {
     "Linear":           LinearRegression(),
 }
 
+now = time.strftime("%Y-%m")
 
 class TesteIncrementalFeatures:
     """Testa modelos (incluindo otimizados via Optuna) com features incrementais."""
@@ -129,7 +132,6 @@ class TesteIncrementalFeatures:
         self.feature_start = feature_start
         self.experimento_mlflow = experimento_mlflow
         self.optuna_params_otimizados = {}
-        self.best_params_mlp = None
         self.usar_mlp_otimizado = usar_mlp_otimizado
 
         if usar_xgboost:
@@ -210,29 +212,6 @@ class TesteIncrementalFeatures:
             logger.info("  %s: %s", nome, params)
         return melhores_params
 
-    def _otimizar_mlp(self, X_train, y_train, X_val, y_val, input_dim, target_name="preco_por_m2"):
-        logger.info(
-            "Otimizando MLP com OtimizadorMLP (%d trials)...",
-            self.n_trials_mlp,
-        )
-        otimizador_mlp = OtimizadorMLP(
-            mlflow_manager=self.mlflow_mgr,
-            target_name=target_name,
-        )
-        study, _ = otimizador_mlp.otimizar(
-            X_train=X_train,
-            y_train=y_train,
-            X_val=X_val,
-            y_val=y_val,
-            input_dim=input_dim,
-            n_trials=self.n_trials_mlp,
-            epochs=100,
-            nome="mlp_incremental",
-        )
-        self.best_params_mlp = study.best_params
-        logger.info("  MLP params: %s", self.best_params_mlp)
-        return study
-
     def executar(
         self,
         train,
@@ -305,33 +284,12 @@ class TesteIncrementalFeatures:
                 preprocessor_todas, X_todas, y_todas, self.mlflow_mgr
             )
 
-        # --- Otimizacao MLP (uma vez, full features, pre-processado internamente) ---
-        if otimizar_mlp:
-            factory_mlp = PreprocessadorFactory(
-                numeric_features=features_ordenadas,
-                categorical_features=cat_fixas,
-            )
-            pp_mlp = factory_mlp.criar()
-            X_full_proc = pp_mlp.fit_transform(
-                train[features_ordenadas + cat_fixas]
-            )
-            y_full = train[target_col].values
-            # split interno para validação
-            from sklearn.model_selection import train_test_split
-
-            X_tr_mlp, X_val_mlp, y_tr_mlp, y_val_mlp = train_test_split(
-                X_full_proc, y_full, test_size=0.2, random_state=42
-            )
-            self._otimizar_mlp(
-                X_tr_mlp, y_tr_mlp, X_val_mlp, y_val_mlp, X_tr_mlp.shape[1]
-            )
-
         # --- Montar dicionario de modelos efetivos ---
         modelos_efetivos = dict(self.modelos_simples)
         if otimizar_com_optuna and self.optuna_params_otimizados:
             for nome_curto in self.modelos_optuna_nomes:
                 modelos_efetivos[nome_curto] = None
-        if otimizar_mlp and self.best_params_mlp:
+        if otimizar_mlp:
             modelos_efetivos["MLP_opt"] = None
 
         total = (
@@ -359,7 +317,7 @@ class TesteIncrementalFeatures:
             for esc_name, scaler in self.escaladores.items():
                 for mod_name, modelo in modelos_efetivos.items():
                     atual += 1
-                    run_name = f"inc_{mod_name}_{n_feats:02d}feats_{esc_name}"
+                    run_name = f"inc_{mod_name}_{n_feats:02d}feats_{esc_name}_{now}"
                     factory_pp = PreprocessadorFactory(
                         numeric_features=feats_num,
                         categorical_features=cat_fixas,
@@ -384,17 +342,30 @@ class TesteIncrementalFeatures:
                             y_pred = rede.predict(X_te_proc, verbose=0).squeeze()
                             pipe = rede
 
-                        elif mod_name == "MLP_opt" and self.best_params_mlp:
+                        elif mod_name == "MLP_opt" and otimizar_mlp:
                             import optuna
                             import keras
-                            from keras import layers
 
                             X_tr_proc = preprocessor.fit_transform(X_tr_sel)
                             X_te_proc = preprocessor.transform(X_te_sel)
                             input_dim = X_tr_proc.shape[1]
 
+                            X_tr_split, X_val_split, y_tr_split, y_val_split = train_test_split(
+                                X_tr_proc, y_train, test_size=0.2, random_state=42
+                            )
+                            otimizador_mlp = OtimizadorMLP(
+                                mlflow_manager=self.mlflow_mgr,
+                                target_name=target_col,
+                            )
+                            study, _ = otimizador_mlp.otimizar(
+                                X_train=X_tr_split, y_train=y_tr_split,
+                                X_val=X_val_split, y_val=y_val_split,
+                                input_dim=input_dim,
+                                n_trials=self.n_trials_mlp, epochs=100,
+                                nome=run_name,
+                            )
                             model_mlp = OtimizadorMLP.construir_de_trial(
-                                optuna.trial.FixedTrial(self.best_params_mlp),
+                                optuna.trial.FixedTrial(study.best_params),
                                 input_dim,
                             )
                             early_stop = keras.callbacks.EarlyStopping(
@@ -404,7 +375,7 @@ class TesteIncrementalFeatures:
                                 X_tr_proc,
                                 y_train,
                                 epochs=100,
-                                batch_size=self.best_params_mlp.get("batch_size", 128),
+                                batch_size=study.best_params.get("batch_size", 128),
                                 callbacks=[early_stop],
                                 verbose=0,
                             )
@@ -573,36 +544,6 @@ class TesteIncrementalFeatures:
             logger.warning("MLflow: %s", e)
             self.mlflow_mgr = None
 
-        # --- Otimizacao MLP (uma vez, full features) ---
-        self.best_params_mlp = None
-        if otimizar_mlp:
-            logger.info("Otimizando MLP (%d trials)...", n_trials_mlp)
-            cols_mlp = features_testadas + [c for c in cat_fixas if c not in features_testadas]
-            num_mlp = [c for c in cols_mlp if c not in cat_fixas]
-            factory_mlp = PreprocessadorFactory(
-                numeric_features=num_mlp,
-                categorical_features=cat_fixas,
-            )
-            pp_mlp = factory_mlp.criar()
-            X_full_proc = pp_mlp.fit_transform(train[cols_mlp])
-            y_full = train[target_col].values
-            X_tr_mlp, X_val_mlp, y_tr_mlp, y_val_mlp = train_test_split(
-                X_full_proc, y_full, test_size=0.2, random_state=42
-            )
-            otimizador_mlp = OtimizadorMLP(
-                mlflow_manager=self.mlflow_mgr,
-                target_name=target_col,
-            )
-            study, _ = otimizador_mlp.otimizar(
-                X_train=X_tr_mlp, y_train=y_tr_mlp,
-                X_val=X_val_mlp, y_val=y_val_mlp,
-                input_dim=X_tr_mlp.shape[1],
-                n_trials=n_trials_mlp, epochs=100,
-                nome="mlp_tratamentos",
-            )
-            self.best_params_mlp = study.best_params
-            logger.info("MLP params: %s", self.best_params_mlp)
-
         colunas_validas = []
         resultados = []
         total = len(features_testadas) * len(TRATAMENTOS) * (qtd_optuna + qtd_simples)
@@ -632,7 +573,7 @@ class TesteIncrementalFeatures:
 
                 for mod_name, factory_fn in MODELOS_OTIMIZAVEIS.items():
                     atual += 1
-                    run_name = f"{mod_name}|{trat['nome']}|feat{idx_col:02d}_{col}"
+                    run_name = f"{mod_name}|{trat['nome']}|feat{idx_col:02d}_{col}_{now}"
                     t0 = time.time()
 
                     try:
@@ -750,20 +691,39 @@ class TesteIncrementalFeatures:
                     sys.stdout.write(f"\r[{atual:4d}/{total}] {idx_col:2d}feats {trat['nome']:>18} {mod_name:>18} R2={r2s} {dt:4.0f}s")
                     sys.stdout.flush()
 
-                # --- MLP otimizado ---
-                if self.best_params_mlp:
+                # --- MLP otimizado per-incremento ---
+                if otimizar_mlp:
                     mod_name = "MLP_opt"
                     atual += 1
                     run_name = f"{mod_name}|{trat['nome']}|feat{idx_col:02d}_{col}"
                     t0 = time.time()
 
                     try:
-                        X_tr_proc = pp.fit_transform(X_tr)
-                        X_te_proc = pp.transform(X_te)
+                        pp_mlp_inc = PreprocessadorFactory(
+                            numeric_features=num_feats,
+                            categorical_features=cat_fixas,
+                        ).criar(scaler=scaler, imputer_num=imputer_num, imputer_cat=imputer_cat, encoder=encoder)
+
+                        X_tr_proc = pp_mlp_inc.fit_transform(X_tr)
+                        X_te_proc = pp_mlp_inc.transform(X_te)
                         input_dim = X_tr_proc.shape[1]
 
+                        X_tr_split, X_val_split, y_tr_split, y_val_split = train_test_split(
+                            X_tr_proc, y_train, test_size=0.2, random_state=42
+                        )
+                        otimizador_mlp = OtimizadorMLP(
+                            mlflow_manager=self.mlflow_mgr,
+                            target_name=target_col,
+                        )
+                        study, _ = otimizador_mlp.otimizar(
+                            X_train=X_tr_split, y_train=y_tr_split,
+                            X_val=X_val_split, y_val=y_val_split,
+                            input_dim=input_dim,
+                            n_trials=n_trials_mlp, epochs=100,
+                            nome=run_name,
+                        )
                         model_mlp = OtimizadorMLP.construir_de_trial(
-                            optuna.trial.FixedTrial(self.best_params_mlp),
+                            optuna.trial.FixedTrial(study.best_params),
                             input_dim,
                         )
                         import keras
@@ -773,7 +733,7 @@ class TesteIncrementalFeatures:
                         model_mlp.fit(
                             X_tr_proc, y_train,
                             epochs=100,
-                            batch_size=self.best_params_mlp.get("batch_size", 128),
+                            batch_size=study.best_params.get("batch_size", 128),
                             callbacks=[early_stop], verbose=0,
                         )
                         y_pred = model_mlp.predict(X_te_proc, verbose=0).ravel()
@@ -784,6 +744,7 @@ class TesteIncrementalFeatures:
                             "ultima_feature": col,
                             "tratamento": trat["nome"],
                             "modelo": mod_name,
+                            "best_rmse_cv": float(study.best_value),
                             **met,
                         })
 
@@ -794,6 +755,7 @@ class TesteIncrementalFeatures:
                             mlflow.log_param("modelo", mod_name)
                             mlflow.log_param("n_features", len(colunas_validas))
                             mlflow.log_param("ultima_feature", col)
+                            mlflow.log_params({f"best_{k}": str(v)[:80] for k, v in study.best_params.items()})
                             mlflow.log_metrics(met)
                             self.mlflow_mgr.log_feature_history(X_tr, run_name=run_name)
                             mlflow.end_run()

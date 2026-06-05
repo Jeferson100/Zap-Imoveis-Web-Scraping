@@ -1,0 +1,14 @@
+name: Rodando Treinamento de Imoveis de Joinville Joinville 
+on:
+  schedule:
+    - cron: '0 9 2 1,2,3,4,5,6,7,8,9,10,11,12 *'  # 09:00 no primeiro dia de cada mês
+  workflow_dispatch:
+
+jobs:
+    treinamento_modelos_predicoes:
+        uses: ./.github/workflows/pipeline_cidade_rodando.yml
+        with:
+        cidade_pasta: joinville
+        arquivo_rodando_imovel: joinville_predicao_valor_imoveis.py
+        DATABRICKS_HOST: "https://dbc-ed602b14-1f14.cloud.databricks.com"
+        DATABRICKS_TOKEN: ${{ secrets.DATABRICKS_TOKEN }}

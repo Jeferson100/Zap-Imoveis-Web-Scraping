@@ -67,7 +67,12 @@ on:
       FILTRO_BAIRRO:
         required: false
         type: string
-
+      DATABRICKS_TOKEN:
+        required: false
+        type: string
+      DATABRICKS_HOST:
+        required: false
+        type: string
 
 jobs:
   build:
@@ -137,7 +142,8 @@ jobs:
           URL_TEMPLATE_ZAP: ${{ inputs.URL_TEMPLATE_ZAP }}
           URL_TEMPLATE_CHAVES: ${{ inputs.URL_TEMPLATE_CHAVES }}
           FILTRO_BAIRRO: ${{ inputs.FILTRO_BAIRRO }}
-
+          DATABRICKS_TOKEN: ${{ inputs.DATABRICKS_TOKEN }}
+          DATABRICKS_HOST: ${{ inputs.DATABRICKS_HOST }}
 
       - name: Commit e Push
         run: |
