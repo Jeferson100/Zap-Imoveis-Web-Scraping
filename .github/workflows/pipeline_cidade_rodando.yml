@@ -69,7 +69,6 @@ on:
         type: string
       DATABRICKS_TOKEN:
         required: false
-        default: ${{ secrets.DATABRICKS_TOKEN }}
         type: string
       DATABRICKS_HOST:
         required: false

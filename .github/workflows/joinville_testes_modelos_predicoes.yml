@@ -8,5 +8,6 @@ jobs:
     treinamento_modelos_predicoes:
         uses: ./.github/workflows/pipeline_cidade_rodando.yml
         with:
-          cidade_pasta: joinville
-          arquivo_rodando_imovel: joinville_predicao_valor_imoveis.py
+            cidade_pasta: joinville
+            arquivo_rodando_imovel: joinville_predicao_valor_imoveis.py
+            DATABRICKS_TOKEN: ${{ secrets.DATABRICKS_TOKEN }}
