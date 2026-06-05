@@ -69,9 +69,11 @@ on:
         type: string
       DATABRICKS_TOKEN:
         required: false
+        default: ${{ secrets.DATABRICKS_TOKEN }}
         type: string
       DATABRICKS_HOST:
         required: false
+        default: "https://dbc-ed602b14-1f14.cloud.databricks.com"
         type: string
 
 jobs:
