@@ -10,4 +10,5 @@ jobs:
         with:
             cidade_pasta: joinville
             arquivo_rodando_imovel: joinville_predicao_valor_imoveis.py
-            DATABRICKS_TOKEN: ${{ secrets.DATABRICKS_TOKEN }}
+            DATABRICKS_HOST: "https://dbc-ed602b14-1f14.cloud.databricks.com"
+        secrets: inherit
