@@ -71,6 +71,9 @@ on:
         required: false
         default: "https://dbc-ed602b14-1f14.cloud.databricks.com"
         type: string
+      LOCALIZAZAO_COMPLETA:
+        required: false
+        type: string
 
 jobs:
   build:
@@ -142,6 +145,7 @@ jobs:
           FILTRO_BAIRRO: ${{ inputs.FILTRO_BAIRRO }}
           DATABRICKS_TOKEN: ${{ secrets.DATABRICKS_TOKEN }}
           DATABRICKS_HOST: ${{ inputs.DATABRICKS_HOST }}
+          LOCALIZAZAO_COMPLETA: ${{ inputs.LOCALIZAZAO_COMPLETA }}
 
       - name: Commit e Push
         run: |

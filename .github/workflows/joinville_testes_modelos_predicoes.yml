@@ -11,4 +11,5 @@ jobs:
             cidade_pasta: joinville
             arquivo_rodando_imovel: joinville_predicao_valor_imoveis.py
             DATABRICKS_HOST: "https://dbc-ed602b14-1f14.cloud.databricks.com"
+            LOCALIZAZAO_COMPLETA : "Joinville, Santa Catarina, Brasil"
         secrets: inherit
