@@ -7,11 +7,13 @@ from sklearn.model_selection import train_test_split
 import logging
 import warnings
 from  mlflow_manager import MLflowManager
+import asyncio
 
 import sys
 #sys.path.append(str(Path(__file__).parent.parent))
 
 from teste_incremental_features import TesteIncrementalFeatures
+from teste_incremental_features_async import TesteIncrementalFeaturesAsync
 
 
 load_dotenv()
@@ -174,7 +176,7 @@ TARGET = 'valor_imovel'
 
 FEATURES_TESTADAS = NUMERIC_FEATURES + CATEGORICAL_FEATURES
 
-teste = TesteIncrementalFeatures(experimento_mlflow=f"imoveis-{cidade}-valor")
+"""teste = TesteIncrementalFeatures(experimento_mlflow=f"imoveis-{cidade}-valor")
 
 df_resultados = teste.testar_tratamentos_modelos_incrementais(
     train=train, test=test, target_col=TARGET,
@@ -182,4 +184,18 @@ df_resultados = teste.testar_tratamentos_modelos_incrementais(
     categorical_features=CATEGORICAL_FEATURES,
     n_trials_optuna=5,
     otimizar_mlp=True,
-)
+)"""
+
+async def main():
+    teste = TesteIncrementalFeaturesAsync(experimento_mlflow="imoveis-joinville-valor")
+    df = await teste.testar_tratamentos_modelos_incrementais_async(
+        train=train, test=test, target_col=TARGET,
+        features_testadas=FEATURES_TESTADAS,
+        categorical_features=CATEGORICAL_FEATURES,
+        n_trials_optuna=5,
+        otimizar_mlp=True,
+        max_concurrent=3,
+    )
+    return df
+
+df = asyncio.run(main())
