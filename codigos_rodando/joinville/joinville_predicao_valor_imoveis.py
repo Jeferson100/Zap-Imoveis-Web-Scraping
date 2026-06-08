@@ -194,7 +194,7 @@ async def main():
         categorical_features=CATEGORICAL_FEATURES,
         n_trials_optuna=5,
         otimizar_mlp=True,
-        max_concurrent=15,
+        max_concurrent=100,
     )
     return df
 

@@ -182,6 +182,7 @@ class MLflowManager:
                     "rmse": run.data.metrics.get("rmse"),
                     "mae": run.data.metrics.get("mae"),
                     "mape": run.data.metrics.get("mape"),
+                    "mdape": run.data.metrics.get("mdape"),
                     "r2": run.data.metrics.get("r2"),
                     "parametros": run.data.params,
                     "feature_sampled": run.data.tags.get("feature_sample"),
@@ -228,6 +229,7 @@ class MLflowManager:
     def _conectar_databricks_token(self, host, token, mlflow):
         os.environ["DATABRICKS_HOST"] = host
         os.environ["DATABRICKS_TOKEN"] = token
+        os.environ["MLFLOW_HTTP_REQUEST_TIMEOUT"] = "30"
         mlflow.set_tracking_uri("databricks")
         mlflow.set_experiment(self.databricks_workspace_path)
         self._conectado = True

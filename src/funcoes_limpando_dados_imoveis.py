@@ -921,9 +921,8 @@ async def geocodificar_endereco(session: aiohttp.ClientSession, row: pd.Series, 
     "Geocodifica com tratamento de erro 429 e validação de JSON."
     url = "https://nominatim.openstreetmap.org/search"
     
-    # MELHORIA: Identifique seu bot para evitar bloqueios agressivos
     headers = {
-        'User-Agent': f'GeocodificadorImoveis{cidade}/1.0 (contato: seu-email@exemplo.com)'
+        'User-Agent': 'analise_imoveis_v1_jeferson (jefer-silva2018@hotmail.com)'
     }
     
     cep = str(row.get('cep', '')).strip()
@@ -1088,7 +1087,10 @@ async def preencher_coordenadas(session: aiohttp.ClientSession, row: pd.Series, 
         lat, lng = await geocodificar_endereco(session, row, cidade, estado, pais) 
         return {'idx': idx, 'lat': lat, 'lng': lng}
 
-async def preencher_todas_coordenadas(df: pd.DataFrame, batch_size: int = 10, cidade: str= 'Joinville', estado:str='SC', pais:str='Brasil') -> pd.DataFrame:
+async def preencher_todas_coordenadas(df: pd.DataFrame, batch_size: int = None, cidade: str= 'Joinville', estado:str='SC', pais:str='Brasil') -> pd.DataFrame:
+    import os
+    if batch_size is None:
+        batch_size = 1 if os.getenv("CI") else 2
     if 'lat' not in df.columns: df['lat'] = np.nan
     if 'lng' not in df.columns: df['lng'] = np.nan
     mask = df['lat'].isna() | df['lng'].isna()

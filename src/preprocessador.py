@@ -71,9 +71,10 @@ class Avaliador:
         rmse = mean_squared_error(y_true, y_pred) ** 0.5
         mae = mean_absolute_error(y_true, y_pred)
         mape = np.mean(np.abs((y_true - y_pred) / y_true)) * 100
+        mdape = np.median(np.abs((y_true - y_pred) / y_true)) * 100
         r2 = r2_score(y_true, y_pred)
-        print(f"{nome}: RMSE=R$ {rmse:,.0f} | MAE=R$ {mae:,.0f} | MAPE={mape:.1f}% | R2={r2:.3f}")
-        return {"rmse": rmse, "mae": mae, "mape": mape, "r2": r2}
+        print(f"{nome}: RMSE=R$ {rmse:,.0f} | MAE=R$ {mae:,.0f} | MAPE={mape:.1f}% | MdAPE={mdape:.1f}% | R2={r2:.3f}")
+        return {"rmse": rmse, "mae": mae, "mape": mape, "mdape": mdape, "r2": r2}
 
     @staticmethod
     def rmse(y_true, y_pred):

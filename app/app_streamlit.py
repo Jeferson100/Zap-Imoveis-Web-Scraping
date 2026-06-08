@@ -4,7 +4,6 @@ import plotly.express as px
 import plotly.graph_objects as go
 import os
 import numpy as np
-import numpy as np
 from scipy.stats import pearsonr, spearmanr
 from pathlib import Path
 
@@ -87,16 +86,21 @@ def gerar_pagina_analise_imoveis(cidade_pth, cidade_nome, prefixo_arquivo, df=No
         pasta = BASE_DIR / 'dados' / cidade_pth
         
         try:
-            arquivos = list(pasta.glob(f'{prefixo_arquivo}_com_ind_local_*.parquet'))
+            #arquivos = list(pasta.glob(f'{prefixo_arquivo}_com_ind_local_*.parquet'))
                 
-            arquivo_mais_recente = max(arquivos, key=lambda f: f.stem.split('_')[-1])
+            #arquivo_mais_recente = max(arquivos, key=lambda f: f.stem.split('_')[-1])
             
-        except:
             arquivos = list(pasta.glob(f'{prefixo_arquivo}_imoveis_limpo_*.parquet'))
-                
+            if not arquivos:
+                st.error(f"Nenhum arquivo encontrado com prefixo '{prefixo_arquivo}' em '{pasta}'.")
+                return
             arquivo_mais_recente = max(arquivos, key=lambda f: f.stem.split('_')[-1])
         
             data_mais_recente = arquivo_mais_recente.stem.split('_')[-1]
+            
+        except Exception:
+            st.error(f"Erro: Não foi possível encontrar arquivos com prefixo '{prefixo_arquivo}' em '{pasta}'. Verifique se os arquivos estão no local correto e seguem o padrão de nomenclatura.")
+            return
                 
         key_df = f"df_{cidade_nome.lower()}"
         
@@ -198,12 +202,15 @@ def gerar_pagina_analise_imoveis(cidade_pth, cidade_nome, prefixo_arquivo, df=No
         value=(int(df['metragem'].min()), int(df['metragem'].max()))
     )
 
-    desvio_mediana_min, desvio_mediana_max = st.sidebar.slider(
+    desvio_mediana_min = float(df['desvio_mediana'].min())
+    desvio_mediana_max = float(df['desvio_mediana'].max())
+    desvio_mediana_range = st.sidebar.slider(
         'Desvio do preço por m² em relação ao preço mediano do bairro:',
-        min_value=int(df['desvio_mediana'].min()),
-        max_value=int(df['desvio_mediana'].max()),
-        value=(int(df['desvio_mediana'].min()), int(df['desvio_mediana'].max()))
+        min_value=desvio_mediana_min,
+        max_value=desvio_mediana_max,
+        value=(desvio_mediana_min, desvio_mediana_max)
     )
+    desvio_mediana_min, desvio_mediana_max = desvio_mediana_range
 
     vaga_garagem_min, vaga_garagem_max  = st.sidebar.slider(
         'Vagas de Garagens:',
@@ -386,10 +393,6 @@ def gerar_pagina_analise_imoveis(cidade_pth, cidade_nome, prefixo_arquivo, df=No
 
     with col3:
         if not df_filtrado.empty and df_filtrado['tipo_imovel'].nunique() > 1:
-            df_filtrado_diferenca = df.copy()
-            if faixas_selecionado:
-                df_filtrado_diferenca = df_filtrado[df_filtrado['faixa'].isin(faixas_selecionado)]
-            
             try:
             
                 df_agregado_pivot = (df_filtrado.groupby(['bairro', 'tipo_imovel'])['preco_por_m2'].aggregate(['mean', 'median'])).pivot_table(
@@ -867,18 +870,17 @@ def gerar_pagina_analise_imoveis(cidade_pth, cidade_nome, prefixo_arquivo, df=No
     with col_11:
         st.subheader('Tempo de Publicação do anúncio por Bairro')
         
-        dfontes_desejadas = ['zap_imoveis', 'viva_real']
-        df_filtrado = df_filtrado[df_filtrado['fonte'].isin(fontes_desejadas)]
+        fontes_tempo = ['zap_imoveis', 'viva_real']
+        df_tempo = df_filtrado[df_filtrado['fonte'].isin(fontes_tempo)].copy()
         
-        if not df_filtrado.empty:
-            # 1. Preparação dos Dados (Geral para todos os bairros)
+        if not df_tempo.empty:
             bins = [0, 60, 180, 365, 730, 9999]
             
             labels = ['0-60 dias', '61-180 dias', '181-365 dias', '1 ano', '2 anos+']
             
-            df_filtrado['faixa_tempo'] = pd.cut(df_filtrado['dias_publicacao'], bins=bins, labels=labels)
+            df_tempo['faixa_tempo'] = pd.cut(df_tempo['dias_publicacao'], bins=bins, labels=labels)
 
-            df_geral = df_filtrado.groupby(['bairro', 'faixa_tempo'], observed=True).size().reset_index(name='quantidade')
+            df_geral = df_tempo.groupby(['bairro', 'faixa_tempo'], observed=True).size().reset_index(name='quantidade')
 
             df_geral['total_bairro'] = df_geral.groupby('bairro')['quantidade'].transform('sum')
             
@@ -919,10 +921,10 @@ def gerar_pagina_analise_imoveis(cidade_pth, cidade_nome, prefixo_arquivo, df=No
             
     with col_12:
 
-        if not df_filtrado.empty:
+        if not df_tempo.empty:
             st.subheader('Tempo de Publicação do anúncio por Tipo de Imóvel')
 
-            df_temp_ana = df_filtrado.groupby(['tipo_imovel', 'faixa_tempo'], observed=True).size().reset_index(name='quantidade')
+            df_temp_ana = df_tempo.groupby(['tipo_imovel', 'faixa_tempo'], observed=True).size().reset_index(name='quantidade')
 
             # Cálculo de Totais e Porcentagem
             df_temp_ana['total_grupo'] = df_temp_ana.groupby(['tipo_imovel'])['quantidade'].transform('sum')

@@ -81,6 +81,7 @@ def comparar_modelos_mlflow(EXPERIMENTO_NOME: str):
                 "rmse": run.data.metrics.get("rmse"),
                 "mae": run.data.metrics.get("mae"),
                 "mape": run.data.metrics.get("mape"),
+                "mdape": run.data.metrics.get("mdape"),
                 "r2": run.data.metrics.get("r2"),
                 "parametros": run.data.params,
                 "feature_sampled": run.data.tags.get("feature_sample"),

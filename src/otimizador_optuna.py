@@ -1,13 +1,18 @@
 import numpy as np
 import optuna
 from sklearn.model_selection import KFold, cross_validate
+from sklearn.metrics import make_scorer
 from sklearn.pipeline import Pipeline
+
+
+def _mdape(y_true, y_pred):
+    return np.median(np.abs((y_true - y_pred) / y_true)) * 100
 
 
 class OtimizadorOptuna:
     """Otimizacao de hiperparametros com Optuna + cross-validation + MLflow."""
 
-    def __init__(self, preprocessador, X, y, mlflow_manager=None, n_trials=40, n_folds=3, random_state=42):
+    def __init__(self, preprocessador, X, y, mlflow_manager=None, n_trials=40, n_folds=3, random_state=42, n_jobs=-1):
         self.preprocessador = preprocessador
         self.X = X
         self.y = y
@@ -15,6 +20,7 @@ class OtimizadorOptuna:
         self.n_trials = n_trials
         self.n_folds = n_folds
         self.random_state = random_state
+        self.n_jobs = n_jobs
         self.cv = KFold(n_splits=n_folds, shuffle=True, random_state=random_state)
         self.melhores_params = {}
         self.estudos = {}
@@ -46,13 +52,15 @@ class OtimizadorOptuna:
                 "rmse": "neg_root_mean_squared_error",
                 "mae": "neg_mean_absolute_error",
                 "mape": "neg_mean_absolute_percentage_error",
+                "mdape": make_scorer(_mdape, greater_is_better=False),
                 "r2": "r2",
             }
-            scores = cross_validate(pipe, self.X, self.y, cv=self.cv, scoring=scoring, n_jobs=-1)
+            scores = cross_validate(pipe, self.X, self.y, cv=self.cv, scoring=scoring, n_jobs=self.n_jobs)
             metrics = {
                 "rmse": -scores["test_rmse"].mean(),
                 "mae": -scores["test_mae"].mean(),
                 "mape": -scores["test_mape"].mean(),
+                "mdape": -scores["test_mdape"].mean(),
                 "r2": scores["test_r2"].mean(),
             }
             self._log_trial(nome, trial, metrics, self.X)
@@ -86,7 +94,7 @@ class OtimizadorOptuna:
                 study_name=nome,
                 sampler=optuna.samplers.TPESampler(seed=self.random_state),
             )
-            study.optimize(self._objective(nome, factory), n_trials=self.n_trials, show_progress_bar=True)
+            study.optimize(self._objective(nome, factory), n_trials=self.n_trials, timeout=600, show_progress_bar=False)
 
             self.melhores_params[nome] = study.best_params
             self.estudos[nome] = study
@@ -143,8 +151,8 @@ class FactoryModelos:
         from sklearn.ensemble import RandomForestRegressor
 
         return RandomForestRegressor(
-            n_estimators=trial.suggest_int("n_estimators", 100, 500, step=50),
-            max_depth=trial.suggest_int("max_depth", 6, 30),
+            n_estimators=trial.suggest_int("n_estimators", 100, 200, step=50),
+            max_depth=trial.suggest_int("max_depth", 6, 20),
             min_samples_leaf=trial.suggest_int("min_samples_leaf", 1, 8),
             min_samples_split=trial.suggest_int("min_samples_split", 2, 20),
             max_features=trial.suggest_categorical("max_features", ["sqrt", "log2", 0.7, 0.9]),
@@ -156,8 +164,8 @@ class FactoryModelos:
         from sklearn.ensemble import GradientBoostingRegressor
 
         return GradientBoostingRegressor(
-            n_estimators=trial.suggest_int("n_estimators", 100, 500, step=50),
-            max_depth=trial.suggest_int("max_depth", 3, 12),
+            n_estimators=trial.suggest_int("n_estimators", 100, 200, step=50),
+            max_depth=trial.suggest_int("max_depth", 3, 8),
             learning_rate=trial.suggest_float("learning_rate", 0.01, 0.3, log=True),
             subsample=trial.suggest_float("subsample", 0.6, 1.0),
             min_samples_leaf=trial.suggest_int("min_samples_leaf", 1, 10),
@@ -178,7 +186,7 @@ class FactoryModelos:
         from sklearn.svm import SVR
 
         return SVR(
-            kernel=trial.suggest_categorical("kernel", ["rbf", "linear", "poly"]),
+            kernel=trial.suggest_categorical("kernel", ["rbf", "linear"]),
             C=trial.suggest_float("C", 0.1, 1000.0, log=True),
             epsilon=trial.suggest_float("epsilon", 0.001, 1.0, log=True),
             gamma=trial.suggest_categorical("gamma", ["scale", "auto"]),
@@ -188,8 +196,8 @@ class FactoryModelos:
         from catboost import CatBoostRegressor
 
         return CatBoostRegressor(
-            iterations=trial.suggest_int("iterations", 200, 800, step=50),
-            depth=trial.suggest_int("depth", 4, 10),
+            iterations=trial.suggest_int("iterations", 100, 300, step=50),
+            depth=trial.suggest_int("depth", 4, 8),
             learning_rate=trial.suggest_float("learning_rate", 0.01, 0.2, log=True),
             l2_leaf_reg=trial.suggest_float("l2_leaf_reg", 1.0, 10.0, log=True),
             subsample=trial.suggest_float("subsample", 0.6, 1.0),
@@ -352,6 +360,7 @@ class OtimizadorMLP:
                 rmse = float(np.sqrt(np.mean((y_val_real - preds_real) ** 2)))
                 mae = float(mean_absolute_error(y_val_real, preds_real))
                 mape = float(mean_absolute_percentage_error(y_val_real, preds_real))
+                mdape = float(np.median(np.abs((y_val_real - preds_real) / y_val_real)) * 100)
                 r2 = float(r2_score(y_val_real, preds_real))
 
                 with mlflow.start_run(nested=True, run_name=f"{nome}_trial_{trial.number}"):
@@ -361,6 +370,7 @@ class OtimizadorMLP:
                     mlflow.log_metric("rmse", rmse)
                     mlflow.log_metric("mae", mae)
                     mlflow.log_metric("mape", mape)
+                    mlflow.log_metric("mdape", mdape)
                     mlflow.log_metric("r2", r2)
                     mlflow.log_metric("best_epoch", len(history.history.get("loss", [])))
                     if self.mlflow:
@@ -375,7 +385,7 @@ class OtimizadorMLP:
                 direction="minimize",
                 sampler=optuna.samplers.TPESampler(seed=self.random_state),
             )
-            study.optimize(objective_mlp, n_trials=n_trials, show_progress_bar=True)
+            study.optimize(objective_mlp, n_trials=n_trials, timeout=600, show_progress_bar=False)
 
             for k, v in study.best_params.items():
                 mlflow.log_param(f"best_{k}", str(v)[:100])

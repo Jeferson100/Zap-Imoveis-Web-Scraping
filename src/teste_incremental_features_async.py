@@ -1,5 +1,6 @@
 import asyncio
 import logging
+import os
 import time
 import sys
 import warnings
@@ -227,7 +228,9 @@ class TesteIncrementalFeaturesAsync:
                     f"/Workspace/Users/sehnemjeferson@gmail.com/{self.experimento_mlflow}"
                 ),
             )
-            await loop.run_in_executor(None, self.mlflow_mgr.conectar)
+            await asyncio.wait_for(
+                loop.run_in_executor(None, self.mlflow_mgr.conectar), timeout=60
+            )
         except Exception as e:
             logger.warning("MLflow nao disponivel: %s", e)
             self.mlflow_mgr = None
@@ -287,9 +290,11 @@ class TesteIncrementalFeaturesAsync:
             preprocessor_todas = factory_todas.criar()
             X_todas = train[features_ordenadas + cat_fixas].copy()
             y_todas = train[target_col].copy()
-            await loop.run_in_executor(
-                None,
-                partial(self._otimizar_modelos_optuna, preprocessor_todas, X_todas, y_todas, self.mlflow_mgr),
+            await asyncio.wait_for(
+                loop.run_in_executor(
+                    None,
+                    partial(self._otimizar_modelos_optuna, preprocessor_todas, X_todas, y_todas, self.mlflow_mgr),
+                ), timeout=600
             )
 
         modelos_efetivos = dict(self.modelos_simples)
@@ -307,7 +312,8 @@ class TesteIncrementalFeaturesAsync:
         logger.info("Combinacoes: %d feats x %d scalers x %d modelos = %d",
                     len(features_ordenadas), len(self.escaladores), len(modelos_efetivos), total)
 
-        sem = asyncio.Semaphore(max_concurrent)
+        max_workers = min(max_concurrent, os.cpu_count() or 4)
+        sem = asyncio.Semaphore(max_workers)
         progresso = {"atual": 0}
         lock = asyncio.Lock()
 
@@ -347,7 +353,9 @@ class TesteIncrementalFeaturesAsync:
                                          batch_size=batch_size_rede, verbose=0)
                                 y_pred = rede.predict(X_te_proc, verbose=0).squeeze()
                                 return y_pred, None
-                            y_pred, _ = await loop.run_in_executor(None, _treinar_rede)
+                            y_pred, _ = await asyncio.wait_for(
+                                loop.run_in_executor(None, _treinar_rede), timeout=600
+                            )
                             pipe = None
 
                         elif mod_name == "MLP_opt" and otimizar_mlp:
@@ -382,7 +390,9 @@ class TesteIncrementalFeaturesAsync:
                                               callbacks=[early_stop], verbose=0)
                                 y_pred = model_mlp.predict(X_te_proc, verbose=0).ravel()
                                 return y_pred, study
-                            y_pred, study = await loop.run_in_executor(None, _treinar_mlp_opt)
+                            y_pred, study = await asyncio.wait_for(
+                                loop.run_in_executor(None, _treinar_mlp_opt), timeout=600
+                            )
 
                         elif (
                             mod_name in self.modelos_optuna_nomes
@@ -400,7 +410,9 @@ class TesteIncrementalFeaturesAsync:
                                 ])
                                 pipe.fit(X_tr_sel, y_train)
                                 return pipe.predict(X_te_sel), None
-                            y_pred, _ = await loop.run_in_executor(None, _treinar_optuna)
+                            y_pred, _ = await asyncio.wait_for(
+                                loop.run_in_executor(None, _treinar_optuna), timeout=600
+                            )
 
                         else:
                             def _treinar_simples():
@@ -414,14 +426,19 @@ class TesteIncrementalFeaturesAsync:
                                 ])
                                 pipe.fit(X_tr_sel, y_train, **fit_kw)
                                 return pipe.predict(X_te_sel), None
-                            y_pred, _ = await loop.run_in_executor(None, _treinar_simples)
+                            y_pred, _ = await asyncio.wait_for(
+                                loop.run_in_executor(None, _treinar_simples), timeout=600
+                            )
 
                         met = Avaliador.metricas(run_name, y_test, y_pred)
 
                         if self.mlflow_mgr:
-                            await loop.run_in_executor(None, self._log_executar_resultado,
+                            await asyncio.wait_for(
+                                loop.run_in_executor(None, self._log_executar_resultado,
                                                        run_name, n_feats, feats_num[-1],
-                                                       esc_name, mod_name, met, modelo, X_tr_sel)
+                                                       esc_name, mod_name, met, modelo, X_tr_sel),
+                                timeout=60
+                            )
 
                         return {
                             "n_features": n_feats,
@@ -441,7 +458,7 @@ class TesteIncrementalFeaturesAsync:
                             "escalador": esc_name,
                             "modelo": mod_name,
                             "rmse": float("nan"), "mae": float("nan"),
-                            "mape": float("nan"), "r2": float("nan"),
+                            "mape": float("nan"), "mdape": float("nan"), "r2": float("nan"),
                         }
 
             tasks = [executar_combo(c) for c in combos]
@@ -450,13 +467,12 @@ class TesteIncrementalFeaturesAsync:
                 self.resultados.append(resultado)
                 async with lock:
                     progresso["atual"] += 1
-                dt = time.time() - t0
                 r2v = resultado.get("r2", float("nan"))
                 r2s = f"{r2v:.4f}" if isinstance(r2v, (int, float)) and not np.isnan(r2v) else "FAIL"
                 sys.stdout.write(
                     f"\r[{progresso['atual']:3d}/{total}] "
                     f"{n_feats:2d}feats | {resultado.get('escalador', ''):>8} | "
-                    f"{resultado.get('modelo', ''):>16} | R2={r2s} | {dt:4.0f}s  "
+                    f"{resultado.get('modelo', ''):>16} | R2={r2s}  "
                 )
                 sys.stdout.flush()
 
@@ -523,7 +539,8 @@ class TesteIncrementalFeaturesAsync:
         total = len(features_testadas) * len(TRATAMENTOS) * (qtd_optuna + qtd_simples)
         progresso = {"atual": 0}
         lock = asyncio.Lock()
-        sem = asyncio.Semaphore(max_concurrent)
+        max_workers = min(max_concurrent, os.cpu_count() or 4)
+        sem = asyncio.Semaphore(max_workers)
         loop = asyncio.get_event_loop()
 
         for idx_col, col in enumerate(features_testadas, 1):
@@ -587,7 +604,7 @@ class TesteIncrementalFeaturesAsync:
                             "tratamento": trat["nome"],
                             "modelo": mod_name or "MLP_opt",
                             "rmse": float("nan"), "mae": float("nan"),
-                            "mape": float("nan"), "r2": float("nan"),
+                            "mape": float("nan"), "mdape": float("nan"), "r2": float("nan"),
                         }
 
             tasks = [executar_combo(c) for c in combos]
@@ -633,7 +650,7 @@ class TesteIncrementalFeaturesAsync:
             otim = OtimizadorOptuna(
                 preprocessador=pp, X=X_tr, y=y_train,
                 mlflow_manager=self.mlflow_mgr,
-                n_trials=n_trials, n_folds=3,
+                n_trials=n_trials, n_folds=3, n_jobs=1,
             )
             estudo = otim.otimizar(run_name, factory_fn)
 
@@ -665,7 +682,9 @@ class TesteIncrementalFeaturesAsync:
                 **met,
             }
 
-        return await loop.run_in_executor(None, _run)
+        return await asyncio.wait_for(
+            loop.run_in_executor(None, _run), timeout=600
+        )
 
     async def _combo_simples(self, loop, trat, mod_name, modelo,
                               num_feats, cat_fixas, X_tr, X_te,
@@ -704,7 +723,9 @@ class TesteIncrementalFeaturesAsync:
                 **met,
             }
 
-        return await loop.run_in_executor(None, _run)
+        return await asyncio.wait_for(
+            loop.run_in_executor(None, _run), timeout=600
+        )
 
     async def _combo_mlp(self, loop, trat, num_feats, cat_fixas,
                           X_tr, X_te, y_train, y_test, target_col,
@@ -769,7 +790,9 @@ class TesteIncrementalFeaturesAsync:
                 **met,
             }
 
-        return await loop.run_in_executor(None, _run)
+        return await asyncio.wait_for(
+            loop.run_in_executor(None, _run), timeout=600
+        )
 
 
 def resumo(resultados_df):

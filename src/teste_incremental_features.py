@@ -466,6 +466,7 @@ class TesteIncrementalFeatures:
                                 "rmse": float("nan"),
                                 "mae": float("nan"),
                                 "mape": float("nan"),
+                                "mdape": float("nan"),
                                 "r2": float("nan"),
                             }
                         )
@@ -630,7 +631,7 @@ class TesteIncrementalFeatures:
                             "tratamento": trat["nome"],
                             "modelo": mod_name,
                             "rmse": float("nan"), "mae": float("nan"),
-                            "mape": float("nan"), "r2": float("nan"),
+                            "mape": float("nan"), "mdape": float("nan"), "r2": float("nan"),
                         })
                         logger.debug("Falha %s %s %s: %s", mod_name, trat["nome"], col, exc)
 
@@ -681,7 +682,7 @@ class TesteIncrementalFeatures:
                             "tratamento": trat["nome"],
                             "modelo": mod_name,
                             "rmse": float("nan"), "mae": float("nan"),
-                            "mape": float("nan"), "r2": float("nan"),
+                            "mape": float("nan"), "mdape": float("nan"), "r2": float("nan"),
                         })
                         logger.debug("Falha %s %s %s: %s", mod_name, trat["nome"], col, exc)
 
@@ -767,7 +768,7 @@ class TesteIncrementalFeatures:
                             "tratamento": trat["nome"],
                             "modelo": mod_name,
                             "rmse": float("nan"), "mae": float("nan"),
-                            "mape": float("nan"), "r2": float("nan"),
+                            "mape": float("nan"), "mdape": float("nan"), "r2": float("nan"),
                         })
                         logger.debug("Falha MLP %s %s: %s", trat["nome"], col, exc)
 
