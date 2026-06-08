@@ -7,6 +7,19 @@ import numpy as np
 from scipy.stats import pearsonr, spearmanr
 from pathlib import Path
 
+FONTES_ZAP_VIVA = ['zap_imoveis', 'viva_real']
+
+
+def remover_outliers(df, colunas):
+    mascara = pd.Series(True, index=df.index)
+    for col in colunas:
+        Q1  = df[col].quantile(0.25)
+        Q3  = df[col].quantile(0.75)
+        IQR = Q3 - Q1
+        mascara &= df[col].between(Q1 - 1.5 * IQR, Q3 + 1.5 * IQR)
+    return df[mascara]
+
+
 def carregar_mais_recentes_por_fonte(cidade_path: str, prefixo_name: str, base_dir: Path | None = None):
     if base_dir is None:
         #base_dir = Path.cwd().parent
@@ -77,9 +90,7 @@ def gerar_pagina_analise_imoveis(cidade_pth, cidade_nome, prefixo_arquivo, df=No
         key_df = f"df_{cidade_nome.lower()}"
         if key_df not in st.session_state:
             st.session_state[key_df] = df
-        st.title(f"Análise de Imóveis {cidade_nome}")
     else:
-        st.title(f"Análise de Imóveis {cidade_nome}")
 
         BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -121,11 +132,10 @@ def gerar_pagina_analise_imoveis(cidade_pth, cidade_nome, prefixo_arquivo, df=No
 
     df['preco_por_m2'] = df['preco_por_m2'].fillna(preco_metro_median).astype(int)
 
-    df["desvio_mediana"] = round((df["preco_por_m2"] - df["p50_bairro"]) / df["p50_bairro"],2) 
+    df["p50_bairro"] = df["p50_bairro"].replace(0, np.nan)
+    df["desvio_mediana"] = round((df["preco_por_m2"] - df["p50_bairro"]) / df["p50_bairro"], 2)
 
-    if pd.isna(superior):
-        print("ERRO: O valor superior é NaN. Verifique se a coluna preco_por_m2 tem números válidos.")
-    else:
+    if pd.notna(superior):
         df = df[df['preco_por_m2'] < superior].astype({'preco_por_m2': int})
             
     df = df.rename(columns={'score': 'indice_localizacao'})
@@ -134,7 +144,7 @@ def gerar_pagina_analise_imoveis(cidade_pth, cidade_nome, prefixo_arquivo, df=No
     
     df[cols_num] = df[cols_num].fillna(0)
 
-    st.title(f'🏠 Análise de Imóveis {cidade_nome} - Zap Imóveis')
+    st.title(f"🏠 Análise de Imóveis {cidade_nome} - Zap Imóveis")
 
     st.subheader(f'Atualizado em: {data_mais_recente}')
 
@@ -311,8 +321,6 @@ def gerar_pagina_analise_imoveis(cidade_pth, cidade_nome, prefixo_arquivo, df=No
             df_bairros = df_bairros.sort_values('median', ascending=False) 
 
             # 2. Criar o gráfico de barras comparativo
-            import plotly.graph_objects as go
-
             fig = go.Figure()
 
             # Adicionar barra de Média
@@ -357,7 +365,7 @@ def gerar_pagina_analise_imoveis(cidade_pth, cidade_nome, prefixo_arquivo, df=No
         ]
         
         # 2. Configuração avançada de colunas
-        st.data_editor(
+        st.dataframe(
             df_filtrado[cols_to_show].reset_index(drop=True),
             use_container_width=True,
             hide_index=True,
@@ -382,7 +390,6 @@ def gerar_pagina_analise_imoveis(cidade_pth, cidade_nome, prefixo_arquivo, df=No
                 "dias_publicacao": st.column_config.NumberColumn("Anunciado há", format="%d dias"),
                 "bairro": "📍 Bairro"
             },
-            disabled=cols_to_show # Deixa a tabela apenas para leitura, mas com visual de editor
         )
     else:
         st.info('Nenhum imóvel encontrado com os filtros atuais.')
@@ -588,15 +595,6 @@ def gerar_pagina_analise_imoveis(cidade_pth, cidade_nome, prefixo_arquivo, df=No
     
     st.subheader('Análise: Índice de Localização vs Preço por m² (Sem Outliers | Escala Linear)')
 
-    def remover_outliers(df, colunas):
-        mascara = pd.Series(True, index=df.index)
-        for col in colunas:
-            Q1  = df[col].quantile(0.25)
-            Q3  = df[col].quantile(0.75)
-            IQR = Q3 - Q1
-            mascara &= df[col].between(Q1 - 1.5 * IQR, Q3 + 1.5 * IQR)
-        return df[mascara]
-    
     pd_data_indice_localizacao = df_filtrado.copy()
 
     pd_data_indice_localizacao_sem_sr = pd_data_indice_localizacao[pd_data_indice_localizacao['rua'] != 's/r']
@@ -670,7 +668,7 @@ def gerar_pagina_analise_imoveis(cidade_pth, cidade_nome, prefixo_arquivo, df=No
                 fig.update_layout(
                     height=700,
                     legend_title_text='Tipo',
-                    hovermode='closest',
+                    hovermode='x unified',
                 )
 
                 fig.update_yaxes(tickprefix="R$", tickformat=",.0f")
@@ -750,10 +748,9 @@ def gerar_pagina_analise_imoveis(cidade_pth, cidade_nome, prefixo_arquivo, df=No
 
     with col_9: 
         # Filtra para aceitar ambas as fontes de dados
-        fontes_desejadas = ['zap_imoveis', 'viva_real']
-        df_sem_outliers = df_sem_outliers[df_sem_outliers['fonte'].isin(fontes_desejadas)]
-        if not df_sem_outliers.empty:
-            df_sem_out = df_sem_outliers[df_sem_outliers['desvio_mediana'] <= 2.0]
+        df_outliers_fonte = df_sem_outliers[df_sem_outliers['fonte'].isin(FONTES_ZAP_VIVA)]
+        if not df_outliers_fonte.empty:
+            df_sem_out = df_outliers_fonte[df_outliers_fonte['desvio_mediana'] <= 2.0]
             fig_tempo = px.scatter(
                 df_sem_out,
                 x='dias_publicacao',
@@ -788,7 +785,7 @@ def gerar_pagina_analise_imoveis(cidade_pth, cidade_nome, prefixo_arquivo, df=No
                 # Ajustes de Layout
             fig_tempo.update_layout(
                     template='plotly_white',
-                    hovermode='closest',
+                    hovermode='x unified',
                     yaxis_title="Desvio do Preço Médio (R$)",
                     xaxis_title="Dias de Publicação",
                     legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1)
@@ -850,7 +847,7 @@ def gerar_pagina_analise_imoveis(cidade_pth, cidade_nome, prefixo_arquivo, df=No
                         mode='lines', name='Tendência', 
                         line=dict(color='rgba(100,100,100,0.5)', dash='dash')
                     ))
-            except:
+            except Exception:
                 pass
                 
             fig.update_layout(
@@ -870,8 +867,7 @@ def gerar_pagina_analise_imoveis(cidade_pth, cidade_nome, prefixo_arquivo, df=No
     with col_11:
         st.subheader('Tempo de Publicação do anúncio por Bairro')
         
-        fontes_tempo = ['zap_imoveis', 'viva_real']
-        df_tempo = df_filtrado[df_filtrado['fonte'].isin(fontes_tempo)].copy()
+        df_tempo = df_filtrado[df_filtrado['fonte'].isin(FONTES_ZAP_VIVA)].copy()
         
         if not df_tempo.empty:
             bins = [0, 60, 180, 365, 730, 9999]
@@ -900,7 +896,7 @@ def gerar_pagina_analise_imoveis(cidade_pth, cidade_nome, prefixo_arquivo, df=No
                     #title='<b>Ranking de Liquidez por Bairro (%)</b>',
                     category_orders={'bairro_total': bairros_ordenados}, # Ordena do mais líquido para o menos líquido
                     #color_discrete_sequence=px.colors.sequential.Plasma_r,
-                    text=df_geral['porcentagem'].apply(lambda x: f'{int(x)}%' if x > 8 else ''), # Mostra % se houver espaço
+                    text=df_geral['porcentagem'].apply(lambda x: f'{round(x)}%' if x > 8 else ''), # Mostra % se houver espaço
                 )
 
                 # 3. Ajustes de Layout
