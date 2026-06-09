@@ -1,3 +1,4 @@
+import random
 from playwright.async_api import async_playwright
 from playwright_stealth import Stealth
 import logging
@@ -12,23 +13,30 @@ logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(
 
 logger = logging.getLogger(__name__)
 
+ANTI_DETECT_JS = """
+Object.defineProperty(navigator, 'webdriver', { get: () => undefined });
+Object.defineProperty(navigator, 'languages', { get: () => ['pt-BR', 'pt', 'en-US', 'en'] });
+Object.defineProperty(navigator, 'plugins', { get: () => [1, 2, 3, 4, 5] });
+"""
+
 class TotalPageZap:
     def __init__(self, headless=True):
         self.headless = headless
-        self.user_agent = (
-            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
-            "AppleWebKit/537.36 (KHTML, like Gecko) "
-            "Chrome/124.0.0.0 Safari/537.36"
-        )
 
     async def get_total_pages(self, url: str, imoveis_por_pagina: int = 30) -> int:
-        """
-        Acessa a URL do Zap, captura o total de imóveis e calcula o número de páginas.
-        """
-        async with async_playwright() as p:
-            browser = await p.chromium.launch(headless=self.headless)
-            context = await browser.new_context(user_agent=self.user_agent)
+        async with Stealth().use_async(async_playwright()) as p:
+            browser = await p.chromium.launch(
+                headless=self.headless,
+                args=['--disable-blink-features=AutomationControlled']
+            )
+            context = await browser.new_context(
+                viewport={"width": 1920, "height": 1080},
+                user_agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36",
+                locale="pt-BR",
+                timezone_id="America/Sao_Paulo",
+            )
             page = await context.new_page()
+            await page.add_init_script(ANTI_DETECT_JS)
     
             try:
                 logger.info(f"Acessando Zap para calcular páginas: {url[:50]}...")
@@ -65,7 +73,7 @@ class TotalPageZap:
 
             except Exception as e:
                 logger.error(f"Erro ao capturar total de páginas: {e}")
-                return 50 
+                return 50
             finally:
                 await browser.close()
 

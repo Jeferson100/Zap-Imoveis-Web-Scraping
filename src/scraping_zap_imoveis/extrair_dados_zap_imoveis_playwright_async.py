@@ -10,6 +10,12 @@ from playwright_stealth import Stealth
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
 logger = logging.getLogger(__name__)
 
+ANTI_DETECT_JS = """
+Object.defineProperty(navigator, 'webdriver', { get: () => undefined });
+Object.defineProperty(navigator, 'languages', { get: () => ['pt-BR', 'pt', 'en-US', 'en'] });
+Object.defineProperty(navigator, 'plugins', { get: () => [1, 2, 3, 4, 5] });
+"""
+
 
 @dataclass
 class DadosImovel:
@@ -52,13 +58,15 @@ class ZapScraperDadosImovelAsync:
         try:
             self._pw_cm = Stealth().use_async(async_playwright())
             self._playwright = await self._pw_cm.__aenter__()
-            self._browser = await self._playwright.chromium.launch(headless=self.headless)
-            self._context = await self._browser.new_context(
-            user_agent=(
-                "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
-                "AppleWebKit/537.36 (KHTML, like Gecko) "
-                "Chrome/120.0.0.0 Safari/537.36"
+            self._browser = await self._playwright.chromium.launch(
+                headless=self.headless,
+                args=['--disable-blink-features=AutomationControlled']
             )
+            self._context = await self._browser.new_context(
+                viewport={"width": 1920, "height": 1080},
+                user_agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36",
+                locale="pt-BR",
+                timezone_id="America/Sao_Paulo",
             )
             return self
         except Exception as e:
@@ -194,8 +202,9 @@ class ZapScraperDadosImovelAsync:
         for tentativa in range(1, self.MAX_RETRIES + 1):
             page = await self._context.new_page()
             try:
+                await page.add_init_script(ANTI_DETECT_JS)
                 logger.info("Tentativa %d/%d — %s", tentativa, self.MAX_RETRIES, self.url)
-                await page.goto(self.url, wait_until="domcontentloaded")
+                await page.goto(self.url, wait_until="domcontentloaded", timeout=30000)
                 dados = await self._extrair_dados_da_pagina(page)
                 logger.info("Dados extraídos com sucesso")
                 return dados

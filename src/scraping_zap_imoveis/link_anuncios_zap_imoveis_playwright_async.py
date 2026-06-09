@@ -1,5 +1,5 @@
 import asyncio
-from playwright.async_api import async_playwright, Playwright
+from playwright.async_api import async_playwright
 from playwright_stealth import Stealth
 import logging
 import warnings
@@ -9,6 +9,13 @@ warnings.filterwarnings("ignore")
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
 logger = logging.getLogger(__name__)
+
+ANTI_DETECT_JS = """
+Object.defineProperty(navigator, 'webdriver', { get: () => undefined });
+Object.defineProperty(navigator, 'languages', { get: () => ['pt-BR', 'pt', 'en-US', 'en'] });
+Object.defineProperty(navigator, 'plugins', { get: () => [1, 2, 3, 4, 5] });
+"""
+
 
 class ZapScraperLinksAsync:
 
@@ -23,20 +30,15 @@ class ZapScraperLinksAsync:
         try:
             self._pw_cm = Stealth().use_async(async_playwright())
             self._playwright = await self._pw_cm.__aenter__()
-            self._browser = await self._playwright.chromium.launch(headless=self.headless)
-            """self._context = await self._browser.new_context(
-                            user_agent=(
-                                "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
-                                "AppleWebKit/537.36 (KHTML, like Gecko) "
-                                "Chrome/120.0.0.0 Safari/537.36"
-                            )
-                            )"""
-                            
-            iphone_13 = self._playwright.devices['iPhone 13']
+            self._browser = await self._playwright.chromium.launch(
+                headless=self.headless,
+                args=['--disable-blink-features=AutomationControlled']
+            )
             self._context = await self._browser.new_context(
-            **iphone_13,
-            locale="pt-BR",
-            timezone_id="America/Sao_Paulo"
+                viewport={"width": 1920, "height": 1080},
+                user_agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36",
+                locale="pt-BR",
+                timezone_id="America/Sao_Paulo",
             )
             return self
         except Exception as e:
@@ -117,18 +119,19 @@ class ZapScraperLinksAsync:
         for i in range(retries):
             page = await self._context.new_page()
             try:
-                # 1. Navegação menos exigente
-                await page.goto(url, wait_until="commit", timeout=40000)
-                
-                # Espera manual curta em vez de networkidle
-                await asyncio.sleep(random.uniform(0.5, 2))
+                await page.add_init_script(ANTI_DETECT_JS)
 
-                # 2. Scroll (Zap só renderiza com isso)
-                await page.mouse.wheel(0, 1500)
-                await asyncio.sleep(0.5)
+                await page.goto(url, wait_until="domcontentloaded", timeout=60000)
+
+                await asyncio.sleep(random.uniform(2, 4))
+
+                await page.evaluate("window.scrollTo(0, document.body.scrollHeight / 3)")
+                await asyncio.sleep(random.uniform(0.5, 1.5))
+                await page.evaluate("window.scrollTo(0, document.body.scrollHeight * 2 / 3)")
+                await asyncio.sleep(random.uniform(0.5, 1.5))
+                await page.evaluate("window.scrollTo(0, document.body.scrollHeight)")
 
                 seletor = 'a.olx-core-surface[href*="/imovel/"]'
-                # Busca links existentes, mesmo que não estejam visíveis
                 links = await page.locator(seletor).evaluate_all(
                     "nodes => nodes.map(n => n.href)"
                 )
@@ -136,17 +139,16 @@ class ZapScraperLinksAsync:
                 if links:
                     logger.info("Links encontrados para a URL %s", url)
                     return list(set(links))
-                
+
                 logger.warning(f"Tentativa {i+1}: Nenhum link encontrado na {url}")
 
             except Exception as e:
                 logger.error(f"Tentativa {i+1} falhou para {url}: {e}")
             finally:
                 await page.close()
-            
-            # Se falhou, espera um tempo maior antes de tentar de novo
-            await asyncio.sleep(random.uniform(10, 20))
-        
+
+            await asyncio.sleep(random.uniform(15, 30))
+
         return []
 
 
