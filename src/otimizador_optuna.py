@@ -1,8 +1,33 @@
+import logging
+import threading
 import numpy as np
 import optuna
 from sklearn.model_selection import KFold, cross_validate
 from sklearn.metrics import make_scorer
 from sklearn.pipeline import Pipeline
+from contextlib import contextmanager
+
+
+logger = logging.getLogger(__name__)
+
+
+_optuna_mlflow_lock = threading.Lock()
+
+
+class _NullMlflowManager:
+    @contextmanager
+    def run_session(self, run_name=None, nested=False, tags=None):
+        import mlflow
+        with _optuna_mlflow_lock:
+            active = mlflow.active_run()
+            if active:
+                logger.warning("Run ativo %s — encerrando antes de criar nova run", active.info.run_id)
+                mlflow.end_run()
+            mlflow.start_run(run_name=run_name, nested=nested, tags=tags)
+            try:
+                yield
+            finally:
+                mlflow.end_run()
 
 
 def _mdape(y_true, y_pred):
@@ -24,8 +49,11 @@ class OtimizadorOptuna:
         self.cv = KFold(n_splits=n_folds, shuffle=True, random_state=random_state)
         self.melhores_params = {}
         self.estudos = {}
+        self._log_trials = True
 
     def _log_trial(self, nome, trial, metrics, X_train):
+        if not self._log_trials:
+            return
         import mlflow
 
         with mlflow.start_run(nested=True, run_name=f"{nome}_trial_{trial.number}"):
@@ -67,16 +95,14 @@ class OtimizadorOptuna:
             return metrics["rmse"]
         return objective
 
-    def otimizar(self, nome, factory):
+    def otimizar(self, nome, factory, log_trials=True):
         import mlflow
 
+        self._log_trials = log_trials
         run_name = f"{nome}"
-        if self.mlflow:
-            self.mlflow.criar_run(run_name=run_name)
-        else:
-            mlflow.start_run(run_name=run_name)
 
-        try:
+        mgr = self.mlflow or _NullMlflowManager()
+        with mgr.run_session(run_name=run_name):
             mlflow.set_tag("otimizacao", "optuna")
             mlflow.set_tag("modelo", nome)
             mlflow.log_param("n_trials", self.n_trials)
@@ -96,24 +122,24 @@ class OtimizadorOptuna:
             )
             study.optimize(self._objective(nome, factory), n_trials=self.n_trials, timeout=600, show_progress_bar=False)
 
-            self.melhores_params[nome] = study.best_params
-            self.estudos[nome] = study
+            try:
+                self.melhores_params[nome] = study.best_params
+                self.estudos[nome] = study
 
-            for k, v in study.best_params.items():
-                mlflow.log_param(f"best_{k}", str(v)[:100])
-            mlflow.log_metric("best_rmse", study.best_value)
+                for k, v in study.best_params.items():
+                    mlflow.log_param(f"best_{k}", str(v)[:100])
+                mlflow.log_metric("best_rmse", study.best_value)
 
-            print(f"{nome}: melhor RMSE CV = {study.best_value:,.2f} | params = {study.best_params}")
-            return study
-        finally:
-            if self.mlflow:
-                mlflow.end_run()
-            else:
-                mlflow.end_run()
+                print(f"{nome}: melhor RMSE CV = {study.best_value:,.2f} | params = {study.best_params}")
+                return study
+            except ValueError:
+                mlflow.set_tag("status", "failed_no_trials")
+                logger.warning("Nenhum trial valido para %s", nome)
+                return None
 
-    def otimizar_varios(self, factories):
+    def otimizar_varios(self, factories, log_trials=True):
         for nome, factory in factories.items():
-            self.otimizar(nome, factory)
+            self.otimizar(nome, factory, log_trials=log_trials)
         return self.melhores_params, self.estudos
 
 
@@ -320,17 +346,13 @@ class OtimizadorMLP:
         )
         return model
 
-    def otimizar(self, X_train, y_train, X_val, y_val, input_dim, n_trials=30, epochs=100, nome="mlp_keras"):
+    def otimizar(self, X_train, y_train, X_val, y_val, input_dim, n_trials=30, epochs=100, nome="mlp_keras", log_trials=True):
         import mlflow
         import keras
         from sklearn.metrics import mean_absolute_error, mean_absolute_percentage_error, r2_score
 
-        if self.mlflow:
-            self.mlflow.criar_run(run_name=nome)
-        else:
-            mlflow.start_run(run_name=nome)
-
-        try:
+        mgr = self.mlflow or _NullMlflowManager()
+        with mgr.run_session(run_name=nome):
             mlflow.set_tag("modelo", "keras")
             mlflow.set_tag("target", self.target_name)
             if self.mlflow:
@@ -355,6 +377,7 @@ class OtimizadorMLP:
                     callbacks=[early_stop], verbose=0
                 )
                 preds_log = model.predict(X_val, verbose=0).ravel()
+                preds_log = np.clip(preds_log, -20, 20)
                 y_val_real = np.expm1(y_val)
                 preds_real = np.expm1(preds_log)
                 rmse = float(np.sqrt(np.mean((y_val_real - preds_real) ** 2)))
@@ -363,22 +386,23 @@ class OtimizadorMLP:
                 mdape = float(np.median(np.abs((y_val_real - preds_real) / y_val_real)) * 100)
                 r2 = float(r2_score(y_val_real, preds_real))
 
-                with mlflow.start_run(nested=True, run_name=f"{nome}_trial_{trial.number}"):
-                    mlflow.set_tag("modelo", "keras")
-                    for k, v in trial.params.items():
-                        mlflow.log_param(k, str(v)[:100])
-                    mlflow.log_metric("rmse", rmse)
-                    mlflow.log_metric("mae", mae)
-                    mlflow.log_metric("mape", mape)
-                    mlflow.log_metric("mdape", mdape)
-                    mlflow.log_metric("r2", r2)
-                    mlflow.log_metric("best_epoch", len(history.history.get("loss", [])))
-                    if self.mlflow:
-                        self.mlflow.log_feature_history(X_train, run_name=nome)
-                        self.mlflow.log_feature_store(X_train, run_name=nome,
-                                                      feature_group_name="joinville_imoveis",
-                                                      description="Features do MLP otimizado",
-                                                      source="joinville_historico_imoveis")
+                if log_trials:
+                    with mlflow.start_run(nested=True, run_name=f"{nome}_trial_{trial.number}"):
+                        mlflow.set_tag("modelo", "keras")
+                        for k, v in trial.params.items():
+                            mlflow.log_param(k, str(v)[:100])
+                        mlflow.log_metric("rmse", rmse)
+                        mlflow.log_metric("mae", mae)
+                        mlflow.log_metric("mape", mape)
+                        mlflow.log_metric("mdape", mdape)
+                        mlflow.log_metric("r2", r2)
+                        mlflow.log_metric("best_epoch", len(history.history.get("loss", [])))
+                        if self.mlflow:
+                            self.mlflow.log_feature_history(X_train, run_name=nome)
+                            self.mlflow.log_feature_store(X_train, run_name=nome,
+                                                          feature_group_name="joinville_imoveis",
+                                                          description="Features do MLP otimizado",
+                                                          source="joinville_historico_imoveis")
                 return rmse
 
             study = optuna.create_study(
@@ -387,24 +411,27 @@ class OtimizadorMLP:
             )
             study.optimize(objective_mlp, n_trials=n_trials, timeout=600, show_progress_bar=False)
 
-            for k, v in study.best_params.items():
-                mlflow.log_param(f"best_{k}", str(v)[:100])
-            mlflow.log_metric("best_rmse", study.best_value)
-            mlflow.log_metric("total_trials", n_trials)
+            try:
+                for k, v in study.best_params.items():
+                    mlflow.log_param(f"best_{k}", str(v)[:100])
+                mlflow.log_metric("best_rmse", study.best_value)
+                mlflow.log_metric("total_trials", n_trials)
 
-            best_model = self.construir_de_trial(
-                optuna.trial.FixedTrial(study.best_params), input_dim
-            )
-            early_stop = keras.callbacks.EarlyStopping(
-                monitor="val_loss", patience=15, restore_best_weights=True
-            )
-            best_model.fit(
-                X_train, y_train, validation_data=(X_val, y_val), epochs=200,
-                batch_size=study.best_params.get("batch_size", 256),
-                callbacks=[early_stop], verbose=0,
-            )
-            mlflow.keras.log_model(best_model, name="keras_model_best")
-            print(f"MLP otimizado: melhor RMSE = {study.best_value:,.4f}")
-            return study, best_model
-        finally:
-            mlflow.end_run()
+                best_model = self.construir_de_trial(
+                    optuna.trial.FixedTrial(study.best_params), input_dim
+                )
+                early_stop = keras.callbacks.EarlyStopping(
+                    monitor="val_loss", patience=15, restore_best_weights=True
+                )
+                best_model.fit(
+                    X_train, y_train, validation_data=(X_val, y_val), epochs=200,
+                    batch_size=study.best_params.get("batch_size", 256),
+                    callbacks=[early_stop], verbose=0,
+                )
+                mlflow.keras.log_model(best_model, name="keras_model_best")
+                print(f"MLP otimizado: melhor RMSE = {study.best_value:,.4f}")
+                return study, best_model
+            except ValueError:
+                mlflow.set_tag("status", "failed_no_trials")
+                logger.warning("Nenhum trial valido para MLP %s", nome)
+                return None, None

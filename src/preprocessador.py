@@ -4,7 +4,24 @@ from sklearn.compose import ColumnTransformer
 from sklearn.impute import SimpleImputer
 from sklearn.metrics import mean_absolute_error, mean_squared_error, r2_score
 from sklearn.pipeline import Pipeline
-from sklearn.preprocessing import FunctionTransformer, OneHotEncoder, StandardScaler
+from sklearn.preprocessing import FunctionTransformer, OneHotEncoder, StandardScaler, PowerTransformer
+
+
+TRANSFORM_MAP = {
+    None: "none",
+    "log": "log1p",
+    "sqrt": "sqrt",
+    "boxcox": "box-cox",
+    "yeojohnson": "yeo-johnson",
+}
+
+TRANSFORMACOES = {
+    None: None,
+    "log": FunctionTransformer(np.log1p, validate=False, feature_names_out="one-to-one"),
+    "sqrt": FunctionTransformer(np.sqrt, validate=False, feature_names_out="one-to-one"),
+    "boxcox": PowerTransformer(method="box-cox"),
+    "yeojohnson": PowerTransformer(method="yeo-johnson"),
+}
 
 
 def _replace_inf(X):
@@ -34,6 +51,7 @@ class PreprocessadorFactory:
         imputer_cat=None,
         scaler=None,
         encoder=None,
+        transform=None,
     ):
         if imputer_num is None:
             imputer_num = SimpleImputer(strategy="median")
@@ -44,11 +62,16 @@ class PreprocessadorFactory:
         if encoder is None:
             encoder = OneHotEncoder(handle_unknown="ignore", max_categories=30, sparse_output=False)
 
-        numeric_pipe = Pipeline([
+        transform_step = TRANSFORMACOES.get(transform) if isinstance(transform, str) else transform
+        numeric_steps = [
             ("replace_inf", _replacement_inf),
             ("imputer", imputer_num),
-            ("scaler", scaler),
-        ])
+        ]
+        if transform_step is not None:
+            numeric_steps.append(("transform", transform_step))
+        numeric_steps.append(("scaler", scaler))
+
+        numeric_pipe = Pipeline(numeric_steps)
         categorical_pipe = Pipeline([
             ("imputer", imputer_cat),
             ("ohe", encoder),

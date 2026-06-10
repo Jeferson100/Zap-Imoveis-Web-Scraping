@@ -21,7 +21,9 @@ from sklearn.preprocessing import (
 )
 from sklearn.impute import SimpleImputer
 from sklearn.pipeline import Pipeline
-from sklearn.model_selection import train_test_split
+from sklearn.model_selection import train_test_split, cross_validate
+from sklearn.metrics import make_scorer
+from otimizador_optuna import _mdape
 
 from preprocessador import PreprocessadorFactory, Avaliador
 from mlflow_manager import MLflowManager
@@ -33,6 +35,7 @@ from otimizador_optuna import (
 
 import optuna
 import mlflow
+import mlflow.data
 
 warnings.filterwarnings("ignore")
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
@@ -95,6 +98,14 @@ class TesteIncrementalFeaturesAsync:
         "standard": StandardScaler(),
         "robust": RobustScaler(),
         "minmax": MinMaxScaler(),
+    }
+
+    TRANSFORM_OPCOES = {
+        "none": None,
+        "log": "log",
+        "sqrt": "sqrt",
+        "boxcox": "boxcox",
+        "yeojohnson": "yeojohnson",
     }
 
     MODELOS_OPTUNA = {
@@ -194,7 +205,17 @@ class TesteIncrementalFeaturesAsync:
         corr_list.sort(key=lambda x: x[1], reverse=True)
         return [c[0] for c in corr_list], corr_list
 
-    def _otimizar_modelos_optuna(self, preprocessor, X, y, mlflow_mgr):
+    @staticmethod
+    def _build_transform_map(num_feats, cat_fixas, transf_name, encoder_name="ohe"):
+        import json
+        fmap = {}
+        for f in (num_feats or []):
+            fmap[str(f)] = str(transf_name or "none")
+        for f in (cat_fixas or []):
+            fmap[str(f)] = str(encoder_name)
+        return json.dumps(fmap, default=str)
+
+    def _otimizar_modelos_optuna(self, preprocessor, X, y, mlflow_mgr, log_trials=False):
         logger.info("Otimizando hiperparametros com OtimizadorOptuna...")
         otimizador = OtimizadorOptuna(
             preprocessador=preprocessor, X=X, y=y,
@@ -203,7 +224,7 @@ class TesteIncrementalFeaturesAsync:
         factories = {}
         for nome_curto, metodo in self.modelos_optuna_nomes.items():
             factories[nome_curto] = getattr(self.factory, metodo)
-        melhores_params, _ = otimizador.otimizar_varios(factories)
+        melhores_params, _ = otimizador.otimizar_varios(factories, log_trials=log_trials)
         self.optuna_params_otimizados = dict(melhores_params)
         for nome, params in melhores_params.items():
             logger.info("  %s: %s", nome, params)
@@ -232,8 +253,8 @@ class TesteIncrementalFeaturesAsync:
                 loop.run_in_executor(None, self.mlflow_mgr.conectar), timeout=60
             )
         except Exception as e:
-            logger.warning("MLflow nao disponivel: %s", e)
-            self.mlflow_mgr = None
+            logger.warning("MLflow conexao inicial falhou (tentara novamente depois): %s", e)
+            logger.exception("Detalhes da falha MLflow:")
 
     # ─── executar_async ─────────────────────────────────────────────
 
@@ -326,11 +347,12 @@ class TesteIncrementalFeaturesAsync:
 
             combos = []
             for esc_name, scaler in self.escaladores.items():
-                for mod_name, modelo in modelos_efetivos.items():
-                    combos.append((esc_name, scaler, mod_name, modelo))
+                for transf_name, transf_val in self.TRANSFORM_OPCOES.items():
+                    for mod_name, modelo in modelos_efetivos.items():
+                        combos.append((esc_name, scaler, transf_name, mod_name, modelo))
 
             async def executar_combo(args):
-                esc_name, scaler, mod_name, modelo = args
+                esc_name, scaler, transf_name, mod_name, modelo = args
                 async with sem:
                     run_name = f"inc_{mod_name}_{n_feats:02d}feats_{esc_name}_{now}"
                     t0 = time.time()
@@ -340,7 +362,15 @@ class TesteIncrementalFeaturesAsync:
                             numeric_features=feats_num,
                             categorical_features=cat_fixas,
                         )
-                        preprocessor = factory_pp.criar(scaler=scaler)
+                        preprocessor = factory_pp.criar(scaler=scaler, transform=transf_name)
+
+                        cv_scoring = {
+                            "rmse": "neg_root_mean_squared_error",
+                            "mae": "neg_mean_absolute_error",
+                            "mape": "neg_mean_absolute_percentage_error",
+                            "mdape": make_scorer(_mdape, greater_is_better=False),
+                            "r2": "r2",
+                        }
 
                         if mod_name == "RedesNeurais":
                             def _treinar_rede():
@@ -352,11 +382,10 @@ class TesteIncrementalFeaturesAsync:
                                 rede.fit(X_tr_proc, y_train, epochs=epochs_rede,
                                          batch_size=batch_size_rede, verbose=0)
                                 y_pred = rede.predict(X_te_proc, verbose=0).squeeze()
-                                return y_pred, None
-                            y_pred, _ = await asyncio.wait_for(
+                                return y_pred, {}
+                            y_pred, cv_met_inline = await asyncio.wait_for(
                                 loop.run_in_executor(None, _treinar_rede), timeout=600
                             )
-                            pipe = None
 
                         elif mod_name == "MLP_opt" and otimizar_mlp:
                             def _treinar_mlp_opt():
@@ -377,7 +406,7 @@ class TesteIncrementalFeaturesAsync:
                                     X_val=X_val_s, y_val=y_val_s,
                                     input_dim=input_dim,
                                     n_trials=self.n_trials_mlp, epochs=100,
-                                    nome=run_name,
+                                    nome=run_name, log_trials=False,
                                 )
                                 model_mlp = OtimizadorMLP.construir_de_trial(
                                     optuna.trial.FixedTrial(study.best_params), input_dim,
@@ -389,8 +418,8 @@ class TesteIncrementalFeaturesAsync:
                                               batch_size=study.best_params.get("batch_size", 128),
                                               callbacks=[early_stop], verbose=0)
                                 y_pred = model_mlp.predict(X_te_proc, verbose=0).ravel()
-                                return y_pred, study
-                            y_pred, study = await asyncio.wait_for(
+                                return y_pred, {}
+                            y_pred, cv_met_inline = await asyncio.wait_for(
                                 loop.run_in_executor(None, _treinar_mlp_opt), timeout=600
                             )
 
@@ -409,8 +438,17 @@ class TesteIncrementalFeaturesAsync:
                                     ("modelo", modelo_opt),
                                 ])
                                 pipe.fit(X_tr_sel, y_train)
-                                return pipe.predict(X_te_sel), None
-                            y_pred, _ = await asyncio.wait_for(
+                                y_pred = pipe.predict(X_te_sel)
+                                cv_scores = cross_validate(pipe, X_tr_sel, y_train, cv=3, scoring=cv_scoring, n_jobs=1)
+                                cv_met = {
+                                    "cv_rmse": -cv_scores["test_rmse"].mean(),
+                                    "cv_mae": -cv_scores["test_mae"].mean(),
+                                    "cv_mape": -cv_scores["test_mape"].mean(),
+                                    "cv_mdape": -cv_scores["test_mdape"].mean(),
+                                    "cv_r2": cv_scores["test_r2"].mean(),
+                                }
+                                return y_pred, cv_met
+                            y_pred, cv_met_inline = await asyncio.wait_for(
                                 loop.run_in_executor(None, _treinar_optuna), timeout=600
                             )
 
@@ -425,18 +463,30 @@ class TesteIncrementalFeaturesAsync:
                                     ("modelo", modelo),
                                 ])
                                 pipe.fit(X_tr_sel, y_train, **fit_kw)
-                                return pipe.predict(X_te_sel), None
-                            y_pred, _ = await asyncio.wait_for(
+                                y_pred = pipe.predict(X_te_sel)
+                                cv_scores = cross_validate(pipe, X_tr_sel, y_train, cv=3, scoring=cv_scoring, n_jobs=1)
+                                cv_met = {
+                                    "cv_rmse": -cv_scores["test_rmse"].mean(),
+                                    "cv_mae": -cv_scores["test_mae"].mean(),
+                                    "cv_mape": -cv_scores["test_mape"].mean(),
+                                    "cv_mdape": -cv_scores["test_mdape"].mean(),
+                                    "cv_r2": cv_scores["test_r2"].mean(),
+                                }
+                                return y_pred, cv_met
+                            y_pred, cv_met_inline = await asyncio.wait_for(
                                 loop.run_in_executor(None, _treinar_simples), timeout=600
                             )
 
                         met = Avaliador.metricas(run_name, y_test, y_pred)
+                        met_all = {**met, **cv_met_inline}
 
                         if self.mlflow_mgr:
                             await asyncio.wait_for(
                                 loop.run_in_executor(None, self._log_executar_resultado,
                                                        run_name, n_feats, feats_num[-1],
-                                                       esc_name, mod_name, met, modelo, X_tr_sel),
+                                                       esc_name, mod_name, met_all, modelo, X_tr_sel,
+                                                       transf_name, feats_num, cat_fixas,
+                                                       y_train, X_te_sel, y_test),
                                 timeout=60
                             )
 
@@ -446,6 +496,7 @@ class TesteIncrementalFeaturesAsync:
                             "ultima_feature": feats_num[-1],
                             "escalador": esc_name,
                             "modelo": mod_name,
+                            **cv_met_inline,
                             **met,
                         }
 
@@ -481,20 +532,36 @@ class TesteIncrementalFeaturesAsync:
         return self._resultado_dataframe()
 
     def _log_executar_resultado(self, run_name, n_feats, ultima_feature,
-                                 esc_name, mod_name, met, modelo, X_tr_sel):
-        self.mlflow_mgr.criar_run(run_name=run_name, nested=True)
-        mlflow.set_tag("teste", "incremental_features")
-        mlflow.log_param("n_features", n_feats)
-        mlflow.log_param("ultima_feature", ultima_feature)
-        mlflow.log_param("escalador", esc_name)
-        mlflow.log_param("modelo", mod_name)
-        mlflow.log_metrics(met)
-        if hasattr(modelo, "get_params"):
-            mlflow.log_params({
-                f"modelo__{k}": str(v)[:80] for k, v in modelo.get_params().items()
-            })
-        self.mlflow_mgr.log_feature_history(X_tr_sel, run_name=run_name)
-        mlflow.end_run()
+                                 esc_name, mod_name, met, modelo, X_tr_sel,
+                                 transf_name="none", feats_num=None, cat_fixas=None,
+                                 y_train=None, X_te_sel=None, y_test=None):
+        try:
+            with self.mlflow_mgr.run_session(run_name=run_name):
+                mlflow.set_tag("teste", "incremental_features")
+                mlflow.log_param("n_features", n_feats)
+                mlflow.log_param("ultima_feature", ultima_feature)
+                mlflow.log_param("escalador", esc_name)
+                mlflow.log_param("modelo", mod_name)
+                mlflow.log_param("transform", transf_name)
+                if feats_num or cat_fixas:
+                    mlflow.set_tag("feature_transform_map",
+                                   self._build_transform_map(feats_num, cat_fixas, transf_name))
+                if y_train is not None and X_te_sel is not None and y_test is not None:
+                    train_df = pd.concat([X_tr_sel.reset_index(drop=True),
+                                          pd.Series(y_train, name="target")], axis=1)
+                    mlflow.log_input(mlflow.data.from_pandas(train_df, name="train"), context="training")
+                    test_df = pd.concat([X_te_sel.reset_index(drop=True),
+                                         pd.Series(y_test, name="target")], axis=1)
+                    mlflow.log_input(mlflow.data.from_pandas(test_df, name="test"), context="test")
+                mlflow.log_metrics(met)
+                if hasattr(modelo, "get_params"):
+                    mlflow.log_params({
+                        f"modelo__{k}": str(v)[:80] for k, v in modelo.get_params().items()
+                    })
+                self.mlflow_mgr.log_feature_history(X_tr_sel, run_name=run_name)
+        except Exception as e_mlflow:
+            logger.warning("Falha ao logar MLflow para %s: %s", run_name, e_mlflow)
+            logger.exception("Detalhes:")
 
     # ─── testar_tratamentos_modelos_incrementais_async ──────────────
 
@@ -558,17 +625,18 @@ class TesteIncrementalFeaturesAsync:
             # Monta todas as combinacoes para este incremento
             combos = []
             for trat in TRATAMENTOS:
-                for mod_name, factory_fn in MODELOS_OTIMIZAVEIS.items():
-                    combos.append(("optuna", trat, mod_name, factory_fn, None))
-                for mod_name, modelo in MODELOS_SIMPLES_TRAT.items():
-                    combos.append(("simples", trat, mod_name, None, modelo))
-                if otimizar_mlp:
-                    combos.append(("mlp", trat, None, None, None))
+                for transf_name, _ in self.TRANSFORM_OPCOES.items():
+                    for mod_name, factory_fn in MODELOS_OTIMIZAVEIS.items():
+                        combos.append(("optuna", trat, transf_name, mod_name, factory_fn, None))
+                    for mod_name, modelo in MODELOS_SIMPLES_TRAT.items():
+                        combos.append(("simples", trat, transf_name, mod_name, None, modelo))
+                    if otimizar_mlp:
+                        combos.append(("mlp", trat, transf_name, None, None, None))
 
             n_features_atual = len(colunas_validas)
 
             async def executar_combo(args):
-                tipo, trat, mod_name, factory_fn, modelo = args
+                tipo, trat, transf_name, mod_name, factory_fn, modelo = args
                 async with sem:
                     run_name = f"{mod_name or 'MLP_opt'}|{trat['nome']}|feat{idx_col:02d}_{col}_{now}"
                     t0 = time.time()
@@ -579,30 +647,35 @@ class TesteIncrementalFeaturesAsync:
                                 loop, trat, mod_name, factory_fn,
                                 num_feats, cat_fixas, X_tr, X_te, y_train, y_test,
                                 n_trials_optuna, run_name, n_features_atual, col,
+                                transf_name=transf_name,
                             )
                         elif tipo == "simples":
                             result = await self._combo_simples(
                                 loop, trat, mod_name, modelo,
                                 num_feats, cat_fixas, X_tr, X_te, y_train, y_test,
                                 run_name, n_features_atual, col,
+                                transf_name=transf_name,
                             )
                         else:
                             result = await self._combo_mlp(
                                 loop, trat, num_feats, cat_fixas,
                                 X_tr, X_te, y_train, y_test, target_col,
                                 n_trials_mlp, run_name, n_features_atual, col,
+                                transf_name=transf_name,
                             )
 
                         return result
 
                     except Exception as exc:
-                        logger.debug("Falha %s %s feat%s: %s",
-                                     mod_name or "MLP_opt", trat["nome"], col, exc)
+                        logger.warning("Falha %s %s feat%s: %s",
+                                       mod_name or "MLP_opt", trat["nome"], col, exc)
+                        logger.exception("Traceback completo:")
                         return {
                             "n_features": n_features_atual,
                             "ultima_feature": col,
                             "tratamento": trat["nome"],
                             "modelo": mod_name or "MLP_opt",
+                            "transform": transf_name,
                             "rmse": float("nan"), "mae": float("nan"),
                             "mape": float("nan"), "mdape": float("nan"), "r2": float("nan"),
                         }
@@ -636,7 +709,7 @@ class TesteIncrementalFeaturesAsync:
     async def _combo_optuna(self, loop, trat, mod_name, factory_fn,
                              num_feats, cat_fixas, X_tr, X_te,
                              y_train, y_test, n_trials, run_name,
-                             n_features, col):
+                             n_features, col, transf_name="none"):
         def _run():
             imputer_num = SimpleImputer(strategy=trat["imputer_num"])
             imputer_cat = SimpleImputer(strategy="constant", fill_value="desconhecido")
@@ -645,50 +718,116 @@ class TesteIncrementalFeaturesAsync:
             pp = PreprocessadorFactory(
                 numeric_features=num_feats, categorical_features=cat_fixas,
             ).criar(scaler=scaler, imputer_num=imputer_num,
-                    imputer_cat=imputer_cat, encoder=encoder)
+                    imputer_cat=imputer_cat, encoder=encoder,
+                    transform=transf_name)
 
-            otim = OtimizadorOptuna(
-                preprocessador=pp, X=X_tr, y=y_train,
-                mlflow_manager=self.mlflow_mgr,
-                n_trials=n_trials, n_folds=3, n_jobs=1,
-            )
-            estudo = otim.otimizar(run_name, factory_fn)
+            # ── Treino / CV / Avaliacao (com fallback) ──
+            cv_met = {}
+            met = {}
+            best_params = {}
+            erro = ""
+            try:
+                otim = OtimizadorOptuna(
+                    preprocessador=pp, X=X_tr, y=y_train,
+                    mlflow_manager=self.mlflow_mgr,
+                    n_trials=n_trials, n_folds=3, n_jobs=1,
+                )
+                estudo = otim.otimizar(run_name, factory_fn, log_trials=False)
+                if estudo is None:
+                    return {
+                        "n_features": n_features,
+                        "ultima_feature": col,
+                        "tratamento": trat["nome"],
+                        "modelo": mod_name,
+                        "transform": transf_name,
+                        "status": "failed_no_trials",
+                    }
+                best_params = estudo.best_params
 
-            trial_fixo = optuna.trial.FixedTrial(estudo.best_params)
-            modelo_best = factory_fn(trial_fixo)
-            pipe = Pipeline([("preprocessador", pp), ("modelo", modelo_best)])
-            pipe.fit(X_tr, y_train)
-            y_pred = pipe.predict(X_te)
-            met = Avaliador.metricas(run_name, y_test, y_pred)
+                trial_fixo = optuna.trial.FixedTrial(estudo.best_params)
+                modelo_best = factory_fn(trial_fixo)
 
-            if self.mlflow_mgr:
-                self.mlflow_mgr.criar_run(run_name=run_name, nested=True)
-                mlflow.set_tag("teste", "tratamentos_modelos")
-                mlflow.log_param("tratamento", trat["nome"])
-                mlflow.log_param("modelo", mod_name)
-                mlflow.log_param("n_features", n_features)
-                mlflow.log_param("ultima_feature", col)
-                mlflow.log_params({f"best_{k}": str(v)[:80] for k, v in estudo.best_params.items()})
-                mlflow.log_metrics(met)
-                self.mlflow_mgr.log_feature_history(X_tr, run_name=run_name)
-                mlflow.end_run()
+                cv_scoring = {
+                    "rmse": "neg_root_mean_squared_error",
+                    "mae": "neg_mean_absolute_error",
+                    "mape": "neg_mean_absolute_percentage_error",
+                    "mdape": make_scorer(_mdape, greater_is_better=False),
+                    "r2": "r2",
+                }
+                pipe_cv = Pipeline([("preprocessador", pp), ("modelo", modelo_best)])
+                cv_scores = cross_validate(pipe_cv, X_tr, y_train, cv=3, scoring=cv_scoring, n_jobs=1)
+                cv_met = {
+                    "cv_rmse": -cv_scores["test_rmse"].mean(),
+                    "cv_mae": -cv_scores["test_mae"].mean(),
+                    "cv_mape": -cv_scores["test_mape"].mean(),
+                    "cv_mdape": -cv_scores["test_mdape"].mean(),
+                    "cv_r2": cv_scores["test_r2"].mean(),
+                }
+
+                pipe_cv.fit(X_tr, y_train)
+                y_pred = pipe_cv.predict(X_te)
+                met = Avaliador.metricas(run_name, y_test, y_pred)
+            except Exception as e_train:
+                erro = str(e_train)[:200]
+                logger.warning("Falha treino/CV/avaliacao %s: %s", run_name, e_train, exc_info=True)
+                logger.warning("met=%s cv_met=%s", met, cv_met)
+
+            # ── MLflow (só se há métrica para logar) ──
+            if self.mlflow_mgr and (met or cv_met):
+                try:
+                    with self.mlflow_mgr.run_session(run_name=run_name):
+                        mlflow.set_tag("teste", "tratamentos_modelos")
+                        mlflow.log_param("tratamento", trat["nome"])
+                        mlflow.log_param("modelo", mod_name)
+                        mlflow.log_param("n_features", n_features)
+                        mlflow.log_param("ultima_feature", col)
+                        mlflow.log_param("transform", transf_name)
+                        if best_params:
+                            mlflow.log_params({f"best_{k}": str(v)[:80] for k, v in best_params.items()})
+                        mlflow.log_metrics({**met, **cv_met})
+                        encoder_name = "ordinal" if "Ordinal" in type(trat["encoder"]).__name__ else "ohe"
+                        mlflow.set_tag("feature_transform_map",
+                                       self._build_transform_map(num_feats, cat_fixas, transf_name, encoder_name))
+                        train_df = pd.concat([X_tr.reset_index(drop=True),
+                                              pd.Series(y_train, name="target")], axis=1)
+                        mlflow.log_input(mlflow.data.from_pandas(train_df, name="train"), context="training")
+                        test_df = pd.concat([X_te.reset_index(drop=True),
+                                             pd.Series(y_test, name="target")], axis=1)
+                        mlflow.log_input(mlflow.data.from_pandas(test_df, name="test"), context="test")
+                        self.mlflow_mgr.log_feature_history(X_tr, run_name=run_name)
+                except Exception as e_mlflow:
+                    logger.warning("Falha ao logar MLflow para %s: %s", run_name, e_mlflow)
+                    logger.exception("Detalhes:")
 
             return {
                 "n_features": n_features,
                 "ultima_feature": col,
                 "tratamento": trat["nome"],
                 "modelo": mod_name,
-                "best_rmse_cv": float(estudo.best_value),
+                "transform": transf_name,
+                **cv_met,
                 **met,
             }
 
-        return await asyncio.wait_for(
-            loop.run_in_executor(None, _run), timeout=600
-        )
+        try:
+            return await asyncio.wait_for(
+                loop.run_in_executor(None, _run), timeout=600
+            )
+        except asyncio.TimeoutError:
+            logger.warning("Timeout _combo_optuna %s", run_name)
+            return {
+                "n_features": n_features,
+                "ultima_feature": col,
+                "tratamento": trat["nome"],
+                "modelo": mod_name,
+                "transform": transf_name,
+                "status": "timeout",
+            }
 
     async def _combo_simples(self, loop, trat, mod_name, modelo,
                               num_feats, cat_fixas, X_tr, X_te,
-                              y_train, y_test, run_name, n_features, col):
+                              y_train, y_test, run_name, n_features, col,
+                              transf_name="none"):
         def _run():
             imputer_num = SimpleImputer(strategy=trat["imputer_num"])
             imputer_cat = SimpleImputer(strategy="constant", fill_value="desconhecido")
@@ -697,39 +836,93 @@ class TesteIncrementalFeaturesAsync:
             pp = PreprocessadorFactory(
                 numeric_features=num_feats, categorical_features=cat_fixas,
             ).criar(scaler=scaler, imputer_num=imputer_num,
-                    imputer_cat=imputer_cat, encoder=encoder)
+                    imputer_cat=imputer_cat, encoder=encoder,
+                    transform=transf_name)
 
-            pipe = Pipeline([("preprocessador", pp), ("modelo", modelo)])
-            pipe.fit(X_tr, y_train)
-            y_pred = pipe.predict(X_te)
-            met = Avaliador.metricas(run_name, y_test, y_pred)
+            # ── Treino / CV / Avaliacao ──
+            cv_met = {}
+            met = {}
+            erro = ""
+            try:
+                pipe = Pipeline([("preprocessador", pp), ("modelo", modelo)])
+                pipe.fit(X_tr, y_train)
+                y_pred = pipe.predict(X_te)
+                met = Avaliador.metricas(run_name, y_test, y_pred)
 
-            if self.mlflow_mgr:
-                self.mlflow_mgr.criar_run(run_name=run_name, nested=True)
-                mlflow.set_tag("teste", "tratamentos_modelos")
-                mlflow.log_param("tratamento", trat["nome"])
-                mlflow.log_param("modelo", mod_name)
-                mlflow.log_param("n_features", n_features)
-                mlflow.log_param("ultima_feature", col)
-                mlflow.log_metrics(met)
-                self.mlflow_mgr.log_feature_history(X_tr, run_name=run_name)
-                mlflow.end_run()
+                cv_scoring = {
+                    "rmse": "neg_root_mean_squared_error",
+                    "mae": "neg_mean_absolute_error",
+                    "mape": "neg_mean_absolute_percentage_error",
+                    "mdape": make_scorer(_mdape, greater_is_better=False),
+                    "r2": "r2",
+                }
+                cv_scores = cross_validate(pipe, X_tr, y_train, cv=3, scoring=cv_scoring, n_jobs=1)
+                cv_met = {
+                    "cv_rmse": -cv_scores["test_rmse"].mean(),
+                    "cv_mae": -cv_scores["test_mae"].mean(),
+                    "cv_mape": -cv_scores["test_mape"].mean(),
+                    "cv_mdape": -cv_scores["test_mdape"].mean(),
+                    "cv_r2": cv_scores["test_r2"].mean(),
+                }
+            except Exception as e_train:
+                erro = str(e_train)[:200]
+                logger.warning("Falha treino/CV/avaliacao %s: %s", run_name, e_train, exc_info=True)
+                logger.warning("met=%s cv_met=%s", met, cv_met)
+
+            # ── MLflow (só se há métrica para logar) ──
+            if self.mlflow_mgr and (met or cv_met):
+                try:
+                    with self.mlflow_mgr.run_session(run_name=run_name):
+                        mlflow.set_tag("teste", "tratamentos_modelos")
+                        mlflow.log_param("tratamento", trat["nome"])
+                        mlflow.log_param("modelo", mod_name)
+                        mlflow.log_param("n_features", n_features)
+                        mlflow.log_param("ultima_feature", col)
+                        mlflow.log_param("transform", transf_name)
+                        mlflow.log_metrics({**met, **cv_met})
+                        encoder_name = "ordinal" if "Ordinal" in type(trat["encoder"]).__name__ else "ohe"
+                        mlflow.set_tag("feature_transform_map",
+                                       self._build_transform_map(num_feats, cat_fixas, transf_name, encoder_name))
+                        train_df = pd.concat([X_tr.reset_index(drop=True),
+                                              pd.Series(y_train, name="target")], axis=1)
+                        mlflow.log_input(mlflow.data.from_pandas(train_df, name="train"), context="training")
+                        test_df = pd.concat([X_te.reset_index(drop=True),
+                                             pd.Series(y_test, name="target")], axis=1)
+                        mlflow.log_input(mlflow.data.from_pandas(test_df, name="test"), context="test")
+                        self.mlflow_mgr.log_feature_history(X_tr, run_name=run_name)
+                except Exception as e_mlflow:
+                    logger.warning("Falha ao logar MLflow para %s: %s", run_name, e_mlflow)
+                    logger.exception("Detalhes:")
 
             return {
                 "n_features": n_features,
                 "ultima_feature": col,
                 "tratamento": trat["nome"],
                 "modelo": mod_name,
+                "transform": transf_name,
+                **cv_met,
                 **met,
             }
 
-        return await asyncio.wait_for(
-            loop.run_in_executor(None, _run), timeout=600
-        )
+        try:
+            return await asyncio.wait_for(
+                loop.run_in_executor(None, _run), timeout=600
+            )
+        except asyncio.TimeoutError:
+            logger.warning("Timeout _combo_simples %s", run_name)
+            return {
+                "n_features": n_features,
+                "ultima_feature": col,
+                "tratamento": trat["nome"],
+                "modelo": mod_name,
+                "transform": transf_name,
+                "status": "timeout",
+            }
 
     async def _combo_mlp(self, loop, trat, num_feats, cat_fixas,
                           X_tr, X_te, y_train, y_test, target_col,
-                          n_trials, run_name, n_features, col):
+                          n_trials, run_name, n_features, col,
+                          transf_name="none"):
         def _run():
             imputer_num = SimpleImputer(strategy=trat["imputer_num"])
             imputer_cat = SimpleImputer(strategy="constant", fill_value="desconhecido")
@@ -738,61 +931,135 @@ class TesteIncrementalFeaturesAsync:
             pp = PreprocessadorFactory(
                 numeric_features=num_feats, categorical_features=cat_fixas,
             ).criar(scaler=scaler, imputer_num=imputer_num,
-                    imputer_cat=imputer_cat, encoder=encoder)
+                    imputer_cat=imputer_cat, encoder=encoder,
+                    transform=transf_name)
 
-            X_tr_proc = pp.fit_transform(X_tr)
-            X_te_proc = pp.transform(X_te)
-            input_dim = X_tr_proc.shape[1]
+            # ── Treino / CV / Avaliacao ──
+            cv_met = {}
+            met = {}
+            best_params = {}
+            erro = ""
+            try:
+                X_tr_proc = pp.fit_transform(X_tr)
+                X_te_proc = pp.transform(X_te)
+                input_dim = X_tr_proc.shape[1]
+                if input_dim == 0:
+                    return {
+                        "n_features": n_features,
+                        "ultima_feature": col,
+                        "tratamento": trat["nome"],
+                        "modelo": "MLP_opt",
+                        "transform": transf_name,
+                        "status": "no_features",
+                    }
 
-            X_tr_s, X_val_s, y_tr_s, y_val_s = train_test_split(
-                X_tr_proc, y_train, test_size=0.2, random_state=42
-            )
-            otim_mlp = OtimizadorMLP(
-                mlflow_manager=self.mlflow_mgr, target_name=target_col,
-            )
-            study, _ = otim_mlp.otimizar(
-                X_train=X_tr_s, y_train=y_tr_s,
-                X_val=X_val_s, y_val=y_val_s,
-                input_dim=input_dim, n_trials=n_trials, epochs=100,
-                nome=run_name,
-            )
-            model_mlp = OtimizadorMLP.construir_de_trial(
-                optuna.trial.FixedTrial(study.best_params), input_dim,
-            )
-            import keras
-            early_stop = keras.callbacks.EarlyStopping(
-                monitor="loss", patience=10, restore_best_weights=True
-            )
-            model_mlp.fit(X_tr_proc, y_train, epochs=100,
-                          batch_size=study.best_params.get("batch_size", 128),
-                          callbacks=[early_stop], verbose=0)
-            y_pred = model_mlp.predict(X_te_proc, verbose=0).ravel()
-            met = Avaliador.metricas(run_name, y_test, y_pred)
+                X_tr_s, X_val_s, y_tr_s, y_val_s = train_test_split(
+                    X_tr_proc, y_train, test_size=0.2, random_state=42
+                )
+                otim_mlp = OtimizadorMLP(
+                    mlflow_manager=self.mlflow_mgr, target_name=target_col,
+                )
+                study, _ = otim_mlp.otimizar(
+                    X_train=X_tr_s, y_train=y_tr_s,
+                    X_val=X_val_s, y_val=y_val_s,
+                    input_dim=input_dim, n_trials=n_trials, epochs=100,
+                    nome=run_name, log_trials=False,
+                )
+                if study is None:
+                    return {
+                        "n_features": n_features,
+                        "ultima_feature": col,
+                        "tratamento": trat["nome"],
+                        "modelo": "MLP_opt",
+                        "transform": transf_name,
+                        "status": "failed_no_trials",
+                    }
+                best_params = study.best_params
+                model_mlp = OtimizadorMLP.construir_de_trial(
+                    optuna.trial.FixedTrial(study.best_params), input_dim,
+                )
+                import keras
+                early_stop = keras.callbacks.EarlyStopping(
+                    monitor="loss", patience=10, restore_best_weights=True
+                )
+                model_mlp.fit(X_tr_proc, y_train, epochs=100,
+                              batch_size=study.best_params.get("batch_size", 128),
+                              callbacks=[early_stop], verbose=0)
+                y_pred = model_mlp.predict(X_te_proc, verbose=0).ravel()
+                met = Avaliador.metricas(run_name, y_test, y_pred)
 
-            if self.mlflow_mgr:
-                self.mlflow_mgr.criar_run(run_name=run_name, nested=True)
-                mlflow.set_tag("teste", "tratamentos_modelos")
-                mlflow.log_param("tratamento", trat["nome"])
-                mlflow.log_param("modelo", "MLP_opt")
-                mlflow.log_param("n_features", n_features)
-                mlflow.log_param("ultima_feature", col)
-                mlflow.log_params({f"best_{k}": str(v)[:80] for k, v in study.best_params.items()})
-                mlflow.log_metrics(met)
-                self.mlflow_mgr.log_feature_history(X_tr, run_name=run_name)
-                mlflow.end_run()
+                cv_scoring = {
+                    "rmse": "neg_root_mean_squared_error",
+                    "mae": "neg_mean_absolute_error",
+                    "mape": "neg_mean_absolute_percentage_error",
+                    "mdape": make_scorer(_mdape, greater_is_better=False),
+                    "r2": "r2",
+                }
+                pipe_cv = Pipeline([("preprocessador", pp), ("modelo", model_mlp)])
+                cv_scores = cross_validate(pipe_cv, X_tr, y_train, cv=3, scoring=cv_scoring, n_jobs=1)
+                cv_met = {
+                    "cv_rmse": -cv_scores["test_rmse"].mean(),
+                    "cv_mae": -cv_scores["test_mae"].mean(),
+                    "cv_mape": -cv_scores["test_mape"].mean(),
+                    "cv_mdape": -cv_scores["test_mdape"].mean(),
+                    "cv_r2": cv_scores["test_r2"].mean(),
+                }
+            except Exception as e_train:
+                erro = str(e_train)[:200]
+                logger.warning("Falha treino/CV/avaliacao %s: %s", run_name, e_train, exc_info=True)
+                logger.warning("met=%s cv_met=%s", met, cv_met)
+
+            # ── MLflow (só se há métrica para logar) ──
+            if self.mlflow_mgr and (met or cv_met):
+                try:
+                    with self.mlflow_mgr.run_session(run_name=run_name):
+                        mlflow.set_tag("teste", "tratamentos_modelos")
+                        mlflow.log_param("tratamento", trat["nome"])
+                        mlflow.log_param("modelo", "MLP_opt")
+                        mlflow.log_param("n_features", n_features)
+                        mlflow.log_param("ultima_feature", col)
+                        mlflow.log_param("transform", transf_name)
+                        if best_params:
+                            mlflow.log_params({f"best_{k}": str(v)[:80] for k, v in best_params.items()})
+                        mlflow.log_metrics({**met, **cv_met})
+                        encoder_name = "ordinal" if "Ordinal" in type(trat["encoder"]).__name__ else "ohe"
+                        mlflow.set_tag("feature_transform_map",
+                                       self._build_transform_map(num_feats, cat_fixas, transf_name, encoder_name))
+                        train_df = pd.concat([X_tr.reset_index(drop=True),
+                                              pd.Series(y_train, name="target")], axis=1)
+                        mlflow.log_input(mlflow.data.from_pandas(train_df, name="train"), context="training")
+                        test_df = pd.concat([X_te.reset_index(drop=True),
+                                             pd.Series(y_test, name="target")], axis=1)
+                        mlflow.log_input(mlflow.data.from_pandas(test_df, name="test"), context="test")
+                        self.mlflow_mgr.log_feature_history(X_tr, run_name=run_name)
+                except Exception as e_mlflow:
+                    logger.warning("Falha ao logar MLflow para %s: %s", run_name, e_mlflow)
+                    logger.exception("Detalhes:")
 
             return {
                 "n_features": n_features,
                 "ultima_feature": col,
                 "tratamento": trat["nome"],
                 "modelo": "MLP_opt",
-                "best_rmse_cv": float(study.best_value),
+                "transform": transf_name,
+                **cv_met,
                 **met,
             }
 
-        return await asyncio.wait_for(
-            loop.run_in_executor(None, _run), timeout=600
-        )
+        try:
+            return await asyncio.wait_for(
+                loop.run_in_executor(None, _run), timeout=600
+            )
+        except asyncio.TimeoutError:
+            logger.warning("Timeout _combo_mlp %s", run_name)
+            return {
+                "n_features": n_features,
+                "ultima_feature": col,
+                "tratamento": trat["nome"],
+                "modelo": "MLP_opt",
+                "transform": transf_name,
+                "status": "timeout",
+            }
 
 
 def resumo(resultados_df):

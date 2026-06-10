@@ -8,7 +8,7 @@ import logging
 import warnings
 from  mlflow_manager import MLflowManager
 import asyncio
-
+import mlflow.data
 import sys
 #sys.path.append(str(Path(__file__).parent.parent))
 
@@ -176,15 +176,21 @@ TARGET = 'valor_imovel'
 
 FEATURES_TESTADAS = NUMERIC_FEATURES + CATEGORICAL_FEATURES
 
-"""teste = TesteIncrementalFeatures(experimento_mlflow=f"imoveis-{cidade}-valor")
+import mlflow.data
 
-df_resultados = teste.testar_tratamentos_modelos_incrementais(
-    train=train, test=test, target_col=TARGET,
-    features_testadas=FEATURES_TESTADAS,
-    categorical_features=CATEGORICAL_FEATURES,
-    n_trials_optuna=5,
-    otimizar_mlp=True,
-)"""
+# Train
+train_data = mlflow.data.from_pandas(
+    pd.concat([X_train.reset_index(drop=True), pd.Series(y_train, name="target")], axis=1),
+    name="train"
+)
+mlflow.log_input(train_data, context="training")
+
+# Test (apenas onde X_te/y_te existem)
+test_data = mlflow.data.from_pandas(
+    pd.concat([X_test.reset_index(drop=True), pd.Series(y_test, name="target")], axis=1),
+    name="test"
+)
+mlflow.log_input(test_data, context="test")
 
 async def main():
     teste = TesteIncrementalFeaturesAsync(experimento_mlflow="imoveis-joinville-valor")

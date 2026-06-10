@@ -1,6 +1,9 @@
+import logging
 import os
 import tempfile
+import threading
 import warnings
+from contextlib import contextmanager
 from pathlib import Path
 from urllib.parse import urlparse
 
@@ -9,6 +12,9 @@ from dotenv import load_dotenv
 
 
 load_dotenv()
+
+logger = logging.getLogger(__name__)
+_mlflow_lock = threading.Lock()
 
 
 class MLflowManager:
@@ -75,7 +81,26 @@ class MLflowManager:
 
         if not self._conectado:
             self.conectar()
-        return mlflow.start_run(run_name=run_name, nested=nested, tags=tags)
+        with _mlflow_lock:
+            active = mlflow.active_run()
+            if active:
+                logger.warning("Run ativo %s — encerrando antes de criar nova run", active.info.run_id)
+                mlflow.end_run()
+            return mlflow.start_run(run_name=run_name, nested=nested, tags=tags)
+
+    def end_run(self):
+        import mlflow
+
+        with _mlflow_lock:
+            mlflow.end_run()
+
+    @contextmanager
+    def run_session(self, run_name=None, nested=False, tags=None):
+        self.criar_run(run_name=run_name, nested=nested, tags=tags)
+        try:
+            yield
+        finally:
+            self.end_run()
 
     def log_feature_history(self, X, run_name=None):
         import mlflow
@@ -218,7 +243,7 @@ class MLflowManager:
 
     def _conectar_local(self, mlflow):
         self.mlruns_dir.mkdir(parents=True, exist_ok=True)
-        tracking_uri = f"file:///{self.mlruns_dir}"
+        tracking_uri = self.mlruns_dir.as_uri()
         mlflow.set_tracking_uri(tracking_uri)
         mlflow.set_experiment(self.nome_experimento)
         self._conectado = True
