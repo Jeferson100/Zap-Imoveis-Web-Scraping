@@ -358,6 +358,8 @@ class TesteIncrementalFeaturesAsync:
                     t0 = time.time()
 
                     try:
+                        if transf_name == "boxcox" and feats_num and X_tr_sel[feats_num].min().min() <= 0:
+                            transf_name = "yeojohnson"
                         factory_pp = PreprocessadorFactory(
                             numeric_features=feats_num,
                             categorical_features=cat_fixas,
@@ -729,6 +731,9 @@ class TesteIncrementalFeaturesAsync:
         lock, progresso, total, resultados, run_name_base,
         transf_name="none",
     ):
+        if transf_name == "boxcox" and num_feats and X_tr[num_feats].min().min() <= 0:
+            logger.debug("Fallback boxcox->yeojohnson para %s (dados nao positivos)", run_name_base)
+            transf_name = "yeojohnson"
         async with sem:
             run_name = f"{mod_name}|{trat['nome']}|{transf_name}_{run_name_base}_{time.time_ns()}"
             logger.debug("Task: %s | %s | %s | %s", mod_name, trat["nome"], transf_name, run_name_base)

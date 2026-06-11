@@ -1,5 +1,6 @@
 import asyncio
 import logging
+import random
 import sys
 import time
 from dataclasses import dataclass, field
@@ -14,7 +15,18 @@ ANTI_DETECT_JS = """
 Object.defineProperty(navigator, 'webdriver', { get: () => undefined });
 Object.defineProperty(navigator, 'languages', { get: () => ['pt-BR', 'pt', 'en-US', 'en'] });
 Object.defineProperty(navigator, 'plugins', { get: () => [1, 2, 3, 4, 5] });
+Object.defineProperty(navigator, 'hardwareConcurrency', { get: () => 8 });
+Object.defineProperty(navigator, 'deviceMemory', { get: () => 8 });
 """
+
+USER_AGENTS = [
+    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/132.0.0.0 Safari/537.36",
+    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/133.0.0.0 Safari/537.36",
+    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/134.0.0.0 Safari/537.36",
+    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/135.0.0.0 Safari/537.36",
+    "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/134.0.0.0 Safari/537.36",
+    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36",
+]
 
 
 @dataclass
@@ -46,13 +58,15 @@ class ZapScraperDadosImovelAsync:
     MAX_RETRIES = 3
     RETRY_DELAY = 2  # segundos
 
-    def __init__(self, url: str, headless: bool = True):
+    def __init__(self, url: str, headless: bool = True, proxy: Optional[dict] = None):
         self.url = url
         self.headless = headless
+        self.proxy = proxy
         self._playwright = None
         self._browser = None
         self._pw_cm = None
         self._context: Optional[BrowserContext] = None
+        self._user_agent = random.choice(USER_AGENTS)
 
     async def __aenter__(self):
         try:
@@ -62,12 +76,19 @@ class ZapScraperDadosImovelAsync:
                 headless=self.headless,
                 args=['--disable-blink-features=AutomationControlled']
             )
-            self._context = await self._browser.new_context(
-                viewport={"width": 1920, "height": 1080},
-                user_agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36",
+            viewport_w = random.randint(1850, 1980)
+            viewport_h = random.randint(1020, 1120)
+            context_kwargs = dict(
+                viewport={"width": viewport_w, "height": viewport_h},
+                user_agent=self._user_agent,
                 locale="pt-BR",
                 timezone_id="America/Sao_Paulo",
+                device_scale_factor=random.choice([1, 1.25, 1.5, 2]),
+                has_touch=False,
             )
+            if self.proxy:
+                context_kwargs["proxy"] = self.proxy
+            self._context = await self._browser.new_context(**context_kwargs)
             return self
         except Exception as e:
             logger.error("Erro ao inicializar navegador: %s", e)

@@ -18,16 +18,22 @@ logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(
 logger = logging.getLogger(__name__)
 
 class VivaRealColeta:
-    def __init__(self, base_url_template, headless=True, max_concurrency=5, retries=1, max_concurrency_links=1):
+    def __init__(self, base_url_template, headless=True, max_concurrency=5, retries=1, max_concurrency_links=1, proxy_list=None):
         self.base_url_template = base_url_template
         self.headless = headless
         self.max_concurrency = max_concurrency
         self.max_concurrency_links = max_concurrency_links
         self.retries = retries
+        self.proxy_list = proxy_list
         self.lista_dados = []
     
         if sys.platform == 'win32':
             asyncio.set_event_loop_policy(asyncio.WindowsProactorEventLoopPolicy())
+
+    def _get_proxy(self):
+        if self.proxy_list:
+            return {"server": random.choice(self.proxy_list)}
+        return None
             
     async def _total_pages(self):
         """Usa a classe TotalPageOLX para detectar o limite real de páginas"""
@@ -46,7 +52,7 @@ class VivaRealColeta:
 
     async def _get_links_from_page(self, page_number):
         url = self.base_url_template.format(pagina=page_number)
-        async with VivaRealScraperLinksAsync(headless=self.headless) as scanner:
+        async with VivaRealScraperLinksAsync(headless=self.headless, proxy=self._get_proxy()) as scanner:
             links = await scanner.get_links(url, retries= self.retries)
             logger.info(f"Página {page_number}: {len(links)} links encontrados.")
             return links
@@ -54,7 +60,7 @@ class VivaRealColeta:
     async def _get_item_data(self, url, semaphore):
         async with semaphore:
             try:
-                async with VivaRealDadosImovelAsync(url, headless=self.headless) as scraper:
+                async with VivaRealDadosImovelAsync(url, headless=self.headless, proxy=self._get_proxy()) as scraper:
                     return await scraper.extrair()
             except Exception as e:
                 logger.error(f"Erro ao extrair {url}: {e}")
@@ -163,8 +169,9 @@ class VivaRealColeta:
                 logger.error(f"Interrompendo: {limite_falhas} páginas seguidas sem links. Iniciando extração do que foi coletado.")
                 break
             
-            # Pequeno delay aleatório para não ser bloqueado na listagem
-            await asyncio.sleep(random.uniform(1.5, 4))
+            # Delay com distribuição log-normal simulando comportamento humano
+            delay = max(2.0, random.lognormvariate(1.5, 0.6))
+            await asyncio.sleep(delay)
 
         # Remove duplicatas de links
         todos_os_links = list(set(todos_os_links))
