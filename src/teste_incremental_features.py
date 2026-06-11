@@ -62,7 +62,17 @@ MODELOS_OTIMIZAVEIS = {
 
 # ─── Modelos simples (sem Optuna) ──────────────────────────────
 MODELOS_SIMPLES_TRAT = {
-    "Linear":           lambda: LinearRegression(),
+    "Linear": lambda: LinearRegression(),
+    "Ridge": lambda: Ridge(),
+    "DecisionTree": lambda: DecisionTreeRegressor(random_state=42),
+    "RandomForest": lambda: RandomForestRegressor(
+        n_estimators=200, max_depth=12, random_state=42, n_jobs=-1
+    ),
+    "GradientBoosting": lambda: GradientBoostingRegressor(
+        n_estimators=200, max_depth=5, learning_rate=0.1, random_state=42
+    ),
+    "KNeighbors": lambda: KNeighborsRegressor(n_jobs=-1),
+    "SVR": lambda: SVR(kernel="rbf"),
 }
 
 now = time.strftime("%Y-%m")
@@ -219,7 +229,7 @@ class TesteIncrementalFeatures:
         target_col,
         numeric_features,
         categorical_features,
-        otimizar_com_optuna=True,
+        otimizar_com_optuna=False,
         otimizar_mlp=False,
         epochs_rede=50,
         batch_size_rede=200,
@@ -507,7 +517,7 @@ class TesteIncrementalFeatures:
         target_col,
         features_testadas,
         categorical_features,
-        n_trials_optuna=10,
+        n_trials_optuna=0,
         n_trials_mlp=15,
         otimizar_mlp=False,
         epochs_rede=50,
@@ -516,13 +526,25 @@ class TesteIncrementalFeatures:
         random_limit=10,
         random_seed=42,
         categorical_fixas=None,
+        modo="simples",
     ):
         import random as _random
         import optuna
         import mlflow
 
-        qtd_optuna = len(MODELOS_OTIMIZAVEIS)
-        qtd_simples = len(MODELOS_SIMPLES_TRAT) + (1 if otimizar_mlp else 0)
+        if modo == "simples":
+            modelos_otimizaveis = {}
+            modelos_simples = MODELOS_SIMPLES_TRAT
+        elif modo == "optuna":
+            modelos_otimizaveis = MODELOS_OTIMIZAVEIS
+            modelos_simples = {}
+        elif modo == "ambos":
+            modelos_otimizaveis = MODELOS_OTIMIZAVEIS
+            modelos_simples = MODELOS_SIMPLES_TRAT
+        else:
+            raise ValueError(f"modo invalido: {modo}")
+        qtd_optuna = len(modelos_otimizaveis)
+        qtd_simples = len(modelos_simples) + (1 if otimizar_mlp else 0)
 
         logger.info("=" * 60)
         logger.info("TESTE TRATAMENTOS x MODELOS x FEATURES (incremental defensivo)")
@@ -573,7 +595,7 @@ class TesteIncrementalFeatures:
                 self._executar_combos_incremento_sync(
                     idx_col, col, cont,
                     TRATAMENTOS, num_feats, cat_feats, X_tr, X_te, y_train, y_test,
-                    target_col, MODELOS_OTIMIZAVEIS, MODELOS_SIMPLES_TRAT, len(colunas_validas),
+                    target_col, modelos_otimizaveis, modelos_simples, len(colunas_validas),
                     n_trials_optuna, n_trials_mlp, otimizar_mlp, epochs_rede,
                     resultados, total,
                 )
@@ -594,7 +616,7 @@ class TesteIncrementalFeatures:
                 self._executar_combos_incremento_sync(
                     size, f"random{size}", cont,
                     TRATAMENTOS, num_feats, cat_feats, X_tr, X_te, y_train, y_test,
-                    target_col, MODELOS_OTIMIZAVEIS, MODELOS_SIMPLES_TRAT, len(colunas_validas),
+                    target_col, modelos_otimizaveis, modelos_simples, len(colunas_validas),
                     n_trials_optuna, n_trials_mlp, otimizar_mlp, epochs_rede,
                     resultados, total,
                 )
@@ -618,7 +640,18 @@ class TesteIncrementalFeatures:
         import optuna
         import mlflow
 
-        for trat in tratamentos:
+        if not cat_feats:
+            vistos = set()
+            tratamentos_filtrados = []
+            for t in tratamentos:
+                key = t["imputer_num"]
+                if key not in vistos:
+                    vistos.add(key)
+                    tratamentos_filtrados.append(t)
+        else:
+            tratamentos_filtrados = tratamentos
+
+        for trat in tratamentos_filtrados:
             imputer_num = SimpleImputer(strategy=trat["imputer_num"])
             imputer_cat = SimpleImputer(strategy="constant", fill_value="desconhecido")
             encoder = trat["encoder"]()

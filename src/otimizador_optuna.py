@@ -366,44 +366,49 @@ class OtimizadorMLP:
             mlflow.log_param("input_dim", input_dim)
 
             def objective_mlp(trial):
-                model = self.construir_de_trial(trial, input_dim)
-                batch_size = trial.suggest_categorical("batch_size", [64, 128, 256, 512])
-                early_stop = keras.callbacks.EarlyStopping(
-                    monitor="val_loss", patience=10, restore_best_weights=True
-                )
-                history = model.fit(
-                    X_train, y_train, validation_data=(X_val, y_val),
-                    epochs=epochs, batch_size=batch_size,
-                    callbacks=[early_stop], verbose=0
-                )
-                preds_log = model.predict(X_val, verbose=0).ravel()
-                preds_log = np.clip(preds_log, -20, 20)
-                y_val_real = np.expm1(y_val)
-                preds_real = np.expm1(preds_log)
-                rmse = float(np.sqrt(np.mean((y_val_real - preds_real) ** 2)))
-                mae = float(mean_absolute_error(y_val_real, preds_real))
-                mape = float(mean_absolute_percentage_error(y_val_real, preds_real))
-                mdape = float(np.median(np.abs((y_val_real - preds_real) / y_val_real)) * 100)
-                r2 = float(r2_score(y_val_real, preds_real))
+                try:
+                    model = self.construir_de_trial(trial, input_dim)
+                    batch_size = trial.suggest_categorical("batch_size", [64, 128, 256, 512])
+                    early_stop = keras.callbacks.EarlyStopping(
+                        monitor="val_loss", patience=10, restore_best_weights=True
+                    )
+                    history = model.fit(
+                        X_train, y_train, validation_data=(X_val, y_val),
+                        epochs=epochs, batch_size=batch_size,
+                        callbacks=[early_stop], verbose=0
+                    )
+                    preds_log = model.predict(X_val, verbose=0).ravel()
+                    preds_log = np.clip(preds_log, -20, 20)
+                    preds_log = np.nan_to_num(preds_log, nan=0.0)
+                    y_val_real = np.expm1(y_val)
+                    preds_real = np.expm1(preds_log)
+                    preds_real = np.clip(preds_real, 0, 1e10)
+                    rmse = float(np.sqrt(np.mean((y_val_real - preds_real) ** 2)))
+                    mae = float(mean_absolute_error(y_val_real, preds_real))
+                    mape = float(mean_absolute_percentage_error(y_val_real, preds_real))
+                    mdape = float(np.median(np.abs((y_val_real - preds_real) / y_val_real)) * 100)
+                    r2 = float(r2_score(y_val_real, preds_real))
 
-                if log_trials:
-                    with mlflow.start_run(nested=True, run_name=f"{nome}_trial_{trial.number}"):
-                        mlflow.set_tag("modelo", "keras")
-                        for k, v in trial.params.items():
-                            mlflow.log_param(k, str(v)[:100])
-                        mlflow.log_metric("rmse", rmse)
-                        mlflow.log_metric("mae", mae)
-                        mlflow.log_metric("mape", mape)
-                        mlflow.log_metric("mdape", mdape)
-                        mlflow.log_metric("r2", r2)
-                        mlflow.log_metric("best_epoch", len(history.history.get("loss", [])))
-                        if self.mlflow:
-                            self.mlflow.log_feature_history(X_train, run_name=nome)
-                            self.mlflow.log_feature_store(X_train, run_name=nome,
-                                                          feature_group_name="joinville_imoveis",
-                                                          description="Features do MLP otimizado",
-                                                          source="joinville_historico_imoveis")
-                return rmse
+                    if log_trials:
+                        with mlflow.start_run(nested=True, run_name=f"{nome}_trial_{trial.number}"):
+                            mlflow.set_tag("modelo", "keras")
+                            for k, v in trial.params.items():
+                                mlflow.log_param(k, str(v)[:100])
+                            mlflow.log_metric("rmse", rmse)
+                            mlflow.log_metric("mae", mae)
+                            mlflow.log_metric("mape", mape)
+                            mlflow.log_metric("mdape", mdape)
+                            mlflow.log_metric("r2", r2)
+                            mlflow.log_metric("best_epoch", len(history.history.get("loss", [])))
+                            if self.mlflow:
+                                self.mlflow.log_feature_history(X_train, run_name=nome)
+                                self.mlflow.log_feature_store(X_train, run_name=nome,
+                                                              feature_group_name="joinville_imoveis",
+                                                              description="Features do MLP otimizado",
+                                                              source="joinville_historico_imoveis")
+                    return rmse
+                except Exception:
+                    return float("inf")
 
             study = optuna.create_study(
                 direction="minimize",

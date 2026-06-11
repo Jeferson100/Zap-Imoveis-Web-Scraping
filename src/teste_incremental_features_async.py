@@ -71,6 +71,16 @@ MODELOS_OTIMIZAVEIS = {
 
 MODELOS_SIMPLES_TRAT = {
     "Linear": lambda: LinearRegression(),
+    "Ridge": lambda: Ridge(),
+    "DecisionTree": lambda: DecisionTreeRegressor(random_state=42),
+    "RandomForest": lambda: RandomForestRegressor(
+        n_estimators=200, max_depth=12, random_state=42, n_jobs=-1
+    ),
+    "GradientBoosting": lambda: GradientBoostingRegressor(
+        n_estimators=200, max_depth=5, learning_rate=0.1, random_state=42
+    ),
+    "KNeighbors": lambda: KNeighborsRegressor(n_jobs=-1),
+    "SVR": lambda: SVR(kernel="rbf"),
 }
 
 now = time.strftime("%Y-%m")
@@ -265,7 +275,7 @@ class TesteIncrementalFeaturesAsync:
         target_col,
         numeric_features,
         categorical_features,
-        otimizar_com_optuna=True,
+        otimizar_com_optuna=False,
         otimizar_mlp=False,
         epochs_rede=50,
         batch_size_rede=200,
@@ -574,7 +584,7 @@ class TesteIncrementalFeaturesAsync:
         target_col,
         features_testadas,
         categorical_features,
-        n_trials_optuna=10,
+        n_trials_optuna=0,
         n_trials_mlp=15,
         otimizar_mlp=False,
         max_concurrent=MAX_CONCURRENT,
@@ -583,10 +593,22 @@ class TesteIncrementalFeaturesAsync:
         random_limit=10,
         random_seed=42,
         categorical_fixas=None,
+        modo="simples",
     ):
         import random as _random
-        qtd_optuna = len(MODELOS_OTIMIZAVEIS)
-        qtd_simples = len(MODELOS_SIMPLES_TRAT) + (1 if otimizar_mlp else 0)
+        if modo == "simples":
+            modelos_otimizaveis = {}
+            modelos_simples = MODELOS_SIMPLES_TRAT
+        elif modo == "optuna":
+            modelos_otimizaveis = MODELOS_OTIMIZAVEIS
+            modelos_simples = {}
+        elif modo == "ambos":
+            modelos_otimizaveis = MODELOS_OTIMIZAVEIS
+            modelos_simples = MODELOS_SIMPLES_TRAT
+        else:
+            raise ValueError(f"modo invalido: {modo}")
+        qtd_optuna = len(modelos_otimizaveis)
+        qtd_simples = len(modelos_simples) + (1 if otimizar_mlp else 0)
 
         logger.info("=" * 60)
         logger.info("TESTE TRATAMENTOS x MODELOS x FEATURES (async)")
@@ -643,8 +665,8 @@ class TesteIncrementalFeaturesAsync:
                     loop, sem, lock, progresso, total, idx_col, col,
                     tratamentos=TRATAMENTOS, num_feats=num_feats, cat_feats=cat_feats,
                     X_tr=X_tr, X_te=X_te, y_train=y_train, y_test=y_test,
-                    target_col=target_col, modelos_otimizaveis=MODELOS_OTIMIZAVEIS,
-                    modelos_simples=MODELOS_SIMPLES_TRAT, n_features_atual=n_features_atual,
+                    target_col=target_col, modelos_otimizaveis=modelos_otimizaveis,
+                    modelos_simples=modelos_simples, n_features_atual=n_features_atual,
                     n_trials_optuna=n_trials_optuna, n_trials_mlp=n_trials_mlp,
                     otimizar_mlp=otimizar_mlp, resultados=resultados,
                     run_name_base=col,
@@ -669,8 +691,8 @@ class TesteIncrementalFeaturesAsync:
                     loop, sem, lock, progresso, total, size, f"random{size}",
                     tratamentos=TRATAMENTOS, num_feats=num_feats, cat_feats=cat_feats,
                     X_tr=X_tr, X_te=X_te, y_train=y_train, y_test=y_test,
-                    target_col=target_col, modelos_otimizaveis=MODELOS_OTIMIZAVEIS,
-                    modelos_simples=MODELOS_SIMPLES_TRAT, n_features_atual=n_features_atual,
+                    target_col=target_col, modelos_otimizaveis=modelos_otimizaveis,
+                    modelos_simples=modelos_simples, n_features_atual=n_features_atual,
                     n_trials_optuna=n_trials_optuna, n_trials_mlp=n_trials_mlp,
                     otimizar_mlp=otimizar_mlp, resultados=resultados,
                     run_name_base=str(size),
@@ -695,7 +717,18 @@ class TesteIncrementalFeaturesAsync:
         run_name_base="",
     ):
         tasks = []
-        for trat in tratamentos:
+        if not cat_feats:
+            vistos = set()
+            tratamentos_filtrados = []
+            for t in tratamentos:
+                key = t["imputer_num"]
+                if key not in vistos:
+                    vistos.add(key)
+                    tratamentos_filtrados.append(t)
+        else:
+            tratamentos_filtrados = tratamentos
+
+        for trat in tratamentos_filtrados:
             for transf_name in self.TRANSFORM_OPCOES:
                 for mod_name, factory_fn in modelos_otimizaveis.items():
                     tasks.append(self._executar_combo_individual(
@@ -735,7 +768,7 @@ class TesteIncrementalFeaturesAsync:
             logger.debug("Fallback boxcox->yeojohnson para %s (dados nao positivos)", run_name_base)
             transf_name = "yeojohnson"
         async with sem:
-            run_name = f"{mod_name}|{trat['nome']}|{transf_name}_{run_name_base}_{time.time_ns()}"
+            run_name = f"{mod_name}|{trat['nome']}|{transf_name}_{run_name_base}_{time.strftime('%Y_%m')}"
             logger.debug("Task: %s | %s | %s | %s", mod_name, trat["nome"], transf_name, run_name_base)
             try:
                 if tipo == "optuna":
