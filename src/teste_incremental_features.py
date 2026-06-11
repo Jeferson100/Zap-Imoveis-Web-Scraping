@@ -33,18 +33,18 @@ logger = logging.getLogger(__name__)
 
 # ─── Configuracoes de tratamento ───────────────────────────────
 TRATAMENTOS = [
-    {"nome": "std_median_ohe",       "scaler": StandardScaler(),
-     "imputer_num": "median",        "encoder": OneHotEncoder(handle_unknown="ignore", max_categories=30, sparse_output=False)},
-    {"nome": "robust_median_ohe",    "scaler": RobustScaler(),
-     "imputer_num": "median",        "encoder": OneHotEncoder(handle_unknown="ignore", max_categories=30, sparse_output=False)},
-    {"nome": "minmax_mean_ohe",      "scaler": MinMaxScaler(),
-     "imputer_num": "mean",          "encoder": OneHotEncoder(handle_unknown="ignore", max_categories=30, sparse_output=False)},
-    {"nome": "quantile_median_ord",  "scaler": QuantileTransformer(output_distribution="normal"),
-     "imputer_num": "median",        "encoder": OrdinalEncoder(handle_unknown="use_encoded_value", unknown_value=-1)},
-    {"nome": "power_median_ohe",     "scaler": PowerTransformer(),
-     "imputer_num": "median",        "encoder": OneHotEncoder(handle_unknown="ignore", max_categories=30, sparse_output=False)},
-    {"nome": "raw_zero_ord",         "scaler": None,
-     "imputer_num": "constant",      "encoder": OrdinalEncoder(handle_unknown="use_encoded_value", unknown_value=-1)},
+    {"nome": "std_median_ohe",       "scaler": lambda: StandardScaler(),
+     "imputer_num": "median",        "encoder": lambda: OneHotEncoder(handle_unknown="ignore", max_categories=30, sparse_output=False)},
+    {"nome": "robust_median_ohe",    "scaler": lambda: RobustScaler(),
+     "imputer_num": "median",        "encoder": lambda: OneHotEncoder(handle_unknown="ignore", max_categories=30, sparse_output=False)},
+    {"nome": "minmax_mean_ohe",      "scaler": lambda: MinMaxScaler(),
+     "imputer_num": "mean",          "encoder": lambda: OneHotEncoder(handle_unknown="ignore", max_categories=30, sparse_output=False)},
+    {"nome": "quantile_median_ord",  "scaler": lambda: QuantileTransformer(output_distribution="normal"),
+     "imputer_num": "median",        "encoder": lambda: OrdinalEncoder(handle_unknown="use_encoded_value", unknown_value=-1)},
+    {"nome": "power_median_ohe",     "scaler": lambda: PowerTransformer(),
+     "imputer_num": "median",        "encoder": lambda: OneHotEncoder(handle_unknown="ignore", max_categories=30, sparse_output=False)},
+    {"nome": "raw_zero_ord",         "scaler": lambda: None,
+     "imputer_num": "constant",      "encoder": lambda: OrdinalEncoder(handle_unknown="use_encoded_value", unknown_value=-1)},
 ]
 
 # ─── Modelos que serao otimizados com Optuna ────────────────────
@@ -62,7 +62,7 @@ MODELOS_OTIMIZAVEIS = {
 
 # ─── Modelos simples (sem Optuna) ──────────────────────────────
 MODELOS_SIMPLES_TRAT = {
-    "Linear":           LinearRegression(),
+    "Linear":           lambda: LinearRegression(),
 }
 
 now = time.strftime("%Y-%m")
@@ -511,12 +511,13 @@ class TesteIncrementalFeatures:
         n_trials_mlp=15,
         otimizar_mlp=False,
         epochs_rede=50,
+        feature_selection="sequential",
+        random_start=3,
+        random_limit=10,
+        random_seed=42,
+        categorical_fixas=None,
     ):
-        """
-        Teste incremental com validacao defensiva de features.
-        Para cada feature adicionada: testa N tratamentos x M modelos.
-        Modelos otimizaveis rodam OtimizadorOptuna no subconjunto atual.
-        """
+        import random as _random
         import optuna
         import mlflow
 
@@ -529,13 +530,14 @@ class TesteIncrementalFeatures:
                     len(TRATAMENTOS), qtd_optuna + qtd_simples,
                     qtd_optuna, qtd_simples,
                     ", +MLP_opt" if otimizar_mlp else "")
+        logger.info("Selecao: %s", feature_selection)
         logger.info("Features candidatas: %d", len(features_testadas))
         logger.info("Optuna trials: %d | MLP trials: %d", n_trials_optuna, n_trials_mlp)
         logger.info("=" * 60)
 
-        cat_fixas = [c for c in categorical_features if c in train.columns]
-        cols_full = features_testadas + [c for c in cat_fixas if c not in features_testadas]
-        x_test_full = test[cols_full].copy()
+        categorical_fixas_list = list(categorical_fixas or [])
+        pool = [f for f in features_testadas + [c for c in categorical_features if c in train.columns and c not in features_testadas]
+                if f not in categorical_fixas_list]
         y_train = train[target_col].values
         y_test = test[target_col].values
 
@@ -546,249 +548,56 @@ class TesteIncrementalFeatures:
             logger.warning("MLflow conexao inicial falhou (tentara novamente depois): %s", e)
             logger.exception("Detalhes da falha MLflow:")
 
-        colunas_validas = []
         resultados = []
-        total = len(features_testadas) * len(TRATAMENTOS) * (qtd_optuna + qtd_simples)
-        atual = 0
+        cols_full = categorical_fixas_list + pool
+        x_test_full = test[cols_full].copy() if cols_full else test[pool].copy()
 
-        for idx_col, col in enumerate(features_testadas, 1):
-            try:
-                colunas_validas.append(col)
-                num_feats = [c for c in colunas_validas if c not in cat_fixas]
-                cols_loop = colunas_validas + [c for c in cat_fixas if c not in colunas_validas]
-                X_tr = train[cols_loop].copy()
-                X_te = x_test_full[cols_loop].copy()
-            except Exception as e:
-                logger.warning("Feature %s falhou na selecao: %s", col, e)
-                colunas_validas.pop(-1)
-                continue
+        if feature_selection == "sequential":
+            all_candidates = categorical_fixas_list + list(pool)
+            total = len(all_candidates) * len(TRATAMENTOS) * (qtd_optuna + qtd_simples)
+            cont = {"atual": 0}
+            colunas_validas = []
 
-            for trat in TRATAMENTOS:
-                imputer_num = SimpleImputer(strategy=trat["imputer_num"])
-                imputer_cat = SimpleImputer(strategy="constant", fill_value="desconhecido")
-                encoder = trat["encoder"]
-                scaler = trat["scaler"]
-                factory_pp = PreprocessadorFactory(
-                    numeric_features=num_feats,
-                    categorical_features=cat_fixas,
+            for idx_col, col in enumerate(all_candidates, 1):
+                try:
+                    colunas_validas.append(col)
+                    num_feats = [c for c in colunas_validas if c not in categorical_features]
+                    cat_feats = [c for c in colunas_validas if c in categorical_features]
+                    X_tr = train[colunas_validas].copy()
+                    X_te = x_test_full[colunas_validas].copy()
+                except Exception as e:
+                    logger.warning("Feature %s falhou na selecao: %s", col, e)
+                    colunas_validas.pop(-1)
+                    continue
+
+                self._executar_combos_incremento_sync(
+                    idx_col, col, cont,
+                    TRATAMENTOS, num_feats, cat_feats, X_tr, X_te, y_train, y_test,
+                    target_col, MODELOS_OTIMIZAVEIS, MODELOS_SIMPLES_TRAT, len(colunas_validas),
+                    n_trials_optuna, n_trials_mlp, otimizar_mlp, epochs_rede,
+                    resultados, total,
                 )
 
-                for mod_name, factory_fn in MODELOS_OTIMIZAVEIS.items():
-                    atual += 1
-                    run_name = f"{mod_name}|{trat['nome']}|feat{idx_col:02d}_{col}_{now}"
-                    t0 = time.time()
+        elif feature_selection == "random":
+            total = (random_limit - random_start + 1) * len(TRATAMENTOS) * (qtd_optuna + qtd_simples)
+            cont = {"atual": 0}
 
-                    met = {}
-                    best_params = {}
-                    pp = None
-                    try:
-                        pp = factory_pp.criar(scaler=scaler,
-                                              imputer_num=imputer_num,
-                                              imputer_cat=imputer_cat,
-                                              encoder=encoder)
+            for size in range(random_start, random_limit + 1):
+                _random.seed(random_seed + size)
+                amostra = _random.sample(pool, min(size, len(pool)))
+                colunas_validas = categorical_fixas_list + amostra
+                num_feats = [c for c in colunas_validas if c not in categorical_features]
+                cat_feats = [c for c in colunas_validas if c in categorical_features]
+                X_tr = train[colunas_validas].copy()
+                X_te = x_test_full[colunas_validas].copy()
 
-                        otim = OtimizadorOptuna(
-                            preprocessador=pp,
-                            X=X_tr,
-                            y=y_train,
-                            mlflow_manager=self.mlflow_mgr,
-                            n_trials=n_trials_optuna,
-                            n_folds=3,
-                        )
-                        estudo = otim.otimizar(run_name, factory_fn)
-                        if estudo is None:
-                            resultados.append({
-                                "n_features": len(colunas_validas),
-                                "ultima_feature": col,
-                                "tratamento": trat["nome"],
-                                "modelo": mod_name,
-                                "status": "failed_no_trials",
-                            })
-                            continue
-                        best_params = estudo.best_params
-
-                        trial_fixo = optuna.trial.FixedTrial(estudo.best_params)
-                        modelo_best = factory_fn(trial_fixo)
-                        pipe = Pipeline([("preprocessador", pp), ("modelo", modelo_best)])
-                        pipe.fit(X_tr, y_train)
-                        y_pred = pipe.predict(X_te)
-                        met = Avaliador.metricas(run_name, y_test, y_pred)
-                    except Exception as exc:
-                        logger.warning("Falha optuna %s %s %s: %s", mod_name, trat["nome"], col, exc)
-                        logger.exception("Traceback completo:")
-
-                    resultados.append({
-                        "n_features": len(colunas_validas),
-                        "ultima_feature": col,
-                        "tratamento": trat["nome"],
-                        "modelo": mod_name,
-                        **met,
-                    })
-
-                    if self.mlflow_mgr and met:
-                        try:
-                            with self.mlflow_mgr.run_session(run_name=run_name):
-                                mlflow.set_tag("teste", "tratamentos_modelos")
-                                mlflow.log_param("tratamento", trat["nome"])
-                                mlflow.log_param("modelo", mod_name)
-                                mlflow.log_param("n_features", len(colunas_validas))
-                                mlflow.log_param("ultima_feature", col)
-                                if best_params:
-                                    mlflow.log_params({f"best_{k}": str(v)[:80] for k, v in best_params.items()})
-                                mlflow.log_metrics(met)
-                                self.mlflow_mgr.log_feature_history(X_tr, run_name=run_name)
-                        except Exception as e_mlflow:
-                            logger.warning("Falha MLflow %s: %s", run_name, e_mlflow)
-                            logger.exception("Detalhes:")
-
-                    dt = time.time() - t0
-                    r2v = resultados[-1].get("r2", float("nan"))
-                    r2s = f"{r2v:.4f}" if isinstance(r2v, (int, float)) and not np.isnan(r2v) else "FAIL"
-                    sys.stdout.write(f"\r[{atual:4d}/{total}] {idx_col:2d}feats {trat['nome']:>18} {mod_name:>18} R2={r2s} {dt:4.0f}s")
-                    sys.stdout.flush()
-
-                for mod_name, modelo in MODELOS_SIMPLES_TRAT.items():
-                    atual += 1
-                    run_name = f"{mod_name}|{trat['nome']}|feat{idx_col:02d}_{col}"
-                    t0 = time.time()
-
-                    met = {}
-                    try:
-                        pp = factory_pp.criar(scaler=scaler,
-                                              imputer_num=imputer_num,
-                                              imputer_cat=imputer_cat,
-                                              encoder=encoder)
-                        pipe = Pipeline([("preprocessador", pp), ("modelo", modelo)])
-                        pipe.fit(X_tr, y_train)
-                        y_pred = pipe.predict(X_te)
-                        met = Avaliador.metricas(run_name, y_test, y_pred)
-                    except Exception as exc:
-                        logger.warning("Falha simples %s %s %s: %s", mod_name, trat["nome"], col, exc)
-                        logger.exception("Traceback completo:")
-
-                    resultados.append({
-                        "n_features": len(colunas_validas),
-                        "ultima_feature": col,
-                        "tratamento": trat["nome"],
-                        "modelo": mod_name,
-                        **met,
-                    })
-
-                    if self.mlflow_mgr and met:
-                        try:
-                            with self.mlflow_mgr.run_session(run_name=run_name):
-                                mlflow.set_tag("teste", "tratamentos_modelos")
-                                mlflow.log_param("tratamento", trat["nome"])
-                                mlflow.log_param("modelo", mod_name)
-                                mlflow.log_param("n_features", len(colunas_validas))
-                                mlflow.log_param("ultima_feature", col)
-                                mlflow.log_metrics(met)
-                                self.mlflow_mgr.log_feature_history(X_tr, run_name=run_name)
-                        except Exception as e_mlflow:
-                            logger.warning("Falha MLflow %s: %s", run_name, e_mlflow)
-                            logger.exception("Detalhes:")
-
-                    dt = time.time() - t0
-                    r2v = resultados[-1].get("r2", float("nan"))
-                    r2s = f"{r2v:.4f}" if isinstance(r2v, (int, float)) and not np.isnan(r2v) else "FAIL"
-                    sys.stdout.write(f"\r[{atual:4d}/{total}] {idx_col:2d}feats {trat['nome']:>18} {mod_name:>18} R2={r2s} {dt:4.0f}s")
-                    sys.stdout.flush()
-
-                # --- MLP otimizado per-incremento ---
-                if otimizar_mlp:
-                    mod_name = "MLP_opt"
-                    atual += 1
-                    run_name = f"{mod_name}|{trat['nome']}|feat{idx_col:02d}_{col}"
-                    t0 = time.time()
-
-                    met = {}
-                    best_params = {}
-                    try:
-                        pp_mlp_inc = PreprocessadorFactory(
-                            numeric_features=num_feats,
-                            categorical_features=cat_fixas,
-                        ).criar(scaler=scaler, imputer_num=imputer_num, imputer_cat=imputer_cat, encoder=encoder)
-
-                        X_tr_proc = pp_mlp_inc.fit_transform(X_tr)
-                        X_te_proc = pp_mlp_inc.transform(X_te)
-                        input_dim = X_tr_proc.shape[1]
-                        if input_dim == 0:
-                            logger.warning("input_dim=0 MLP %s %s %s", mod_name, trat["nome"], col)
-                            continue
-
-                        X_tr_split, X_val_split, y_tr_split, y_val_split = train_test_split(
-                            X_tr_proc, y_train, test_size=0.2, random_state=42
-                        )
-                        otimizador_mlp = OtimizadorMLP(
-                            mlflow_manager=self.mlflow_mgr,
-                            target_name=target_col,
-                        )
-                        study, _ = otimizador_mlp.otimizar(
-                            X_train=X_tr_split, y_train=y_tr_split,
-                            X_val=X_val_split, y_val=y_val_split,
-                            input_dim=input_dim,
-                            n_trials=n_trials_mlp, epochs=100,
-                            nome=run_name,
-                        )
-                        if study is None:
-                            resultados.append({
-                                "n_features": len(colunas_validas),
-                                "ultima_feature": col,
-                                "tratamento": trat["nome"],
-                                "modelo": "MLP_opt",
-                                "status": "failed_no_trials",
-                            })
-                            continue
-                        best_params = study.best_params
-                        model_mlp = OtimizadorMLP.construir_de_trial(
-                            optuna.trial.FixedTrial(study.best_params),
-                            input_dim,
-                        )
-                        import keras
-                        early_stop = keras.callbacks.EarlyStopping(
-                            monitor="loss", patience=10, restore_best_weights=True
-                        )
-                        model_mlp.fit(
-                            X_tr_proc, y_train,
-                            epochs=100,
-                            batch_size=study.best_params.get("batch_size", 128),
-                            callbacks=[early_stop], verbose=0,
-                        )
-                        y_pred = model_mlp.predict(X_te_proc, verbose=0).ravel()
-                        met = Avaliador.metricas(run_name, y_test, y_pred)
-                    except Exception as exc:
-                        logger.warning("Falha MLP %s %s: %s", trat["nome"], col, exc)
-                        logger.exception("Traceback completo:")
-
-                    resultados.append({
-                        "n_features": len(colunas_validas),
-                        "ultima_feature": col,
-                        "tratamento": trat["nome"],
-                        "modelo": mod_name,
-                        **met,
-                    })
-
-                    if self.mlflow_mgr and met:
-                        try:
-                            with self.mlflow_mgr.run_session(run_name=run_name):
-                                mlflow.set_tag("teste", "tratamentos_modelos")
-                                mlflow.log_param("tratamento", trat["nome"])
-                                mlflow.log_param("modelo", mod_name)
-                                mlflow.log_param("n_features", len(colunas_validas))
-                                mlflow.log_param("ultima_feature", col)
-                                if best_params:
-                                    mlflow.log_params({f"best_{k}": str(v)[:80] for k, v in best_params.items()})
-                                mlflow.log_metrics(met)
-                                self.mlflow_mgr.log_feature_history(X_tr, run_name=run_name)
-                        except Exception as e_mlflow:
-                            logger.warning("Falha MLflow %s: %s", run_name, e_mlflow)
-                            logger.exception("Detalhes:")
-
-                    dt = time.time() - t0
-                    r2v = resultados[-1].get("r2", float("nan"))
-                    r2s = f"{r2v:.4f}" if isinstance(r2v, (int, float)) and not np.isnan(r2v) else "FAIL"
-                    sys.stdout.write(f"\r[{atual:4d}/{total}] {idx_col:2d}feats {trat['nome']:>18} {mod_name:>18} R2={r2s} {dt:4.0f}s")
-                    sys.stdout.flush()
+                self._executar_combos_incremento_sync(
+                    size, f"random{size}", cont,
+                    TRATAMENTOS, num_feats, cat_feats, X_tr, X_te, y_train, y_test,
+                    target_col, MODELOS_OTIMIZAVEIS, MODELOS_SIMPLES_TRAT, len(colunas_validas),
+                    n_trials_optuna, n_trials_mlp, otimizar_mlp, epochs_rede,
+                    resultados, total,
+                )
 
         print()
         df = pd.DataFrame(resultados)
@@ -798,6 +607,242 @@ class TesteIncrementalFeatures:
             df.to_csv(saida / "resultados_tratamentos_modelos.csv", index=False)
             logger.info("Resultados salvos em scripts/resultados_tratamentos_modelos.csv")
         return df
+
+    def _executar_combos_incremento_sync(
+        self, idx_col, col, cont,
+        tratamentos, num_feats, cat_feats, X_tr, X_te, y_train, y_test,
+        target_col, modelos_otimizaveis, modelos_simples, n_features_atual,
+        n_trials_optuna, n_trials_mlp, otimizar_mlp, epochs_rede,
+        resultados, total,
+    ):
+        import optuna
+        import mlflow
+
+        for trat in tratamentos:
+            imputer_num = SimpleImputer(strategy=trat["imputer_num"])
+            imputer_cat = SimpleImputer(strategy="constant", fill_value="desconhecido")
+            encoder = trat["encoder"]()
+            scaler = trat["scaler"]()
+            factory_pp = PreprocessadorFactory(
+                numeric_features=num_feats,
+                categorical_features=cat_feats,
+            )
+
+            for mod_name, factory_fn in modelos_otimizaveis.items():
+                cont["atual"] += 1
+                run_name = f"{mod_name}|{trat['nome']}|{col}_{idx_col}"
+                t0 = time.time()
+
+                met = {}
+                best_params = {}
+                pp = None
+                try:
+                    pp = factory_pp.criar(scaler=scaler,
+                                          imputer_num=imputer_num,
+                                          imputer_cat=imputer_cat,
+                                          encoder=encoder)
+
+                    otim = OtimizadorOptuna(
+                        preprocessador=pp,
+                        X=X_tr,
+                        y=y_train,
+                        mlflow_manager=self.mlflow_mgr,
+                        n_trials=n_trials_optuna,
+                        n_folds=3,
+                    )
+                    estudo = otim.otimizar(run_name, factory_fn)
+                    if estudo is None:
+                        resultados.append({
+                            "n_features": n_features_atual,
+                            "ultima_feature": col,
+                            "tratamento": trat["nome"],
+                            "modelo": mod_name,
+                            "status": "failed_no_trials",
+                        })
+                        continue
+                    best_params = estudo.best_params
+
+                    trial_fixo = optuna.trial.FixedTrial(estudo.best_params)
+                    modelo_best = factory_fn(trial_fixo)
+                    pipe = Pipeline([("preprocessador", pp), ("modelo", modelo_best)])
+                    pipe.fit(X_tr, y_train)
+                    y_pred = pipe.predict(X_te)
+                    met = Avaliador.metricas(run_name, y_test, y_pred)
+                except Exception as exc:
+                    logger.warning("Falha optuna %s %s %s: %s", mod_name, trat["nome"], col, exc)
+                    logger.exception("Traceback completo:")
+
+                resultados.append({
+                    "n_features": n_features_atual,
+                    "ultima_feature": col,
+                    "tratamento": trat["nome"],
+                    "modelo": mod_name,
+                    **met,
+                })
+
+                if self.mlflow_mgr and met:
+                    try:
+                        with self.mlflow_mgr.run_session(run_name=run_name):
+                            mlflow.set_tag("teste", "tratamentos_modelos")
+                            mlflow.log_param("tratamento", trat["nome"])
+                            mlflow.log_param("modelo", mod_name)
+                            mlflow.log_param("n_features", n_features_atual)
+                            mlflow.log_param("ultima_feature", col)
+                            if best_params:
+                                mlflow.log_params({f"best_{k}": str(v)[:80] for k, v in best_params.items()})
+                            mlflow.log_metrics(met)
+                            self.mlflow_mgr.log_feature_history(X_tr, run_name=run_name)
+                    except Exception as e_mlflow:
+                        logger.warning("Falha MLflow %s: %s", run_name, e_mlflow)
+                        logger.exception("Detalhes:")
+
+                dt = time.time() - t0
+                r2v = resultados[-1].get("r2", float("nan"))
+                r2s = f"{r2v:.4f}" if isinstance(r2v, (int, float)) and not np.isnan(r2v) else "FAIL"
+                sys.stdout.write(f"\r[{cont['atual']:4d}/{total}] {n_features_atual:2d}feats {trat['nome']:>18} {mod_name:>18} R2={r2s} {dt:4.0f}s")
+                sys.stdout.flush()
+
+            for mod_name, modelo_factory in modelos_simples.items():
+                cont["atual"] += 1
+                run_name = f"{mod_name}|{trat['nome']}|{col}_{idx_col}"
+                t0 = time.time()
+
+                met = {}
+                try:
+                    pp = factory_pp.criar(scaler=scaler,
+                                          imputer_num=imputer_num,
+                                          imputer_cat=imputer_cat,
+                                          encoder=encoder)
+                    pipe = Pipeline([("preprocessador", pp), ("modelo", modelo_factory())])
+                    pipe.fit(X_tr, y_train)
+                    y_pred = pipe.predict(X_te)
+                    met = Avaliador.metricas(run_name, y_test, y_pred)
+                except Exception as exc:
+                    logger.warning("Falha simples %s %s %s: %s", mod_name, trat["nome"], col, exc)
+                    logger.exception("Traceback completo:")
+
+                resultados.append({
+                    "n_features": n_features_atual,
+                    "ultima_feature": col,
+                    "tratamento": trat["nome"],
+                    "modelo": mod_name,
+                    **met,
+                })
+
+                if self.mlflow_mgr and met:
+                    try:
+                        with self.mlflow_mgr.run_session(run_name=run_name):
+                            mlflow.set_tag("teste", "tratamentos_modelos")
+                            mlflow.log_param("tratamento", trat["nome"])
+                            mlflow.log_param("modelo", mod_name)
+                            mlflow.log_param("n_features", n_features_atual)
+                            mlflow.log_param("ultima_feature", col)
+                            mlflow.log_metrics(met)
+                            self.mlflow_mgr.log_feature_history(X_tr, run_name=run_name)
+                    except Exception as e_mlflow:
+                        logger.warning("Falha MLflow %s: %s", run_name, e_mlflow)
+                        logger.exception("Detalhes:")
+
+                dt = time.time() - t0
+                r2v = resultados[-1].get("r2", float("nan"))
+                r2s = f"{r2v:.4f}" if isinstance(r2v, (int, float)) and not np.isnan(r2v) else "FAIL"
+                sys.stdout.write(f"\r[{cont['atual']:4d}/{total}] {n_features_atual:2d}feats {trat['nome']:>18} {mod_name:>18} R2={r2s} {dt:4.0f}s")
+                sys.stdout.flush()
+
+            if otimizar_mlp:
+                mod_name = "MLP_opt"
+                cont["atual"] += 1
+                run_name = f"{mod_name}|{trat['nome']}|{col}_{idx_col}"
+                t0 = time.time()
+
+                met = {}
+                best_params = {}
+                try:
+                    pp_mlp_inc = PreprocessadorFactory(
+                        numeric_features=num_feats,
+                        categorical_features=cat_feats,
+                    ).criar(scaler=scaler, imputer_num=imputer_num, imputer_cat=imputer_cat, encoder=encoder)
+
+                    X_tr_proc = pp_mlp_inc.fit_transform(X_tr)
+                    X_te_proc = pp_mlp_inc.transform(X_te)
+                    input_dim = X_tr_proc.shape[1]
+                    if input_dim == 0:
+                        logger.warning("input_dim=0 MLP %s %s %s", mod_name, trat["nome"], col)
+                        continue
+
+                    X_tr_split, X_val_split, y_tr_split, y_val_split = train_test_split(
+                        X_tr_proc, y_train, test_size=0.2, random_state=42
+                    )
+                    otimizador_mlp = OtimizadorMLP(
+                        mlflow_manager=self.mlflow_mgr,
+                        target_name=target_col,
+                    )
+                    study, _ = otimizador_mlp.otimizar(
+                        X_train=X_tr_split, y_train=y_tr_split,
+                        X_val=X_val_split, y_val=y_val_split,
+                        input_dim=input_dim,
+                        n_trials=n_trials_mlp, epochs=100,
+                        nome=run_name,
+                    )
+                    if study is None:
+                        resultados.append({
+                            "n_features": n_features_atual,
+                            "ultima_feature": col,
+                            "tratamento": trat["nome"],
+                            "modelo": "MLP_opt",
+                            "status": "failed_no_trials",
+                        })
+                        continue
+                    best_params = study.best_params
+                    model_mlp = OtimizadorMLP.construir_de_trial(
+                        optuna.trial.FixedTrial(study.best_params),
+                        input_dim,
+                    )
+                    import keras
+                    early_stop = keras.callbacks.EarlyStopping(
+                        monitor="loss", patience=10, restore_best_weights=True
+                    )
+                    model_mlp.fit(
+                        X_tr_proc, y_train,
+                        epochs=100,
+                        batch_size=study.best_params.get("batch_size", 128),
+                        callbacks=[early_stop], verbose=0,
+                    )
+                    y_pred = model_mlp.predict(X_te_proc, verbose=0).ravel()
+                    met = Avaliador.metricas(run_name, y_test, y_pred)
+                except Exception as exc:
+                    logger.warning("Falha MLP %s %s: %s", trat["nome"], col, exc)
+                    logger.exception("Traceback completo:")
+
+                resultados.append({
+                    "n_features": n_features_atual,
+                    "ultima_feature": col,
+                    "tratamento": trat["nome"],
+                    "modelo": mod_name,
+                    **met,
+                })
+
+                if self.mlflow_mgr and met:
+                    try:
+                        with self.mlflow_mgr.run_session(run_name=run_name):
+                            mlflow.set_tag("teste", "tratamentos_modelos")
+                            mlflow.log_param("tratamento", trat["nome"])
+                            mlflow.log_param("modelo", mod_name)
+                            mlflow.log_param("n_features", n_features_atual)
+                            mlflow.log_param("ultima_feature", col)
+                            if best_params:
+                                mlflow.log_params({f"best_{k}": str(v)[:80] for k, v in best_params.items()})
+                            mlflow.log_metrics(met)
+                            self.mlflow_mgr.log_feature_history(X_tr, run_name=run_name)
+                    except Exception as e_mlflow:
+                        logger.warning("Falha MLflow %s: %s", run_name, e_mlflow)
+                        logger.exception("Detalhes:")
+
+                dt = time.time() - t0
+                r2v = resultados[-1].get("r2", float("nan"))
+                r2s = f"{r2v:.4f}" if isinstance(r2v, (int, float)) and not np.isnan(r2v) else "FAIL"
+                sys.stdout.write(f"\r[{cont['atual']:4d}/{total}] {n_features_atual:2d}feats {trat['nome']:>18} {mod_name:>18} R2={r2s} {dt:4.0f}s")
+                sys.stdout.flush()
 
     def _resultado_dataframe(self):
         df = pd.DataFrame(self.resultados)

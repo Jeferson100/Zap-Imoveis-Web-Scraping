@@ -41,21 +41,21 @@ warnings.filterwarnings("ignore")
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
 logger = logging.getLogger(__name__)
 
-MAX_CONCURRENT = 4
+MAX_CONCURRENT = 10
 
 TRATAMENTOS = [
-    {"nome": "std_median_ohe",       "scaler": StandardScaler(),
-     "imputer_num": "median",        "encoder": OneHotEncoder(handle_unknown="ignore", max_categories=30, sparse_output=False)},
-    {"nome": "robust_median_ohe",    "scaler": RobustScaler(),
-     "imputer_num": "median",        "encoder": OneHotEncoder(handle_unknown="ignore", max_categories=30, sparse_output=False)},
-    {"nome": "minmax_mean_ohe",      "scaler": MinMaxScaler(),
-     "imputer_num": "mean",          "encoder": OneHotEncoder(handle_unknown="ignore", max_categories=30, sparse_output=False)},
-    {"nome": "quantile_median_ord",  "scaler": QuantileTransformer(output_distribution="normal"),
-     "imputer_num": "median",        "encoder": OrdinalEncoder(handle_unknown="use_encoded_value", unknown_value=-1)},
-    {"nome": "power_median_ohe",     "scaler": PowerTransformer(),
-     "imputer_num": "median",        "encoder": OneHotEncoder(handle_unknown="ignore", max_categories=30, sparse_output=False)},
-    {"nome": "raw_zero_ord",         "scaler": None,
-     "imputer_num": "constant",      "encoder": OrdinalEncoder(handle_unknown="use_encoded_value", unknown_value=-1)},
+    {"nome": "std_median_ohe",       "scaler": lambda: StandardScaler(),
+     "imputer_num": "median",        "encoder": lambda: OneHotEncoder(handle_unknown="ignore", max_categories=30, sparse_output=False)},
+    {"nome": "robust_median_ohe",    "scaler": lambda: RobustScaler(),
+     "imputer_num": "median",        "encoder": lambda: OneHotEncoder(handle_unknown="ignore", max_categories=30, sparse_output=False)},
+    {"nome": "minmax_mean_ohe",      "scaler": lambda: MinMaxScaler(),
+     "imputer_num": "mean",          "encoder": lambda: OneHotEncoder(handle_unknown="ignore", max_categories=30, sparse_output=False)},
+    {"nome": "quantile_median_ord",  "scaler": lambda: QuantileTransformer(output_distribution="normal"),
+     "imputer_num": "median",        "encoder": lambda: OrdinalEncoder(handle_unknown="use_encoded_value", unknown_value=-1)},
+    {"nome": "power_median_ohe",     "scaler": lambda: PowerTransformer(),
+     "imputer_num": "median",        "encoder": lambda: OneHotEncoder(handle_unknown="ignore", max_categories=30, sparse_output=False)},
+    {"nome": "raw_zero_ord",         "scaler": lambda: None,
+     "imputer_num": "constant",      "encoder": lambda: OrdinalEncoder(handle_unknown="use_encoded_value", unknown_value=-1)},
 ]
 
 MODELOS_OTIMIZAVEIS = {
@@ -63,14 +63,14 @@ MODELOS_OTIMIZAVEIS = {
     "RandomForest_opt": FactoryModelos().random_forest,
     "GradientBoosting_opt": FactoryModelos().gradient_boosting,
     "KNN_opt":          FactoryModelos().knn,
-    "SVR_opt":          FactoryModelos().svr,
+    #"SVR_opt":          FactoryModelos().svr,
     "CatBoost_opt":     FactoryModelos().catboost,
-    "LightGBM_opt":     FactoryModelos().lightgbm,
-    "HistGB_opt":       FactoryModelos().hist_gb,
+    #"LightGBM_opt":     FactoryModelos().lightgbm,
+    #"HistGB_opt":       FactoryModelos().hist_gb,
 }
 
 MODELOS_SIMPLES_TRAT = {
-    "Linear": LinearRegression(),
+    "Linear": lambda: LinearRegression(),
 }
 
 now = time.strftime("%Y-%m")
@@ -125,7 +125,7 @@ class TesteIncrementalFeaturesAsync:
         modelos_simples=None,
         escaladores=None,
         modelos_optuna=None,
-        n_trials_optuna=20,
+        n_trials_optuna=5,
         n_trials_mlp=15,
         usar_xgboost=True,
         usar_rede_neural=True,
@@ -206,12 +206,12 @@ class TesteIncrementalFeaturesAsync:
         return [c[0] for c in corr_list], corr_list
 
     @staticmethod
-    def _build_transform_map(num_feats, cat_fixas, transf_name, encoder_name="ohe"):
+    def _build_transform_map(num_feats, cat_feats, transf_name, encoder_name="ohe"):
         import json
         fmap = {}
         for f in (num_feats or []):
             fmap[str(f)] = str(transf_name or "none")
-        for f in (cat_fixas or []):
+        for f in (cat_feats or []):
             fmap[str(f)] = str(encoder_name)
         return json.dumps(fmap, default=str)
 
@@ -576,9 +576,13 @@ class TesteIncrementalFeaturesAsync:
         n_trials_mlp=15,
         otimizar_mlp=False,
         max_concurrent=MAX_CONCURRENT,
+        feature_selection="sequential",
+        random_start=3,
+        random_limit=10,
+        random_seed=42,
+        categorical_fixas=None,
     ):
-        """Versao async: testa N tratamentos x M modelos com features incrementais.
-        Combinacoes rodam concorrentemente via asyncio com semaforo."""
+        import random as _random
         qtd_optuna = len(MODELOS_OTIMIZAVEIS)
         qtd_simples = len(MODELOS_SIMPLES_TRAT) + (1 if otimizar_mlp else 0)
 
@@ -588,112 +592,87 @@ class TesteIncrementalFeaturesAsync:
                     len(TRATAMENTOS), qtd_optuna + qtd_simples,
                     qtd_optuna, qtd_simples,
                     ", +MLP_opt" if otimizar_mlp else "")
+        logger.info("Selecao: %s", feature_selection)
         logger.info("Features candidatas: %d", len(features_testadas))
         logger.info("Optuna trials: %d | MLP trials: %d", n_trials_optuna, n_trials_mlp)
         logger.info("Max concurrent: %d", max_concurrent)
         logger.info("=" * 60)
 
-        cat_fixas = [c for c in categorical_features if c in train.columns]
-        cols_full = features_testadas + [c for c in cat_fixas if c not in features_testadas]
-        x_test_full = test[cols_full].copy()
+        categorical_fixas_list = list(categorical_fixas or [])
+        pool = [f for f in features_testadas + [c for c in categorical_features if c in train.columns and c not in features_testadas]
+                if f not in categorical_fixas_list]
         y_train = train[target_col].values
         y_test = test[target_col].values
 
         await self._conectar_mlflow_async()
 
-        colunas_validas = []
         resultados = []
-        total = len(features_testadas) * len(TRATAMENTOS) * (qtd_optuna + qtd_simples)
         progresso = {"atual": 0}
         lock = asyncio.Lock()
         max_workers = min(max_concurrent, os.cpu_count() or 4)
         sem = asyncio.Semaphore(max_workers)
         loop = asyncio.get_event_loop()
+        cols_full = categorical_fixas_list + pool
+        x_test_full = test[cols_full].copy() if cols_full else test[pool].copy()
 
-        for idx_col, col in enumerate(features_testadas, 1):
-            try:
-                colunas_validas.append(col)
-                num_feats = [c for c in colunas_validas if c not in cat_fixas]
-                cols_loop = colunas_validas + [c for c in cat_fixas if c not in colunas_validas]
-                X_tr = train[cols_loop].copy()
-                X_te = x_test_full[cols_loop].copy()
-            except Exception as e:
-                logger.warning("Feature %s falhou na selecao: %s", col, e)
-                colunas_validas.pop(-1)
-                continue
+        if feature_selection == "sequential":
+            all_candidates = categorical_fixas_list + list(pool)
+            n_transf = len(self.TRANSFORM_OPCOES)
+            total = len(all_candidates) * len(TRATAMENTOS) * n_transf * (qtd_optuna + qtd_simples)
+            colunas_validas = []
 
-            # Monta todas as combinacoes para este incremento
-            combos = []
-            for trat in TRATAMENTOS:
-                for transf_name, _ in self.TRANSFORM_OPCOES.items():
-                    for mod_name, factory_fn in MODELOS_OTIMIZAVEIS.items():
-                        combos.append(("optuna", trat, transf_name, mod_name, factory_fn, None))
-                    for mod_name, modelo in MODELOS_SIMPLES_TRAT.items():
-                        combos.append(("simples", trat, transf_name, mod_name, None, modelo))
-                    if otimizar_mlp:
-                        combos.append(("mlp", trat, transf_name, None, None, None))
+            for idx_col, col in enumerate(all_candidates, 1):
+                try:
+                    colunas_validas.append(col)
+                    num_feats = [c for c in colunas_validas if c not in categorical_features]
+                    cat_feats = [c for c in colunas_validas if c in categorical_features]
+                    X_tr = train[colunas_validas].copy()
+                    X_te = x_test_full[colunas_validas].copy()
+                except Exception as e:
+                    logger.warning("Feature %s falhou na selecao: %s", col, e)
+                    colunas_validas.pop(-1)
+                    continue
 
-            n_features_atual = len(colunas_validas)
-
-            async def executar_combo(args):
-                tipo, trat, transf_name, mod_name, factory_fn, modelo = args
-                async with sem:
-                    run_name = f"{mod_name or 'MLP_opt'}|{trat['nome']}|feat{idx_col:02d}_{col}_{now}"
-                    t0 = time.time()
-
-                    try:
-                        if tipo == "optuna":
-                            result = await self._combo_optuna(
-                                loop, trat, mod_name, factory_fn,
-                                num_feats, cat_fixas, X_tr, X_te, y_train, y_test,
-                                n_trials_optuna, run_name, n_features_atual, col,
-                                transf_name=transf_name,
-                            )
-                        elif tipo == "simples":
-                            result = await self._combo_simples(
-                                loop, trat, mod_name, modelo,
-                                num_feats, cat_fixas, X_tr, X_te, y_train, y_test,
-                                run_name, n_features_atual, col,
-                                transf_name=transf_name,
-                            )
-                        else:
-                            result = await self._combo_mlp(
-                                loop, trat, num_feats, cat_fixas,
-                                X_tr, X_te, y_train, y_test, target_col,
-                                n_trials_mlp, run_name, n_features_atual, col,
-                                transf_name=transf_name,
-                            )
-
-                        return result
-
-                    except Exception as exc:
-                        logger.warning("Falha %s %s feat%s: %s",
-                                       mod_name or "MLP_opt", trat["nome"], col, exc)
-                        logger.exception("Traceback completo:")
-                        return {
-                            "n_features": n_features_atual,
-                            "ultima_feature": col,
-                            "tratamento": trat["nome"],
-                            "modelo": mod_name or "MLP_opt",
-                            "transform": transf_name,
-                            "rmse": float("nan"), "mae": float("nan"),
-                            "mape": float("nan"), "mdape": float("nan"), "r2": float("nan"),
-                        }
-
-            tasks = [executar_combo(c) for c in combos]
-            for coro in asyncio.as_completed(tasks):
-                resultado = await coro
-                resultados.append(resultado)
-                async with lock:
-                    progresso["atual"] += 1
-                r2v = resultado.get("r2", float("nan"))
-                r2s = f"{r2v:.4f}" if isinstance(r2v, (int, float)) and not np.isnan(r2v) else "FAIL"
-                sys.stdout.write(
-                    f"\r[{progresso['atual']:4d}/{total}] "
-                    f"{idx_col:2d}feats {resultado.get('tratamento', ''):>18} "
-                    f"{resultado.get('modelo', ''):>18} R2={r2s}     "
+                logger.debug("Incremento %d/%d: %d features [%s ...]",
+                             idx_col, len(all_candidates), len(colunas_validas),
+                             colunas_validas[0] if colunas_validas else "")
+                n_features_atual = len(colunas_validas)
+                await self._rodar_combos_incremento(
+                    loop, sem, lock, progresso, total, idx_col, col,
+                    tratamentos=TRATAMENTOS, num_feats=num_feats, cat_feats=cat_feats,
+                    X_tr=X_tr, X_te=X_te, y_train=y_train, y_test=y_test,
+                    target_col=target_col, modelos_otimizaveis=MODELOS_OTIMIZAVEIS,
+                    modelos_simples=MODELOS_SIMPLES_TRAT, n_features_atual=n_features_atual,
+                    n_trials_optuna=n_trials_optuna, n_trials_mlp=n_trials_mlp,
+                    otimizar_mlp=otimizar_mlp, resultados=resultados,
+                    run_name_base=col,
                 )
-                sys.stdout.flush()
+
+        elif feature_selection == "random":
+            n_transf = len(self.TRANSFORM_OPCOES)
+            total = (random_limit - random_start + 1) * len(TRATAMENTOS) * n_transf * (qtd_optuna + qtd_simples)
+
+            for size in range(random_start, random_limit + 1):
+                _random.seed(random_seed + size)
+                amostra = _random.sample(pool, min(size, len(pool)))
+                colunas_validas = categorical_fixas_list + amostra
+                num_feats = [c for c in colunas_validas if c not in categorical_features]
+                cat_feats = [c for c in colunas_validas if c in categorical_features]
+                X_tr = train[colunas_validas].copy()
+                X_te = x_test_full[colunas_validas].copy()
+                n_features_atual = len(colunas_validas)
+                logger.debug("Incremento random size=%d/%d: %d features",
+                             size, random_limit, n_features_atual)
+                await self._rodar_combos_incremento(
+                    loop, sem, lock, progresso, total, size, f"random{size}",
+                    tratamentos=TRATAMENTOS, num_feats=num_feats, cat_feats=cat_feats,
+                    X_tr=X_tr, X_te=X_te, y_train=y_train, y_test=y_test,
+                    target_col=target_col, modelos_otimizaveis=MODELOS_OTIMIZAVEIS,
+                    modelos_simples=MODELOS_SIMPLES_TRAT, n_features_atual=n_features_atual,
+                    n_trials_optuna=n_trials_optuna, n_trials_mlp=n_trials_mlp,
+                    otimizar_mlp=otimizar_mlp, resultados=resultados,
+                    run_name_base=str(size),
+                )
 
         print()
         df = pd.DataFrame(resultados)
@@ -706,23 +685,116 @@ class TesteIncrementalFeaturesAsync:
 
     # ─── combo helpers ──────────────────────────────────────────────
 
+    async def _rodar_combos_incremento(
+        self, loop, sem, lock, progresso, total, idx, col,
+        tratamentos, num_feats, cat_feats, X_tr, X_te, y_train, y_test,
+        target_col, modelos_otimizaveis, modelos_simples, n_features_atual,
+        n_trials_optuna, n_trials_mlp, otimizar_mlp, resultados,
+        run_name_base="",
+    ):
+        tasks = []
+        for trat in tratamentos:
+            for transf_name in self.TRANSFORM_OPCOES:
+                for mod_name, factory_fn in modelos_otimizaveis.items():
+                    tasks.append(self._executar_combo_individual(
+                        "optuna", loop, sem, trat, mod_name, factory_fn, None,
+                        num_feats, cat_feats, X_tr, X_te, y_train, y_test, target_col,
+                        n_trials_optuna, n_trials_mlp, n_features_atual, col,
+                        lock, progresso, total, resultados, run_name_base,
+                        transf_name=transf_name,
+                    ))
+                for mod_name, modelo in modelos_simples.items():
+                    tasks.append(self._executar_combo_individual(
+                        "simples", loop, sem, trat, mod_name, None, modelo,
+                        num_feats, cat_feats, X_tr, X_te, y_train, y_test, target_col,
+                        n_trials_optuna, n_trials_mlp, n_features_atual, col,
+                        lock, progresso, total, resultados, run_name_base,
+                        transf_name=transf_name,
+                    ))
+                if otimizar_mlp:
+                    tasks.append(self._executar_combo_individual(
+                        "mlp", loop, sem, trat, "MLP_opt", None, None,
+                        num_feats, cat_feats, X_tr, X_te, y_train, y_test, target_col,
+                        n_trials_optuna, n_trials_mlp, n_features_atual, col,
+                        lock, progresso, total, resultados, run_name_base,
+                        transf_name=transf_name,
+                    ))
+        for coro in asyncio.as_completed(tasks):
+            await coro
+
+    async def _executar_combo_individual(
+        self, tipo, loop, sem, trat, mod_name, factory_fn, modelo,
+        num_feats, cat_feats, X_tr, X_te, y_train, y_test, target_col,
+        n_trials_optuna, n_trials_mlp, n_features, col,
+        lock, progresso, total, resultados, run_name_base,
+        transf_name="none",
+    ):
+        async with sem:
+            run_name = f"{mod_name}|{trat['nome']}|{transf_name}_{run_name_base}_{time.time_ns()}"
+            logger.debug("Task: %s | %s | %s | %s", mod_name, trat["nome"], transf_name, run_name_base)
+            try:
+                if tipo == "optuna":
+                    result = await self._combo_optuna(
+                        loop, trat, mod_name, factory_fn,
+                        num_feats, cat_feats, X_tr, X_te, y_train, y_test,
+                        n_trials_optuna, run_name, n_features, col,
+                        transf_name=transf_name,
+                    )
+                elif tipo == "simples":
+                    result = await self._combo_simples(
+                        loop, trat, mod_name, modelo,
+                        num_feats, cat_feats, X_tr, X_te, y_train, y_test,
+                        run_name, n_features, col,
+                        transf_name=transf_name,
+                    )
+                else:
+                    result = await self._combo_mlp(
+                        loop, trat, num_feats, cat_feats,
+                        X_tr, X_te, y_train, y_test, target_col,
+                        n_trials_mlp, run_name, n_features, col,
+                        transf_name=transf_name,
+                    )
+
+                resultados.append(result)
+                async with lock:
+                    progresso["atual"] += 1
+                r2v = result.get("r2", float("nan"))
+                r2s = f"{r2v:.4f}" if isinstance(r2v, (int, float)) and not np.isnan(r2v) else "FAIL"
+                sys.stdout.write(
+                    f"\r[{progresso['atual']:4d}/{total}] "
+                    f"{n_features:2d}feats {result.get('tratamento', ''):>18} "
+                    f"{result.get('modelo', ''):>18} R2={r2s}     "
+                )
+                sys.stdout.flush()
+            except Exception as exc:
+                logger.warning("Falha %s %s %s: %s", mod_name, trat["nome"], run_name_base, exc)
+                logger.exception("Traceback completo:")
+                resultados.append({
+                    "n_features": n_features,
+                    "ultima_feature": col,
+                    "tratamento": trat["nome"],
+                    "modelo": mod_name or "MLP_opt",
+                    "transform": transf_name,
+                    "rmse": float("nan"), "mae": float("nan"),
+                    "mape": float("nan"), "mdape": float("nan"), "r2": float("nan"),
+                })
+
     async def _combo_optuna(self, loop, trat, mod_name, factory_fn,
-                             num_feats, cat_fixas, X_tr, X_te,
-                             y_train, y_test, n_trials, run_name,
-                             n_features, col, transf_name="none"):
+                             num_feats, cat_feats, X_tr, X_te,
+                             y_train, y_test, n_trials, run_name, n_features, col,
+                             transf_name="none"):
         def _run():
             imputer_num = SimpleImputer(strategy=trat["imputer_num"])
             imputer_cat = SimpleImputer(strategy="constant", fill_value="desconhecido")
-            encoder = trat["encoder"]
-            scaler = trat["scaler"]
+            encoder = trat["encoder"]()
+            scaler = trat["scaler"]()
             pp = PreprocessadorFactory(
-                numeric_features=num_feats, categorical_features=cat_fixas,
+                numeric_features=num_feats, categorical_features=cat_feats,
             ).criar(scaler=scaler, imputer_num=imputer_num,
                     imputer_cat=imputer_cat, encoder=encoder,
                     transform=transf_name)
 
-            # ── Treino / CV / Avaliacao (com fallback) ──
-            cv_met = {}
+            # ── Treino / Avaliacao ──
             met = {}
             best_params = {}
             erro = ""
@@ -746,34 +818,17 @@ class TesteIncrementalFeaturesAsync:
 
                 trial_fixo = optuna.trial.FixedTrial(estudo.best_params)
                 modelo_best = factory_fn(trial_fixo)
-
-                cv_scoring = {
-                    "rmse": "neg_root_mean_squared_error",
-                    "mae": "neg_mean_absolute_error",
-                    "mape": "neg_mean_absolute_percentage_error",
-                    "mdape": make_scorer(_mdape, greater_is_better=False),
-                    "r2": "r2",
-                }
-                pipe_cv = Pipeline([("preprocessador", pp), ("modelo", modelo_best)])
-                cv_scores = cross_validate(pipe_cv, X_tr, y_train, cv=3, scoring=cv_scoring, n_jobs=1)
-                cv_met = {
-                    "cv_rmse": -cv_scores["test_rmse"].mean(),
-                    "cv_mae": -cv_scores["test_mae"].mean(),
-                    "cv_mape": -cv_scores["test_mape"].mean(),
-                    "cv_mdape": -cv_scores["test_mdape"].mean(),
-                    "cv_r2": cv_scores["test_r2"].mean(),
-                }
-
-                pipe_cv.fit(X_tr, y_train)
-                y_pred = pipe_cv.predict(X_te)
+                pipe = Pipeline([("preprocessador", pp), ("modelo", modelo_best)])
+                pipe.fit(X_tr, y_train)
+                y_pred = pipe.predict(X_te)
                 met = Avaliador.metricas(run_name, y_test, y_pred)
             except Exception as e_train:
                 erro = str(e_train)[:200]
-                logger.warning("Falha treino/CV/avaliacao %s: %s", run_name, e_train, exc_info=True)
-                logger.warning("met=%s cv_met=%s", met, cv_met)
+                logger.warning("Falha treino/avaliacao %s: %s", run_name, e_train, exc_info=True)
+                logger.warning("met=%s", met)
 
             # ── MLflow (só se há métrica para logar) ──
-            if self.mlflow_mgr and (met or cv_met):
+            if self.mlflow_mgr and met:
                 try:
                     with self.mlflow_mgr.run_session(run_name=run_name):
                         mlflow.set_tag("teste", "tratamentos_modelos")
@@ -784,10 +839,10 @@ class TesteIncrementalFeaturesAsync:
                         mlflow.log_param("transform", transf_name)
                         if best_params:
                             mlflow.log_params({f"best_{k}": str(v)[:80] for k, v in best_params.items()})
-                        mlflow.log_metrics({**met, **cv_met})
-                        encoder_name = "ordinal" if "Ordinal" in type(trat["encoder"]).__name__ else "ohe"
+                        mlflow.log_metrics(met)
+                        encoder_name = "ordinal" if "Ordinal" in type(trat["encoder"]()).__name__ else "ohe"
                         mlflow.set_tag("feature_transform_map",
-                                       self._build_transform_map(num_feats, cat_fixas, transf_name, encoder_name))
+                                       self._build_transform_map(num_feats, cat_feats, transf_name, encoder_name))
                         train_df = pd.concat([X_tr.reset_index(drop=True),
                                               pd.Series(y_train, name="target")], axis=1)
                         mlflow.log_input(mlflow.data.from_pandas(train_df, name="train"), context="training")
@@ -805,7 +860,6 @@ class TesteIncrementalFeaturesAsync:
                 "tratamento": trat["nome"],
                 "modelo": mod_name,
                 "transform": transf_name,
-                **cv_met,
                 **met,
             }
 
@@ -824,23 +878,23 @@ class TesteIncrementalFeaturesAsync:
                 "status": "timeout",
             }
 
-    async def _combo_simples(self, loop, trat, mod_name, modelo,
-                              num_feats, cat_fixas, X_tr, X_te,
+    async def _combo_simples(self, loop, trat, mod_name, modelo_factory,
+                              num_feats, cat_feats, X_tr, X_te,
                               y_train, y_test, run_name, n_features, col,
                               transf_name="none"):
         def _run():
             imputer_num = SimpleImputer(strategy=trat["imputer_num"])
             imputer_cat = SimpleImputer(strategy="constant", fill_value="desconhecido")
-            encoder = trat["encoder"]
-            scaler = trat["scaler"]
+            encoder = trat["encoder"]()
+            scaler = trat["scaler"]()
+            modelo = modelo_factory()
             pp = PreprocessadorFactory(
-                numeric_features=num_feats, categorical_features=cat_fixas,
+                numeric_features=num_feats, categorical_features=cat_feats,
             ).criar(scaler=scaler, imputer_num=imputer_num,
                     imputer_cat=imputer_cat, encoder=encoder,
                     transform=transf_name)
 
-            # ── Treino / CV / Avaliacao ──
-            cv_met = {}
+            # ── Treino / Avaliacao ──
             met = {}
             erro = ""
             try:
@@ -848,29 +902,13 @@ class TesteIncrementalFeaturesAsync:
                 pipe.fit(X_tr, y_train)
                 y_pred = pipe.predict(X_te)
                 met = Avaliador.metricas(run_name, y_test, y_pred)
-
-                cv_scoring = {
-                    "rmse": "neg_root_mean_squared_error",
-                    "mae": "neg_mean_absolute_error",
-                    "mape": "neg_mean_absolute_percentage_error",
-                    "mdape": make_scorer(_mdape, greater_is_better=False),
-                    "r2": "r2",
-                }
-                cv_scores = cross_validate(pipe, X_tr, y_train, cv=3, scoring=cv_scoring, n_jobs=1)
-                cv_met = {
-                    "cv_rmse": -cv_scores["test_rmse"].mean(),
-                    "cv_mae": -cv_scores["test_mae"].mean(),
-                    "cv_mape": -cv_scores["test_mape"].mean(),
-                    "cv_mdape": -cv_scores["test_mdape"].mean(),
-                    "cv_r2": cv_scores["test_r2"].mean(),
-                }
             except Exception as e_train:
                 erro = str(e_train)[:200]
-                logger.warning("Falha treino/CV/avaliacao %s: %s", run_name, e_train, exc_info=True)
-                logger.warning("met=%s cv_met=%s", met, cv_met)
+                logger.warning("Falha treino/avaliacao %s: %s", run_name, e_train, exc_info=True)
+                logger.warning("met=%s", met)
 
             # ── MLflow (só se há métrica para logar) ──
-            if self.mlflow_mgr and (met or cv_met):
+            if self.mlflow_mgr and met:
                 try:
                     with self.mlflow_mgr.run_session(run_name=run_name):
                         mlflow.set_tag("teste", "tratamentos_modelos")
@@ -879,10 +917,10 @@ class TesteIncrementalFeaturesAsync:
                         mlflow.log_param("n_features", n_features)
                         mlflow.log_param("ultima_feature", col)
                         mlflow.log_param("transform", transf_name)
-                        mlflow.log_metrics({**met, **cv_met})
-                        encoder_name = "ordinal" if "Ordinal" in type(trat["encoder"]).__name__ else "ohe"
+                        mlflow.log_metrics(met)
+                        encoder_name = "ordinal" if "Ordinal" in type(trat["encoder"]()).__name__ else "ohe"
                         mlflow.set_tag("feature_transform_map",
-                                       self._build_transform_map(num_feats, cat_fixas, transf_name, encoder_name))
+                                       self._build_transform_map(num_feats, cat_feats, transf_name, encoder_name))
                         train_df = pd.concat([X_tr.reset_index(drop=True),
                                               pd.Series(y_train, name="target")], axis=1)
                         mlflow.log_input(mlflow.data.from_pandas(train_df, name="train"), context="training")
@@ -900,7 +938,6 @@ class TesteIncrementalFeaturesAsync:
                 "tratamento": trat["nome"],
                 "modelo": mod_name,
                 "transform": transf_name,
-                **cv_met,
                 **met,
             }
 
@@ -919,23 +956,22 @@ class TesteIncrementalFeaturesAsync:
                 "status": "timeout",
             }
 
-    async def _combo_mlp(self, loop, trat, num_feats, cat_fixas,
+    async def _combo_mlp(self, loop, trat, num_feats, cat_feats,
                           X_tr, X_te, y_train, y_test, target_col,
                           n_trials, run_name, n_features, col,
                           transf_name="none"):
         def _run():
             imputer_num = SimpleImputer(strategy=trat["imputer_num"])
             imputer_cat = SimpleImputer(strategy="constant", fill_value="desconhecido")
-            encoder = trat["encoder"]
-            scaler = trat["scaler"]
+            encoder = trat["encoder"]()
+            scaler = trat["scaler"]()
             pp = PreprocessadorFactory(
-                numeric_features=num_feats, categorical_features=cat_fixas,
+                numeric_features=num_feats, categorical_features=cat_feats,
             ).criar(scaler=scaler, imputer_num=imputer_num,
                     imputer_cat=imputer_cat, encoder=encoder,
                     transform=transf_name)
 
-            # ── Treino / CV / Avaliacao ──
-            cv_met = {}
+            # ── Treino / Avaliacao ──
             met = {}
             best_params = {}
             erro = ""
@@ -987,30 +1023,13 @@ class TesteIncrementalFeaturesAsync:
                               callbacks=[early_stop], verbose=0)
                 y_pred = model_mlp.predict(X_te_proc, verbose=0).ravel()
                 met = Avaliador.metricas(run_name, y_test, y_pred)
-
-                cv_scoring = {
-                    "rmse": "neg_root_mean_squared_error",
-                    "mae": "neg_mean_absolute_error",
-                    "mape": "neg_mean_absolute_percentage_error",
-                    "mdape": make_scorer(_mdape, greater_is_better=False),
-                    "r2": "r2",
-                }
-                pipe_cv = Pipeline([("preprocessador", pp), ("modelo", model_mlp)])
-                cv_scores = cross_validate(pipe_cv, X_tr, y_train, cv=3, scoring=cv_scoring, n_jobs=1)
-                cv_met = {
-                    "cv_rmse": -cv_scores["test_rmse"].mean(),
-                    "cv_mae": -cv_scores["test_mae"].mean(),
-                    "cv_mape": -cv_scores["test_mape"].mean(),
-                    "cv_mdape": -cv_scores["test_mdape"].mean(),
-                    "cv_r2": cv_scores["test_r2"].mean(),
-                }
             except Exception as e_train:
                 erro = str(e_train)[:200]
-                logger.warning("Falha treino/CV/avaliacao %s: %s", run_name, e_train, exc_info=True)
-                logger.warning("met=%s cv_met=%s", met, cv_met)
+                logger.warning("Falha treino/avaliacao %s: %s", run_name, e_train, exc_info=True)
+                logger.warning("met=%s", met)
 
             # ── MLflow (só se há métrica para logar) ──
-            if self.mlflow_mgr and (met or cv_met):
+            if self.mlflow_mgr and met:
                 try:
                     with self.mlflow_mgr.run_session(run_name=run_name):
                         mlflow.set_tag("teste", "tratamentos_modelos")
@@ -1021,10 +1040,10 @@ class TesteIncrementalFeaturesAsync:
                         mlflow.log_param("transform", transf_name)
                         if best_params:
                             mlflow.log_params({f"best_{k}": str(v)[:80] for k, v in best_params.items()})
-                        mlflow.log_metrics({**met, **cv_met})
-                        encoder_name = "ordinal" if "Ordinal" in type(trat["encoder"]).__name__ else "ohe"
+                        mlflow.log_metrics(met)
+                        encoder_name = "ordinal" if "Ordinal" in type(trat["encoder"]()).__name__ else "ohe"
                         mlflow.set_tag("feature_transform_map",
-                                       self._build_transform_map(num_feats, cat_fixas, transf_name, encoder_name))
+                                       self._build_transform_map(num_feats, cat_feats, transf_name, encoder_name))
                         train_df = pd.concat([X_tr.reset_index(drop=True),
                                               pd.Series(y_train, name="target")], axis=1)
                         mlflow.log_input(mlflow.data.from_pandas(train_df, name="train"), context="training")
@@ -1042,7 +1061,6 @@ class TesteIncrementalFeaturesAsync:
                 "tratamento": trat["nome"],
                 "modelo": "MLP_opt",
                 "transform": transf_name,
-                **cv_met,
                 **met,
             }
 
