@@ -83,6 +83,12 @@ MODELOS_SIMPLES_TRAT = {
     "SVR": lambda: SVR(kernel="rbf"),
 }
 
+SCALE_INVARIANT = {
+    "Linear", "Ridge", "DecisionTree",
+    "RandomForest", "GradientBoosting",
+    "Ridge_opt", "RandomForest_opt", "GradientBoosting_opt",
+}
+
 now = time.strftime("%Y-%m")
 
 
@@ -731,6 +737,8 @@ class TesteIncrementalFeaturesAsync:
         for trat in tratamentos_filtrados:
             for transf_name in self.TRANSFORM_OPCOES:
                 for mod_name, factory_fn in modelos_otimizaveis.items():
+                    if not cat_feats and mod_name in SCALE_INVARIANT and trat != tratamentos_filtrados[0]:
+                        continue
                     tasks.append(self._executar_combo_individual(
                         "optuna", loop, sem, trat, mod_name, factory_fn, None,
                         num_feats, cat_feats, X_tr, X_te, y_train, y_test, target_col,
@@ -739,6 +747,8 @@ class TesteIncrementalFeaturesAsync:
                         transf_name=transf_name,
                     ))
                 for mod_name, modelo in modelos_simples.items():
+                    if not cat_feats and mod_name in SCALE_INVARIANT and trat != tratamentos_filtrados[0]:
+                        continue
                     tasks.append(self._executar_combo_individual(
                         "simples", loop, sem, trat, mod_name, None, modelo,
                         num_feats, cat_feats, X_tr, X_te, y_train, y_test, target_col,

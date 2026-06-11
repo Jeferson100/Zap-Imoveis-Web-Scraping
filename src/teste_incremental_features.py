@@ -75,6 +75,12 @@ MODELOS_SIMPLES_TRAT = {
     "SVR": lambda: SVR(kernel="rbf"),
 }
 
+SCALE_INVARIANT = {
+    "Linear", "Ridge", "DecisionTree",
+    "RandomForest", "GradientBoosting",
+    "Ridge_opt", "RandomForest_opt", "GradientBoosting_opt",
+}
+
 now = time.strftime("%Y-%m")
 
 class TesteIncrementalFeatures:
@@ -662,6 +668,8 @@ class TesteIncrementalFeatures:
             )
 
             for mod_name, factory_fn in modelos_otimizaveis.items():
+                if not cat_feats and mod_name in SCALE_INVARIANT and trat != tratamentos_filtrados[0]:
+                    continue
                 cont["atual"] += 1
                 run_name = f"{mod_name}|{trat['nome']}|{col}_{idx_col}"
                 t0 = time.time()
@@ -736,6 +744,8 @@ class TesteIncrementalFeatures:
                 sys.stdout.flush()
 
             for mod_name, modelo_factory in modelos_simples.items():
+                if not cat_feats and mod_name in SCALE_INVARIANT and trat != tratamentos_filtrados[0]:
+                    continue
                 cont["atual"] += 1
                 run_name = f"{mod_name}|{trat['nome']}|{col}_{idx_col}"
                 t0 = time.time()
