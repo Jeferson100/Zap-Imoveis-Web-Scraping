@@ -641,6 +641,7 @@ class TesteIncrementalFeaturesAsync:
         lock = asyncio.Lock()
         max_workers = min(max_concurrent, os.cpu_count() or 4)
         sem = asyncio.Semaphore(max_workers)
+        sem_mlp = asyncio.Semaphore(min(2, max_workers))
         loop = asyncio.get_event_loop()
         cols_full = categorical_fixas_list + pool
         x_test_full = test[cols_full].copy() if cols_full else test[pool].copy()
@@ -669,6 +670,7 @@ class TesteIncrementalFeaturesAsync:
                 n_features_atual = len(colunas_validas)
                 await self._rodar_combos_incremento(
                     loop, sem, lock, progresso, total, idx_col, col,
+                    sem_mlp=sem_mlp,
                     tratamentos=TRATAMENTOS, num_feats=num_feats, cat_feats=cat_feats,
                     X_tr=X_tr, X_te=X_te, y_train=y_train, y_test=y_test,
                     target_col=target_col, modelos_otimizaveis=modelos_otimizaveis,
@@ -677,7 +679,6 @@ class TesteIncrementalFeaturesAsync:
                     otimizar_mlp=otimizar_mlp, resultados=resultados,
                     run_name_base=col,
                 )
-
         elif feature_selection == "random":
             n_transf = len(self.TRANSFORM_OPCOES)
             total = (random_limit - random_start + 1) * len(TRATAMENTOS) * n_transf * (qtd_optuna + qtd_simples)
@@ -695,6 +696,7 @@ class TesteIncrementalFeaturesAsync:
                              size, random_limit, n_features_atual)
                 await self._rodar_combos_incremento(
                     loop, sem, lock, progresso, total, size, f"random{size}",
+                    sem_mlp=sem_mlp,
                     tratamentos=TRATAMENTOS, num_feats=num_feats, cat_feats=cat_feats,
                     X_tr=X_tr, X_te=X_te, y_train=y_train, y_test=y_test,
                     target_col=target_col, modelos_otimizaveis=modelos_otimizaveis,
@@ -703,7 +705,6 @@ class TesteIncrementalFeaturesAsync:
                     otimizar_mlp=otimizar_mlp, resultados=resultados,
                     run_name_base=str(size),
                 )
-
         print()
         df = pd.DataFrame(resultados)
         if not df.empty:
@@ -717,9 +718,11 @@ class TesteIncrementalFeaturesAsync:
 
     async def _rodar_combos_incremento(
         self, loop, sem, lock, progresso, total, idx, col,
-        tratamentos, num_feats, cat_feats, X_tr, X_te, y_train, y_test,
-        target_col, modelos_otimizaveis, modelos_simples, n_features_atual,
-        n_trials_optuna, n_trials_mlp, otimizar_mlp, resultados,
+        sem_mlp=None,
+        tratamentos=None, num_feats=None, cat_feats=None,
+        X_tr=None, X_te=None, y_train=None, y_test=None,
+        target_col=None, modelos_otimizaveis=None, modelos_simples=None, n_features_atual=None,
+        n_trials_optuna=None, n_trials_mlp=None, otimizar_mlp=None, resultados=None,
         run_name_base="",
     ):
         tasks = []
@@ -757,8 +760,9 @@ class TesteIncrementalFeaturesAsync:
                         transf_name=transf_name,
                     ))
                 if otimizar_mlp:
+                    mlp_sem = sem_mlp or sem
                     tasks.append(self._executar_combo_individual(
-                        "mlp", loop, sem, trat, "MLP_opt", None, None,
+                        "mlp", loop, mlp_sem, trat, "MLP_opt", None, None,
                         num_feats, cat_feats, X_tr, X_te, y_train, y_test, target_col,
                         n_trials_optuna, n_trials_mlp, n_features_atual, col,
                         lock, progresso, total, resultados, run_name_base,
@@ -1114,10 +1118,10 @@ class TesteIncrementalFeaturesAsync:
 
         try:
             return await asyncio.wait_for(
-                loop.run_in_executor(None, _run), timeout=600
+                loop.run_in_executor(None, _run), timeout=120
             )
         except asyncio.TimeoutError:
-            logger.warning("Timeout _combo_mlp %s", run_name)
+            logger.warning("Timeout _combo_mlp %s (120s)", run_name)
             return {
                 "n_features": n_features,
                 "ultima_feature": col,
