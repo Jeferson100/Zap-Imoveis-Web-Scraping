@@ -908,17 +908,33 @@ def reclassificar_outros(descricao) -> str:
 
 async def extrair_coords_url(link_maps: str) -> tuple:
     """Tenta extrair lat/lng direto da URL do Maps."""
+    if not link_maps or not isinstance(link_maps, str):
+        return None, None
     try:
-        match = re.search(r'q=(-?\d+\.\d+%2C-?\d+\.\d+)', str(link_maps))
+        url = str(link_maps).replace('%2C', ',').replace('%2c', ',')
+
+        # 1. @lat,lng (mais comum): .../@-26.1234,-48.5678,17z/
+        match = re.search(r'@(-?\d+\.\d+),(-?\d+\.\d+)', url)
         if match:
             return float(match.group(1)), float(match.group(2))
-    except:
+
+        # 2. q=lat,lng: ...?q=-26.1234,-48.5678
+        match = re.search(r'[?&]q=(-?\d+\.\d+),(-?\d+\.\d+)', url)
+        if match:
+            return float(match.group(1)), float(match.group(2))
+
+        # 3. !3d!4d: ...!3d-26.1234!4d-48.5678
+        m3 = re.search(r'!3d(-?\d+\.\d+)', url)
+        m4 = re.search(r'!4d(-?\d+\.\d+)', url)
+        if m3 and m4:
+            return float(m3.group(1)), float(m4.group(1))
+    except Exception:
         pass
     return None, None
     
 
 async def geocodificar_endereco(session: aiohttp.ClientSession, row: pd.Series, cidade:str='Joinville', estado:str='SC', pais:str='Brasil') -> tuple:
-    "Geocodifica com tratamento de erro 429 e validação de JSON."
+    "Geocodifica com retry exponencial e tratamento de erros HTTP."
     url = "https://nominatim.openstreetmap.org/search"
     
     headers = {
@@ -926,16 +942,11 @@ async def geocodificar_endereco(session: aiohttp.ClientSession, row: pd.Series, 
     }
     
     cep = str(row.get('cep', '')).strip()
-    
     rua = str(row.get('rua', '')).strip()
-    
     bairro = str(row.get('bairro', '')).strip()
-    
     numero = str(row.get('numero', '')).strip()
-    
 
     tentativas = []
-    
     
     # 1. Tentativa de maior precisão: Número + Rua + Bairro
     if rua and rua.lower() not in ('s/r', '', 'nan') and numero and numero.lower() not in ('s/n', '', 'nan'):
@@ -958,7 +969,6 @@ async def geocodificar_endereco(session: aiohttp.ClientSession, row: pd.Series, 
     if not tentativas:
         tentativas.append({'q': f"{cidade}, {estado}, {pais}", 'tag': 'Cidade'})
 
-
     for item in tentativas:
         params = {
             'q': item['q'],
@@ -966,34 +976,45 @@ async def geocodificar_endereco(session: aiohttp.ClientSession, row: pd.Series, 
             'limit': 1
         }
         
-        try:
-            async with session.get(url, params=params, headers=headers) as response:
-                if response.status == 200:
-                    content_type = response.headers.get('Content-Type', '')
-                    if 'application/json' in content_type:
-                        data = await response.json()
+        for tentativa in range(4):
+            try:
+                async with session.get(url, params=params, headers=headers) as response:
+                    if response.status == 429 or response.status == 503:
+                        wait = 2 ** tentativa * 2
+                        logger.warning(f"⏳ HTTP {response.status} — aguardando {wait}s (tentativa {tentativa+1}/4)")
+                        await asyncio.sleep(wait)
+                        continue
+
+                    if response.status != 200:
+                        logger.error(f"❌ Erro HTTP {response.status} para: {item['q']}")
+                        break
+
+                    text = await response.text()
+                    if 'application/json' in response.headers.get('Content-Type', ''):
+                        try:
+                            data = __import__('json').loads(text)
+                        except Exception:
+                            data = None
                         if data and len(data) > 0:
                             logger.info(f"✅ {item['tag']} encontrada: {item['q']}")
                             return float(data[0]['lat']), float(data[0]['lon'])
-                    else:
-                        logger.warning(f"⚠️ Resposta inesperada (não é JSON). Início do texto: {text[:50]}")
-                        text = await response.text()
-                        coords = re.findall(r'(-?\d+\.\d{4,})', text)
-                        
-                        if len(coords) >= 2:
-                            lat, lon = float(coords[0]), float(coords[1])
-                            if -27 < lat < -25 and -49 < lon < -47:
-                                logger.info(f"🎯 Coordenadas extraídas do TEXTO para {item['tag']}")
-                                return lat, lon
                     
-                        logger.warning(f"⚠️ Resposta inesperada e sem coordenadas claras: {text[:50]}")
-
-                if response.status != 200:
-                    logger.error(f"❌ Erro HTTP {response.status} para: {item['q']}")
-                    return None, None
+                    coords = re.findall(r'(-?\d+\.\d{4,})', text)
+                    if len(coords) >= 2:
+                        lat, lon = float(coords[0]), float(coords[1])
+                        if -27 < lat < -25 and -49 < lon < -47:
+                            logger.info(f"🎯 Coordenadas extraídas do TEXTO para {item['tag']}")
+                            return lat, lon
                     
-        except Exception as e:
-            logger.error(f"🔥 Falha na requisição para {item['q']}: {e}")
+                    logger.warning(f"⚠️ Sem coordenadas em {item['tag']}: {text[:80]}")
+                    break
+                    
+            except asyncio.TimeoutError:
+                logger.warning(f"⏱️ Timeout em {item['tag']}")
+                continue
+            except Exception as e:
+                logger.error(f"🔥 Falha na requisição para {item['q']}: {e}")
+                break
     
         await asyncio.sleep(1.2)
 
@@ -1123,7 +1144,7 @@ async def preencher_todas_coordenadas(df: pd.DataFrame, batch_size: int = None, 
 
 def geocodificar_dataframe(data, cidade="Balneário Piçarras", estado="SC", pais="Brasil"):
     """
-    Geocodifica endereços garantindo o alinhamento correto dos índices.
+    Geocodifica endereços com retry exponencial para 429/503.
     """
     url = "https://nominatim.openstreetmap.org/search"
     
@@ -1137,19 +1158,15 @@ def geocodificar_dataframe(data, cidade="Balneário Piçarras", estado="SC", pai
         df['lng'] = None
         
     for idx in tqdm(df.index):
-        # Pular se já tiver coordenadas
         if pd.notna(df.at[idx, 'lat']):
             continue
 
         rua = str(df.at[idx, 'rua'])
-        
         bairro = str(df.at[idx, 'bairro'])
-        
         numero = str(df.at[idx, 'numero'])
                 
         partes = [p for p in [rua, numero, bairro, cidade, estado, pais] if p]
-        
-        query  = ", ".join(partes)
+        query = ", ".join(partes)
         
         params = {
             'q': query,
@@ -1158,24 +1175,37 @@ def geocodificar_dataframe(data, cidade="Balneário Piçarras", estado="SC", pai
             'limit': 1
         }
 
-        try:
-            response = requests.get(url, params=params, headers=headers)
-            
-            if response.status_code == 200:
-                res_data = response.json()
-                if res_data:
-                    df.at[idx, 'lat'] = float(res_data[0]['lat'])
-                    df.at[idx, 'lng'] = float(res_data[0]['lon'])
-                    logger.info(f"✅  Encontrado: {query}")
-                else:
-                    logger.info(f"❌ Não encontrado {query}: {res_data}")
-            
-            elif response.status_code == 429:
-                print("⚠️ Erro 429: Muita requisição! Pausando...")
-                time.sleep(5)
+        for tentativa in range(4):
+            try:
+                response = requests.get(url, params=params, headers=headers, timeout=15)
                 
-        except Exception as e:
-            print(f"🔥 Erro no índice {idx}: {e}")
+                if response.status_code == 200:
+                    res_data = response.json()
+                    if res_data:
+                        df.at[idx, 'lat'] = float(res_data[0]['lat'])
+                        df.at[idx, 'lng'] = float(res_data[0]['lon'])
+                        logger.info(f"✅  Encontrado: {query}")
+                    else:
+                        logger.info(f"❌ Não encontrado {query}")
+                    break
+
+                elif response.status_code in (429, 503):
+                    wait = 2 ** tentativa * 2
+                    print(f"⚠️ HTTP {response.status_code} — aguardando {wait}s (tentativa {tentativa+1}/4)")
+                    time.sleep(wait)
+                    continue
+                    
+                else:
+                    logger.error(f"❌ Erro HTTP {response.status_code} para: {query}")
+                    break
+                    
+            except requests.exceptions.Timeout:
+                print(f"⏱️ Timeout em {idx} (tentativa {tentativa+1}/4)")
+                continue
+            except Exception as e:
+                print(f"🔥 Erro no índice {idx}: {e}")
+                break
+        
         time.sleep(1.2)
     
     return df

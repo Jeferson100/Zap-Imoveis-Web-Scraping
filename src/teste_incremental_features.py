@@ -725,6 +725,9 @@ class TesteIncrementalFeatures:
                     try:
                         with self.mlflow_mgr.run_session(run_name=run_name):
                             mlflow.set_tag("teste", "tratamentos_modelos")
+                            mlflow.set_tag("scaler", trat["scaler"]().__class__.__name__ if trat["scaler"] else "None")
+                            mlflow.set_tag("imputer_num", trat["imputer_num"])
+                            mlflow.set_tag("encoder", type(trat["encoder"]()).__name__)
                             mlflow.log_param("tratamento", trat["nome"])
                             mlflow.log_param("modelo", mod_name)
                             mlflow.log_param("n_features", n_features_atual)
@@ -776,10 +779,13 @@ class TesteIncrementalFeatures:
                     try:
                         with self.mlflow_mgr.run_session(run_name=run_name):
                             mlflow.set_tag("teste", "tratamentos_modelos")
-                            mlflow.log_param("tratamento", trat["nome"])
-                            mlflow.log_param("modelo", mod_name)
-                            mlflow.log_param("n_features", n_features_atual)
-                            mlflow.log_param("ultima_feature", col)
+                            mlflow.set_tag("scaler", trat["scaler"]().__class__.__name__ if trat["scaler"] else "None")
+                            mlflow.set_tag("imputer_num", trat["imputer_num"])
+                            mlflow.set_tag("encoder", type(trat["encoder"]()).__name__)
+                            mlflow.set_tag("tratamento", trat["nome"])
+                            mlflow.set_tag("modelo", mod_name)
+                            mlflow.set_tag("n_features", n_features_atual)
+                            mlflow.set_tag("ultima_feature", col)
                             mlflow.log_metrics(met)
                             self.mlflow_mgr.log_feature_history(X_tr, run_name=run_name)
                     except Exception as e_mlflow:
@@ -869,6 +875,9 @@ class TesteIncrementalFeatures:
                     try:
                         with self.mlflow_mgr.run_session(run_name=run_name):
                             mlflow.set_tag("teste", "tratamentos_modelos")
+                            mlflow.set_tag("scaler", trat["scaler"]().__class__.__name__ if trat["scaler"] else "None")
+                            mlflow.set_tag("imputer_num", trat["imputer_num"])
+                            mlflow.set_tag("encoder", type(trat["encoder"]()).__name__)
                             mlflow.log_param("tratamento", trat["nome"])
                             mlflow.log_param("modelo", mod_name)
                             mlflow.log_param("n_features", n_features_atual)

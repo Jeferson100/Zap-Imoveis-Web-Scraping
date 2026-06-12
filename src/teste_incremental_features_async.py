@@ -71,7 +71,7 @@ MODELOS_OTIMIZAVEIS = {
 
 MODELOS_SIMPLES_TRAT = {
     "Linear": lambda: LinearRegression(),
-    "Ridge": lambda: Ridge(),
+    #"Ridge": lambda: Ridge(),
     "DecisionTree": lambda: DecisionTreeRegressor(random_state=42),
     "RandomForest": lambda: RandomForestRegressor(
         n_estimators=200, max_depth=12, random_state=42, n_jobs=-1
@@ -80,7 +80,7 @@ MODELOS_SIMPLES_TRAT = {
         n_estimators=200, max_depth=5, learning_rate=0.1, random_state=42
     ),
     "KNeighbors": lambda: KNeighborsRegressor(n_jobs=-1),
-    "SVR": lambda: SVR(kernel="rbf"),
+    #"SVR": lambda: SVR(kernel="rbf"),
 }
 
 SCALE_INVARIANT = {
@@ -600,6 +600,7 @@ class TesteIncrementalFeaturesAsync:
         random_seed=42,
         categorical_fixas=None,
         modo="simples",
+        cidade="joinville",
     ):
         import random as _random
         if modo == "simples":
@@ -708,10 +709,10 @@ class TesteIncrementalFeaturesAsync:
         print()
         df = pd.DataFrame(resultados)
         if not df.empty:
-            saida = Path.cwd().parent / "scripts"
+            saida = Path.cwd().parent / "dados" / cidade
             saida.mkdir(parents=True, exist_ok=True)
-            df.to_csv(saida / "resultados_tratamentos_modelos_async.csv", index=False)
-            logger.info("Resultados salvos em scripts/resultados_tratamentos_modelos_async.csv")
+            df.to_csv(saida / f"resultados_treinamento_incremental_{cidade}_{now}.csv", index=False)
+            logger.info(f"Resultados salvos em {saida}")
         return df
 
     # ─── combo helpers ──────────────────────────────────────────────
@@ -884,6 +885,9 @@ class TesteIncrementalFeaturesAsync:
                 try:
                     with self.mlflow_mgr.run_session(run_name=run_name):
                         mlflow.set_tag("teste", "tratamentos_modelos")
+                        mlflow.set_tag("scaler", trat["scaler"]().__class__.__name__ if trat["scaler"] else "None")
+                        mlflow.set_tag("imputer_num", trat["imputer_num"])
+                        mlflow.set_tag("encoder", type(trat["encoder"]()).__name__)
                         mlflow.log_param("tratamento", trat["nome"])
                         mlflow.log_param("modelo", mod_name)
                         mlflow.log_param("n_features", n_features)
@@ -964,10 +968,13 @@ class TesteIncrementalFeaturesAsync:
                 try:
                     with self.mlflow_mgr.run_session(run_name=run_name):
                         mlflow.set_tag("teste", "tratamentos_modelos")
-                        mlflow.log_param("tratamento", trat["nome"])
-                        mlflow.log_param("modelo", mod_name)
-                        mlflow.log_param("n_features", n_features)
-                        mlflow.log_param("ultima_feature", col)
+                        mlflow.set_tag("scaler", trat["scaler"]().__class__.__name__ if trat["scaler"] else "None")
+                        mlflow.set_tag("imputer_num", trat["imputer_num"])
+                        mlflow.set_tag("encoder", type(trat["encoder"]()).__name__)
+                        mlflow.set_tag("tratamento", trat["nome"])
+                        mlflow.set_tag("modelo", mod_name)
+                        mlflow.set_tag("n_features", n_features)
+                        mlflow.set_tag("ultima_feature", col)
                         mlflow.log_param("transform", transf_name)
                         mlflow.log_metrics(met)
                         encoder_name = "ordinal" if "Ordinal" in type(trat["encoder"]()).__name__ else "ohe"
@@ -1085,6 +1092,9 @@ class TesteIncrementalFeaturesAsync:
                 try:
                     with self.mlflow_mgr.run_session(run_name=run_name):
                         mlflow.set_tag("teste", "tratamentos_modelos")
+                        mlflow.set_tag("scaler", trat["scaler"]().__class__.__name__ if trat["scaler"] else "None")
+                        mlflow.set_tag("imputer_num", trat["imputer_num"])
+                        mlflow.set_tag("encoder", type(trat["encoder"]()).__name__)
                         mlflow.log_param("tratamento", trat["nome"])
                         mlflow.log_param("modelo", "MLP_opt")
                         mlflow.log_param("n_features", n_features)
