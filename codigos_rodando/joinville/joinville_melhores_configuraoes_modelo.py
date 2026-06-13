@@ -42,8 +42,8 @@ NUMERIC_FEATURES = [
 
 PASTA_DADOS = Path(__file__).parent.parent.parent / 'dados' / cidade
 
-train_path = PASTA_DADOS / f"train_{MES_REF}.parquet"
-test_path  = PASTA_DADOS / f"test_{MES_REF}.parquet"
+train_path = PASTA_DADOS / f"{cidade}_train_{MES_REF}.parquet"
+test_path  = PASTA_DADOS / f"{cidade}_test_{MES_REF}.parquet"
 
 if train_path.exists() and test_path.exists():
     train = pd.read_parquet(train_path)
@@ -95,3 +95,4 @@ async def main():
 
 if __name__ == "__main__":
     df = asyncio.run(main())
+    
