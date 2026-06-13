@@ -71,7 +71,9 @@ def buscar_melhores_por_incremento(client, experiment_id, min_features=1, metric
             "encoder": t.get("encoder", ""),
             "r2": m.get("r2"),
             "rmse": m.get("rmse"),
+            "mae": m.get("mae"),
             "mape": m.get("mape"),
+            "mdape": m.get("mdape"),
             "feature_transform_map": t.get("feature_transform_map", "{}"),
         })
     df = pd.DataFrame(rows)
@@ -188,22 +190,46 @@ def otimizar_melhores_incrementos(
         if not estudo:
             continue
 
-        trial_fixo = optuna.trial.FixedTrial(estudo.best_params)
+        best_params = estudo.best_params
+
+        trial_fixo = optuna.trial.FixedTrial(best_params)
         modelo_best = factory(trial_fixo)
         pipe = Pipeline([("preprocessador", pp), ("modelo", modelo_best)])
         pipe.fit(X_tr, y_tr)
         y_pred = pipe.predict(X_te)
         met = Avaliador.metricas(run_name, y_te, y_pred)
 
+        with mgr.run_session(run_name=run_name, tags={"categoria": "otimizado_melhor_incremento"}):
+            import mlflow
+            mlflow.log_params({k: str(v) for k, v in best_params.items()})
+            mlflow.log_metrics(met)
+            mlflow.set_tag("modelo", modelo_nome)
+            mlflow.set_tag("tratamento", row["tratamento"])
+            mlflow.set_tag("n_features", nf)
+            mlflow.set_tag("transform", transform)
+            mlflow.set_tag("scaler", row["scaler"])
+            mlflow.set_tag("imputer_num", row["imputer_num"])
+            mlflow.set_tag("encoder", row["encoder"])
+
         resultados.append({
             "n_features": nf,
             "modelo": modelo_nome,
             "tratamento": row["tratamento"],
             "transform": transform,
+            "scaler": row["scaler"],
+            "imputer_num": row["imputer_num"],
+            "encoder": row["encoder"],
+            "best_params": json.dumps(best_params),
             "r2_original": row["r2"],
+            "rmse_original": row["rmse"],
+            "mae_original": row["mae"],
+            "mape_original": row["mape"],
+            "mdape_original": row["mdape"],
             "r2_otimizado": met.get("r2"),
             "rmse_otimizado": met.get("rmse"),
+            "mae_otimizado": met.get("mae"),
             "mape_otimizado": met.get("mape"),
+            "mdape_otimizado": met.get("mdape"),
         })
 
     df_out = pd.DataFrame(resultados)

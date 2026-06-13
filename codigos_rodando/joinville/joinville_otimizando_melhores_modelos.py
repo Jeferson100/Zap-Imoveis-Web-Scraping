@@ -12,12 +12,16 @@ from selecao_modelos_mlflow import otimizar_melhores_incrementos, carregar_dados
 load_dotenv()
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+
 logger = logging.getLogger(__name__)
+
 warnings.filterwarnings("ignore")
 
 cidade = os.getenv("CIDADE_PASTA")
+
 MES_REF = os.getenv("MES_REF", datetime.now().strftime("%Y-%m"))
-N_TRIALS = int(os.getenv("N_TRIALS_OPTUNA", "15"))
+
+N_TRIALS = int(os.getenv("N_TRIALS_OPTUNA", "100"))
 
 CATEGORICAL_FEATURES = ['tipo_imovel', 'bairro', 'novo_lancamento', 'tem_elevador']
 
@@ -56,6 +60,11 @@ if not resultados.empty:
     resultados.to_parquet(parquet_path, index=False)
     resultados.to_csv(csv_path, index=False)
     logger.info(f"Otimizacao concluida ({len(resultados)} linhas): {parquet_path.name}")
-    logger.info(f"\n{resultados[['n_features','modelo','tratamento','r2_original','r2_otimizado']].to_string()}")
+    cols = ['n_features','modelo','tratamento','transform','scaler',
+            'imputer_num','encoder',
+            'r2_original','rmse_original','mape_original',
+            'r2_otimizado','rmse_otimizado','mape_otimizado',
+            'mae_otimizado','mdape_otimizado','best_params']
+    logger.info(f"\n{resultados[cols].to_string()}")
 else:
     logger.warning("Nenhum resultado de otimizacao gerado")
