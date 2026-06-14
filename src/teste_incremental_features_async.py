@@ -81,6 +81,7 @@ MODELOS_SIMPLES_TRAT = {
     ),
     "KNeighbors": lambda: KNeighborsRegressor(n_jobs=-1),
     #"SVR": lambda: SVR(kernel="rbf"),
+    "MLP": None,
 }
 
 SCALE_INVARIANT = {
@@ -753,8 +754,9 @@ class TesteIncrementalFeaturesAsync:
                 for mod_name, modelo in modelos_simples.items():
                     if not cat_feats and mod_name in SCALE_INVARIANT and trat != tratamentos_filtrados[0]:
                         continue
+                    tipo = "mlp_simples" if mod_name == "MLP" else "simples"
                     tasks.append(self._executar_combo_individual(
-                        "simples", loop, sem, trat, mod_name, None, modelo,
+                        tipo, loop, sem, trat, mod_name, None, modelo,
                         num_feats, cat_feats, X_tr, X_te, y_train, y_test, target_col,
                         n_trials_optuna, n_trials_mlp, n_features_atual, col,
                         lock, progresso, total, resultados, run_name_base,
@@ -797,6 +799,13 @@ class TesteIncrementalFeaturesAsync:
                     result = await self._combo_simples(
                         loop, trat, mod_name, modelo,
                         num_feats, cat_feats, X_tr, X_te, y_train, y_test,
+                        run_name, n_features, col,
+                        transf_name=transf_name,
+                    )
+                elif tipo == "mlp_simples":
+                    result = await self._combo_mlp_simples(
+                        loop, trat, num_feats, cat_feats,
+                        X_tr, X_te, y_train, y_test, target_col,
                         run_name, n_features, col,
                         transf_name=transf_name,
                     )
@@ -885,6 +894,7 @@ class TesteIncrementalFeaturesAsync:
                 try:
                     with self.mlflow_mgr.run_session(run_name=run_name):
                         mlflow.set_tag("teste", "tratamentos_modelos")
+                        mlflow.set_tag("otimizacao", "optuna")
                         mlflow.set_tag("scaler", trat["scaler"]().__class__.__name__ if trat["scaler"] else "None")
                         mlflow.set_tag("imputer_num", trat["imputer_num"])
                         mlflow.set_tag("encoder", type(trat["encoder"]()).__name__)
@@ -968,6 +978,7 @@ class TesteIncrementalFeaturesAsync:
                 try:
                     with self.mlflow_mgr.run_session(run_name=run_name):
                         mlflow.set_tag("teste", "tratamentos_modelos")
+                        mlflow.set_tag("otimizacao", "simples")
                         mlflow.set_tag("scaler", trat["scaler"]().__class__.__name__ if trat["scaler"] else "None")
                         mlflow.set_tag("imputer_num", trat["imputer_num"])
                         mlflow.set_tag("encoder", type(trat["encoder"]()).__name__)
@@ -1011,6 +1022,110 @@ class TesteIncrementalFeaturesAsync:
                 "ultima_feature": col,
                 "tratamento": trat["nome"],
                 "modelo": mod_name,
+                "transform": transf_name,
+                "status": "timeout",
+            }
+
+    async def _combo_mlp_simples(self, loop, trat, num_feats, cat_feats,
+                                   X_tr, X_te, y_train, y_test, target_col,
+                                   run_name, n_features, col, transf_name="none"):
+        def _run():
+            imputer_num = SimpleImputer(strategy=trat["imputer_num"])
+            imputer_cat = SimpleImputer(strategy="constant", fill_value="desconhecido")
+            encoder = trat["encoder"]()
+            scaler = trat["scaler"]()
+            pp = PreprocessadorFactory(
+                numeric_features=num_feats, categorical_features=cat_feats,
+            ).criar(scaler=scaler, imputer_num=imputer_num,
+                    imputer_cat=imputer_cat, encoder=encoder,
+                    transform=transf_name)
+
+            met = {}
+            erro = ""
+            try:
+                X_tr_proc = pp.fit_transform(X_tr)
+                X_te_proc = pp.transform(X_te)
+                input_dim = X_tr_proc.shape[1]
+                if input_dim == 0:
+                    return {
+                        "n_features": n_features,
+                        "ultima_feature": col,
+                        "tratamento": trat["nome"],
+                        "modelo": "MLP",
+                        "transform": transf_name,
+                        "status": "no_features",
+                    }
+
+                from optuna.trial import FixedTrial
+                fixed_params = {
+                    "num_camadas": 2,
+                    "unidades_0": 64,
+                    "unidades_1": 32,
+                    "dropout_0": 0.2,
+                    "dropout_1": 0.2,
+                    "learning_rate": 0.001,
+                }
+                model_mlp = OtimizadorMLP.construir_de_trial(FixedTrial(fixed_params), input_dim)
+                import keras
+                early_stop = keras.callbacks.EarlyStopping(
+                    monitor="loss", patience=10, restore_best_weights=True
+                )
+                model_mlp.fit(X_tr_proc, y_train, epochs=50,
+                              batch_size=64, callbacks=[early_stop], verbose=0)
+                y_pred = model_mlp.predict(X_te_proc, verbose=0).ravel()
+                met = Avaliador.metricas(run_name, y_test, y_pred)
+            except Exception as e_train:
+                erro = str(e_train)[:200]
+                logger.warning("Falha treino/avaliacao %s: %s", run_name, e_train, exc_info=True)
+
+            if self.mlflow_mgr and met:
+                try:
+                    with self.mlflow_mgr.run_session(run_name=run_name):
+                        mlflow.set_tag("teste", "tratamentos_modelos")
+                        mlflow.set_tag("otimizacao", "simples")
+                        mlflow.set_tag("scaler", trat["scaler"]().__class__.__name__ if trat["scaler"] else "None")
+                        mlflow.set_tag("imputer_num", trat["imputer_num"])
+                        mlflow.set_tag("encoder", type(trat["encoder"]()).__name__)
+                        mlflow.set_tag("tratamento", trat["nome"])
+                        mlflow.set_tag("modelo", "MLP")
+                        mlflow.set_tag("n_features", n_features)
+                        mlflow.set_tag("ultima_feature", col)
+                        mlflow.log_param("transform", transf_name)
+                        mlflow.log_metrics(met)
+                        encoder_name = "ordinal" if "Ordinal" in type(trat["encoder"]()).__name__ else "ohe"
+                        mlflow.set_tag("feature_transform_map",
+                                       self._build_transform_map(num_feats, cat_feats, transf_name, encoder_name))
+                        train_df = pd.concat([X_tr.reset_index(drop=True),
+                                              pd.Series(y_train, name="target")], axis=1)
+                        mlflow.log_input(mlflow.data.from_pandas(train_df, name="train"), context="training")
+                        test_df = pd.concat([X_te.reset_index(drop=True),
+                                             pd.Series(y_test, name="target")], axis=1)
+                        mlflow.log_input(mlflow.data.from_pandas(test_df, name="test"), context="test")
+                        self.mlflow_mgr.log_feature_history(X_tr, run_name=run_name)
+                except Exception as e_mlflow:
+                    logger.warning("Falha ao logar MLflow para %s: %s", run_name, e_mlflow)
+                    logger.exception("Detalhes:")
+
+            return {
+                "n_features": n_features,
+                "ultima_feature": col,
+                "tratamento": trat["nome"],
+                "modelo": "MLP",
+                "transform": transf_name,
+                **met,
+            }
+
+        try:
+            return await asyncio.wait_for(
+                loop.run_in_executor(None, _run), timeout=120
+            )
+        except asyncio.TimeoutError:
+            logger.warning("Timeout _combo_mlp_simples %s (120s)", run_name)
+            return {
+                "n_features": n_features,
+                "ultima_feature": col,
+                "tratamento": trat["nome"],
+                "modelo": "MLP",
                 "transform": transf_name,
                 "status": "timeout",
             }
@@ -1092,6 +1207,7 @@ class TesteIncrementalFeaturesAsync:
                 try:
                     with self.mlflow_mgr.run_session(run_name=run_name):
                         mlflow.set_tag("teste", "tratamentos_modelos")
+                        mlflow.set_tag("otimizacao", "optuna")
                         mlflow.set_tag("scaler", trat["scaler"]().__class__.__name__ if trat["scaler"] else "None")
                         mlflow.set_tag("imputer_num", trat["imputer_num"])
                         mlflow.set_tag("encoder", type(trat["encoder"]()).__name__)

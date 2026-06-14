@@ -60,21 +60,26 @@ def buscar_melhores_por_incremento(client, experiment_id, min_features=1, metric
         nf = int(t.get("n_features") or p.get("n_features", 0) or 0)
         if nf < min_features:
             continue
+        eh_optuna = "_opt" in str(r.info.run_name or "")
         rows.append({
             "run_name": r.info.run_name or "",
             "modelo": t.get("modelo") or p.get("modelo", ""),
             "tratamento": t.get("tratamento") or p.get("tratamento", ""),
             "n_features": nf,
+            "otimizacao": t.get("otimizacao") or ("optuna" if eh_optuna else "simples"),
             "transform": p.get("transform", "none"),
             "scaler": t.get("scaler", ""),
             "imputer_num": t.get("imputer_num", ""),
             "encoder": t.get("encoder", ""),
+            "feature_history_columns": t.get("feature_history_columns", ""),
+            "feature_history_num_columns": t.get("feature_history_num_columns", ""),
+            "feature_history_run_name": t.get("feature_history_run_name", ""),
+            "feature_transform_map": t.get("feature_transform_map", "{}"),
             "r2": m.get("r2"),
             "rmse": m.get("rmse"),
             "mae": m.get("mae"),
             "mape": m.get("mape"),
             "mdape": m.get("mdape"),
-            "feature_transform_map": t.get("feature_transform_map", "{}"),
         })
     df = pd.DataFrame(rows)
     if df.empty:
@@ -98,6 +103,38 @@ def carregar_dados(pasta_dados, mes_ref, cidade):
     test  = pd.read_parquet(test_path)
     logger.info(f"Dados carregados do cache: treino {len(train):,}, teste {len(test):,}")
     return train, test
+
+
+def deletar_runs_experimento(experimento_mlflow, confirmacao=False):
+    from mlflow_manager import MLflowManager
+    from mlflow.tracking import MlflowClient
+
+    mgr = MLflowManager(nome_experimento=experimento_mlflow)
+    mgr.conectar()
+    client = MlflowClient(mgr.get_tracking_uri())
+
+    exp = client.get_experiment_by_name(mgr.nome_experimento)
+    if not exp:
+        exp = client.get_experiment_by_name(mgr.databricks_workspace_path)
+    if not exp:
+        logger.warning(f"Experimento '{experimento_mlflow}' nao encontrado, nada a deletar")
+        return
+
+    runs = buscar_todos_runs(client, exp.experiment_id)
+    if not runs:
+        logger.info("Nenhum run encontrado no experimento")
+        return
+
+    if not confirmacao:
+        logger.warning(
+            f"Encontrados {len(runs)} runs no experimento '{exp.name}'. "
+            f"Defina confirmacao=True para deletar."
+        )
+        return
+
+    for run in runs:
+        client.delete_run(run.info.run_id)
+    logger.info(f"{len(runs)} runs deletados do experimento '{exp.name}'")
 
 
 def otimizar_melhores_incrementos(
@@ -183,7 +220,7 @@ def otimizar_melhores_incrementos(
         run_name = f"optuna_{modelo_nome}|{row['tratamento']}|{transform}_{nf}feats"
         otim = OtimizadorOptuna(
             preprocessador=pp, X=X_tr, y=y_tr,
-            mlflow_manager=mgr,
+            mlflow_manager=None,
             n_trials=n_trials, n_folds=5,
         )
         estudo = otim.otimizar(run_name, factory, log_trials=False)
@@ -191,6 +228,7 @@ def otimizar_melhores_incrementos(
             continue
 
         best_params = estudo.best_params
+        best_cv_rmse = estudo.best_value
 
         trial_fixo = optuna.trial.FixedTrial(best_params)
         modelo_best = factory(trial_fixo)
@@ -199,9 +237,11 @@ def otimizar_melhores_incrementos(
         y_pred = pipe.predict(X_te)
         met = Avaliador.metricas(run_name, y_te, y_pred)
 
-        with mgr.run_session(run_name=run_name, tags={"categoria": "otimizado_melhor_incremento"}):
+        with mgr.run_session(run_name=f"best_{modelo_nome}|{row['tratamento']}|{transform}_{nf}feats",
+                             tags={"categoria": "otimizado_melhor_incremento"}):
             import mlflow
-            mlflow.log_params({k: str(v) for k, v in best_params.items()})
+            mlflow.log_params({f"best_{k}": str(v) for k, v in best_params.items()})
+            mlflow.log_metric("best_cv_rmse", best_cv_rmse)
             mlflow.log_metrics(met)
             mlflow.set_tag("modelo", modelo_nome)
             mlflow.set_tag("tratamento", row["tratamento"])
@@ -210,6 +250,10 @@ def otimizar_melhores_incrementos(
             mlflow.set_tag("scaler", row["scaler"])
             mlflow.set_tag("imputer_num", row["imputer_num"])
             mlflow.set_tag("encoder", row["encoder"])
+            mlflow.set_tag("feature_transform_map", row.get("feature_transform_map", ""))
+            mlflow.set_tag("feature_history_columns", row.get("feature_history_columns", ""))
+            mlflow.set_tag("feature_history_num_columns", row.get("feature_history_num_columns", ""))
+            mlflow.set_tag("feature_history_run_name", row.get("feature_history_run_name", ""))
 
         resultados.append({
             "n_features": nf,
@@ -219,6 +263,10 @@ def otimizar_melhores_incrementos(
             "scaler": row["scaler"],
             "imputer_num": row["imputer_num"],
             "encoder": row["encoder"],
+            "feature_history_columns": row.get("feature_history_columns", ""),
+            "feature_history_num_columns": row.get("feature_history_num_columns", ""),
+            "feature_history_run_name": row.get("feature_history_run_name", ""),
+            "feature_transform_map": row.get("feature_transform_map", ""),
             "best_params": json.dumps(best_params),
             "r2_original": row["r2"],
             "rmse_original": row["rmse"],

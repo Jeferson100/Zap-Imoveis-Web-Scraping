@@ -21,7 +21,7 @@ cidade = os.getenv("CIDADE_PASTA")
 
 MES_REF = os.getenv("MES_REF", datetime.now().strftime("%Y-%m"))
 
-N_TRIALS = int(os.getenv("N_TRIALS_OPTUNA", "100"))
+N_TRIALS = int(os.getenv("N_TRIALS_OPTUNA", "500"))
 
 CATEGORICAL_FEATURES = ['tipo_imovel', 'bairro', 'novo_lancamento', 'tem_elevador']
 

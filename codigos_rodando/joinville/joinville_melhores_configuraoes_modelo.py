@@ -79,6 +79,11 @@ mlf = MLflowManager(
 
 mlf.conectar()
 
+DELETAR_RUNS = os.getenv("DELETAR_RUNS", "").lower() in ("true", "1", "sim")
+if DELETAR_RUNS:
+    from selecao_modelos_mlflow import deletar_runs_experimento
+    deletar_runs_experimento(f"imoveis-{cidade}-valor", confirmacao=True)
+
 
 async def main():
     teste = TesteIncrementalFeaturesAsync(experimento_mlflow=f"imoveis-{cidade}-valor")
@@ -95,4 +100,32 @@ async def main():
 
 if __name__ == "__main__":
     df = asyncio.run(main())
+    logger.info("Treinamento concluido, buscando melhores modelos por incremento no MLflow...")
+
+    from mlflow.tracking import MlflowClient
+    from selecao_modelos_mlflow import buscar_melhores_por_incremento
+
+    client = MlflowClient(mlf.get_tracking_uri())
+    exp = client.get_experiment_by_name(mlf.nome_experimento)
+    if not exp:
+        exp = client.get_experiment_by_name(mlf.databricks_workspace_path)
+    if not exp:
+        for e in client.search_experiments():
+            if mlf.nome_experimento in e.name or mlf.databricks_workspace_path in e.name:
+                exp = e
+                break
+    if exp:
+        melhores = buscar_melhores_por_incremento(client, exp.experiment_id)
+        if not melhores.empty:
+            parquet_path = PASTA_DADOS / f"{cidade}_melhores_por_incremento_{MES_REF}.parquet"
+            csv_path = PASTA_DADOS / f"{cidade}_melhores_por_incremento_{MES_REF}.csv"
+            melhores.to_parquet(parquet_path, index=False)
+            melhores.to_csv(csv_path, index=False)
+            logger.info(f"Melhores por incremento salvos ({len(melhores)} linhas): {parquet_path.name}")
+            cols = ['n_features','modelo','otimizacao','tratamento','transform','scaler','imputer_num','encoder','r2','rmse','mape']
+            logger.info(f"\n{melhores[cols].head(15).to_string()}")
+        else:
+            logger.warning("Nenhum run com metrica r2 encontrado no MLflow")
+    else:
+        logger.warning(f"Experimento '{mlf.nome_experimento}' nao encontrado no MLflow")
     
