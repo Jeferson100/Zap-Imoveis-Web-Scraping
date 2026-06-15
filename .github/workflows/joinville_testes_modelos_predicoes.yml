@@ -1,15 +1,17 @@
-name: Rodando Treinamento de Imoveis de Joinville Joinville 
-on:
-  schedule:
-    - cron: '0 9 2 1,2,3,4,5,6,7,8,9,10,11,12 *'  # 09:00 no primeiro dia de cada mês
-  workflow_dispatch:
+name: Rodando Treinamento de Imoveis de Joinville 
+on: 
+    workflow_run:
+        workflows: ["Rodando Limpeza Imoveis Joinville"]
+        types:
+            - completed
+    workflow_dispatch:
 
 jobs:
     treinamento_modelos_predicoes:
         uses: ./.github/workflows/pipeline_cidade_rodando.yml
         with:
             cidade_pasta: joinville
-            arquivo_rodando_imovel: joinville_predicao_valor_imoveis.py
+            arquivo_rodando_imovel: joinville_melhores_configuraoes_modelo.py
             DATABRICKS_HOST: "https://dbc-ed602b14-1f14.cloud.databricks.com"
             LOCALIZAZAO_COMPLETA : "Joinville, Santa Catarina, Brasil"
         secrets: inherit

@@ -118,9 +118,7 @@ if __name__ == "__main__":
         melhores = buscar_melhores_por_incremento(client, exp.experiment_id)
         if not melhores.empty:
             parquet_path = PASTA_DADOS / f"{cidade}_melhores_por_incremento_{MES_REF}.parquet"
-            csv_path = PASTA_DADOS / f"{cidade}_melhores_por_incremento_{MES_REF}.csv"
             melhores.to_parquet(parquet_path, index=False)
-            melhores.to_csv(csv_path, index=False)
             logger.info(f"Melhores por incremento salvos ({len(melhores)} linhas): {parquet_path.name}")
             cols = ['n_features','modelo','otimizacao','tratamento','transform','scaler','imputer_num','encoder','r2','rmse','mape']
             logger.info(f"\n{melhores[cols].head(15).to_string()}")

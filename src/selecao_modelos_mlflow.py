@@ -33,6 +33,20 @@ ENCODER_MAP = {
     "OrdinalEncoder": lambda: OrdinalEncoder(handle_unknown="use_encoded_value", unknown_value=-1),
 }
 
+MODEL_KEY_MAP = {
+    "RandomForest_opt": "random_forest",
+    "RandomForest": "random_forest",
+    "GradientBoosting_opt": "gradient_boosting",
+    "GradientBoosting": "gradient_boosting",
+    "Ridge_opt": "ridge",
+    "Ridge": "ridge",
+    "KNN_opt": "knn",
+    "KNeighbors": "knn",
+    "CatBoost_opt": "catboost",
+    "Linear": "linear",
+    "DecisionTree": "decision_tree",
+}
+
 
 def buscar_todos_runs(client, experiment_id):
     all_runs = []
@@ -84,7 +98,8 @@ def buscar_melhores_por_incremento(client, experiment_id, min_features=1, metric
     df = pd.DataFrame(rows)
     if df.empty:
         return df
-    idx = df.groupby("n_features")[metrica].idxmax()
+    direcao = "max" if metrica == "r2" else "min"
+    idx = getattr(df.groupby("n_features")[metrica], f"idx{direcao}")()
     return df.loc[idx].sort_values("n_features").reset_index(drop=True)
 
 
@@ -147,6 +162,14 @@ def otimizar_melhores_incrementos(
     target_col="valor_imovel",
     metrica="r2",
 ):
+    logger.info(f"Buscando melhores incrementos no experimento '{experimento_mlflow}'")
+    logger.info(f"Minimo de features: {min_features}")
+    logger.info(f"Metrica: {metrica}")
+    logger.info(f"Otimalizando {n_trials} vezes")
+    logger.info(f"Features numericas: {numeric_features}")
+    logger.info(f"Features categoricas: {categorical_features}")
+    logger.info(f"Target: {target_col}")
+    
     from mlflow_manager import MLflowManager
 
     mgr = MLflowManager(nome_experimento=experimento_mlflow)
@@ -200,19 +223,7 @@ def otimizar_melhores_incrementos(
             transform=transform if transform != "none" else None,
         )
 
-        model_key = {
-            "RandomForest_opt": "random_forest",
-            "RandomForest": "random_forest",
-            "GradientBoosting_opt": "gradient_boosting",
-            "GradientBoosting": "gradient_boosting",
-            "Ridge_opt": "ridge",
-            "Ridge": "ridge",
-            "KNN_opt": "knn",
-            "KNeighbors": "knn",
-            "CatBoost_opt": "catboost",
-            "Linear": "linear",
-            "DecisionTree": "decision_tree",
-        }.get(modelo_nome, "")
+        model_key = MODEL_KEY_MAP.get(modelo_nome, "")
         factory = getattr(FactoryModelos(), model_key, None)
         if not factory:
             logger.warning(f"Modelo '{modelo_nome}' nao mapeado, pulando")

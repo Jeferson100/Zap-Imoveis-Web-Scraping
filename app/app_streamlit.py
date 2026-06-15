@@ -138,7 +138,8 @@ def gerar_pagina_analise_imoveis(cidade_pth, cidade_nome, prefixo_arquivo, df=No
     if pd.notna(superior):
         df = df[df['preco_por_m2'] < superior].astype({'preco_por_m2': int})
             
-    df = df.rename(columns={'score': 'indice_localizacao'})
+    if 'score' in df.columns:
+        df = df.rename(columns={'score': 'indice_localizacao'})
     
     cols_num = ['preco_por_m2', 'quartos', 'metragem', 'desvio_mediana', 'vagas']
     
@@ -363,6 +364,14 @@ def gerar_pagina_analise_imoveis(cidade_pth, cidade_nome, prefixo_arquivo, df=No
             'url', 'titulo', 'bairro', 'valor_imovel', 'preco_por_m2', 'desvio_mediana', 'faixa',
             'metragem', 'fonte','tipo_imovel', 'quartos', 'banheiros', 'vagas', 'dias_publicacao',
         ]
+
+        for col in ['valor_predito', 'erro_absoluto', 'erro_percentual']:
+            if col in df_filtrado.columns:
+                cols_to_show.append(col)
+
+        if 'valor_predito' in df_filtrado.columns and 'metragem' in df_filtrado.columns:
+            df_filtrado['preco_por_m2_predito'] = (df_filtrado['valor_predito'] / df_filtrado['metragem']).round(0)
+            cols_to_show.append('preco_por_m2_predito')
         
         # 2. Configuração avançada de colunas
         st.dataframe(
@@ -388,7 +397,11 @@ def gerar_pagina_analise_imoveis(cidade_pth, cidade_nome, prefixo_arquivo, df=No
                 "banheiros": "Banheiros🚿",
                 "vagas": "Garagem🚗",
                 "dias_publicacao": st.column_config.NumberColumn("Anunciado há", format="%d dias"),
-                "bairro": "📍 Bairro"
+                "bairro": "📍 Bairro",
+                "valor_predito": st.column_config.NumberColumn("Preço Previsto", format="R$ %d"),
+                "erro_absoluto": st.column_config.NumberColumn("Erro Absoluto", format="R$ %d"),
+                "erro_percentual": st.column_config.NumberColumn("Erro %", format="%.1f%%"),
+                "preco_por_m2_predito": st.column_config.NumberColumn("Preço/m² Previsto", format="R$ %d"),
             },
         )
     else:

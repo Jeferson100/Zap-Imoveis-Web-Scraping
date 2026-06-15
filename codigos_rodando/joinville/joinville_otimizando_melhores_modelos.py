@@ -52,13 +52,12 @@ resultados = otimizar_melhores_incrementos(
     numeric_features=NUMERIC_FEATURES,
     categorical_features=CATEGORICAL_FEATURES,
     n_trials=N_TRIALS,
+    metrica="rmse",
 )
 
 if not resultados.empty:
     parquet_path = PASTA_DADOS / f"{cidade}_otimizados_melhores_incrementos_{MES_REF}.parquet"
-    csv_path = PASTA_DADOS / f"{cidade}_otimizados_melhores_incrementos_{MES_REF}.csv"
     resultados.to_parquet(parquet_path, index=False)
-    resultados.to_csv(csv_path, index=False)
     logger.info(f"Otimizacao concluida ({len(resultados)} linhas): {parquet_path.name}")
     cols = ['n_features','modelo','tratamento','transform','scaler',
             'imputer_num','encoder',

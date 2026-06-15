@@ -38,6 +38,10 @@ _replacement_inf = FunctionTransformer(
 )
 
 
+def _cleanup_transform(X):
+    return np.nan_to_num(X, nan=0.0, posinf=1e10, neginf=-1e10)
+
+
 class PreprocessadorFactory:
     """Cria ColumnTransformers para pre-processamento de features."""
 
@@ -70,7 +74,7 @@ class PreprocessadorFactory:
         if transform_step is not None:
             numeric_steps.append(("transform", transform_step))
             numeric_steps.append(("cleanup", FunctionTransformer(
-                lambda X: np.nan_to_num(X, nan=0.0, posinf=1e10, neginf=-1e10),
+                _cleanup_transform,
                 validate=False, feature_names_out="one-to-one")))
         numeric_steps.append(("scaler", scaler))
 
