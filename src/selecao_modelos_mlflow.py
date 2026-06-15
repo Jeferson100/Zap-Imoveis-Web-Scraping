@@ -145,6 +145,7 @@ def otimizar_melhores_incrementos(
     n_trials=15,
     min_features=1,
     target_col="valor_imovel",
+    metrica="r2",
 ):
     from mlflow_manager import MLflowManager
 
@@ -163,7 +164,7 @@ def otimizar_melhores_incrementos(
         logger.error(f"Experimento '{experimento_mlflow}' nao encontrado")
         return pd.DataFrame()
 
-    melhores = buscar_melhores_por_incremento(client, exp.experiment_id, min_features)
+    melhores = buscar_melhores_por_incremento(client, exp.experiment_id, min_features, metrica)
     if melhores.empty:
         logger.warning("Nenhum run encontrado")
         return pd.DataFrame()

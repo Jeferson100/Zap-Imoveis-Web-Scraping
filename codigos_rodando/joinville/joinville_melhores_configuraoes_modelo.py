@@ -79,7 +79,7 @@ mlf = MLflowManager(
 
 mlf.conectar()
 
-DELETAR_RUNS = os.getenv("DELETAR_RUNS", "").lower() in ("true", "1", "sim")
+DELETAR_RUNS = True
 if DELETAR_RUNS:
     from selecao_modelos_mlflow import deletar_runs_experimento
     deletar_runs_experimento(f"imoveis-{cidade}-valor", confirmacao=True)
