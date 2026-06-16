@@ -949,31 +949,11 @@ class TokenBucket:
             self._ultimo = time.monotonic()
 
 
-_PHOTON_BUCKET = TokenBucket(0.1)
 _NOMINATIM_BUCKET = TokenBucket(1.0)
-_PHOTON_URL = "https://photon.komoot.io/api/"
 _NOMINATIM_URL = "https://nominatim.openstreetmap.org/search"
 _NOMINATIM_HEADERS = {
     'User-Agent': 'analise_imoveis_v1_jeferson (jefer-silva2018@hotmail.com)'
 }
-
-
-async def _geocode_photon(session, query):
-    params = {'q': query, 'limit': 1}
-    await _PHOTON_BUCKET.acquire()
-    try:
-        async with session.get(_PHOTON_URL, params=params) as resp:
-            if resp.status != 200:
-                return None, None
-            data = await resp.json()
-            features = data.get('features', [])
-            if not features:
-                return None, None
-            lon, lat = features[0]['geometry']['coordinates']
-            return lat, lon
-    except Exception as e:
-        logger.warning("Photon erro: %s", e)
-        return None, None
 
 
 async def _geocode_nominatim(session, query):
@@ -1004,7 +984,7 @@ async def _geocode_nominatim(session, query):
 
 
 async def geocodificar_endereco(session, row, cidade='Joinville', estado='SC', pais='Brasil'):
-    """Geocodifica: Photon → Nominatim → None."""
+    """Geocodifica via Nominatim com token bucket (1 req/s)."""
     cep = str(row.get('cep', '')).strip()
     rua = str(row.get('rua', '')).strip()
     bairro = str(row.get('bairro', '')).strip()
@@ -1024,16 +1004,10 @@ async def geocodificar_endereco(session, row, cidade='Joinville', estado='SC', p
         queries.append(f"{cidade}, {estado}, {pais}")
 
     for q in queries:
-        lat, lon = await _geocode_photon(session, q)
-        if lat:
-            logger.info("✅ Photon: %s", q[:60])
-            return lat, lon
-
         lat, lon = await _geocode_nominatim(session, q)
         if lat:
             logger.info("✅ Nominatim: %s", q[:60])
             return lat, lon
-
         await asyncio.sleep(2.5)
 
     return None, None

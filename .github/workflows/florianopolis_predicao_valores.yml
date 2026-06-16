@@ -1,0 +1,17 @@
+name: Rodando Predicao Valores Florianopolis
+on: 
+    workflow_run:
+        workflows: ["Rodando Otimizacao Melhores Modelos Florianopolis"]
+        types:
+            - completed
+    workflow_dispatch:
+
+jobs:
+    treinamento_modelos_predicoes:
+        uses: ./.github/workflows/pipeline_cidade_rodando.yml
+        with:
+            cidade_pasta: florianopolis
+            arquivo_rodando_imovel: florianopolis_melhor_modelo_geral.py
+            DATABRICKS_HOST: "https://dbc-ed602b14-1f14.cloud.databricks.com"
+            LOCALIZAZAO_COMPLETA : "Florianopolis, Santa Catarina, Brasil"
+        secrets: inherit

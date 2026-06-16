@@ -1,0 +1,17 @@
+name: Rodando Predicao Valores Jaragua
+on: 
+    workflow_run:
+        workflows: ["Rodando Otimizacao Melhores Modelos Jaragua"]
+        types:
+            - completed
+    workflow_dispatch:
+
+jobs:
+    treinamento_modelos_predicoes:
+        uses: ./.github/workflows/pipeline_cidade_rodando.yml
+        with:
+            cidade_pasta: jaragua
+            arquivo_rodando_imovel: jaragua_melhor_modelo_geral.py
+            DATABRICKS_HOST: "https://dbc-ed602b14-1f14.cloud.databricks.com"
+            LOCALIZAZAO_COMPLETA : "Jaragua do Sul, Santa Catarina, Brasil"
+        secrets: inherit

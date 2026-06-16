@@ -1,0 +1,17 @@
+name: Rodando Otimizacao Melhores Modelos Itajai
+on: 
+    workflow_run:
+        workflows: ["Rodando Treinamento de Imoveis de Itajai"]
+        types:
+            - completed
+    workflow_dispatch:
+
+jobs:
+    treinamento_modelos_predicoes:
+        uses: ./.github/workflows/pipeline_cidade_rodando.yml
+        with:
+            cidade_pasta: itajai
+            arquivo_rodando_imovel: itajai_otimizando_melhores_modelos.py
+            DATABRICKS_HOST: "https://dbc-ed602b14-1f14.cloud.databricks.com"
+            LOCALIZAZAO_COMPLETA : "Itajai, Santa Catarina, Brasil"
+        secrets: inherit
