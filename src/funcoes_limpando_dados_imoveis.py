@@ -1016,7 +1016,7 @@ async def geocodificar_endereco(session: aiohttp.ClientSession, row: pd.Series, 
                 logger.error(f"🔥 Falha na requisição para {item['q']}: {e}")
                 break
     
-        await asyncio.sleep(1.2)
+        await asyncio.sleep(2.5)
 
     return None, None
 
@@ -1087,13 +1087,38 @@ async def geocodificar_endereco(session: aiohttp.ClientSession, row: pd.Series, 
 
     return None, None
 """
-async def preencher_coordenadas(session: aiohttp.ClientSession, row: pd.Series, semaforo: asyncio.Semaphore, cidade: str= 'Joinville', estado:str='SC', pais:str='Brasil') -> dict:
+_CACHE_DIR = Path(__file__).parent.parent / 'codigos_rodando' / 'cache' / 'geocode_cache'
+
+
+def _carregar_cache_geocode(cidade, estado):
+    _CACHE_DIR.mkdir(parents=True, exist_ok=True)
+    path = _CACHE_DIR / f"{cidade.lower()}_{estado.lower()}_geocode.parquet"
+    if path.exists():
+        df = pd.read_parquet(path)
+        return {r['chave']: (r['lat'], r['lng']) for _, r in df.iterrows()}
+    return {}
+
+
+def _salvar_cache_geocode(cache, cidade, estado):
+    path = _CACHE_DIR / f"{cidade.lower()}_{estado.lower()}_geocode.parquet"
+    df = pd.DataFrame([(k, v[0], v[1]) for k, v in cache.items()],
+                      columns=['chave', 'lat', 'lng'])
+    df.to_parquet(path, index=False)
+
+
+async def preencher_coordenadas(session: aiohttp.ClientSession, row: pd.Series, semaforo: asyncio.Semaphore, cidade: str= 'Joinville', estado:str='SC', pais:str='Brasil', cache: dict = None, cache_atualizado: list = None) -> dict:
     async with semaforo:
         idx = row.name
 
         # Já tem coordenadas — pula
         if pd.notna(row['lat']) and pd.notna(row['lng']):
             return {'idx': idx, 'lat': row['lat'], 'lng': row['lng']}
+
+        # Tenta cache persistente
+        chave = f"{row.get('rua','')}|{row.get('bairro','')}|{cidade}|{estado}"
+        if cache and chave in cache:
+            lat, lng = cache[chave]
+            return {'idx': idx, 'lat': lat, 'lng': lng}
 
         # Tenta extrair da URL
         try:
@@ -1104,8 +1129,14 @@ async def preencher_coordenadas(session: aiohttp.ClientSession, row: pd.Series, 
             logger.error(f"Sem link_maps: {e}")
 
         # Fallback: geocodifica por rua/bairro
-        await asyncio.sleep(1)
-        lat, lng = await geocodificar_endereco(session, row, cidade, estado, pais) 
+        await asyncio.sleep(2.5)
+        lat, lng = await geocodificar_endereco(session, row, cidade, estado, pais)
+
+        if lat is not None and cache is not None:
+            cache[chave] = (lat, lng)
+            if cache_atualizado:
+                cache_atualizado[0] = True
+
         return {'idx': idx, 'lat': lat, 'lng': lng}
 
 async def preencher_todas_coordenadas(df: pd.DataFrame, batch_size: int = None, cidade: str= 'Joinville', estado:str='SC', pais:str='Brasil') -> pd.DataFrame:
@@ -1118,12 +1149,20 @@ async def preencher_todas_coordenadas(df: pd.DataFrame, batch_size: int = None, 
     linhas_nan = df[mask]
     logger.info(f"Linhas com NaN: {len(linhas_nan)}")
 
-    semaforo = asyncio.Semaphore(batch_size)  # Máximo de requisições simultâneas
+    if len(linhas_nan) == 0:
+        logger.info("Nenhuma coordenada faltando, pulando geocodificacao")
+        return df
+
+    cache = _carregar_cache_geocode(cidade, estado)
+    cache_atualizado = [False]
+    logger.info("Cache geocode carregado: %d entradas", len(cache))
+
+    semaforo = asyncio.Semaphore(batch_size)
     resultados = []
 
     async with aiohttp.ClientSession() as session:
         tasks = [
-            preencher_coordenadas(session, row, semaforo, cidade, estado, pais)
+            preencher_coordenadas(session, row, semaforo, cidade, estado, pais, cache, cache_atualizado)
             for _, row in linhas_nan.iterrows()
         ]
 
@@ -1131,13 +1170,17 @@ async def preencher_todas_coordenadas(df: pd.DataFrame, batch_size: int = None, 
             resultado = await future
             resultados.append(resultado)
 
-            if i % 50 == 0:
+            if i % 50 == 0 and i > 0:
                 logger.info(f"Progresso: {i}/{len(tasks)}")
 
     # Atualizar DataFrame
     df_resultados = pd.DataFrame(resultados).set_index('idx')
     df.loc[df_resultados.index, 'lat'] = df_resultados['lat']
     df.loc[df_resultados.index, 'lng'] = df_resultados['lng']
+
+    if cache_atualizado[0]:
+        _salvar_cache_geocode(cache, cidade, estado)
+        logger.info("Cache geocode salvo: %d entradas", len(cache))
 
     logger.info(f"Ainda com NaN: {df['lat'].isna().sum()}")
     return df
