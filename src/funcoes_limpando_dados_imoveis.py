@@ -933,160 +933,111 @@ async def extrair_coords_url(link_maps: str) -> tuple:
     return None, None
     
 
-async def geocodificar_endereco(session: aiohttp.ClientSession, row: pd.Series, cidade:str='Joinville', estado:str='SC', pais:str='Brasil') -> tuple:
-    "Geocodifica com retry exponencial e tratamento de erros HTTP."
-    url = "https://nominatim.openstreetmap.org/search"
-    
-    headers = {
-        'User-Agent': 'analise_imoveis_v1_jeferson (jefer-silva2018@hotmail.com)'
-    }
-    
+class TokenBucket:
+    """Garante no máximo 1 request a cada `intervalo` segundos."""
+    def __init__(self, intervalo=1.0):
+        self.intervalo = intervalo
+        self._ultimo = 0.0
+        self._lock = asyncio.Lock()
+
+    async def acquire(self):
+        async with self._lock:
+            agora = time.monotonic()
+            espera = self.intervalo - (agora - self._ultimo)
+            if espera > 0:
+                await asyncio.sleep(espera)
+            self._ultimo = time.monotonic()
+
+
+_PHOTON_BUCKET = TokenBucket(0.1)
+_NOMINATIM_BUCKET = TokenBucket(1.0)
+_PHOTON_URL = "https://photon.komoot.io/api/"
+_NOMINATIM_URL = "https://nominatim.openstreetmap.org/search"
+_NOMINATIM_HEADERS = {
+    'User-Agent': 'analise_imoveis_v1_jeferson (jefer-silva2018@hotmail.com)'
+}
+
+
+async def _geocode_photon(session, query):
+    params = {'q': query, 'limit': 1}
+    await _PHOTON_BUCKET.acquire()
+    try:
+        async with session.get(_PHOTON_URL, params=params) as resp:
+            if resp.status != 200:
+                return None, None
+            data = await resp.json()
+            features = data.get('features', [])
+            if not features:
+                return None, None
+            lon, lat = features[0]['geometry']['coordinates']
+            return lat, lon
+    except Exception as e:
+        logger.warning("Photon erro: %s", e)
+        return None, None
+
+
+async def _geocode_nominatim(session, query):
+    params = {'q': query, 'format': 'json', 'limit': 1}
+    await _NOMINATIM_BUCKET.acquire()
+    for tentativa in range(4):
+        try:
+            async with session.get(_NOMINATIM_URL, params=params,
+                                   headers=_NOMINATIM_HEADERS) as resp:
+                if resp.status == 200:
+                    data = await resp.json()
+                    if data:
+                        return float(data[0]['lat']), float(data[0]['lon'])
+                    return None, None
+                if resp.status in (429, 503):
+                    wait = 2 ** tentativa * 2
+                    logger.warning("⏳ Nominatim %s — aguardando %ds (tentativa %d/4)",
+                                   resp.status, wait, tentativa + 1)
+                    await asyncio.sleep(wait)
+                    continue
+                logger.error("❌ Nominatim HTTP %s", resp.status)
+                return None, None
+        except (asyncio.TimeoutError, aiohttp.ClientError) as e:
+            logger.warning("⏱️ Nominatim erro: %s", e)
+            await asyncio.sleep(2 ** tentativa)
+            continue
+    return None, None
+
+
+async def geocodificar_endereco(session, row, cidade='Joinville', estado='SC', pais='Brasil'):
+    """Geocodifica: Photon → Nominatim → None."""
     cep = str(row.get('cep', '')).strip()
     rua = str(row.get('rua', '')).strip()
     bairro = str(row.get('bairro', '')).strip()
     numero = str(row.get('numero', '')).strip()
 
-    tentativas = []
-    
-    # 1. Tentativa de maior precisão: Número + Rua + Bairro
+    queries = []
     if rua and rua.lower() not in ('s/r', '', 'nan') and numero and numero.lower() not in ('s/n', '', 'nan'):
-        tentativas.append({'q': f"{numero} {rua}, {bairro}, {cidade}, {estado}, {pais}", 'tag': 'Numero'})
-    
-    # 2. Tentativa: Rua + Bairro
+        queries.append(f"{numero} {rua}, {bairro}, {cidade}, {estado}, {pais}")
     if rua and rua.lower() not in ('s/r', '', 'nan'):
-        tentativas.append({'q': f"{rua}, {bairro}, {cidade}, {estado}, {pais}", 'tag': 'Rua'})
-    
-    # 3. Tentativa: CEP (como fallback ou reforço)
-    if cep and len(cep) >= 8:
-        cep_formatado = f"{cep[:5]}-{cep[5:]}" if len(cep) == 8 else cep
-        tentativas.append({'q': f"{cep_formatado}, {pais}", 'tag': 'CEP'})
-    
-    # 4. Tentativa: Apenas Bairro
+        queries.append(f"{rua}, {bairro}, {cidade}, {estado}, {pais}")
+    cep_clean = ''.join(filter(str.isdigit, cep))
+    if len(cep_clean) == 8:
+        queries.append(f"{cep_clean[:5]}-{cep_clean[5:]}, {pais}")
     if bairro and bairro.lower() not in ('', 'nan', 'none'):
-        tentativas.append({'q': f"{bairro}, {cidade}, {estado}, {pais}", 'tag': 'Bairro'})
+        queries.append(f"{bairro}, {cidade}, {estado}, {pais}")
+    if not queries:
+        queries.append(f"{cidade}, {estado}, {pais}")
 
-    # Fallback final
-    if not tentativas:
-        tentativas.append({'q': f"{cidade}, {estado}, {pais}", 'tag': 'Cidade'})
+    for q in queries:
+        lat, lon = await _geocode_photon(session, q)
+        if lat:
+            logger.info("✅ Photon: %s", q[:60])
+            return lat, lon
 
-    for item in tentativas:
-        params = {
-            'q': item['q'],
-            'format': 'json',
-            'limit': 1
-        }
-        
-        for tentativa in range(4):
-            try:
-                async with session.get(url, params=params, headers=headers) as response:
-                    if response.status == 429 or response.status == 503:
-                        wait = 2 ** tentativa * 2
-                        logger.warning(f"⏳ HTTP {response.status} — aguardando {wait}s (tentativa {tentativa+1}/4)")
-                        await asyncio.sleep(wait)
-                        continue
+        lat, lon = await _geocode_nominatim(session, q)
+        if lat:
+            logger.info("✅ Nominatim: %s", q[:60])
+            return lat, lon
 
-                    if response.status != 200:
-                        logger.error(f"❌ Erro HTTP {response.status} para: {item['q']}")
-                        break
-
-                    text = await response.text()
-                    if 'application/json' in response.headers.get('Content-Type', ''):
-                        try:
-                            data = __import__('json').loads(text)
-                        except Exception:
-                            data = None
-                        if data and len(data) > 0:
-                            logger.info(f"✅ {item['tag']} encontrada: {item['q']}")
-                            return float(data[0]['lat']), float(data[0]['lon'])
-                    
-                    coords = re.findall(r'(-?\d+\.\d{4,})', text)
-                    if len(coords) >= 2:
-                        lat, lon = float(coords[0]), float(coords[1])
-                        if -27 < lat < -25 and -49 < lon < -47:
-                            logger.info(f"🎯 Coordenadas extraídas do TEXTO para {item['tag']}")
-                            return lat, lon
-                    
-                    logger.warning(f"⚠️ Sem coordenadas em {item['tag']}: {text[:80]}")
-                    break
-                    
-            except asyncio.TimeoutError:
-                logger.warning(f"⏱️ Timeout em {item['tag']}")
-                continue
-            except Exception as e:
-                logger.error(f"🔥 Falha na requisição para {item['q']}: {e}")
-                break
-    
         await asyncio.sleep(2.5)
 
     return None, None
 
-""" 
-async def geocodificar_endereco(session: aiohttp.ClientSession, row: pd.Series, cidade:str='Joinville', estado:str='SC', pais:str='Brasil') -> tuple:
-    url = "https://nominatim.openstreetmap.org/search"
-    
-    # IMPORTANTE: Use um e-mail real aqui para evitar bloqueios
-    headers = {
-        'User-Agent': 'MeuRoboGeocodificador_v1 (seu-email@dominio.com)'
-    }
-    
-    # Limpeza de dados básica
-    cep = str(row.get('cep', '')).strip()
-    rua = str(row.get('rua', '')).strip()
-    bairro = str(row.get('bairro', '')).strip()
-    numero = str(row.get('numero', '')).strip()
-
-    tentativas = []
-    
-    # 1. Número + Rua + Bairro
-    if rua and rua.lower() not in ('s/r', '', 'nan') and numero and numero.lower() not in ('s/n', '', 'nan'):
-        tentativas.append({'q': f"{numero} {rua}, {bairro}, {cidade}, {estado}, {pais}", 'tag': 'Numero'})
-    
-    # 2. Rua + Bairro
-    if rua and rua.lower() not in ('s/r', '', 'nan'):
-        tentativas.append({'q': f"{rua}, {bairro}, {cidade}, {estado}, {pais}", 'tag': 'Rua'})
-    
-    # 3. CEP
-    if cep and len(cep) >= 8:
-        clean_cep = ''.join(filter(str.isdigit, cep))
-        if len(clean_cep) == 8:
-            cep_formatado = f"{clean_cep[:5]}-{clean_cep[5:]}"
-            tentativas.append({'q': f"{cep_formatado}, {pais}", 'tag': 'CEP'})
-    
-    # 4. Fallback Bairro ou Cidade
-    if bairro and bairro.lower() not in ('', 'nan', 'none'):
-        tentativas.append({'q': f"{bairro}, {cidade}, {estado}, {pais}", 'tag': 'Bairro'})
-    else:
-        tentativas.append({'q': f"{cidade}, {estado}, {pais}", 'tag': 'Cidade'})
-
-    for item in tentativas:
-        params = {'q': item['q'], 'format': 'json', 'limit': 1}
-        
-        try:
-            async with session.get(url, params=params, headers=headers) as response:
-                if response.status == 200:
-                    data = await response.json()
-                    if data:
-                        logger.info(f"✅ {item['tag']} encontrada: {item['q']}")
-                        return float(data[0]['lat']), float(data[0]['lon'])
-                
-                elif response.status == 429:
-                    logger.warning(f"⏳ Rate limit atingido (429). {item['tag']}: {item['q']}")
-                    await asyncio.sleep(5) # Se bater o limite, espera mais
-                    continue
-                
-                else:
-                    logger.error(f"❌ Erro HTTP {response.status} para: {item['q']}")
-                    continue 
-                    
-        except Exception as e:
-            logger.error(f"🔥 Erro na tentativa {item['tag']}: {e}")
-    
-        # O Nominatim exige 1 requisição por segundo. 
-        # Com concorrência (Semaphore), esse sleep precisa ser estratégico.
-        await asyncio.sleep(1.2)
-
-    return None, None
-"""
 _CACHE_DIR = Path(__file__).parent.parent / 'codigos_rodando' / 'cache' / 'geocode_cache'
 
 
@@ -1106,31 +1057,36 @@ def _salvar_cache_geocode(cache, cidade, estado):
     df.to_parquet(path, index=False)
 
 
-async def preencher_coordenadas(session: aiohttp.ClientSession, row: pd.Series, semaforo: asyncio.Semaphore, cidade: str= 'Joinville', estado:str='SC', pais:str='Brasil', cache: dict = None, cache_atualizado: list = None) -> dict:
+async def preencher_coordenadas(session: aiohttp.ClientSession, row: pd.Series, semaforo: asyncio.Semaphore,
+                                cidade: str = 'Joinville', estado: str = 'SC', pais: str = 'Brasil',
+                                cache: dict = None, cache_atualizado: list = None,
+                                bairro_centroides: dict = None) -> dict:
     async with semaforo:
         idx = row.name
 
-        # Já tem coordenadas — pula
         if pd.notna(row['lat']) and pd.notna(row['lng']):
             return {'idx': idx, 'lat': row['lat'], 'lng': row['lng']}
 
-        # Tenta cache persistente
         chave = f"{row.get('rua','')}|{row.get('bairro','')}|{cidade}|{estado}"
         if cache and chave in cache:
             lat, lng = cache[chave]
             return {'idx': idx, 'lat': lat, 'lng': lng}
 
-        # Tenta extrair da URL
         try:
             lat, lng = await extrair_coords_url(row['link_maps'])
             if lat and lng:
                 return {'idx': idx, 'lat': lat, 'lng': lng}
         except Exception as e:
-            logger.error(f"Sem link_maps: {e}")
+            logger.error("Sem link_maps: %s", e)
 
-        # Fallback: geocodifica por rua/bairro
-        await asyncio.sleep(2.5)
         lat, lng = await geocodificar_endereco(session, row, cidade, estado, pais)
+
+        if lat is None and bairro_centroides:
+            bairro = row.get('bairro', '')
+            if bairro in bairro_centroides:
+                c = bairro_centroides[bairro]
+                lat, lng = c['lat'], c['lng']
+                logger.info("📍 Centroid bairro %s: (%.4f, %.4f)", bairro, lat, lng)
 
         if lat is not None and cache is not None:
             cache[chave] = (lat, lng)
@@ -1139,41 +1095,49 @@ async def preencher_coordenadas(session: aiohttp.ClientSession, row: pd.Series, 
 
         return {'idx': idx, 'lat': lat, 'lng': lng}
 
-async def preencher_todas_coordenadas(df: pd.DataFrame, batch_size: int = None, cidade: str= 'Joinville', estado:str='SC', pais:str='Brasil') -> pd.DataFrame:
+async def preencher_todas_coordenadas(df: pd.DataFrame, batch_size: int = None, cidade: str = 'Joinville', estado: str = 'SC', pais: str = 'Brasil') -> pd.DataFrame:
     import os
     if batch_size is None:
         batch_size = 1 if os.getenv("CI") else 2
-    if 'lat' not in df.columns: df['lat'] = np.nan
-    if 'lng' not in df.columns: df['lng'] = np.nan
+    if 'lat' not in df.columns:
+        df['lat'] = np.nan
+    if 'lng' not in df.columns:
+        df['lng'] = np.nan
+
     mask = df['lat'].isna() | df['lng'].isna()
     linhas_nan = df[mask]
-    logger.info(f"Linhas com NaN: {len(linhas_nan)}")
-
+    logger.info("Linhas com NaN: %d", len(linhas_nan))
     if len(linhas_nan) == 0:
-        logger.info("Nenhuma coordenada faltando, pulando geocodificacao")
         return df
 
     cache = _carregar_cache_geocode(cidade, estado)
     cache_atualizado = [False]
     logger.info("Cache geocode carregado: %d entradas", len(cache))
 
+    bairro_centroides = (
+        df.dropna(subset=['lat', 'lng'])
+        .groupby('bairro')[['lat', 'lng']]
+        .mean()
+        .to_dict('index')
+    )
+    logger.info("Centroides de bairro calculados: %d bairros", len(bairro_centroides))
+
     semaforo = asyncio.Semaphore(batch_size)
     resultados = []
 
     async with aiohttp.ClientSession() as session:
         tasks = [
-            preencher_coordenadas(session, row, semaforo, cidade, estado, pais, cache, cache_atualizado)
+            preencher_coordenadas(session, row, semaforo, cidade, estado, pais,
+                                  cache, cache_atualizado, bairro_centroides)
             for _, row in linhas_nan.iterrows()
         ]
 
         for i, future in tqdm(enumerate(asyncio.as_completed(tasks))):
             resultado = await future
             resultados.append(resultado)
-
             if i % 50 == 0 and i > 0:
-                logger.info(f"Progresso: {i}/{len(tasks)}")
+                logger.info("Progresso: %d/%d", i, len(tasks))
 
-    # Atualizar DataFrame
     df_resultados = pd.DataFrame(resultados).set_index('idx')
     df.loc[df_resultados.index, 'lat'] = df_resultados['lat']
     df.loc[df_resultados.index, 'lng'] = df_resultados['lng']
@@ -1182,7 +1146,7 @@ async def preencher_todas_coordenadas(df: pd.DataFrame, batch_size: int = None, 
         _salvar_cache_geocode(cache, cidade, estado)
         logger.info("Cache geocode salvo: %d entradas", len(cache))
 
-    logger.info(f"Ainda com NaN: {df['lat'].isna().sum()}")
+    logger.info("Ainda com NaN: %d", df['lat'].isna().sum())
     return df
 
 def geocodificar_dataframe(data, cidade="Balneário Piçarras", estado="SC", pais="Brasil"):
