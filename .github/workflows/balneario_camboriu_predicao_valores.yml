@@ -1,0 +1,17 @@
+name: Rodando Predicao Valores Balneario Camboriu
+on: 
+    workflow_run:
+        workflows: ["Rodando Otimizacao Melhores Modelos Balneario Camboriu"]
+        types:
+            - completed
+    workflow_dispatch:
+
+jobs:
+    treinamento_modelos_predicoes:
+        uses: ./.github/workflows/pipeline_cidade_rodando.yml
+        with:
+            cidade_pasta: balneario_camboriu
+            arquivo_rodando_imovel: balneario_camboriu_melhor_modelo_geral.py
+            DATABRICKS_HOST: "https://dbc-ed602b14-1f14.cloud.databricks.com"
+            LOCALIZAZAO_COMPLETA : "Balneario Camboriu, Santa Catarina, Brasil"
+        secrets: inherit
