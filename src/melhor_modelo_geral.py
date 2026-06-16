@@ -14,6 +14,7 @@ from sklearn.pipeline import Pipeline
 from sklearn.impute import SimpleImputer
 from sklearn.preprocessing import StandardScaler
 import mlflow
+from datetime import datetime
 
 from selecao_modelos_mlflow import (
     carregar_dados,
@@ -46,7 +47,6 @@ NUMERIC_FEATURES = [
 ]
 
 ALL_FEATURES = NUMERIC_FEATURES + CATEGORICAL_FEATURES
-
 
 def treinar_melhor_modelo_geral(
     cidade=None,
@@ -144,13 +144,13 @@ def treinar_melhor_modelo_geral(
         mlflow.set_tag("encoder", best["encoder"])
         mlflow.set_tag("transform", best["transform"])
         mlflow.set_tag("feature_transform_map", best.get("feature_transform_map", ""))
-        mlflow.sklearn.log_model(pipe, "melhor_modelo_geral")
+        mlflow.sklearn.log_model(pipe, f"{cidade}_modelo_geral_{mes_ref}")
 
     logger.info("Run salva: %s", run_name)
 
     # ── 8. Salvar modelo local ──────────────────────────────────────────
     modelo_path = pasta_dados / f"{cidade}_modelo_geral_{mes_ref}.joblib"
-    joblib.dump(pipe, modelo_path)
+    joblib.dump(pipe, modelo_path, compress=3)
     logger.info("Modelo salvo: %s", modelo_path.name)
 
     # ── 9. Remover modelos de meses anteriores ──────────────────────────
