@@ -187,7 +187,7 @@ def treinar_melhor_modelo_geral(
         #erro_absoluto=np.abs(df_full[target] - pred_series),
         #erro_percentual=np.abs(df_full[target] - pred_series) / df_full[target] * 100,
         erro_absoluto= df_full[target] - pred_series,
-        erro_percentual=df_full[target] - pred_series / df_full[target] * 100,
+        erro_percentual=((df_full[target] - pred_series) / df_full[target]) * 100,
         
     )
 
