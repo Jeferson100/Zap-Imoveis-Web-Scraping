@@ -184,8 +184,11 @@ def treinar_melhor_modelo_geral(
 
     df_full = df_full.assign(
         valor_predito=pred_series,
-        erro_absoluto=np.abs(df_full[target] - pred_series),
-        erro_percentual=np.abs(df_full[target] - pred_series) / df_full[target] * 100,
+        #erro_absoluto=np.abs(df_full[target] - pred_series),
+        #erro_percentual=np.abs(df_full[target] - pred_series) / df_full[target] * 100,
+        erro_absoluto= df_full[target] - pred_series,
+        erro_percentual=df_full[target] - pred_series / df_full[target] * 100,
+        
     )
 
     df_full.to_parquet(imoveis_path, index=False)
