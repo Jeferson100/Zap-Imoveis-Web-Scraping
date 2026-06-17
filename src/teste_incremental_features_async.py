@@ -37,6 +37,11 @@ import optuna
 import mlflow
 import mlflow.data
 
+try:
+    import shap
+except ImportError:
+    shap = None
+
 warnings.filterwarnings("ignore")
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
 logger = logging.getLogger(__name__)
@@ -231,6 +236,29 @@ class TesteIncrementalFeaturesAsync:
         for f in (cat_feats or []):
             fmap[str(f)] = str(encoder_name)
         return json.dumps(fmap, default=str)
+
+    @staticmethod
+    def _shap_order_por_combo(X_tr_proc, X_te_proc, y_train, feat_names,
+                               shap_sample=500):
+        if shap is None:
+            return list(feat_names)
+        import xgboost as xgb
+
+        n_tr = min(shap_sample, len(X_tr_proc))
+        idx_tr = np.random.RandomState(42).choice(len(X_tr_proc), n_tr, replace=False)
+        X_tr_s = X_tr_proc[idx_tr] if isinstance(X_tr_proc, np.ndarray) else X_tr_proc.iloc[idx_tr]
+        y_tr_s = y_train.iloc[idx_tr] if hasattr(y_train, 'iloc') else y_train[idx_tr]
+
+        n_te = min(shap_sample, len(X_te_proc))
+        idx_te = np.random.RandomState(42).choice(len(X_te_proc), n_te, replace=False)
+        X_te_s = X_te_proc[idx_te] if isinstance(X_te_proc, np.ndarray) else X_te_proc.iloc[idx_te]
+
+        model = xgb.XGBRegressor(n_estimators=100, max_depth=6,
+                                 random_state=42, verbosity=0)
+        model.fit(X_tr_s, y_tr_s)
+        explainer = shap.Explainer(model, X_te_s)
+        importances = np.abs(explainer(X_te_s).values).mean(axis=0)
+        return [feat_names[i] for i in np.argsort(importances)[::-1]]
 
     def _otimizar_modelos_optuna(self, preprocessor, X, y, mlflow_mgr, log_trials=False):
         logger.info("Otimizando hiperparametros com OtimizadorOptuna...")
@@ -648,7 +676,61 @@ class TesteIncrementalFeaturesAsync:
         cols_full = categorical_fixas_list + pool
         x_test_full = test[cols_full].copy() if cols_full else test[pool].copy()
 
-        if feature_selection == "sequential":
+        if feature_selection == "shap":
+            n_transf = len(self.TRANSFORM_OPCOES)
+            n_modelos = qtd_optuna + qtd_simples
+            total = len(TRATAMENTOS) * n_transf * len(pool) * n_modelos
+            for trat in TRATAMENTOS:
+                for transf_name in self.TRANSFORM_OPCOES:
+                    num_feats = [c for c in pool if c not in categorical_features]
+                    cat_feats = [c for c in pool if c in categorical_features]
+                    cols_full = categorical_fixas_list + num_feats + cat_feats
+
+                    factory_pp = PreprocessadorFactory(
+                        numeric_features=num_feats,
+                        categorical_features=cat_feats,
+                    )
+                    pp = factory_pp.criar(
+                        scaler=trat["scaler"](),
+                        transform=transf_name,
+                    )
+                    X_tr_p = pp.fit_transform(train[cols_full], y_train)
+                    X_te_p = pp.transform(x_test_full[cols_full])
+
+                    ordem = self._shap_order_por_combo(
+                        X_tr_p, X_te_p, y_train,
+                        num_feats + cat_feats,
+                    )
+
+                    colunas_validas = list(categorical_fixas_list)
+                    for idx_col, col in enumerate(ordem, 1):
+                        colunas_validas.append(col)
+                        num_inc = [c for c in colunas_validas
+                                   if c not in categorical_features]
+                        cat_inc = [c for c in colunas_validas
+                                   if c in categorical_features]
+                        X_tr_inc = train[colunas_validas].copy()
+                        X_te_inc = x_test_full[colunas_validas].copy()
+
+                        await self._rodar_combos_incremento(
+                            loop, sem, lock, progresso, total,
+                            idx_col, col,
+                            tratamentos=[trat],
+                            num_feats=num_inc, cat_feats=cat_inc,
+                            X_tr=X_tr_inc, X_te=X_te_inc,
+                            y_train=y_train, y_test=y_test,
+                            target_col=target_col,
+                            modelos_otimizaveis=modelos_otimizaveis,
+                            modelos_simples=modelos_simples,
+                            n_features_atual=len(colunas_validas),
+                            n_trials_optuna=n_trials_optuna,
+                            n_trials_mlp=n_trials_mlp,
+                            otimizar_mlp=otimizar_mlp,
+                            resultados=resultados,
+                            run_name_base=f"{trat['nome']}|{transf_name}",
+                            transf_unica=transf_name,
+                        )
+        elif feature_selection == "sequential":
             all_candidates = categorical_fixas_list + list(pool)
             n_transf = len(self.TRANSFORM_OPCOES)
             total = len(all_candidates) * len(TRATAMENTOS) * n_transf * (qtd_optuna + qtd_simples)
@@ -726,6 +808,7 @@ class TesteIncrementalFeaturesAsync:
         target_col=None, modelos_otimizaveis=None, modelos_simples=None, n_features_atual=None,
         n_trials_optuna=None, n_trials_mlp=None, otimizar_mlp=None, resultados=None,
         run_name_base="",
+        transf_unica=None,
     ):
         tasks = []
         if not cat_feats:
@@ -740,7 +823,9 @@ class TesteIncrementalFeaturesAsync:
             tratamentos_filtrados = tratamentos
 
         for trat in tratamentos_filtrados:
-            for transf_name in self.TRANSFORM_OPCOES:
+            transforms = ([transf_unica] if transf_unica is not None
+                          else list(self.TRANSFORM_OPCOES.keys()))
+            for transf_name in transforms:
                 for mod_name, factory_fn in modelos_otimizaveis.items():
                     if not cat_feats and mod_name in SCALE_INVARIANT and trat != tratamentos_filtrados[0]:
                         continue

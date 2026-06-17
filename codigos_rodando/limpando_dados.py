@@ -131,8 +131,9 @@ async def limpando_dados_cidades(pd_data, batch, cidade_limpeza = 'joinville', e
 
     pd_data_long_lat = pd_data_tipo_imovel.copy()
     
+    cache_path = pasta_dados.parent / "geocode_cache.parquet"
     if tipo_async:
-        pd_data_lat_log_completo, timeout_ocorrido = await preencher_todas_coordenadas(pd_data_long_lat, batch_size=batch, cidade=cidade_localizacao, estado=estado_localizacao, pais=pais)
+        pd_data_lat_log_completo, timeout_ocorrido = await preencher_todas_coordenadas(pd_data_long_lat, batch_size=batch, cidade=cidade_localizacao, estado=estado_localizacao, pais=pais, cache_path=cache_path)
     else:
         pd_data_lat_log_completo = geocodificar_dataframe(pd_data_long_lat, cidade=cidade_localizacao, estado=estado_localizacao, pais=pais)
         timeout_ocorrido = False

@@ -25,6 +25,7 @@ cidade_nome = os.getenv("LOCALIZAZAO_COMPLETA", "Sao Paulo, Sao Paulo, Brasil")
 MES_REF = os.getenv("MES_REF", datetime.now().strftime("%Y-%m"))
 N_TRIALS_OPTUNA = int(os.getenv("N_TRIALS_OPTUNA", "15"))
 MAX_CONCURRENT = int(os.getenv("MAX_CONCURRENT", "20"))
+FEATURE_SELECTION = os.getenv("FEATURE_SELECTION", "sequential")
 TARGET = "valor_imovel"
 
 CATEGORICAL_FEATURES = ['tipo_imovel', 'bairro', 'novo_lancamento', 'tem_elevador']
@@ -107,13 +108,14 @@ if DELETAR_RUNS:
 
 async def main():
     teste = TesteIncrementalFeaturesAsync(experimento_mlflow=EXPERIMENTO)
-    df = await teste.testar_tratamentos_modelos_incrementais_async(
+    df = await teste.        testar_tratamentos_modelos_incrementais_async(
         train=train, test=test, target_col=TARGET,
         features_testadas=FEATURES_TESTADAS,
         categorical_features=CATEGORICAL_FEATURES,
         n_trials_optuna=N_TRIALS_OPTUNA,
         otimizar_mlp=False,
         max_concurrent=MAX_CONCURRENT,
+        feature_selection=FEATURE_SELECTION,
     )
     return df
 

@@ -1015,17 +1015,23 @@ async def geocodificar_endereco(session, row, cidade='Joinville', estado='SC', p
 _CACHE_DIR = Path(__file__).parent.parent / 'codigos_rodando' / 'cache' / 'geocode_cache'
 
 
-def _carregar_cache_geocode(cidade, estado):
-    _CACHE_DIR.mkdir(parents=True, exist_ok=True)
-    path = _CACHE_DIR / f"{cidade.lower()}_{estado.lower()}_geocode.parquet"
+def _carregar_cache_geocode(cidade, estado, cache_path=None):
+    if cache_path:
+        path = Path(cache_path)
+    else:
+        _CACHE_DIR.mkdir(parents=True, exist_ok=True)
+        path = _CACHE_DIR / f"{cidade.lower()}_{estado.lower()}_geocode.parquet"
     if path.exists():
         df = pd.read_parquet(path)
         return {r['chave']: (r['lat'], r['lng']) for _, r in df.iterrows()}
     return {}
 
 
-def _salvar_cache_geocode(cache, cidade, estado):
-    path = _CACHE_DIR / f"{cidade.lower()}_{estado.lower()}_geocode.parquet"
+def _salvar_cache_geocode(cache, cidade, estado, cache_path=None):
+    if cache_path:
+        path = Path(cache_path)
+    else:
+        path = _CACHE_DIR / f"{cidade.lower()}_{estado.lower()}_geocode.parquet"
     df = pd.DataFrame([(k, v[0], v[1]) for k, v in cache.items()],
                       columns=['chave', 'lat', 'lng'])
     df.to_parquet(path, index=False)
@@ -1078,7 +1084,7 @@ async def _preencher_coordenadas_inner(session, row, cidade, estado, pais,
 
     return {'idx': idx, 'lat': lat, 'lng': lng}
 
-async def preencher_todas_coordenadas(df: pd.DataFrame, batch_size: int = None, cidade: str = 'Joinville', estado: str = 'SC', pais: str = 'Brasil') -> Tuple[pd.DataFrame, bool]:
+async def preencher_todas_coordenadas(df: pd.DataFrame, batch_size: int = None, cidade: str = 'Joinville', estado: str = 'SC', pais: str = 'Brasil', cache_path: str = None) -> Tuple[pd.DataFrame, bool]:
     import os
     if batch_size is None:
         batch_size = 1 if os.getenv("CI") else 2
@@ -1094,7 +1100,7 @@ async def preencher_todas_coordenadas(df: pd.DataFrame, batch_size: int = None, 
     if len(linhas_nan) == 0:
         return df, False
 
-    cache = _carregar_cache_geocode(cidade, estado)
+    cache = _carregar_cache_geocode(cidade, estado, cache_path)
     cache_atualizado = [False]
     logger.info("Cache geocode carregado: %d entradas", len(cache))
 
@@ -1149,7 +1155,7 @@ async def preencher_todas_coordenadas(df: pd.DataFrame, batch_size: int = None, 
     df.loc[df_resultados.index, 'lng'] = df_resultados['lng']
 
     if cache_atualizado[0]:
-        _salvar_cache_geocode(cache, cidade, estado)
+        _salvar_cache_geocode(cache, cidade, estado, cache_path)
         logger.info("Cache geocode salvo: %d entradas", len(cache))
 
     logger.info("Ainda com NaN: %d", df['lat'].isna().sum())
