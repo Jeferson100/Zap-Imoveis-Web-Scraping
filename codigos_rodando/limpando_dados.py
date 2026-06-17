@@ -132,9 +132,10 @@ async def limpando_dados_cidades(pd_data, batch, cidade_limpeza = 'joinville', e
     pd_data_long_lat = pd_data_tipo_imovel.copy()
     
     if tipo_async:
-        pd_data_lat_log_completo = await preencher_todas_coordenadas(pd_data_long_lat, batch_size=batch, cidade=cidade_localizacao, estado=estado_localizacao, pais=pais)
+        pd_data_lat_log_completo, timeout_ocorrido = await preencher_todas_coordenadas(pd_data_long_lat, batch_size=batch, cidade=cidade_localizacao, estado=estado_localizacao, pais=pais)
     else:
         pd_data_lat_log_completo = geocodificar_dataframe(pd_data_long_lat, cidade=cidade_localizacao, estado=estado_localizacao, pais=pais)
+        timeout_ocorrido = False
 
     logger.info(f"Todas as coordenadas preenchidas. Registros restantes: {pd_data_lat_log_completo.shape}")
 
@@ -174,7 +175,7 @@ async def limpando_dados_cidades(pd_data, batch, cidade_limpeza = 'joinville', e
 
     logger.info(f"Coluna 'desvio_mediana' criada. Registros restantes: {pd_data_range_bairro_tipo_imovel.shape}")
     
-    return pd_data_range_bairro_tipo_imovel
+    return pd_data_range_bairro_tipo_imovel, timeout_ocorrido
 
 def carregar_json(pasta_dados: Path, glob_pattern: str) -> tuple[pd.DataFrame, Path | None]:
     """
@@ -355,7 +356,7 @@ def limpando_dados(
     logger.info(f"Registros após filtro de cidade: {len(df_cidade)} | Registros removidos: {len(df) - len(df_cidade)}")
     
     # Limpeza
-    df_limpo = asyncio.run(limpando_dados_cidades(df_cidade, 
+    df_limpo, timeout_ocorrido = asyncio.run(limpando_dados_cidades(df_cidade, 
                                         batch = batch, 
                                         cidade_limpeza= cidade_limpeza, 
                                         cidade_localizacao= cidade_localizacao,
@@ -399,7 +400,9 @@ def limpando_dados(
     
     logger.info(f"Arquivo salvo: {caminho_saida.name}")
 
-    if not df_limpo.empty:
+    if timeout_ocorrido:
+        logger.warning("⏱️ Timeout do geocode atingido — arquivos originais MANTIDOS")
+    elif not df_limpo.empty:
         
         total_registros = len(df_limpo)
         

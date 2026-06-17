@@ -19,7 +19,7 @@ import requests
 from tqdm import tqdm
 import re
 import unicodedata
-from typing import Optional
+from typing import Optional, Tuple
 import unicodedata
 
 warnings.filterwarnings("ignore")
@@ -1031,48 +1031,58 @@ def _salvar_cache_geocode(cache, cidade, estado):
     df.to_parquet(path, index=False)
 
 
-async def preencher_coordenadas(session: aiohttp.ClientSession, row: pd.Series, semaforo: asyncio.Semaphore,
+async def preencher_coordenadas(session: aiohttp.ClientSession, row: pd.Series, semaforo: asyncio.Semaphore = None,
                                 cidade: str = 'Joinville', estado: str = 'SC', pais: str = 'Brasil',
                                 cache: dict = None, cache_atualizado: list = None,
                                 bairro_centroides: dict = None) -> dict:
-    async with semaforo:
-        idx = row.name
+    if semaforo:
+        async with semaforo:
+            return await _preencher_coordenadas_inner(session, row, cidade, estado, pais,
+                                                       cache, cache_atualizado, bairro_centroides)
+    return await _preencher_coordenadas_inner(session, row, cidade, estado, pais,
+                                               cache, cache_atualizado, bairro_centroides)
 
-        if pd.notna(row['lat']) and pd.notna(row['lng']):
-            return {'idx': idx, 'lat': row['lat'], 'lng': row['lng']}
 
-        chave = f"{row.get('rua','')}|{row.get('bairro','')}|{cidade}|{estado}"
-        if cache and chave in cache:
-            lat, lng = cache[chave]
-            return {'idx': idx, 'lat': lat, 'lng': lng}
+async def _preencher_coordenadas_inner(session, row, cidade, estado, pais,
+                                        cache, cache_atualizado, bairro_centroides):
+    idx = row.name
 
-        try:
-            lat, lng = await extrair_coords_url(row['link_maps'])
-            if lat and lng:
-                return {'idx': idx, 'lat': lat, 'lng': lng}
-        except Exception as e:
-            logger.error("Sem link_maps: %s", e)
+    if pd.notna(row['lat']) and pd.notna(row['lng']):
+        return {'idx': idx, 'lat': row['lat'], 'lng': row['lng']}
 
-        lat, lng = await geocodificar_endereco(session, row, cidade, estado, pais)
-
-        if lat is None and bairro_centroides:
-            bairro = row.get('bairro', '')
-            if bairro in bairro_centroides:
-                c = bairro_centroides[bairro]
-                lat, lng = c['lat'], c['lng']
-                logger.info("📍 Centroid bairro %s: (%.4f, %.4f)", bairro, lat, lng)
-
-        if lat is not None and cache is not None:
-            cache[chave] = (lat, lng)
-            if cache_atualizado:
-                cache_atualizado[0] = True
-
+    chave = f"{row.get('rua','')}|{row.get('bairro','')}|{cidade}|{estado}"
+    if cache and chave in cache:
+        lat, lng = cache[chave]
         return {'idx': idx, 'lat': lat, 'lng': lng}
 
-async def preencher_todas_coordenadas(df: pd.DataFrame, batch_size: int = None, cidade: str = 'Joinville', estado: str = 'SC', pais: str = 'Brasil') -> pd.DataFrame:
+    try:
+        lat, lng = await extrair_coords_url(row['link_maps'])
+        if lat and lng:
+            return {'idx': idx, 'lat': lat, 'lng': lng}
+    except Exception as e:
+        logger.error("Sem link_maps: %s", e)
+
+    lat, lng = await geocodificar_endereco(session, row, cidade, estado, pais)
+
+    if lat is None and bairro_centroides:
+        bairro = row.get('bairro', '')
+        if bairro in bairro_centroides:
+            c = bairro_centroides[bairro]
+            lat, lng = c['lat'], c['lng']
+            logger.info("📍 Centroid bairro %s: (%.4f, %.4f)", bairro, lat, lng)
+
+    if lat is not None and cache is not None:
+        cache[chave] = (lat, lng)
+        if cache_atualizado:
+            cache_atualizado[0] = True
+
+    return {'idx': idx, 'lat': lat, 'lng': lng}
+
+async def preencher_todas_coordenadas(df: pd.DataFrame, batch_size: int = None, cidade: str = 'Joinville', estado: str = 'SC', pais: str = 'Brasil') -> Tuple[pd.DataFrame, bool]:
     import os
     if batch_size is None:
         batch_size = 1 if os.getenv("CI") else 2
+    tipo_async = os.getenv("TIPO_ASYNC", "False").strip().lower() in ("true", "1", "yes")
     if 'lat' not in df.columns:
         df['lat'] = np.nan
     if 'lng' not in df.columns:
@@ -1082,7 +1092,7 @@ async def preencher_todas_coordenadas(df: pd.DataFrame, batch_size: int = None, 
     linhas_nan = df[mask]
     logger.info("Linhas com NaN: %d", len(linhas_nan))
     if len(linhas_nan) == 0:
-        return df
+        return df, False
 
     cache = _carregar_cache_geocode(cidade, estado)
     cache_atualizado = [False]
@@ -1096,21 +1106,43 @@ async def preencher_todas_coordenadas(df: pd.DataFrame, batch_size: int = None, 
     )
     logger.info("Centroides de bairro calculados: %d bairros", len(bairro_centroides))
 
-    semaforo = asyncio.Semaphore(batch_size)
     resultados = []
+    timeout_geo = int(os.getenv("TIMEOUT_GEOCODE", "21000"))
+    fim = time.monotonic() + timeout_geo
+    timeout_ocorrido = False
 
     async with aiohttp.ClientSession() as session:
-        tasks = [
-            preencher_coordenadas(session, row, semaforo, cidade, estado, pais,
-                                  cache, cache_atualizado, bairro_centroides)
-            for _, row in linhas_nan.iterrows()
-        ]
-
-        for i, future in tqdm(enumerate(asyncio.as_completed(tasks))):
-            resultado = await future
-            resultados.append(resultado)
-            if i % 50 == 0 and i > 0:
-                logger.info("Progresso: %d/%d", i, len(tasks))
+        if tipo_async:
+            logger.info("Modo async: semaphoro (concorrente, batch_size=%d)", batch_size)
+            semaforo = asyncio.Semaphore(batch_size)
+            tasks = [
+                preencher_coordenadas(session, row, semaforo, cidade, estado, pais,
+                                      cache, cache_atualizado, bairro_centroides)
+                for _, row in linhas_nan.iterrows()
+            ]
+            for i, future in tqdm(enumerate(asyncio.as_completed(tasks))):
+                if time.monotonic() >= fim:
+                    timeout_ocorrido = True
+                    logger.warning("⏱️ Timeout geocode %ds — interrompendo (processados %d/%d)", timeout_geo, len(resultados), len(tasks))
+                    break
+                resultado = await future
+                resultados.append(resultado)
+                if i % 50 == 0 and i > 0:
+                    logger.info("Progresso: %d/%d", i, len(tasks))
+        else:
+            logger.info("Modo sync: um_por_um (sequencial, 1 req/s)")
+            for i, (_, row) in tqdm(enumerate(linhas_nan.iterrows()), total=len(linhas_nan)):
+                if time.monotonic() >= fim:
+                    timeout_ocorrido = True
+                    logger.warning("⏱️ Timeout geocode %ds — interrompendo (processados %d/%d)", timeout_geo, len(resultados), len(linhas_nan))
+                    break
+                resultado = await preencher_coordenadas(
+                    session, row, None, cidade, estado, pais,
+                    cache, cache_atualizado, bairro_centroides,
+                )
+                resultados.append(resultado)
+                if i % 50 == 0 and i > 0:
+                    logger.info("Progresso: %d/%d", i + 1, len(linhas_nan))
 
     df_resultados = pd.DataFrame(resultados).set_index('idx')
     df.loc[df_resultados.index, 'lat'] = df_resultados['lat']
@@ -1121,7 +1153,7 @@ async def preencher_todas_coordenadas(df: pd.DataFrame, batch_size: int = None, 
         logger.info("Cache geocode salvo: %d entradas", len(cache))
 
     logger.info("Ainda com NaN: %d", df['lat'].isna().sum())
-    return df
+    return df, timeout_ocorrido
 
 def geocodificar_dataframe(data, cidade="Balneário Piçarras", estado="SC", pais="Brasil"):
     """
