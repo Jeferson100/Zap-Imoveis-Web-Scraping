@@ -1,0 +1,16 @@
+name: Predicao Rio Janeiro Tijuca - Melhor Modelo Geral
+
+on:
+  workflow_run:
+    workflows: ["Predicao Rio Janeiro Tijuca - Otimizando Melhores Modelos"]
+    types:
+      - completed
+  workflow_dispatch:
+
+jobs:
+  pipeline:
+    uses: ./.github/workflows/pipeline_predicao_rodando.yml
+    with:
+      cidade_pasta: rio_janeiro
+      arquivo_rodando_imovel: rio_janeiro_melhor_modelo_geral.py
+      bairro: tijuca

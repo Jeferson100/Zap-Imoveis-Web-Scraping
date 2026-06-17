@@ -1,0 +1,16 @@
+name: Predicao Sao Paulo Paraiso - Melhores Configuracoes Modelo
+
+on:
+  workflow_run:
+    workflows: ["Rodando Limpeza Imoveis Sao Paulo Paraiso"]
+    types:
+      - completed
+  workflow_dispatch:
+
+jobs:
+  pipeline:
+    uses: ./.github/workflows/pipeline_predicao_rodando.yml
+    with:
+      cidade_pasta: sao_paulo
+      arquivo_rodando_imovel: sao_paulo_melhores_configuraoes_modelo.py
+      bairro: paraiso

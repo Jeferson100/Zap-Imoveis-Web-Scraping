@@ -1,0 +1,16 @@
+name: Predicao Rio Janeiro Lagoa - Melhores Configuracoes Modelo
+
+on:
+  workflow_run:
+    workflows: ["Rodando Limpeza Imoveis Rio Janeiro Lagoa"]
+    types:
+      - completed
+  workflow_dispatch:
+
+jobs:
+  pipeline:
+    uses: ./.github/workflows/pipeline_predicao_rodando.yml
+    with:
+      cidade_pasta: rio_janeiro
+      arquivo_rodando_imovel: rio_janeiro_melhores_configuraoes_modelo.py
+      bairro: lagoa

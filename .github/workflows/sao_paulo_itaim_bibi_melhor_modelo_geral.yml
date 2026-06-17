@@ -1,0 +1,16 @@
+name: Predicao Sao Paulo Itaim Bibi - Melhor Modelo Geral
+
+on:
+  workflow_run:
+    workflows: ["Predicao Sao Paulo Itaim Bibi - Otimizando Melhores Modelos"]
+    types:
+      - completed
+  workflow_dispatch:
+
+jobs:
+  pipeline:
+    uses: ./.github/workflows/pipeline_predicao_rodando.yml
+    with:
+      cidade_pasta: sao_paulo
+      arquivo_rodando_imovel: sao_paulo_melhor_modelo_geral.py
+      bairro: itaim-bibi

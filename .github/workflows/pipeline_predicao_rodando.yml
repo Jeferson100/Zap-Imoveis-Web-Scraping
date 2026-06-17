@@ -1,0 +1,76 @@
+name: Pipeline Predicao
+
+on:
+  workflow_call:
+    inputs:
+      cidade_pasta:
+        required: true
+        type: string
+      arquivo_rodando_imovel:
+        required: true
+        type: string
+      bairro:
+        required: true
+        type: string
+      mes_ref:
+        required: false
+        type: string
+        default: ""
+      localizazao_completa:
+        required: false
+        type: string
+        default: "Sao Paulo, Sao Paulo, Brasil"
+      databricks_host:
+        required: false
+        type: string
+        default: "https://dbc-ed602b14-1f14.cloud.databricks.com"
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Cache Python dependencies
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ hashFiles('**/pyproject.toml') }}
+          restore-keys: |
+            ${{ runner.os }}-pip-
+
+      - run: pip install uv
+
+      - run: uv venv
+
+      - run: |
+          source .venv/bin/activate
+          make uv_install
+
+      - name: Rodar predicao
+        run: |
+          CAMINHO="codigos_rodando/${{ inputs.cidade_pasta }}/${{ inputs.arquivo_rodando_imovel }}"
+          echo "Executando: $CAMINHO (bairro=${{ inputs.bairro }})"
+          uv run $CAMINHO
+        env:
+          CIDADE_PASTA: ${{ inputs.cidade_pasta }}
+          BAIRRO: ${{ inputs.bairro }}
+          MES_REF: ${{ inputs.mes_ref }}
+          LOCALIZAZAO_COMPLETA: ${{ inputs.localizazao_completa }}
+          DATABRICKS_TOKEN: ${{ secrets.DATABRICKS_TOKEN }}
+          DATABRICKS_HOST: ${{ inputs.databricks_host }}
+
+      - name: Commit e Push
+        run: |
+          git config user.name "github-actions"
+          git config user.email "github-actions@github.com"
+          git add dados/
+          git commit -m "Predicao ${{ inputs.cidade_pasta }} ${{ inputs.bairro }}: $(date +'%Y-%m-%d')" || echo "Nada para commitar"
+          git pull --rebase -X ours origin main
+          git push origin main
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

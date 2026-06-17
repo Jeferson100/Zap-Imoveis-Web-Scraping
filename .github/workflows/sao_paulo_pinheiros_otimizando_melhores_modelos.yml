@@ -1,0 +1,16 @@
+name: Predicao Sao Paulo Pinheiros - Otimizando Melhores Modelos
+
+on:
+  workflow_run:
+    workflows: ["Predicao Sao Paulo Pinheiros - Melhores Configuracoes Modelo"]
+    types:
+      - completed
+  workflow_dispatch:
+
+jobs:
+  pipeline:
+    uses: ./.github/workflows/pipeline_predicao_rodando.yml
+    with:
+      cidade_pasta: sao_paulo
+      arquivo_rodando_imovel: sao_paulo_otimizando_melhores_modelos.py
+      bairro: pinheiros
