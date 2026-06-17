@@ -162,9 +162,30 @@ def treinar_melhor_modelo_geral(
     # ── 10. Predicao no imoveis_limpo ───────────────────────────────────
     logger.info("Gerando predicoes no dataset completo...")
 
+    FONTES = ["zap", "vivareal", "chave_mao", "olx"]
     imoveis_path = pasta_dados / f"{cidade}_imoveis_limpo_{mes_ref}.parquet"
-    df_full = pd.read_parquet(imoveis_path)
-    logger.info("Imoveis limpo carregado: %d linhas", len(df_full))
+    if imoveis_path.exists():
+        df_full = pd.read_parquet(imoveis_path)
+        df_full["_fonte_origem"] = "combinado"
+        logger.info("Combinado carregado: %d linhas", len(df_full))
+    else:
+        logger.info("Combinado não encontrado — carregando fontes individuais...")
+        partes = []
+        for fonte in FONTES:
+            pattern = f"{cidade}_imoveis_limpo_{fonte}_{mes_ref}.parquet"
+            caminhos = list(pasta_dados.glob(pattern))
+            if caminhos:
+                df = pd.read_parquet(caminhos[0])
+                df["_fonte_origem"] = fonte
+                partes.append(df)
+                logger.info("  %s: %d registros", fonte, len(df))
+        if not partes:
+            raise FileNotFoundError(
+                f"Nenhum arquivo de imóveis encontrado para {cidade}/{mes_ref}. "
+                f"Execute os scripts de limpeza primeiro."
+            )
+        df_full = pd.concat(partes, ignore_index=True)
+        logger.info("Total: %d registros (%d fontes)", len(df_full), len(partes))
 
     indices = CriandoIndicesIndividuais(cidade=cidade_nome, cache_dir=pasta_dados)
     df_full = indices.calcular_indices(imoveis_df=df_full)
@@ -191,13 +212,28 @@ def treinar_melhor_modelo_geral(
         
     )
 
-    df_full.to_parquet(imoveis_path, index=False)
-    logger.info(
-        "Predicoes salvas em %s (%.0f com valor, %d sem filtro)",
-        imoveis_path.name,
-        df_full["valor_predito"].notna().sum(),
-        df_full["valor_predito"].isna().sum(),
-    )
+    if df_full["_fonte_origem"].eq("combinado").all():
+        df_full.to_parquet(imoveis_path, index=False)
+        logger.info(
+            "Predicoes salvas em %s (%.0f com valor, %d sem filtro)",
+            imoveis_path.name,
+            df_full["valor_predito"].notna().sum(),
+            df_full["valor_predito"].isna().sum(),
+        )
+    else:
+        col_saida = [c for c in df_full.columns if c != "_fonte_origem"]
+        for fonte in FONTES:
+            mask = df_full["_fonte_origem"] == fonte
+            if not mask.any():
+                continue
+            df_pred = df_full.loc[mask, col_saida]
+            caminho_pred = pasta_dados / f"{cidade}_predicoes_{fonte}_{mes_ref}.parquet"
+            df_pred.to_parquet(caminho_pred, index=False)
+            logger.info(
+                "Predicoes %s: %s (%d registros, %.0f com valor)",
+                fonte, caminho_pred.name, len(df_pred),
+                df_pred["valor_predito"].notna().sum(),
+            )
 
     # ── 11. Limpeza dos caches ──────────────────────────────────────────
     for nome in [
