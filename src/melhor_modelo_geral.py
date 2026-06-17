@@ -249,10 +249,6 @@ def treinar_melhor_modelo_geral(
             p.unlink()
             logger.info("Cache removido: %s", nome)
 
-    for f in pasta_dados.glob(f"pois_*.parquet"):
-        f.unlink()
-        logger.info("Cache POI removido: %s", f.name)
-
     logger.info("Concluido!")
     return pipe
 
