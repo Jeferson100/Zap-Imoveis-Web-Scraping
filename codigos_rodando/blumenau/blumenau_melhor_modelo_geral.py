@@ -4,7 +4,7 @@ import warnings
 import os
 from dotenv import load_dotenv
 
-from src.melhor_modelo_geral import treinar_melhor_modelo_geral
+from melhor_modelo_geral import treinar_melhor_modelo_geral
 
 
 load_dotenv()
