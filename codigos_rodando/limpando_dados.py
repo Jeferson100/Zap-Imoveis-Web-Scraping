@@ -188,18 +188,23 @@ def carregar_json(pasta_dados: Path, glob_pattern: str) -> tuple[pd.DataFrame, P
         logger.warning(f"Nenhum arquivo encontrado para o padrão: {glob_pattern}")
         return pd.DataFrame(), None
 
-    arquivo = max(arquivos, key=lambda f: f.stem.split('_')[-1])
+    arquivo_ref = max(arquivos, key=lambda f: f.stem.split('_')[-1])
     
-    logger.info(f"Arquivo encontrado: {arquivo.name}")
+    logger.info(f"Arquivo(s) encontrado(s): {len(arquivos)} — ref: {arquivo_ref.name}")
 
     try:
-        with open(arquivo, 'r', encoding='utf-8') as f:
-            data = json.load(f)
-        return pd.DataFrame(data), arquivo
+        partes = []
+        for a in arquivos:
+            with open(a, 'r', encoding='utf-8') as f:
+                data = json.load(f)
+            partes.append(pd.DataFrame(data))
+        df = pd.concat(partes, ignore_index=True)
+        logger.info("Carregados %d registros de %d arquivo(s)", len(df), len(partes))
+        return df, arquivo_ref
 
     except Exception as e:
-        logger.error(f"Erro ao carregar {arquivo.name}: {e}")
-        return pd.DataFrame(), arquivo
+        logger.error(f"Erro ao carregar {arquivo_ref.name}: {e}")
+        return pd.DataFrame(), arquivo_ref
 
 def carregar_parquet(pasta_dados: Path, glob_pattern: str) -> tuple[pd.DataFrame, Path | None]:
     """
@@ -218,22 +223,22 @@ def carregar_parquet(pasta_dados: Path, glob_pattern: str) -> tuple[pd.DataFrame
 
     # Mantém sua lógica de pegar o arquivo com a data mais recente no nome
     try:
-        arquivo = max(arquivos, key=lambda f: f.stem.split('_')[-1])
+        arquivo_ref = max(arquivos, key=lambda f: f.stem.split('_')[-1])
     except Exception:
         # Fallback caso o nome do arquivo não siga o padrão de data
-        arquivo = max(arquivos, key=lambda f: f.stat().st_mtime)
+        arquivo_ref = max(arquivos, key=lambda f: f.stat().st_mtime)
     
-    logger.info(f"Arquivo Parquet encontrado: {arquivo.name}")
+    logger.info(f"Arquivo(s) Parquet encontrado(s): {len(arquivos)} — ref: {arquivo_ref.name}")
 
     try:
-        # O pandas lê o Parquet diretamente do caminho (Path ou str)
-        # Não é necessário usar 'with open' pois o formato é binário
-        df = pd.read_parquet(arquivo)
-        return df, arquivo
+        partes = [pd.read_parquet(a) for a in arquivos]
+        df = pd.concat(partes, ignore_index=True)
+        logger.info("Carregados %d registros de %d arquivo(s)", len(df), len(partes))
+        return df, arquivo_ref
 
     except Exception as e:
-        logger.error(f"Erro ao carregar {arquivo.name}: {e}")
-        return pd.DataFrame(), arquivo
+        logger.error(f"Erro ao carregar {arquivo_ref.name}: {e}")
+        return pd.DataFrame(), arquivo_ref
 
 def deletar_arquivo(arquivo: Path | None):
     if arquivo and arquivo.exists():

@@ -171,13 +171,16 @@ def treinar_melhor_modelo_geral(
     else:
         logger.info("Combinado não encontrado — carregando fontes individuais...")
         partes = []
+        caminhos_fonte = {}
         for fonte in FONTES:
             pattern = f"{cidade}_imoveis_limpo_{fonte}_{mes_ref}.parquet"
             caminhos = list(pasta_dados.glob(pattern))
             if caminhos:
-                df = pd.read_parquet(caminhos[0])
+                caminho = caminhos[0]
+                df = pd.read_parquet(caminho)
                 df["_fonte_origem"] = fonte
                 partes.append(df)
+                caminhos_fonte[fonte] = caminho
                 logger.info("  %s: %d registros", fonte, len(df))
         if not partes:
             raise FileNotFoundError(
@@ -226,12 +229,12 @@ def treinar_melhor_modelo_geral(
             mask = df_full["_fonte_origem"] == fonte
             if not mask.any():
                 continue
+            caminho_orig = caminhos_fonte[fonte]
             df_pred = df_full.loc[mask, col_saida]
-            caminho_pred = pasta_dados / f"{cidade}_predicoes_{fonte}_{mes_ref}.parquet"
-            df_pred.to_parquet(caminho_pred, index=False)
+            df_pred.to_parquet(caminho_orig, index=False)
             logger.info(
                 "Predicoes %s: %s (%d registros, %.0f com valor)",
-                fonte, caminho_pred.name, len(df_pred),
+                fonte, caminho_orig.name, len(df_pred),
                 df_pred["valor_predito"].notna().sum(),
             )
 
