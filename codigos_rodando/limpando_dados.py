@@ -33,7 +33,7 @@ warnings.filterwarnings("ignore")
 
 start_time = time.time()
 
-async def limpando_dados_cidades(pd_data, batch, cidade_limpeza = 'joinville', estado_limpeza = 'sc', cidade_localizacao = 'Joinville', estado_localizacao = 'SC',  tipo_async=True,  pais='Brasil'): 
+async def limpando_dados_cidades(pd_data, batch, pasta_dados: Path, cidade_limpeza = 'joinville', estado_limpeza = 'sc', cidade_localizacao = 'Joinville', estado_localizacao = 'SC',  tipo_async=True,  pais='Brasil'): 
        
     logger.info("Iniciando o processo de limpeza de dados de imóveis...")    
     
@@ -132,6 +132,7 @@ async def limpando_dados_cidades(pd_data, batch, cidade_limpeza = 'joinville', e
     pd_data_long_lat = pd_data_tipo_imovel.copy()
     
     cache_path = pasta_dados.parent / "geocode_cache.parquet"
+    
     if tipo_async:
         pd_data_lat_log_completo, timeout_ocorrido = await preencher_todas_coordenadas(pd_data_long_lat, batch_size=batch, cidade=cidade_localizacao, estado=estado_localizacao, pais=pais, cache_path=cache_path)
     else:
@@ -363,7 +364,8 @@ def limpando_dados(
     
     # Limpeza
     df_limpo, timeout_ocorrido = asyncio.run(limpando_dados_cidades(df_cidade, 
-                                        batch = batch, 
+                                        batch = batch,
+                                        pasta_dados=pasta_dados,
                                         cidade_limpeza= cidade_limpeza, 
                                         cidade_localizacao= cidade_localizacao,
                                         tipo_async=tipo_async,

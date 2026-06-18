@@ -6,6 +6,7 @@ import os
 import numpy as np
 from scipy.stats import pearsonr, spearmanr
 from pathlib import Path
+from app_streamlit_2 import gerar_pagina_predicao, CIDADE_POI
 
 FONTES_ZAP_VIVA = ['zap_imoveis', 'viva_real']
 
@@ -76,6 +77,13 @@ def gerar_pagina_analise_imoveis(cidade_pth, cidade_nome, prefixo_arquivo, df=No
     prefixo_arquivo: Ex: "zap_imoveis_joinville"
     """
     st.set_page_config(page_title=f"Análise de Imóveis {cidade_nome}", layout="wide")
+
+    modo = st.sidebar.radio("Modo", ["Análise", "Predição"])
+    if modo == "Predição":
+        cidade_pasta = cidade_pth.split("/")[0]
+        cidade_nome_poi = CIDADE_POI.get(cidade_pasta, cidade_nome)
+        gerar_pagina_predicao(cidade_pth, prefixo_arquivo, cidade_nome_poi)
+        return
 
     st.markdown("""
         <style>
