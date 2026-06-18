@@ -984,33 +984,41 @@ async def _geocode_nominatim(session, query):
 
 
 async def geocodificar_endereco(session, row, cidade='Joinville', estado='SC', pais='Brasil'):
-    """Geocodifica via Nominatim com token bucket (1 req/s)."""
+    """Geocodifica via Nominatim com token bucket (1 req/s).
+    Retorna (lat, lon, nivel) onde nivel ∈ {'address', 'bairro', 'city'}.
+    city-level nunca é retornado como coordenada — quem chama decide o fallback."""
     cep = str(row.get('cep', '')).strip()
     rua = str(row.get('rua', '')).strip()
     bairro = str(row.get('bairro', '')).strip()
     numero = str(row.get('numero', '')).strip()
 
-    queries = []
-    if rua and rua.lower() not in ('s/r', '', 'nan') and numero and numero.lower() not in ('s/n', '', 'nan'):
-        queries.append(f"{numero} {rua}, {bairro}, {cidade}, {estado}, {pais}")
-    if rua and rua.lower() not in ('s/r', '', 'nan'):
-        queries.append(f"{rua}, {bairro}, {cidade}, {estado}, {pais}")
+    rua = '' if rua.lower() in ('s/r', '', 'nan') else rua
+    bairro = '' if bairro.lower() in ('', 'nan', 'none') else bairro
+    numero = '' if numero.lower() in ('s/n', '', 'nan') else numero
+
+    queries_nivel = []
+    if rua and numero:
+        queries_nivel.append((f"{numero} {rua}, {bairro}, {cidade}, {estado}, {pais}", 'address'))
+    if rua:
+        queries_nivel.append((f"{rua}, {bairro}, {cidade}, {estado}, {pais}", 'address'))
     cep_clean = ''.join(filter(str.isdigit, cep))
     if len(cep_clean) == 8:
-        queries.append(f"{cep_clean[:5]}-{cep_clean[5:]}, {pais}")
-    if bairro and bairro.lower() not in ('', 'nan', 'none'):
-        queries.append(f"{bairro}, {cidade}, {estado}, {pais}")
-    if not queries:
-        queries.append(f"{cidade}, {estado}, {pais}")
+        queries_nivel.append((f"{cep_clean[:5]}-{cep_clean[5:]}, {pais}", 'address'))
+    if bairro:
+        queries_nivel.append((f"{bairro}, {cidade}, {estado}, {pais}", 'bairro'))
 
-    for q in queries:
+    # Se nao tem endereco nem bairro, retorna city-level para quem chama decidir
+    if not queries_nivel:
+        return None, None, 'city'
+
+    for q, nivel in queries_nivel:
         lat, lon = await _geocode_nominatim(session, q)
         if lat:
-            logger.info("✅ Nominatim: %s", q[:60])
-            return lat, lon
+            logger.info("✅ Nominatim (%s): %s", nivel, q[:60])
+            return lat, lon, nivel
         await asyncio.sleep(2.5)
 
-    return None, None
+    return None, None, 'city'
 
 _CACHE_DIR = Path(__file__).parent.parent / 'codigos_rodando' / 'cache' / 'geocode_cache'
 
@@ -1023,7 +1031,11 @@ def _carregar_cache_geocode(cidade, estado, cache_path=None):
         path = _CACHE_DIR / f"{cidade.lower()}_{estado.lower()}_geocode.parquet"
     if path.exists():
         df = pd.read_parquet(path)
-        return {r['chave']: (r['lat'], r['lng']) for _, r in df.iterrows()}
+        cache = {}
+        for _, r in df.iterrows():
+            level = r.get('level', 'address')
+            cache[r['chave']] = (r['lat'], r['lng'], level)
+        return cache
     return {}
 
 
@@ -1032,8 +1044,8 @@ def _salvar_cache_geocode(cache, cidade, estado, cache_path=None):
         path = Path(cache_path)
     else:
         path = _CACHE_DIR / f"{cidade.lower()}_{estado.lower()}_geocode.parquet"
-    df = pd.DataFrame([(k, v[0], v[1]) for k, v in cache.items()],
-                      columns=['chave', 'lat', 'lng'])
+    df = pd.DataFrame([(k, v[0], v[1], v[2]) for k, v in cache.items()],
+                      columns=['chave', 'lat', 'lng', 'level'])
     df.to_parquet(path, index=False)
 
 
@@ -1056,33 +1068,68 @@ async def _preencher_coordenadas_inner(session, row, cidade, estado, pais,
     if pd.notna(row['lat']) and pd.notna(row['lng']):
         return {'idx': idx, 'lat': row['lat'], 'lng': row['lng']}
 
-    chave = f"{row.get('rua','')}|{row.get('bairro','')}|{cidade}|{estado}"
+    def _norm(val):
+        v = str(val).strip().lower()
+        return '' if v in ('', 'nan', 'none', 's/r', 's/n', 'null') else str(val).strip()
+
+    rua = _norm(row.get('rua', ''))
+    bairro = _norm(row.get('bairro', ''))
+    chave = f"{rua}|{bairro}|{cidade}|{estado}"
+
     if cache and chave in cache:
-        lat, lng = cache[chave]
-        return {'idx': idx, 'lat': lat, 'lng': lng}
+        lat, lng, level = cache[chave]
+        if level != 'city':
+            return {'idx': idx, 'lat': lat, 'lng': lng}
 
     try:
         lat, lng = await extrair_coords_url(row['link_maps'])
         if lat and lng:
             return {'idx': idx, 'lat': lat, 'lng': lng}
-    except Exception as e:
-        logger.error("Sem link_maps: %s", e)
+    except Exception:
+        pass
 
-    lat, lng = await geocodificar_endereco(session, row, cidade, estado, pais)
+    lat, lng, level = await geocodificar_endereco(session, row, cidade, estado, pais)
 
-    if lat is None and bairro_centroides:
-        bairro = row.get('bairro', '')
+    if bairro_centroides and (lat is None or level == 'city'):
         if bairro in bairro_centroides:
             c = bairro_centroides[bairro]
             lat, lng = c['lat'], c['lng']
+            level = 'bairro'
             logger.info("📍 Centroid bairro %s: (%.4f, %.4f)", bairro, lat, lng)
 
+    if lat is not None and level == 'city':
+        return {'idx': idx, 'lat': None, 'lng': None}
+
     if lat is not None and cache is not None:
-        cache[chave] = (lat, lng)
+        cache[chave] = (lat, lng, level)
         if cache_atualizado:
             cache_atualizado[0] = True
 
     return {'idx': idx, 'lat': lat, 'lng': lng}
+
+def _calcular_centroides(df):
+    """Calcula centroides de bairro a partir de coordenadas já existentes."""
+    existentes = df.dropna(subset=['lat', 'lng'])
+    if existentes.empty:
+        return {}
+    return existentes.groupby('bairro')[['lat', 'lng']].mean().to_dict('index')
+
+
+def _atualizar_centroides(centroides, novos_resultados):
+    """Atualiza centroides com novas coordenadas descobertas (media movel)."""
+    for r in novos_resultados:
+        lat, lng = r.get('lat'), r.get('lng')
+        bairro = r.get('bairro', '')
+        if lat is not None and lng is not None and bairro:
+            if bairro not in centroides:
+                centroides[bairro] = {'lat': lat, 'lng': lng, '_count': 1}
+            else:
+                c = centroides[bairro]
+                count = c.get('_count', 1)
+                c['lat'] = (c['lat'] * count + lat) / (count + 1)
+                c['lng'] = (c['lng'] * count + lng) / (count + 1)
+                c['_count'] = count + 1
+
 
 async def preencher_todas_coordenadas(df: pd.DataFrame, batch_size: int = None, cidade: str = 'Joinville', estado: str = 'SC', pais: str = 'Brasil', cache_path: str = None) -> Tuple[pd.DataFrame, bool]:
     import os
@@ -1104,16 +1151,11 @@ async def preencher_todas_coordenadas(df: pd.DataFrame, batch_size: int = None, 
     cache_atualizado = [False]
     logger.info("Cache geocode carregado: %d entradas", len(cache))
 
-    bairro_centroides = (
-        df.dropna(subset=['lat', 'lng'])
-        .groupby('bairro')[['lat', 'lng']]
-        .mean()
-        .to_dict('index')
-    )
+    bairro_centroides = _calcular_centroides(df)
     logger.info("Centroides de bairro calculados: %d bairros", len(bairro_centroides))
 
     resultados = []
-    timeout_geo = int(os.getenv("TIMEOUT_GEOCODE", "21000"))
+    timeout_geo = int(os.getenv("TIMEOUT_GEOCODE", "21600"))
     fim = time.monotonic() + timeout_geo
     timeout_ocorrido = False
 
@@ -1129,10 +1171,12 @@ async def preencher_todas_coordenadas(df: pd.DataFrame, batch_size: int = None, 
             for i, future in tqdm(enumerate(asyncio.as_completed(tasks))):
                 if time.monotonic() >= fim:
                     timeout_ocorrido = True
-                    logger.warning("⏱️ Timeout geocode %ds — interrompendo (processados %d/%d)", timeout_geo, len(resultados), len(tasks))
+                    logger.warning("⏱️ Timeout — interrompendo (%d/%d)", len(resultados), len(tasks))
                     break
                 resultado = await future
                 resultados.append(resultado)
+                if i % 10 == 0 and i > 0:
+                    _atualizar_centroides(bairro_centroides, resultados[-10:])
                 if i % 50 == 0 and i > 0:
                     logger.info("Progresso: %d/%d", i, len(tasks))
         else:
@@ -1140,13 +1184,15 @@ async def preencher_todas_coordenadas(df: pd.DataFrame, batch_size: int = None, 
             for i, (_, row) in tqdm(enumerate(linhas_nan.iterrows()), total=len(linhas_nan)):
                 if time.monotonic() >= fim:
                     timeout_ocorrido = True
-                    logger.warning("⏱️ Timeout geocode %ds — interrompendo (processados %d/%d)", timeout_geo, len(resultados), len(linhas_nan))
+                    logger.warning("⏱️ Timeout — interrompendo (%d/%d)", len(resultados), len(linhas_nan))
                     break
                 resultado = await preencher_coordenadas(
                     session, row, None, cidade, estado, pais,
                     cache, cache_atualizado, bairro_centroides,
                 )
                 resultados.append(resultado)
+                if i % 10 == 0 and i > 0:
+                    _atualizar_centroides(bairro_centroides, resultados[-10:])
                 if i % 50 == 0 and i > 0:
                     logger.info("Progresso: %d/%d", i + 1, len(linhas_nan))
 
