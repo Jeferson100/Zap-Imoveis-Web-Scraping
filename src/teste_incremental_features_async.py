@@ -98,6 +98,21 @@ SCALE_INVARIANT = {
 now = time.strftime("%Y-%m")
 
 
+def _agregar_importancias_por_feature(importances, preprocessor, feat_names):
+    """Agrega importancias SHAP de colunas OHE de volta pra feature original."""
+    trans_names = preprocessor.get_feature_names_out()
+    agg = {f: 0.0 for f in feat_names}
+    for i, tn in enumerate(trans_names):
+        stem = tn.split('__', 1)[-1] if '__' in tn else tn
+        for fn in feat_names:
+            if stem == fn or (stem.startswith(fn + '_') and fn):
+                agg[fn] += importances[i]
+                break
+        else:
+            agg[feat_names[i % len(feat_names)]] += importances[i]
+    return np.array([agg[f] for f in feat_names])
+
+
 class TesteIncrementalFeaturesAsync:
     """Versao assincrona do teste incremental de features com modelos."""
 
@@ -155,6 +170,7 @@ class TesteIncrementalFeaturesAsync:
         feature_start=1,
         experimento_mlflow="teste-incremental-features",
         log_level=logging.INFO,
+        max_samples=None,
     ):
         logging.basicConfig(
             level=log_level,
@@ -170,6 +186,7 @@ class TesteIncrementalFeaturesAsync:
         self.n_trials_mlp = n_trials_mlp
         self.feature_start = feature_start
         self.experimento_mlflow = experimento_mlflow
+        self.max_samples = max_samples
         self.optuna_params_otimizados = {}
         self.usar_mlp_otimizado = usar_mlp_otimizado
 
@@ -239,7 +256,7 @@ class TesteIncrementalFeaturesAsync:
 
     @staticmethod
     def _shap_order_por_combo(X_tr_proc, X_te_proc, y_train, feat_names,
-                               shap_sample=500):
+                               preprocessor=None, shap_sample=500):
         if shap is None:
             return list(feat_names)
         import xgboost as xgb
@@ -258,6 +275,16 @@ class TesteIncrementalFeaturesAsync:
         model.fit(X_tr_s, y_tr_s)
         explainer = shap.Explainer(model, X_te_s)
         importances = np.abs(explainer(X_te_s).values).mean(axis=0)
+
+        # Agrega importancias OHE de volta para as features originais
+        if preprocessor is not None and len(importances) != len(feat_names):
+            try:
+                importances = _agregar_importancias_por_feature(
+                    importances, preprocessor, feat_names
+                )
+            except Exception as exc:
+                logger.warning("Falha ao agregar SHAP: %s", exc)
+
         return [feat_names[i] for i in np.argsort(importances)[::-1]]
 
     def _otimizar_modelos_optuna(self, preprocessor, X, y, mlflow_mgr, log_trials=False):
@@ -658,6 +685,15 @@ class TesteIncrementalFeaturesAsync:
         logger.info("Max concurrent: %d", max_concurrent)
         logger.info("=" * 60)
 
+        # Amostragem se dados forem muito grandes
+        if self.max_samples is not None and len(train) > self.max_samples:
+            ratio = self.max_samples / len(train)
+            n_test = max(1, int(len(test) * ratio))
+            logger.info("Amostrando treino: %d -> %d", len(train), self.max_samples)
+            train = train.sample(n=self.max_samples, random_state=42)
+            logger.info("Amostrando teste: %d -> %d", len(test), n_test)
+            test = test.sample(n=n_test, random_state=42)
+
         categorical_fixas_list = list(categorical_fixas or [])
         pool = [f for f in features_testadas + [c for c in categorical_features if c in train.columns and c not in features_testadas]
                 if f not in categorical_fixas_list]
@@ -686,13 +722,17 @@ class TesteIncrementalFeaturesAsync:
                     cat_feats = [c for c in pool if c in categorical_features]
                     cols_full = categorical_fixas_list + num_feats + cat_feats
 
+                    _transf = transf_name
+                    if _transf == "boxcox" and num_feats and train[num_feats].min().min() <= 0:
+                        _transf = "yeojohnson"
+
                     factory_pp = PreprocessadorFactory(
                         numeric_features=num_feats,
                         categorical_features=cat_feats,
                     )
                     pp = factory_pp.criar(
                         scaler=trat["scaler"](),
-                        transform=transf_name,
+                        transform=_transf,
                     )
                     X_tr_p = pp.fit_transform(train[cols_full], y_train)
                     X_te_p = pp.transform(x_test_full[cols_full])
@@ -700,6 +740,7 @@ class TesteIncrementalFeaturesAsync:
                     ordem = self._shap_order_por_combo(
                         X_tr_p, X_te_p, y_train,
                         num_feats + cat_feats,
+                        preprocessor=pp,
                     )
 
                     colunas_validas = list(categorical_fixas_list)

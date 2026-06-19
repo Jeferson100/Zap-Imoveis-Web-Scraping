@@ -88,11 +88,12 @@ def treinar_melhor_modelo_geral(
         best["modelo"], best["rmse_otimizado"], best["tratamento"], best["n_features"],
     )
 
-    # ── 3. Carregar todos os dados e concatenar ─────────────────────────
+    # ── 3. Carregar dados (train = treino, test = calibracao) ───────────
     train, test = carregar_dados(pasta_dados, mes_ref, cidade)
-    X = pd.concat([train[ALL_FEATURES], test[ALL_FEATURES]], ignore_index=True)
-    y = pd.concat([train[target], test[target]], ignore_index=True).values
+    X_train, y_train = train[ALL_FEATURES].copy(), train[target].values
+    X_cal,   y_cal   = test[ALL_FEATURES].copy(),  test[target].values
     del train, test
+    logger.info("Treino: %d | Calibracao: %d", len(X_train), len(X_cal))
 
     # ── 4. Reconstruir preprocessador ───────────────────────────────────
     scaler_cls = SCALER_MAP.get(best["scaler"], StandardScaler)
@@ -120,13 +121,19 @@ def treinar_melhor_modelo_geral(
     trial_fixo = optuna.trial.FixedTrial(best_params)
     modelo = factory(trial_fixo)
 
-    # ── 6. Treinar pipeline com TODOS os dados ──────────────────────────
+    # ── 6. Treinar pipeline com dados de TREINO ─────────────────────────
     pipe = Pipeline([("preprocessador", pp), ("modelo", modelo)])
-    pipe.fit(X, y)
-    logger.info("Modelo final treinado com %d amostras", len(X))
-    del X, y
+    pipe.fit(X_train, y_train)
+    logger.info("Pipeline treinado com %d amostras", len(X_train))
+    del X_train, y_train
 
-    # ── 7. Logar no MLflow ──────────────────────────────────────────────
+    # ── 7. Preditor com intervalo conformal ──────────────────────────────
+    from intervalo_predicao import PreditorComIntervalo
+    preditor = PreditorComIntervalo(alpha=0.1)
+    preditor.fit(pipe, X_cal, y_cal)
+    del X_cal, y_cal
+
+    # ── 8. Logar no MLflow ──────────────────────────────────────────────
     mgr = MLflowManager(nome_experimento=experimento)
     mgr.conectar()
 
@@ -148,19 +155,27 @@ def treinar_melhor_modelo_geral(
 
     logger.info("Run salva: %s", run_name)
 
-    # ── 8. Salvar modelo local ──────────────────────────────────────────
+    # ── 9. Salvar modelo + preditor local ──────────────────────────────
     modelo_path = pasta_dados / f"{cidade}_modelo_geral_{mes_ref}.joblib"
     joblib.dump(pipe, modelo_path, compress=3)
     logger.info("Modelo salvo: %s", modelo_path.name)
 
-    # ── 9. Remover modelos de meses anteriores ──────────────────────────
+    preditor_path = pasta_dados / f"{cidade}_preditor_intervalo_{mes_ref}.joblib"
+    preditor.save(preditor_path)
+    logger.info("Preditor com intervalo salvo: %s", preditor_path.name)
+
+    # ── 9b. Remover modelos de meses anteriores ─────────────────────────
     for f in pasta_dados.glob(f"{cidade}_modelo_geral_*.joblib"):
         if f.name != modelo_path.name:
             f.unlink()
             logger.info("Modelo anterior removido: %s", f.name)
+    for f in pasta_dados.glob(f"{cidade}_preditor_intervalo_*.joblib"):
+        if f.name != preditor_path.name:
+            f.unlink()
+            logger.info("Preditor anterior removido: %s", f.name)
 
-    # ── 10. Predicao no imoveis_limpo ───────────────────────────────────
-    logger.info("Gerando predicoes no dataset completo...")
+    # ── 10. Predicao com intervalo no imoveis_limpo ─────────────────────
+    logger.info("Gerando predicoes com intervalo no dataset completo...")
 
     FONTES = ["zap", "vivareal", "chave_mao", "olx"]
     imoveis_path = pasta_dados / f"{cidade}_imoveis_limpo_{mes_ref}.parquet"
@@ -202,17 +217,18 @@ def treinar_melhor_modelo_geral(
     df_filtrado, _ = engenharia_features_completa(df_filtrado, df_filtrado.copy())
 
     X_pred = df_filtrado[ALL_FEATURES].copy()
-    y_pred_full = pipe.predict(X_pred)
+    y_pred_full, y_lo, y_hi = preditor.predict(X_pred)
 
     pred_series = pd.Series(y_pred_full, index=df_filtrado.index, name="valor_predito")
+    lo_series   = pd.Series(y_lo, index=df_filtrado.index, name="valor_predito_lo")
+    hi_series   = pd.Series(y_hi, index=df_filtrado.index, name="valor_predito_hi")
 
     df_full = df_full.assign(
         valor_predito=pred_series,
-        #erro_absoluto=np.abs(df_full[target] - pred_series),
-        #erro_percentual=np.abs(df_full[target] - pred_series) / df_full[target] * 100,
-        erro_absoluto= df_full[target] - pred_series,
+        valor_predito_lo=lo_series,
+        valor_predito_hi=hi_series,
+        erro_absoluto=df_full[target] - pred_series,
         erro_percentual=((df_full[target] - pred_series) / df_full[target]) * 100,
-        
     )
 
     if df_full["_fonte_origem"].eq("combinado").all():
@@ -238,7 +254,7 @@ def treinar_melhor_modelo_geral(
                 df_pred["valor_predito"].notna().sum(),
             )
 
-    # ── 11. Limpeza dos caches ──────────────────────────────────────────
+    # ── 12. Limpeza dos caches ──────────────────────────────────────────
     for nome in [
         f"{cidade}_train_{mes_ref}.parquet",
         f"{cidade}_test_{mes_ref}.parquet",

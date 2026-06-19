@@ -92,7 +92,16 @@ def carregar_modelo_e_stats(pasta, prefixo_name):
 
     modelo = joblib.load(modelo_path)
     bairro_stats = pd.read_parquet(stats_path)
-    return modelo, bairro_stats, mes_ref
+
+    from intervalo_predicao import PreditorComIntervalo
+    preditor_path = pasta / f"{prefixo_name}_preditor_intervalo_{mes_ref}.joblib"
+    if preditor_path.exists():
+        preditor = PreditorComIntervalo.load(preditor_path)
+    else:
+        preditor = None
+        st.warning("Preditor com intervalo nao encontrado. Exibindo apenas predicao pontual.")
+
+    return modelo, bairro_stats, mes_ref, preditor
 
 
 def montar_features_predicao(metragem, quartos, banheiros, vagas,
@@ -151,7 +160,7 @@ def gerar_pagina_predicao(cidade_path, prefixo_name, cidade_nome_poi):
     pasta = Path(__file__).resolve().parent.parent / 'dados' / cidade_path
     pasta.mkdir(parents=True, exist_ok=True)
 
-    modelo, bairro_stats, mes_ref = carregar_modelo_e_stats(pasta, prefixo_name)
+    modelo, bairro_stats, mes_ref, preditor = carregar_modelo_e_stats(pasta, prefixo_name)
 
     indices = None
     try:
@@ -210,9 +219,24 @@ def gerar_pagina_predicao(cidade_path, prefixo_name, cidade_nome_poi):
         valor_pred = modelo.predict(X_pred)[0]
         valor_pred = max(valor_pred, 0)
 
+        valor_lo = None
+        valor_hi = None
+        if preditor is not None:
+            try:
+                _, lo, hi = preditor.predict(X_pred)
+                valor_lo = max(lo[0], 0)
+                valor_hi = max(hi[0], 0)
+            except Exception as e:
+                st.warning(f"Nao foi possivel calcular intervalo: {e}")
+
         st.divider()
         col_res1, col_res2, col_res3 = st.columns(3)
         col_res1.metric("Valor previsto", f"R$ {valor_pred:,.2f}")
+        if valor_lo is not None:
+            st.caption(
+                f"Intervalo de 90%: "
+                f"R$ {valor_lo:,.2f} ~ R$ {valor_hi:,.2f}"
+            )
         col_res2.metric("Metragem", f"{metragem} m²")
         col_res3.metric("Bairro", bairro)
 
