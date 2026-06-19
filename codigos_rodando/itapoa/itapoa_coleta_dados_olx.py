@@ -21,7 +21,11 @@ sys.path.append(str(Path(__file__).parent.parent))
 
 from scraping_zap_imoveis import OLXColeta
 
-URL_TEMPLATE = "https://www.olx.com.br/imoveis/venda/estado-sc/norte-de-santa-catarina/itapoa?o={pagina}"
+#URL_TEMPLATE = "https://www.olx.com.br/imoveis/venda/estado-sc/norte-de-santa-catarina/itapoa?o={pagina}"
+
+URL_TEMPLATE = "https://www.olx.com.br/imoveis/venda/estado-sc?q=itapoa&o={pagina}"
+
+sys.path.append('..')
 
 now = time.strftime("%Y-%m")
 
