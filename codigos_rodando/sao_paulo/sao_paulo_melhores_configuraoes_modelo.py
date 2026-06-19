@@ -115,7 +115,7 @@ async def main():
         n_trials_optuna=N_TRIALS_OPTUNA,
         otimizar_mlp=False,
         max_concurrent=MAX_CONCURRENT,
-        feature_selection=FEATURE_SELECTION,
+        feature_selection="shap",
     )
     return df
 

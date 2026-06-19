@@ -14,3 +14,4 @@ jobs:
       cidade_pasta: sao_paulo
       arquivo_rodando_imovel: sao_paulo_melhores_configuraoes_modelo.py
       bairro: paraiso
+    secrets: inherit
