@@ -16,7 +16,7 @@ warnings.filterwarnings("ignore")
 
 cidade = os.getenv("CIDADE_PASTA")
 bairro = os.getenv("BAIRRO")
-MES_REF = os.getenv("MES_REF", datetime.now().strftime("%Y-%m"))
+MES_REF = datetime.now().strftime("%Y-%m")
 N_TRIALS = int(os.getenv("N_TRIALS_OPTUNA", "500"))
 
 CATEGORICAL_FEATURES = ['tipo_imovel', 'bairro', 'novo_lancamento', 'tem_elevador']
