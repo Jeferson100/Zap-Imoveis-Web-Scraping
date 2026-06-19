@@ -1016,7 +1016,7 @@ async def geocodificar_endereco(session, row, cidade='Joinville', estado='SC', p
         if lat:
             logger.info("✅ Nominatim (%s): %s", nivel, q[:60])
             return lat, lon, nivel
-        await asyncio.sleep(2.5)
+        #await asyncio.sleep(2.5)
 
     return None, None, 'city'
 
@@ -1131,8 +1131,9 @@ def _atualizar_centroides(centroides, novos_resultados):
                 c['_count'] = count + 1
 
 
-async def preencher_todas_coordenadas(df: pd.DataFrame, batch_size: int = None, cidade: str = 'Joinville', estado: str = 'SC', pais: str = 'Brasil', cache_path: str = None) -> Tuple[pd.DataFrame, bool]:
+async def preencher_todas_coordenadas(df: pd.DataFrame, batch_size: int = None, cidade: str = 'Joinville', estado: str = 'SC', pais: str = 'Brasil', cache_path: str = None, req_por_segundo: float = 100) -> Tuple[pd.DataFrame, bool]:
     import os
+    _NOMINATIM_BUCKET.intervalo = 1.0 / max(req_por_segundo, 0.1)
     if batch_size is None:
         batch_size = 1 if os.getenv("CI") else 2
     tipo_async = os.getenv("TIPO_ASYNC", "False").strip().lower() in ("true", "1", "yes")
