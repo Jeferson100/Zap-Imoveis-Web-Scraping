@@ -373,7 +373,7 @@ def gerar_pagina_analise_imoveis(cidade_pth, cidade_nome, prefixo_arquivo, df=No
             'metragem', 'fonte','tipo_imovel', 'quartos', 'banheiros', 'vagas', 'dias_publicacao',
         ]
 
-        for col in ['valor_predito', 'erro_absoluto', 'erro_percentual']:
+        for col in ['valor_predito', 'valor_predito_lo', 'valor_predito_hi', 'erro_absoluto', 'erro_percentual', ]:
             if col in df_filtrado.columns:
                 cols_to_show.append(col)
 
@@ -407,6 +407,8 @@ def gerar_pagina_analise_imoveis(cidade_pth, cidade_nome, prefixo_arquivo, df=No
                 "dias_publicacao": st.column_config.NumberColumn("Anunciado há", format="%d dias"),
                 "bairro": "📍 Bairro",
                 "valor_predito": st.column_config.NumberColumn("Preço Previsto", format="R$ %d"),
+                "valor_predito_lo": st.column_config.NumberColumn("Intervalo Inferior", format="R$ %d"),
+                "valor_predito_hi": st.column_config.NumberColumn("Intervalo Superior", format="R$ %d"),
                 "erro_absoluto": st.column_config.NumberColumn("Erro Absoluto", format="R$ %d"),
                 "erro_percentual": st.column_config.NumberColumn("Erro %", format="%.1f%%"),
                 "preco_por_m2_predito": st.column_config.NumberColumn("Preço/m² Previsto", format="R$ %d"),

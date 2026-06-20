@@ -216,6 +216,30 @@ def treinar_melhor_modelo_geral(
     df_filtrado = df_full[mask].copy()
     df_filtrado, _ = engenharia_features_completa(df_filtrado, df_filtrado.copy())
 
+    # ── 10b. Salvar bairro_stats para o Streamlit ─────────────────────
+    bairro_stats = df_filtrado.groupby('bairro').agg(
+        metro_quadrado_bairro_mean=('preco_por_m2', 'mean'),
+        metro_quadrado_bairro_median=('preco_por_m2', 'median'),
+        valor_bairro_mean=('valor_imovel', 'mean'),
+        lat_centroide=('lat', 'mean'),
+        lng_centroide=('lng', 'mean'),
+        count=('metragem', 'count'),
+    ).fillna(0)
+
+    bairro_stats['bairro_rank'] = (
+        df_filtrado.groupby('bairro')['preco_por_m2'].median().rank()
+    )
+
+    score_cols = [c for c in df_filtrado.columns if c.startswith('score_')]
+    for col in score_cols:
+        bairro_stats[col] = df_filtrado.groupby('bairro')[col].mean()
+
+    bairro_stats.index.name = 'bairro'
+
+    stats_path = pasta_dados / f"{cidade}_bairro_stats_{mes_ref}.parquet"
+    bairro_stats.to_parquet(stats_path)
+    logger.info("Bairro stats salvo: %s (%d bairros)", stats_path.name, len(bairro_stats))
+
     X_pred = df_filtrado[ALL_FEATURES].copy()
     y_pred_full, y_lo, y_hi = preditor.predict(X_pred)
 
