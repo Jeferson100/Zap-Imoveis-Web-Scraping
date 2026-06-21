@@ -1131,8 +1131,10 @@ def _atualizar_centroides(centroides, novos_resultados):
                 c['_count'] = count + 1
 
 
-async def preencher_todas_coordenadas(df: pd.DataFrame, batch_size: int = None, cidade: str = 'Joinville', estado: str = 'SC', pais: str = 'Brasil', cache_path: str = None, req_por_segundo: float = 100) -> Tuple[pd.DataFrame, bool]:
+async def preencher_todas_coordenadas(df: pd.DataFrame, batch_size: int = None, cidade: str = 'Joinville', estado: str = 'SC', pais: str = 'Brasil', cache_path: str = None, req_por_segundo: float = None) -> Tuple[pd.DataFrame, bool]:
     import os
+    if req_por_segundo is None:
+        req_por_segundo = 1.0 if os.getenv("CI") else 100
     _NOMINATIM_BUCKET.intervalo = 1.0 / max(req_por_segundo, 0.1)
     if batch_size is None:
         batch_size = 1 if os.getenv("CI") else 2
