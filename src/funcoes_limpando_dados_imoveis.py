@@ -1171,17 +1171,27 @@ async def preencher_todas_coordenadas(df: pd.DataFrame, batch_size: int = None, 
                                       cache, cache_atualizado, bairro_centroides)
                 for _, row in linhas_nan.iterrows()
             ]
-            for i, future in tqdm(enumerate(asyncio.as_completed(tasks))):
-                if time.monotonic() >= fim:
+            pendentes = set(tasks)
+            while pendentes:
+                restante = max(0.0, fim - time.monotonic())
+                if restante <= 0:
                     timeout_ocorrido = True
-                    logger.warning("⏱️ Timeout — interrompendo (%d/%d)", len(resultados), len(tasks))
+                    logger.warning("⏱️ Timeout — cancelando %d tarefas restantes", len(pendentes))
+                    for t in pendentes:
+                        t.cancel()
                     break
-                resultado = await future
-                resultados.append(resultado)
-                if i % 10 == 0 and i > 0:
+                prontas, pendentes = await asyncio.wait(pendentes, timeout=restante)
+                i = len(resultados)
+                for future in prontas:
+                    try:
+                        resultado = await future
+                        resultados.append(resultado)
+                    except asyncio.CancelledError:
+                        pass
+                if len(resultados) - i > 0:
                     _atualizar_centroides(bairro_centroides, resultados[-10:])
-                if i % 50 == 0 and i > 0:
-                    logger.info("Progresso: %d/%d", i, len(tasks))
+                if len(resultados) % 50 == 0:
+                    logger.info("Progresso: %d/%d", len(resultados), len(tasks))
         else:
             logger.info("Modo sync: um_por_um (sequencial, 1 req/s)")
             for i, (_, row) in tqdm(enumerate(linhas_nan.iterrows()), total=len(linhas_nan)):
