@@ -16,6 +16,7 @@ warnings.filterwarnings("ignore")
 
 cidade = os.getenv("CIDADE_PASTA")
 bairro = os.getenv("BAIRRO")
+cidade_nome = os.getenv("LOCALIZAZAO_COMPLETA", "Rio de Janeiro, Rio de Janeiro, Brasil")
 MES_REF = datetime.now().strftime("%Y-%m")
 N_TRIALS = int(os.getenv("N_TRIALS_OPTUNA", "500"))
 
@@ -39,7 +40,7 @@ prefixo = f"{cidade}_{bairro}"
 EXPERIMENTO = f"imoveis-{cidade}-{bairro}-valor"
 
 logger.info(f"Carregando dados do cache {MES_REF}...")
-train, test = carregar_dados(PASTA_DADOS, MES_REF, prefixo)
+train, test = carregar_dados(PASTA_DADOS, MES_REF, prefixo, cidade_nome=cidade_nome)
 
 logger.info(f"Iniciando otimizacao dos melhores modelos por incremento ({N_TRIALS} trials)...")
 
@@ -61,6 +62,7 @@ if not resultados.empty:
             'r2_original','rmse_original','mape_original',
             'r2_otimizado','rmse_otimizado','mape_otimizado',
             'mae_otimizado','mdape_otimizado','best_params']
-    logger.info(f"\n{resultados[cols].to_string()}")
+    logger.info(f"
+{resultados[cols].to_string()}")
 else:
     logger.warning("Nenhum resultado de otimizacao gerado")

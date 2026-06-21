@@ -89,7 +89,7 @@ def treinar_melhor_modelo_geral(
     )
 
     # ── 3. Carregar dados (train = treino, test = calibracao) ───────────
-    train, test = carregar_dados(pasta_dados, mes_ref, cidade)
+    train, test = carregar_dados(pasta_dados, mes_ref, cidade, cidade_nome=cidade_nome)
     X_train, y_train = train[ALL_FEATURES].copy(), train[target].values
     X_cal,   y_cal   = test[ALL_FEATURES].copy(),  test[target].values
     del train, test

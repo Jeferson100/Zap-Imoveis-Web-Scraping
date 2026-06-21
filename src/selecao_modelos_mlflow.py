@@ -13,8 +13,11 @@ from sklearn.preprocessing import (
 )
 from mlflow.tracking import MlflowClient
 
+from sklearn.model_selection import train_test_split
 from preprocessador import PreprocessadorFactory, Avaliador
 from otimizador_optuna import OtimizadorOptuna, FactoryModelos
+from criando_indices_individuais import CriandoIndicesIndividuais
+from funcoes_engenharia_features import engenharia_features_completa
 
 
 logger = logging.getLogger(__name__)
@@ -103,20 +106,48 @@ def buscar_melhores_por_incremento(client, experiment_id, min_features=1, metric
     return df.loc[idx].sort_values("n_features").reset_index(drop=True)
 
 
-def carregar_dados(pasta_dados, mes_ref, cidade):
+def carregar_dados(pasta_dados, mes_ref, cidade, cidade_nome=None):
     train_path = pasta_dados / f"{cidade}_train_{mes_ref}.parquet"
     test_path  = pasta_dados / f"{cidade}_test_{mes_ref}.parquet"
 
-    if not train_path.exists() or not test_path.exists():
+    if train_path.exists() and test_path.exists():
+        train = pd.read_parquet(train_path)
+        test  = pd.read_parquet(test_path)
+        logger.info("Dados carregados do cache: treino %s, teste %s", len(train), len(test))
+        return train, test
+
+    # ── Gerar cache inline a partir do imoveis_limpo ────────────────
+    imoveis_path = pasta_dados / f"{cidade}_imoveis_limpo_{mes_ref}.parquet"
+    if not imoveis_path.exists():
         raise FileNotFoundError(
-            f"Cache nao encontrado: {train_path.name} / {test_path.name}. "
-            f"Execute primeiro 'joinville_melhores_configuraoes_modelo.py' "
-            f"para gerar os dados processados."
+            f"Nem cache nem dados limpos encontrados para {cidade}/{mes_ref}. "
+            "Execute coleta e limpeza primeiro."
         )
 
-    train = pd.read_parquet(train_path)
-    test  = pd.read_parquet(test_path)
-    logger.info(f"Dados carregados do cache: treino {len(train):,}, teste {len(test):,}")
+    logger.info("Cache não encontrado — gerando de %s ...", imoveis_path.name)
+    dados = pd.read_parquet(imoveis_path)
+    cols_obrig = {'descricao', 'bairro', 'metragem', 'preco_por_m2', 'tipo_imovel'}
+    if not cols_obrig.issubset(dados.columns):
+        raise KeyError(f"Colunas obrigatorias ausentes: {cols_obrig - set(dados.columns)}")
+
+    if cidade_nome:
+        logger.info("Calculando indices de localizacao...")
+        indices = CriandoIndicesIndividuais(cidade=cidade_nome, cache_dir=pasta_dados)
+        dados = indices.calcular_indices(imoveis_df=dados)
+
+    df_modelo = dados[
+        (dados["metragem"] > 10)
+        & (dados["tipo_imovel"].isin(["casa", "apartamento"]))
+        & (dados["preco_por_m2"] >= 100)
+    ].copy()
+
+    train, test = train_test_split(df_modelo, test_size=0.25, random_state=42)
+    train, test = engenharia_features_completa(train, test)
+
+    train.to_parquet(train_path, index=False)
+    test.to_parquet(test_path, index=False)
+    logger.info("Cache salvo: %s, %s", train_path.name, test_path.name)
+
     return train, test
 
 
