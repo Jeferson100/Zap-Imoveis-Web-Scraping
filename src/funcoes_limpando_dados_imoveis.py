@@ -1167,8 +1167,8 @@ async def preencher_todas_coordenadas(df: pd.DataFrame, batch_size: int = None, 
             logger.info("Modo async: semaphoro (concorrente, batch_size=%d)", batch_size)
             semaforo = asyncio.Semaphore(batch_size)
             tasks = [
-                preencher_coordenadas(session, row, semaforo, cidade, estado, pais,
-                                      cache, cache_atualizado, bairro_centroides)
+                asyncio.create_task(preencher_coordenadas(session, row, semaforo, cidade, estado, pais,
+                                      cache, cache_atualizado, bairro_centroides))
                 for _, row in linhas_nan.iterrows()
             ]
             pendentes = set(tasks)
