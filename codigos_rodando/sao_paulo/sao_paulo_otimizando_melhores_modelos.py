@@ -62,7 +62,6 @@ if not resultados.empty:
             'r2_original','rmse_original','mape_original',
             'r2_otimizado','rmse_otimizado','mape_otimizado',
             'mae_otimizado','mdape_otimizado','best_params']
-    logger.info(f"
-{resultados[cols].to_string()}")
+    logger.info(f"\n{resultados[cols].to_string()}")
 else:
     logger.warning("Nenhum resultado de otimizacao gerado")
