@@ -38,6 +38,7 @@ NUMERIC_FEATURES = [
     'valor_bairro_mean', 'bairro_rank',
     'quartos_por_metro', 'vagas_por_metro', 'banheiros_por_quarto',
     'dist_centro',
+    'sem_rua',
     'lat', 'lng',
 ]
 

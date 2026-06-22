@@ -80,10 +80,24 @@ def extrair_tem_elevador(train, test):
     return train, test
 
 
+def extrair_sem_rua(train, test):
+    """Flag 1 se o imovel nao tem rua (s/r)."""
+    def _is_sem_rua(series):
+        return (
+            series.str.lower().isin(["s/r", "", "nan"]) |
+            series.isna()
+        ).astype(int)
+
+    train["sem_rua"] = _is_sem_rua(train["rua"])
+    test["sem_rua"] = _is_sem_rua(test["rua"])
+    return train, test
+
+
 def engenharia_features_completa(train, test):
     """Aplica todas as funcoes de engenharia de features."""
     train, test = criar_features_bairro(train, test)
     train, test = criar_razoes(train, test)
     train, test = extrair_novo_lancamento(train, test)
     train, test = extrair_tem_elevador(train, test)
+    train, test = extrair_sem_rua(train, test)
     return train, test
