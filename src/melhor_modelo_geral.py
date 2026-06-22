@@ -31,10 +31,6 @@ from funcoes_engenharia_features import engenharia_features_completa
 
 logger = logging.getLogger(__name__)
 
-CATEGORICAL_FEATURES = [
-    "tipo_imovel", "bairro", "novo_lancamento", "tem_elevador",
-]
-
 NUMERIC_FEATURES = [
     "metragem", "quartos", "banheiros", "vagas",
     "score_escola_privada", "score_escola_publica", "score_hospitais",
@@ -43,7 +39,13 @@ NUMERIC_FEATURES = [
     "metro_quadrado_bairro_mean", "metro_quadrado_bairro_median",
     "valor_bairro_mean", "bairro_rank",
     "quartos_por_metro", "vagas_por_metro", "banheiros_por_quarto",
+    "dist_centro",
     "lat", "lng",
+]
+
+CATEGORICAL_FEATURES = [
+    "tipo_imovel", "bairro", "novo_lancamento", "tem_elevador",
+    "dist_centro_faixa",
 ]
 
 ALL_FEATURES = NUMERIC_FEATURES + CATEGORICAL_FEATURES

@@ -174,6 +174,32 @@ class CriandoIndicesIndividuais:
         return scores
 
     # ========================
+    # DISTANCIA DO CENTRO
+    # ========================
+
+    def _adicionar_distancia_centro(self, df):
+        try:
+            centro = ox.geocoder.geocode(self.cidade)
+            lat_centro, lng_centro = centro[0], centro[1]
+        except Exception:
+            lat_centro = df["lat"].median()
+            lng_centro = df["lng"].median()
+
+        coords = np.radians(df[["lat", "lng"]].fillna(0).values)
+        centro_rad = np.radians([[lat_centro, lng_centro]])
+
+        tree = BallTree(centro_rad, metric="haversine")
+        dist, _ = tree.query(coords, k=1)
+        df["dist_centro"] = dist[:, 0] * 6371
+
+        bins = [0, 5, 10, 15, float("inf")]
+        labels = ["centro", "proximo", "distante", "longe"]
+        df["dist_centro_faixa"] = pd.cut(
+            df["dist_centro"], bins=bins, labels=labels, right=True, include_lowest=True
+        )
+        return df
+
+    # ========================
     # METODO PRINCIPAL
     # ========================
 
@@ -199,5 +225,7 @@ class CriandoIndicesIndividuais:
         scores = self.calcular_scores(df)
         for col in scores.columns:
             df[col] = scores[col]
+
+        df = self._adicionar_distancia_centro(df)
 
         return df

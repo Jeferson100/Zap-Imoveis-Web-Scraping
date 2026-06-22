@@ -28,7 +28,7 @@ MAX_CONCURRENT = int(os.getenv("MAX_CONCURRENT", "20"))
 FEATURE_SELECTION = os.getenv("FEATURE_SELECTION", "sequential")
 TARGET = "valor_imovel"
 
-CATEGORICAL_FEATURES = ['tipo_imovel', 'bairro', 'novo_lancamento', 'tem_elevador']
+CATEGORICAL_FEATURES = ['tipo_imovel', 'bairro', 'novo_lancamento', 'tem_elevador', 'dist_centro_faixa']
 
 NUMERIC_FEATURES = [
     'metragem', 'quartos', 'banheiros', 'vagas',
@@ -38,6 +38,7 @@ NUMERIC_FEATURES = [
     'metro_quadrado_bairro_mean', 'metro_quadrado_bairro_median',
     'valor_bairro_mean', 'bairro_rank',
     'quartos_por_metro', 'vagas_por_metro', 'banheiros_por_quarto',
+    'dist_centro',
     'lat', 'lng',
 ]
 
