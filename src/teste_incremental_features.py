@@ -12,6 +12,7 @@ from sklearn.tree import DecisionTreeRegressor
 from sklearn.ensemble import RandomForestRegressor, GradientBoostingRegressor
 from sklearn.neighbors import KNeighborsRegressor
 from sklearn.svm import SVR
+from catboost import CatBoostRegressor
 from sklearn.preprocessing import StandardScaler, RobustScaler, MinMaxScaler, QuantileTransformer, PowerTransformer, OrdinalEncoder, OneHotEncoder
 from sklearn.impute import SimpleImputer
 from sklearn.pipeline import Pipeline
@@ -73,11 +74,12 @@ MODELOS_SIMPLES_TRAT = {
     ),
     "KNeighbors": lambda: KNeighborsRegressor(n_jobs=-1),
     "SVR": lambda: SVR(kernel="rbf"),
+    "CatBoost": lambda: CatBoostRegressor(verbose=0, random_seed=42),
 }
 
 SCALE_INVARIANT = {
     "Linear", "Ridge", "DecisionTree",
-    "RandomForest", "GradientBoosting",
+    "RandomForest", "GradientBoosting", "CatBoost",
     "Ridge_opt", "RandomForest_opt", "GradientBoosting_opt",
 }
 
@@ -98,6 +100,7 @@ class TesteIncrementalFeatures:
         ),
         "KNeighbors": KNeighborsRegressor(n_jobs=-1),
         "SVR": SVR(kernel="rbf"),
+        "CatBoost": CatBoostRegressor(verbose=0, random_seed=42),
     }
 
     ESCALADORES_PADRAO = {
