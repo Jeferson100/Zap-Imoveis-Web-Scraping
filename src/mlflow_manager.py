@@ -209,6 +209,7 @@ class MLflowManager:
                     "mape": run.data.metrics.get("mape"),
                     "mdape": run.data.metrics.get("mdape"),
                     "r2": run.data.metrics.get("r2"),
+                    "rmsle": run.data.metrics.get("rmsle"),
                     "parametros": run.data.params,
                     "feature_sampled": run.data.tags.get("feature_sample"),
                     "modelo": run.data.tags.get("modelo"),

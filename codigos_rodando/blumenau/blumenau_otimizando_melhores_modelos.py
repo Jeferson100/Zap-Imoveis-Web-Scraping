@@ -7,6 +7,8 @@ import logging
 import warnings
 
 from selecao_modelos_mlflow import otimizar_melhores_incrementos, carregar_dados
+from config_features import NUMERIC_FEATURES, CATEGORICAL_FEATURES
+
 
 
 load_dotenv()
@@ -23,21 +25,6 @@ MES_REF = os.getenv("MES_REF", datetime.now().strftime("%Y-%m"))
 cidade_nome = os.getenv("LOCALIZAZAO_COMPLETA", "Blumenau, Santa Catarina, Brasil")
 
 N_TRIALS = int(os.getenv("N_TRIALS_OPTUNA", "500"))
-
-CATEGORICAL_FEATURES = ['tipo_imovel', 'bairro', 'novo_lancamento', 'tem_elevador', 'dist_centro_faixa']
-
-NUMERIC_FEATURES = [
-    'metragem', 'quartos', 'banheiros', 'vagas',
-    'score_escola_privada', 'score_escola_publica', 'score_hospitais',
-    'score_mercado', 'score_farmacia', 'score_parque',
-    'score_seguranca', 'score_educacao',
-    'metro_quadrado_bairro_mean', 'metro_quadrado_bairro_median',
-    'valor_bairro_mean', 'bairro_rank',
-    'quartos_por_metro', 'vagas_por_metro', 'banheiros_por_quarto',
-    'dist_centro',
-    'sem_rua',
-    'lat', 'lng',
-]
 
 PASTA_DADOS = Path(__file__).parent.parent.parent / 'dados' / cidade
 
@@ -66,7 +53,7 @@ if not resultados.empty:
             'imputer_num','encoder',
             'r2_original','rmse_original','mape_original',
             'r2_otimizado','rmse_otimizado','mape_otimizado',
-            'mae_otimizado','mdape_otimizado','best_params']
+            'mae_otimizado','mdape_otimizado','rmsle_original','rmsle_otimizado','best_params']
     logger.info(f"\n{resultados[cols].to_string()}")
 else:
     logger.warning("Nenhum resultado de otimizacao gerado")

@@ -3,7 +3,7 @@ import threading
 import numpy as np
 import optuna
 from sklearn.model_selection import KFold, cross_validate
-from sklearn.metrics import make_scorer
+from sklearn.metrics import make_scorer, mean_squared_log_error
 from sklearn.pipeline import Pipeline
 from contextlib import contextmanager
 
@@ -32,6 +32,10 @@ class _NullMlflowManager:
 
 def _mdape(y_true, y_pred):
     return np.median(np.abs((y_true - y_pred) / y_true)) * 100
+
+
+def _rmsle(y_true, y_pred):
+    return np.sqrt(mean_squared_log_error(y_true, y_pred))
 
 
 class OtimizadorOptuna:
@@ -82,6 +86,7 @@ class OtimizadorOptuna:
                 "mape": "neg_mean_absolute_percentage_error",
                 "mdape": make_scorer(_mdape, greater_is_better=False),
                 "r2": "r2",
+                "rmsle": make_scorer(_rmsle, greater_is_better=False),
             }
             scores = cross_validate(pipe, self.X, self.y, cv=self.cv, scoring=scoring, n_jobs=self.n_jobs)
             metrics = {
@@ -90,6 +95,7 @@ class OtimizadorOptuna:
                 "mape": -scores["test_mape"].mean(),
                 "mdape": -scores["test_mdape"].mean(),
                 "r2": scores["test_r2"].mean(),
+                "rmsle": -scores["test_rmsle"].mean(),
             }
             self._log_trial(nome, trial, metrics, self.X)
             return metrics["rmse"]

@@ -18,6 +18,8 @@ load_dotenv()
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
+from config_features import NUMERIC_FEATURES, CATEGORICAL_FEATURES
+
 warnings.filterwarnings("ignore")
 
 cidade = os.getenv("CIDADE_PASTA")
@@ -26,21 +28,6 @@ MES_REF = os.getenv("MES_REF", datetime.now().strftime("%Y-%m"))
 N_TRIALS_OPTUNA = int(os.getenv("N_TRIALS_OPTUNA", "15"))
 MAX_CONCURRENT = int(os.getenv("MAX_CONCURRENT", "20"))
 TARGET = "valor_imovel"
-
-CATEGORICAL_FEATURES = ['tipo_imovel', 'bairro', 'novo_lancamento', 'tem_elevador', 'dist_centro_faixa']
-
-NUMERIC_FEATURES = [
-    'metragem', 'quartos', 'banheiros', 'vagas',
-    'score_escola_privada', 'score_escola_publica', 'score_hospitais',
-    'score_mercado', 'score_farmacia', 'score_parque',
-    'score_seguranca', 'score_educacao',
-    'metro_quadrado_bairro_mean', 'metro_quadrado_bairro_median',
-    'valor_bairro_mean', 'bairro_rank',
-    'quartos_por_metro', 'vagas_por_metro', 'banheiros_por_quarto',
-    'dist_centro',
-    'sem_rua',
-    'lat', 'lng',
-]
 
 PASTA_DADOS = Path(__file__).parent.parent.parent / 'dados' / cidade
 
@@ -123,7 +110,7 @@ if __name__ == "__main__":
             parquet_path = PASTA_DADOS / f"{cidade}_melhores_por_incremento_{MES_REF}.parquet"
             melhores.to_parquet(parquet_path, index=False)
             logger.info(f"Melhores por incremento salvos ({len(melhores)} linhas): {parquet_path.name}")
-            cols = ['n_features','modelo','otimizacao','tratamento','transform','scaler','imputer_num','encoder','r2','rmse','mape']
+            cols = ['n_features','modelo','otimizacao','tratamento','transform','scaler','imputer_num','encoder','r2','rmse','mape','rmsle']
             logger.info(f"\n{melhores[cols].head(15).to_string()}")
         else:
             logger.warning("Nenhum run com metrica r2 encontrado no MLflow")

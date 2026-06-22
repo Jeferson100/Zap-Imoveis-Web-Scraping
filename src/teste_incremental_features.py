@@ -485,6 +485,7 @@ class TesteIncrementalFeatures:
                                 "mape": float("nan"),
                                 "mdape": float("nan"),
                                 "r2": float("nan"),
+                                "rmsle": float("nan"),
                             }
                         )
                         logger.warning(

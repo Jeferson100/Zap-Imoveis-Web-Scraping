@@ -9,7 +9,7 @@ import optuna
 import pandas as pd
 from keras import layers
 from mlflow.tracking.client import MlflowClient
-from sklearn.metrics import mean_absolute_error, mean_absolute_percentage_error, mean_squared_error, r2_score
+from sklearn.metrics import mean_absolute_error, mean_absolute_percentage_error, mean_squared_error, mean_squared_log_error, r2_score
 from sklearn.pipeline import Pipeline
 
 
@@ -198,15 +198,17 @@ def treinar_pipeline_com_mlflow(nome, estimador, X_tr, y_tr, X_te, y_te, criar_p
         mae = mean_absolute_error(y_te, pred)
         mape = np.mean(np.abs((y_te - pred) / y_te)) * 100
         r2 = r2_score(y_te, pred)
+        rmsle = float(np.sqrt(mean_squared_log_error(y_te, pred)))
 
         mlflow.log_metric("rmse", float(rmse))
         mlflow.log_metric("mae", float(mae))
         mlflow.log_metric("mape", float(mape))
         mlflow.log_metric("r2", float(r2))
+        mlflow.log_metric("rmsle", rmsle)
         mlflow.log_metric("n_train", len(X_tr))
         mlflow.log_metric("n_test", len(X_te))
 
-        print(f"{nome}: RMSE=R$ {rmse:,.0f} | MAE=R$ {mae:,.0f} | MAPE={mape:.1f}% | R²={r2:.3f}")
+        print(f"{nome}: RMSE=R$ {rmse:,.0f} | MAE=R$ {mae:,.0f} | MAPE={mape:.1f}% | R²={r2:.3f} | RMSLE={rmsle:.4f}")
         return trained_model, {"rmse": rmse, "mae": mae, "mape": mape, "r2": r2}
     finally:
         mlflow.end_run()
@@ -305,6 +307,7 @@ def otimizar_mlp_com_mlflow(
             mae = mean_absolute_error(y_va_real, preds_real)
             mape = mean_absolute_percentage_error(y_va_real, preds_real)
             r2 = r2_score(y_va_real, preds_real)
+            rmsle = float(np.sqrt(mean_squared_log_error(y_va_real, preds_real)))
 
             with mlflow.start_run(nested=True, run_name=f"{nome}_trial_{trial.number}"):
                 mlflow.set_tag("modelo", "keras")
@@ -315,6 +318,7 @@ def otimizar_mlp_com_mlflow(
                 mlflow.log_metric("mae", float(mae))
                 mlflow.log_metric("mape", float(mape))
                 mlflow.log_metric("r2", float(r2))
+                mlflow.log_metric("rmsle", rmsle)
                 mlflow.log_metric("best_epoch", len(history.history.get("loss", [])))
                 _log_feature_history(X_train_keras, run_name=nome)
                 _log_feature_store(

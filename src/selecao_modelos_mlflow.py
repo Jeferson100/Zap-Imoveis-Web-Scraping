@@ -97,6 +97,7 @@ def buscar_melhores_por_incremento(client, experiment_id, min_features=1, metric
             "mae": m.get("mae"),
             "mape": m.get("mape"),
             "mdape": m.get("mdape"),
+            "rmsle": m.get("rmsle"),
         })
     df = pd.DataFrame(rows)
     if df.empty:
@@ -316,11 +317,13 @@ def otimizar_melhores_incrementos(
             "mae_original": row["mae"],
             "mape_original": row["mape"],
             "mdape_original": row["mdape"],
+            "rmsle_original": row.get("rmsle"),
             "r2_otimizado": met.get("r2"),
             "rmse_otimizado": met.get("rmse"),
             "mae_otimizado": met.get("mae"),
             "mape_otimizado": met.get("mape"),
             "mdape_otimizado": met.get("mdape"),
+            "rmsle_otimizado": met.get("rmsle"),
         })
 
     df_out = pd.DataFrame(resultados)

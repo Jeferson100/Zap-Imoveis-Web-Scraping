@@ -23,7 +23,7 @@ from sklearn.impute import SimpleImputer
 from sklearn.pipeline import Pipeline
 from sklearn.model_selection import train_test_split, cross_validate
 from sklearn.metrics import make_scorer
-from otimizador_optuna import _mdape
+from otimizador_optuna import _mdape, _rmsle
 
 from preprocessador import PreprocessadorFactory, Avaliador
 from mlflow_manager import MLflowManager
@@ -444,6 +444,7 @@ class TesteIncrementalFeaturesAsync:
                             "mape": "neg_mean_absolute_percentage_error",
                             "mdape": make_scorer(_mdape, greater_is_better=False),
                             "r2": "r2",
+                            "rmsle": make_scorer(_rmsle, greater_is_better=False),
                         }
 
                         if mod_name == "RedesNeurais":
@@ -520,6 +521,7 @@ class TesteIncrementalFeaturesAsync:
                                     "cv_mape": -cv_scores["test_mape"].mean(),
                                     "cv_mdape": -cv_scores["test_mdape"].mean(),
                                     "cv_r2": cv_scores["test_r2"].mean(),
+                                    "cv_rmsle": -cv_scores["test_rmsle"].mean(),
                                 }
                                 return y_pred, cv_met
                             y_pred, cv_met_inline = await asyncio.wait_for(
@@ -545,6 +547,7 @@ class TesteIncrementalFeaturesAsync:
                                     "cv_mape": -cv_scores["test_mape"].mean(),
                                     "cv_mdape": -cv_scores["test_mdape"].mean(),
                                     "cv_r2": cv_scores["test_r2"].mean(),
+                                    "cv_rmsle": -cv_scores["test_rmsle"].mean(),
                                 }
                                 return y_pred, cv_met
                             y_pred, cv_met_inline = await asyncio.wait_for(
@@ -584,6 +587,7 @@ class TesteIncrementalFeaturesAsync:
                             "modelo": mod_name,
                             "rmse": float("nan"), "mae": float("nan"),
                             "mape": float("nan"), "mdape": float("nan"), "r2": float("nan"),
+                            "rmsle": float("nan"),
                         }
 
             tasks = [executar_combo(c) for c in combos]
@@ -965,6 +969,7 @@ class TesteIncrementalFeaturesAsync:
                     "transform": transf_name,
                     "rmse": float("nan"), "mae": float("nan"),
                     "mape": float("nan"), "mdape": float("nan"), "r2": float("nan"),
+                    "rmsle": float("nan"),
                 })
 
     async def _combo_optuna(self, loop, trat, mod_name, factory_fn,
