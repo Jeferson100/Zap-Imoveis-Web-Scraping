@@ -71,8 +71,8 @@ MODELOS_OTIMIZAVEIS = {
     "KNN_opt":          FactoryModelos().knn,
     #"SVR_opt":          FactoryModelos().svr,
     "CatBoost_opt":     FactoryModelos().catboost,
-    #"LightGBM_opt":     FactoryModelos().lightgbm,
-    #"HistGB_opt":       FactoryModelos().hist_gb,
+    "LightGBM_opt":     FactoryModelos().lightgbm,
+    "HistGB_opt":       FactoryModelos().hist_gb,
 }
 
 MODELOS_SIMPLES_TRAT = {

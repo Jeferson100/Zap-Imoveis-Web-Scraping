@@ -103,7 +103,10 @@ class Avaliador:
         mape = np.mean(np.abs((y_true - y_pred) / y_true)) * 100
         mdape = np.median(np.abs((y_true - y_pred) / y_true)) * 100
         r2 = r2_score(y_true, y_pred)
-        rmsle = float(np.sqrt(mean_squared_log_error(y_true, y_pred)))
+        try:
+            rmsle = float(np.sqrt(mean_squared_log_error(y_true, y_pred)))
+        except ValueError:
+            rmsle = float("nan")
         print(f"{nome}: RMSE=R$ {rmse:,.0f} | MAE=R$ {mae:,.0f} | MAPE={mape:.1f}% | MdAPE={mdape:.1f}% | R2={r2:.3f} | RMSLE={rmsle:.4f}")
         return {"rmse": rmse, "mae": mae, "mape": mape, "mdape": mdape, "r2": r2, "rmsle": rmsle}
 
