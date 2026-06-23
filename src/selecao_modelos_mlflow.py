@@ -148,7 +148,7 @@ def buscar_melhores_top_n(client, experiment_id, n=10, min_features=1, metrica="
     return df.sort_values(metrica, ascending=ascending).head(n).reset_index(drop=True)
 
 
-def buscar_melhores_por_modelo(client, experiment_id, top_k=3, min_features=1, metrica="r2"):
+def buscar_melhores_por_modelo(client, experiment_id, top_k=2, min_features=1, metrica="r2"):
     runs = buscar_todos_runs(client, experiment_id)
     rows = []
     for r in runs:
