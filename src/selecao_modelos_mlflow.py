@@ -46,6 +46,7 @@ MODEL_KEY_MAP = {
     "KNN_opt": "knn",
     "KNeighbors": "knn",
     "CatBoost_opt": "catboost",
+    "CatBoost": "catboost",
     "Linear": "linear",
     "DecisionTree": "decision_tree",
 }
