@@ -108,6 +108,90 @@ def buscar_melhores_por_incremento(client, experiment_id, min_features=1, metric
     return df.loc[idx].sort_values("n_features").reset_index(drop=True)
 
 
+def buscar_melhores_top_n(client, experiment_id, n=10, min_features=1, metrica="r2"):
+    runs = buscar_todos_runs(client, experiment_id)
+    rows = []
+    for r in runs:
+        if not r.data.metrics or metrica not in r.data.metrics:
+            continue
+        p, t, m = r.data.params, r.data.tags, r.data.metrics
+        nf = int(t.get("n_features") or p.get("n_features", 0) or 0)
+        if nf < min_features:
+            continue
+        eh_optuna = "_opt" in str(r.info.run_name or "")
+        rows.append({
+            "run_name": r.info.run_name or "",
+            "modelo": t.get("modelo") or p.get("modelo", ""),
+            "tratamento": t.get("tratamento") or p.get("tratamento", ""),
+            "n_features": nf,
+            "otimizacao": t.get("otimizacao") or ("optuna" if eh_optuna else "simples"),
+            "transform": p.get("transform", "none"),
+            "scaler": t.get("scaler", ""),
+            "imputer_num": t.get("imputer_num", ""),
+            "encoder": t.get("encoder", ""),
+            "feature_history_columns": t.get("feature_history_columns", ""),
+            "feature_history_num_columns": t.get("feature_history_num_columns", ""),
+            "feature_history_run_name": t.get("feature_history_run_name", ""),
+            "feature_transform_map": t.get("feature_transform_map", "{}"),
+            "r2": m.get("r2"),
+            "rmse": m.get("rmse"),
+            "mae": m.get("mae"),
+            "mape": m.get("mape"),
+            "mdape": m.get("mdape"),
+            "rmsle": m.get("rmsle"),
+        })
+    df = pd.DataFrame(rows)
+    if df.empty:
+        return df
+    direcao = "max" if metrica == "r2" else "min"
+    ascending = direcao == "min"
+    return df.sort_values(metrica, ascending=ascending).head(n).reset_index(drop=True)
+
+
+def buscar_melhores_por_modelo(client, experiment_id, top_k=3, min_features=1, metrica="r2"):
+    runs = buscar_todos_runs(client, experiment_id)
+    rows = []
+    for r in runs:
+        if not r.data.metrics or metrica not in r.data.metrics:
+            continue
+        p, t, m = r.data.params, r.data.tags, r.data.metrics
+        nf = int(t.get("n_features") or p.get("n_features", 0) or 0)
+        if nf < min_features:
+            continue
+        eh_optuna = "_opt" in str(r.info.run_name or "")
+        rows.append({
+            "run_name": r.info.run_name or "",
+            "modelo": t.get("modelo") or p.get("modelo", ""),
+            "tratamento": t.get("tratamento") or p.get("tratamento", ""),
+            "n_features": nf,
+            "otimizacao": t.get("otimizacao") or ("optuna" if eh_optuna else "simples"),
+            "transform": p.get("transform", "none"),
+            "scaler": t.get("scaler", ""),
+            "imputer_num": t.get("imputer_num", ""),
+            "encoder": t.get("encoder", ""),
+            "feature_history_columns": t.get("feature_history_columns", ""),
+            "feature_history_num_columns": t.get("feature_history_num_columns", ""),
+            "feature_history_run_name": t.get("feature_history_run_name", ""),
+            "feature_transform_map": t.get("feature_transform_map", "{}"),
+            "r2": m.get("r2"),
+            "rmse": m.get("rmse"),
+            "mae": m.get("mae"),
+            "mape": m.get("mape"),
+            "mdape": m.get("mdape"),
+            "rmsle": m.get("rmsle"),
+        })
+    df = pd.DataFrame(rows)
+    if df.empty:
+        return df
+    direcao = "max" if metrica == "r2" else "min"
+    ascending = direcao == "min"
+    return (
+        df.groupby("modelo", sort=False)
+        .apply(lambda g: g.sort_values(metrica, ascending=ascending).head(top_k))
+        .reset_index(drop=True)
+    )
+
+
 def carregar_dados(pasta_dados, mes_ref, cidade, cidade_nome=None):
     train_path = pasta_dados / f"{cidade}_train_{mes_ref}.parquet"
     test_path  = pasta_dados / f"{cidade}_test_{mes_ref}.parquet"
@@ -194,11 +278,16 @@ def otimizar_melhores_incrementos(
     min_features=1,
     target_col="valor_imovel",
     metrica="r2",
+    selection_mode="features",
+    top_k=10,
 ):
     logger.info(f"Buscando melhores incrementos no experimento '{experimento_mlflow}'")
     logger.info(f"Minimo de features: {min_features}")
     logger.info(f"Metrica: {metrica}")
     logger.info(f"Otimalizando {n_trials} vezes")
+    logger.info(f"Modo de selecao: {selection_mode}")
+    if selection_mode in ("top_n", "por_modelo", "combinado"):
+        logger.info(f"Top K: {top_k}")
     logger.info(f"Features numericas: {numeric_features}")
     logger.info(f"Features categoricas: {categorical_features}")
     logger.info(f"Target: {target_col}")
@@ -220,7 +309,24 @@ def otimizar_melhores_incrementos(
         logger.error(f"Experimento '{experimento_mlflow}' nao encontrado")
         return pd.DataFrame()
 
-    melhores = buscar_melhores_por_incremento(client, exp.experiment_id, min_features, metrica)
+    strategies = {
+        "features": lambda: buscar_melhores_por_incremento(
+            client, exp.experiment_id, min_features, metrica),
+        "top_n": lambda: buscar_melhores_top_n(
+            client, exp.experiment_id, top_k, min_features, metrica),
+        "por_modelo": lambda: buscar_melhores_por_modelo(
+            client, exp.experiment_id, top_k, min_features, metrica),
+    }
+
+    if selection_mode == "combinado":
+        parts = [fn() for fn in strategies.values()]
+        melhores = pd.concat(parts).drop_duplicates(subset="run_name").reset_index(drop=True)
+    elif selection_mode in strategies:
+        melhores = strategies[selection_mode]()
+    else:
+        logger.warning("Modo de selecao invalido: %s", selection_mode)
+        return pd.DataFrame()
+
     if melhores.empty:
         logger.warning("Nenhum run encontrado")
         return pd.DataFrame()

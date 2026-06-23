@@ -21,6 +21,8 @@ bairro = os.getenv("BAIRRO")
 cidade_nome = os.getenv("LOCALIZAZAO_COMPLETA", "Sao Paulo, Sao Paulo, Brasil")
 MES_REF = datetime.now().strftime("%Y-%m")
 N_TRIALS = int(os.getenv("N_TRIALS_OPTUNA", "500"))
+SELECTION_MODE = os.getenv("SELECTION_MODE", "features")
+TOP_K = int(os.getenv("TOP_K", "10"))
 
 BASE_DIR = Path(__file__).parent.parent.parent
 PASTA_DADOS = BASE_DIR / 'dados' / cidade / bairro
@@ -40,6 +42,8 @@ resultados = otimizar_melhores_incrementos(
     categorical_features=CATEGORICAL_FEATURES,
     n_trials=N_TRIALS,
     metrica="rmse",
+    selection_mode=SELECTION_MODE,
+    top_k=TOP_K,
 )
 
 if not resultados.empty:
