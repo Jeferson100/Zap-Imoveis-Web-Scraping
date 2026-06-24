@@ -24,7 +24,7 @@ cidade = os.getenv("CIDADE_PASTA")
 MES_REF = os.getenv("MES_REF", datetime.now().strftime("%Y-%m"))
 cidade_nome = os.getenv("LOCALIZAZAO_COMPLETA", "Joinville, Santa Catarina, Brasil")
 
-N_TRIALS = int(os.getenv("N_TRIALS_OPTUNA", "500"))
+N_TRIALS = int(os.getenv("N_TRIALS_OPTUNA", "400"))
 SELECTION_MODE = os.getenv("SELECTION_MODE", "combinado")
 TOP_K = int(os.getenv("TOP_K", "10"))
 
