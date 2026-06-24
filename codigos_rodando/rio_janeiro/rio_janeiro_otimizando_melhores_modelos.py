@@ -23,6 +23,7 @@ MES_REF = datetime.now().strftime("%Y-%m")
 N_TRIALS = int(os.getenv("N_TRIALS_OPTUNA", "500"))
 SELECTION_MODE = os.getenv("SELECTION_MODE", "features")
 TOP_K = int(os.getenv("TOP_K", "10"))
+TOP_K_MODELO = int(os.getenv("TOP_K_MODELO", "3"))
 
 BASE_DIR = Path(__file__).parent.parent.parent
 PASTA_DADOS = BASE_DIR / 'dados' / cidade / bairro
@@ -44,6 +45,7 @@ resultados = otimizar_melhores_incrementos(
     metrica="rmse",
     selection_mode=SELECTION_MODE,
     top_k=TOP_K,
+    top_k_modelo=TOP_K_MODELO,
 )
 
 if not resultados.empty:

@@ -281,14 +281,17 @@ def otimizar_melhores_incrementos(
     metrica="r2",
     selection_mode="features",
     top_k=10,
+    top_k_modelo=3,
 ):
     logger.info(f"Buscando melhores incrementos no experimento '{experimento_mlflow}'")
     logger.info(f"Minimo de features: {min_features}")
     logger.info(f"Metrica: {metrica}")
     logger.info(f"Otimalizando {n_trials} vezes")
     logger.info(f"Modo de selecao: {selection_mode}")
-    if selection_mode in ("top_n", "por_modelo", "combinado"):
-        logger.info(f"Top K: {top_k}")
+    if selection_mode in ("top_n", "combinado"):
+        logger.info(f"Top K geral: {top_k}")
+    if selection_mode in ("por_modelo", "combinado"):
+        logger.info(f"Top K por modelo: {top_k_modelo}")
     logger.info(f"Features numericas: {numeric_features}")
     logger.info(f"Features categoricas: {categorical_features}")
     logger.info(f"Target: {target_col}")
@@ -316,7 +319,7 @@ def otimizar_melhores_incrementos(
         "top_n": lambda: buscar_melhores_top_n(
             client, exp.experiment_id, top_k, min_features, metrica),
         "por_modelo": lambda: buscar_melhores_por_modelo(
-            client, exp.experiment_id, top_k, min_features, metrica),
+            client, exp.experiment_id, top_k_modelo, min_features, metrica),
     }
 
     if selection_mode == "combinado":
@@ -372,6 +375,8 @@ def otimizar_melhores_incrementos(
             encoder=encoder_cls(),
             transform=transform if transform != "none" else None,
         )
+
+        run_name = f"{modelo_nome}|{row['tratamento']}|{transform}_{nf}feats"
 
         # ── Modelos sem hiperparametros (Linear) — pula Optuna ─────────────
         if modelo_nome in ("Linear", "linear"):
@@ -434,13 +439,12 @@ def otimizar_melhores_incrementos(
             logger.warning(f"Modelo '{modelo_nome}' nao mapeado, pulando")
             continue
 
-        run_name = f"optuna_{modelo_nome}|{row['tratamento']}|{transform}_{nf}feats"
         otim = OtimizadorOptuna(
             preprocessador=pp, X=X_tr, y=y_tr,
             mlflow_manager=None,
             n_trials=n_trials, n_folds=5,
         )
-        estudo = otim.otimizar(run_name, factory, log_trials=False)
+        estudo = otim.otimizar(f"optuna_{run_name}", factory, log_trials=False)
         if not estudo:
             continue
 
@@ -452,9 +456,9 @@ def otimizar_melhores_incrementos(
         pipe = Pipeline([("preprocessador", pp), ("modelo", modelo_best)])
         pipe.fit(X_tr, y_tr)
         y_pred = pipe.predict(X_te)
-        met = Avaliador.metricas(run_name, y_te, y_pred)
+        met = Avaliador.metricas(f"optuna_{run_name}", y_te, y_pred)
 
-        with mgr.run_session(run_name=f"best_{modelo_nome}|{row['tratamento']}|{transform}_{nf}feats",
+        with mgr.run_session(run_name=f"best_{run_name}",
                              tags={"categoria": "otimizado_melhor_incremento"}):
             import mlflow
             mlflow.log_params({f"best_{k}": str(v) for k, v in best_params.items()})

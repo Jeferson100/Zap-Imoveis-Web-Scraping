@@ -27,6 +27,7 @@ cidade_nome = os.getenv("LOCALIZAZAO_COMPLETA", "Florianopolis, Santa Catarina, 
 N_TRIALS = int(os.getenv("N_TRIALS_OPTUNA", "500"))
 SELECTION_MODE = os.getenv("SELECTION_MODE", "features")
 TOP_K = int(os.getenv("TOP_K", "10"))
+TOP_K_MODELO = int(os.getenv("TOP_K_MODELO", "3"))
 
 PASTA_DADOS = Path(__file__).parent.parent.parent / 'dados' / cidade
 
@@ -47,6 +48,7 @@ resultados = otimizar_melhores_incrementos(
     metrica="rmse",
     selection_mode=SELECTION_MODE,
     top_k=TOP_K,
+    top_k_modelo=TOP_K_MODELO,
 )
 
 if not resultados.empty:
