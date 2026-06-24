@@ -153,7 +153,7 @@ jobs:
           git config user.email "github-actions@github.com"
           git add dados/
           git commit -m "Pipeline ${{ inputs.cidade_pasta}}: $(date +'%Y-%m-%d')" || echo "Nada para commitar"
-          git pull --rebase -X ours origin main
+          git pull --rebase --autostash -X ours origin main
           git push origin main
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
