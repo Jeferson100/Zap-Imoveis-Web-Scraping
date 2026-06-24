@@ -3,6 +3,7 @@ import logging
 import pandas as pd
 import numpy as np
 import optuna
+from tqdm import tqdm
 from pathlib import Path
 from sklearn.pipeline import Pipeline
 from sklearn.impute import SimpleImputer
@@ -320,7 +321,9 @@ def otimizar_melhores_incrementos(
 
     if selection_mode == "combinado":
         parts = [fn() for fn in strategies.values()]
-        melhores = pd.concat(parts).drop_duplicates(subset="run_name").reset_index(drop=True)
+        combo_cols = ["modelo", "tratamento", "transform", "n_features",
+                      "scaler", "imputer_num", "encoder"]
+        melhores = pd.concat(parts).drop_duplicates(subset=combo_cols).reset_index(drop=True)
     elif selection_mode in strategies:
         melhores = strategies[selection_mode]()
     else:
@@ -331,8 +334,16 @@ def otimizar_melhores_incrementos(
         logger.warning("Nenhum run encontrado")
         return pd.DataFrame()
 
+    logger.info("Total de runs selecionados para otimizacao: %d", len(melhores))
+    for _, r in melhores.iterrows():
+        logger.info(
+            "  %s | %s | %s | %.0f feats | %s | %s",
+            r["modelo"], r["tratamento"], r["transform"],
+            r["n_features"], r["scaler"], r["imputer_num"],
+        )
+
     resultados = []
-    for _, row in melhores.iterrows():
+    for _, row in tqdm(melhores.iterrows(), total=len(melhores), desc="Otimizando runs"):
         feat_map = json.loads(row["feature_transform_map"])
         all_features = list(feat_map.keys())
         if not all_features:
@@ -362,6 +373,61 @@ def otimizar_melhores_incrementos(
             transform=transform if transform != "none" else None,
         )
 
+        # ── Modelos sem hiperparametros (Linear) — pula Optuna ─────────────
+        if modelo_nome in ("Linear", "linear"):
+            from sklearn.linear_model import LinearRegression
+            best_params = {}
+            best_cv_rmse = None
+            modelo_best = LinearRegression()
+            pipe = Pipeline([("preprocessador", pp), ("modelo", modelo_best)])
+            pipe.fit(X_tr, y_tr)
+            y_pred = pipe.predict(X_te)
+            met = Avaliador.metricas(run_name, y_te, y_pred)
+
+            with mgr.run_session(run_name=f"noopt_{modelo_nome}|{row['tratamento']}|{transform}_{nf}feats",
+                                 tags={"categoria": "otimizado_melhor_incremento"}):
+                import mlflow
+                mlflow.log_metrics(met)
+                mlflow.set_tag("modelo", modelo_nome)
+                mlflow.set_tag("tratamento", row["tratamento"])
+                mlflow.set_tag("n_features", nf)
+                mlflow.set_tag("transform", transform)
+                mlflow.set_tag("scaler", row["scaler"])
+                mlflow.set_tag("imputer_num", row["imputer_num"])
+                mlflow.set_tag("encoder", row["encoder"])
+                mlflow.set_tag("feature_transform_map", row.get("feature_transform_map", ""))
+                mlflow.set_tag("feature_history_columns", row.get("feature_history_columns", ""))
+                mlflow.set_tag("feature_history_num_columns", row.get("feature_history_num_columns", ""))
+                mlflow.set_tag("feature_history_run_name", row.get("feature_history_run_name", ""))
+            resultados.append({
+                "n_features": nf,
+                "modelo": modelo_nome,
+                "tratamento": row["tratamento"],
+                "transform": transform,
+                "scaler": row["scaler"],
+                "imputer_num": row["imputer_num"],
+                "encoder": row["encoder"],
+                "feature_history_columns": row.get("feature_history_columns", ""),
+                "feature_history_num_columns": row.get("feature_history_num_columns", ""),
+                "feature_history_run_name": row.get("feature_history_run_name", ""),
+                "feature_transform_map": row.get("feature_transform_map", ""),
+                "best_params": json.dumps(best_params),
+                "r2_original": row["r2"],
+                "rmse_original": row["rmse"],
+                "mae_original": row["mae"],
+                "mape_original": row["mape"],
+                "mdape_original": row["mdape"],
+                "rmsle_original": row.get("rmsle"),
+                "r2_otimizado": met.get("r2"),
+                "rmse_otimizado": met.get("rmse"),
+                "mae_otimizado": met.get("mae"),
+                "mape_otimizado": met.get("mape"),
+                "mdape_otimizado": met.get("mdape"),
+                "rmsle_otimizado": met.get("rmsle"),
+            })
+            continue
+
+        # ── Modelos com hiperparametros — Optuna normalmente ───────────────
         model_key = MODEL_KEY_MAP.get(modelo_nome, "")
         factory = getattr(FactoryModelos(), model_key, None)
         if not factory:
