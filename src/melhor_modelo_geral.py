@@ -70,15 +70,21 @@ def treinar_melhor_modelo_geral(
     best_idx = df_otim["rmse_otimizado"].idxmin()
     best = df_otim.loc[best_idx]
 
+    feat_map = json.loads(best.get("feature_transform_map", "{}"))
+    best_features = list(feat_map.keys())
+    if not best_features:
+        logger.warning("feature_transform_map vazio — usando ALL_FEATURES (%d)", len(ALL_FEATURES))
+        best_features = ALL_FEATURES
+
     logger.info(
-        "Melhor config: %s | rmse_otimizado=%.2f | tratamento=%s | n_features=%.0f",
-        best["modelo"], best["rmse_otimizado"], best["tratamento"], best["n_features"],
+        "Melhor config: %s | rmse_otimizado=%.2f | tratamento=%s | n_features=%d",
+        best["modelo"], best["rmse_otimizado"], best["tratamento"], len(best_features),
     )
 
     # ── 3. Carregar dados (train = treino, test = calibracao) ───────────
     train, test = carregar_dados(pasta_dados, mes_ref, cidade, cidade_nome=cidade_nome)
-    X_train, y_train = train[ALL_FEATURES].copy(), train[target].values
-    X_cal,   y_cal   = test[ALL_FEATURES].copy(),  test[target].values
+    X_train, y_train = train[best_features].copy(), train[target].values
+    X_cal,   y_cal   = test[best_features].copy(),  test[target].values
     del train, test
     logger.info("Treino: %d | Calibracao: %d", len(X_train), len(X_cal))
 
@@ -88,9 +94,12 @@ def treinar_melhor_modelo_geral(
     encoder_cls = ENCODER_MAP.get(best["encoder"])
     transform = best["transform"] if best["transform"] != "none" else None
 
+    best_num_feats = [c for c in best_features if c in NUMERIC_FEATURES]
+    best_cat_feats = [c for c in best_features if c in CATEGORICAL_FEATURES]
+
     pp = PreprocessadorFactory(
-        numeric_features=NUMERIC_FEATURES,
-        categorical_features=CATEGORICAL_FEATURES,
+        numeric_features=best_num_feats,
+        categorical_features=best_cat_feats,
     ).criar(
         scaler=scaler_cls(),
         imputer_num=SimpleImputer(strategy=imputer_str),
@@ -132,7 +141,7 @@ def treinar_melhor_modelo_geral(
         mlflow.log_params({f"best_{k}": str(v) for k, v in best_params.items()})
         mlflow.set_tag("modelo", best["modelo"])
         mlflow.set_tag("tratamento", best["tratamento"])
-        mlflow.set_tag("n_features", len(ALL_FEATURES))
+        mlflow.set_tag("n_features", len(best_features))
         mlflow.set_tag("scaler", best["scaler"])
         mlflow.set_tag("imputer_num", best["imputer_num"])
         mlflow.set_tag("encoder", best["encoder"])
@@ -227,7 +236,7 @@ def treinar_melhor_modelo_geral(
     bairro_stats.to_parquet(stats_path)
     logger.info("Bairro stats salvo: %s (%d bairros)", stats_path.name, len(bairro_stats))
 
-    X_pred = df_filtrado[ALL_FEATURES].copy()
+    X_pred = df_filtrado[best_features].copy()
     y_pred_full, y_lo, y_hi = preditor.predict(X_pred)
 
     pred_series = pd.Series(y_pred_full, index=df_filtrado.index, name="valor_predito")
@@ -269,7 +278,7 @@ def treinar_melhor_modelo_geral(
     for nome in [
         f"{cidade}_train_{mes_ref}.parquet",
         f"{cidade}_test_{mes_ref}.parquet",
-        f"{cidade}_otimizados_melhores_incrementos_{mes_ref}.parquet",
+        #f"{cidade}_otimizados_melhores_incrementos_{mes_ref}.parquet",
         f"{cidade}_melhores_por_incremento_{mes_ref}.parquet",
         f"{cidade}_melhores_por_incremento_{mes_ref}.csv",
         f"{cidade}_otimizados_melhores_incrementos_{mes_ref}.csv",
