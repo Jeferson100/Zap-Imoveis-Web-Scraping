@@ -282,6 +282,7 @@ def otimizar_melhores_incrementos(
     selection_mode="features",
     top_k=10,
     top_k_modelo=3,
+    incluir_mlp=True,
 ):
     logger.info(f"Buscando melhores incrementos no experimento '{experimento_mlflow}'")
     logger.info(f"Minimo de features: {min_features}")
@@ -292,6 +293,7 @@ def otimizar_melhores_incrementos(
         logger.info(f"Top K geral: {top_k}")
     if selection_mode in ("por_modelo", "combinado"):
         logger.info(f"Top K por modelo: {top_k_modelo}")
+    logger.info(f"Incluir MLP: {incluir_mlp}")
     logger.info(f"Features numericas: {numeric_features}")
     logger.info(f"Features categoricas: {categorical_features}")
     logger.info(f"Target: {target_col}")
@@ -336,6 +338,11 @@ def otimizar_melhores_incrementos(
     if melhores.empty:
         logger.warning("Nenhum run encontrado")
         return pd.DataFrame()
+
+    if not incluir_mlp:
+        n_antes = len(melhores)
+        melhores = melhores[melhores["modelo"] != "MLP"].reset_index(drop=True)
+        logger.info("MLP removido: %d runs filtrados (restam %d)", n_antes - len(melhores), len(melhores))
 
     logger.info("Total de runs selecionados para otimizacao: %d", len(melhores))
     for _, r in melhores.iterrows():
@@ -404,6 +411,88 @@ def otimizar_melhores_incrementos(
                 mlflow.set_tag("feature_history_columns", row.get("feature_history_columns", ""))
                 mlflow.set_tag("feature_history_num_columns", row.get("feature_history_num_columns", ""))
                 mlflow.set_tag("feature_history_run_name", row.get("feature_history_run_name", ""))
+            resultados.append({
+                "n_features": nf,
+                "modelo": modelo_nome,
+                "tratamento": row["tratamento"],
+                "transform": transform,
+                "scaler": row["scaler"],
+                "imputer_num": row["imputer_num"],
+                "encoder": row["encoder"],
+                "feature_history_columns": row.get("feature_history_columns", ""),
+                "feature_history_num_columns": row.get("feature_history_num_columns", ""),
+                "feature_history_run_name": row.get("feature_history_run_name", ""),
+                "feature_transform_map": row.get("feature_transform_map", ""),
+                "best_params": json.dumps(best_params),
+                "r2_original": row["r2"],
+                "rmse_original": row["rmse"],
+                "mae_original": row["mae"],
+                "mape_original": row["mape"],
+                "mdape_original": row["mdape"],
+                "rmsle_original": row.get("rmsle"),
+                "r2_otimizado": met.get("r2"),
+                "rmse_otimizado": met.get("rmse"),
+                "mae_otimizado": met.get("mae"),
+                "mape_otimizado": met.get("mape"),
+                "mdape_otimizado": met.get("mdape"),
+                "rmsle_otimizado": met.get("rmsle"),
+            })
+            continue
+
+        # ── MLP — Otimizador especifico (Keras) ────────────────────────────
+        if modelo_nome == "MLP":
+            from otimizador_optuna import OtimizadorMLP
+            from sklearn.model_selection import train_test_split
+
+            input_dim = X_tr.select_dtypes(include=[np.number]).shape[1]
+
+            X_tr_mlp, X_val_mlp, y_tr_mlp, y_val_mlp = train_test_split(
+                X_tr, y_tr, test_size=0.25, random_state=42
+            )
+
+            pp_mlp = PreprocessadorFactory(
+                numeric_features=numeric_features, categorical_features=categorical_features,
+            ).criar(
+                scaler=StandardScaler(),
+                imputer_num=SimpleImputer(strategy=imputer_str),
+                encoder=encoder_cls(),
+                transform=None,
+            )
+            X_tr_t = pp_mlp.fit_transform(X_tr_mlp, y_tr_mlp)
+            X_val_t = pp_mlp.transform(X_val_mlp)
+            X_te_t = pp_mlp.transform(X_te)
+
+            n_trials_mlp = min(n_trials, 20)
+            otim_mlp = OtimizadorMLP(mlflow_manager=None, random_state=42)
+            estudo, modelo_best = otim_mlp.otimizar(
+                X_train=np.asarray(X_tr_t), y_train=np.asarray(y_tr_mlp),
+                X_val=np.asarray(X_val_t), y_val=np.asarray(y_val_mlp),
+                input_dim=input_dim,
+                n_trials=n_trials_mlp,
+                epochs=100,
+                nome=f"optuna_{run_name}",
+            )
+            if estudo is None:
+                continue
+
+            best_params = estudo.best_params if estudo else {}
+            best_cv_rmse = getattr(estudo, 'best_value', None)
+
+            y_pred = modelo_best.predict(np.asarray(X_te_t), verbose=0).ravel()
+            met = Avaliador.metricas(f"optuna_{run_name}", y_te, y_pred)
+
+            with mgr.run_session(run_name=f"best_{run_name}",
+                                 tags={"categoria": "otimizado_melhor_incremento"}):
+                import mlflow
+                mlflow.log_params({f"best_{k}": str(v) for k, v in best_params.items()})
+                if best_cv_rmse is not None:
+                    mlflow.log_metric("best_cv_rmse", best_cv_rmse)
+                mlflow.log_metrics(met)
+                for tag in ["modelo","tratamento","n_features","transform",
+                            "scaler","imputer_num","encoder",
+                            "feature_transform_map","feature_history_columns",
+                            "feature_history_num_columns","feature_history_run_name"]:
+                    mlflow.set_tag(tag, row.get(tag, ""))
             resultados.append({
                 "n_features": nf,
                 "modelo": modelo_nome,

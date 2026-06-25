@@ -24,6 +24,7 @@ N_TRIALS = int(os.getenv("N_TRIALS_OPTUNA", "500"))
 SELECTION_MODE = os.getenv("SELECTION_MODE", "features")
 TOP_K = int(os.getenv("TOP_K", "10"))
 TOP_K_MODELO = int(os.getenv("TOP_K_MODELO", "3"))
+INCLUIR_MLP = os.getenv("INCLUIR_MLP", "true").lower() == "true"
 
 BASE_DIR = Path(__file__).parent.parent.parent
 PASTA_DADOS = BASE_DIR / 'dados' / cidade / bairro
@@ -46,6 +47,7 @@ resultados = otimizar_melhores_incrementos(
     selection_mode=SELECTION_MODE,
     top_k=TOP_K,
     top_k_modelo=TOP_K_MODELO,
+    incluir_mlp=INCLUIR_MLP,
 )
 
 if not resultados.empty:
