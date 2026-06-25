@@ -12,20 +12,9 @@ import joblib
 
 from criando_indices_individuais import CriandoIndicesIndividuais
 
-CATEGORICAL = ['tipo_imovel', 'bairro', 'novo_lancamento', 'tem_elevador']
+from config_features import NUMERIC_FEATURES, CATEGORICAL_FEATURES
 
-NUMERIC = [
-    'metragem', 'quartos', 'banheiros', 'vagas',
-    'score_escola_privada', 'score_escola_publica', 'score_hospitais',
-    'score_mercado', 'score_farmacia', 'score_parque',
-    'score_seguranca', 'score_educacao',
-    'metro_quadrado_bairro_mean', 'metro_quadrado_bairro_median',
-    'valor_bairro_mean', 'bairro_rank',
-    'quartos_por_metro', 'vagas_por_metro', 'banheiros_por_quarto',
-    'lat', 'lng',
-]
-
-ALL_FEATURES = NUMERIC + CATEGORICAL
+ALL_FEATURES = NUMERIC_FEATURES + CATEGORICAL_FEATURES
 
 CIDADE_POI = {
     "sao_paulo":    "Sao Paulo, Sao Paulo, Brasil",
@@ -93,6 +82,15 @@ def carregar_modelo_e_stats(pasta, prefixo_name):
     modelo = joblib.load(modelo_path)
     bairro_stats = pd.read_parquet(stats_path)
 
+    try:
+        ct = modelo.named_steps["preprocessador"]
+        feature_names_modelo = []
+        for _, _, cols in ct.transformers_:
+            feature_names_modelo.extend(cols)
+    except Exception:
+        feature_names_modelo = ALL_FEATURES
+        st.warning("Nao foi possivel extrair features do modelo — usando ALL_FEATURES")
+
     from intervalo_predicao import PreditorComIntervalo
     preditor_path = pasta / f"{prefixo_name}_preditor_intervalo_{mes_ref}.joblib"
     if preditor_path.exists():
@@ -101,7 +99,7 @@ def carregar_modelo_e_stats(pasta, prefixo_name):
         preditor = None
         st.warning("Preditor com intervalo nao encontrado. Exibindo apenas predicao pontual.")
 
-    return modelo, bairro_stats, mes_ref, preditor
+    return modelo, bairro_stats, mes_ref, preditor, feature_names_modelo
 
 
 def montar_features_predicao(metragem, quartos, banheiros, vagas,
@@ -160,7 +158,7 @@ def gerar_pagina_predicao(cidade_path, prefixo_name, cidade_nome_poi):
     pasta = Path(__file__).resolve().parent.parent / 'dados' / cidade_path
     pasta.mkdir(parents=True, exist_ok=True)
 
-    modelo, bairro_stats, mes_ref, preditor = carregar_modelo_e_stats(pasta, prefixo_name)
+    modelo, bairro_stats, mes_ref, preditor, feature_names = carregar_modelo_e_stats(pasta, prefixo_name)
 
     indices = None
     try:
@@ -216,14 +214,15 @@ def gerar_pagina_predicao(cidade_path, prefixo_name, cidade_nome_poi):
                 bairro_stats=bairro_stats, indices=indices,
             )
 
-        valor_pred = modelo.predict(X_pred)[0]
+        X_pred_filtrado = X_pred[[c for c in feature_names if c in X_pred.columns]]
+        valor_pred = modelo.predict(X_pred_filtrado)[0]
         valor_pred = max(valor_pred, 0)
 
         valor_lo = None
         valor_hi = None
         if preditor is not None:
             try:
-                _, lo, hi = preditor.predict(X_pred)
+                _, lo, hi = preditor.predict(X_pred_filtrado)
                 valor_lo = max(lo[0], 0)
                 valor_hi = max(hi[0], 0)
             except Exception as e:
