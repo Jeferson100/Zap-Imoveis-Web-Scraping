@@ -227,6 +227,7 @@ def carregar_dados(pasta_dados, mes_ref, cidade, cidade_nome=None):
         & (dados["tipo_imovel"].isin(["casa", "apartamento"]))
         & (dados["preco_por_m2"] >= 100)
     ].copy()
+    df_modelo = df_modelo.dropna(subset=["valor_imovel"])
 
     train, test = train_test_split(df_modelo, test_size=0.25, random_state=42)
     train, test = engenharia_features_completa(train, test)

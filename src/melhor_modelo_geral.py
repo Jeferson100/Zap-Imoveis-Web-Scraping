@@ -210,6 +210,7 @@ def treinar_melhor_modelo_geral(
         & (df_full["preco_por_m2"] >= 100)
     )
     df_filtrado = df_full[mask].copy()
+    df_filtrado = df_filtrado.dropna(subset=["valor_imovel"])
     df_filtrado, _ = engenharia_features_completa(df_filtrado, df_filtrado.copy())
 
     # ── 10b. Salvar bairro_stats para o Streamlit ─────────────────────
