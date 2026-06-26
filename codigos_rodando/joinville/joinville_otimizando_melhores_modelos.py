@@ -24,10 +24,10 @@ cidade = os.getenv("CIDADE_PASTA")
 MES_REF = os.getenv("MES_REF", datetime.now().strftime("%Y-%m"))
 cidade_nome = os.getenv("LOCALIZAZAO_COMPLETA", "Joinville, Santa Catarina, Brasil")
 
-N_TRIALS = int(os.getenv("N_TRIALS_OPTUNA", "400"))
+N_TRIALS = int(os.getenv("N_TRIALS_OPTUNA", "300"))
 SELECTION_MODE = os.getenv("SELECTION_MODE", "combinado")
 TOP_K = int(os.getenv("TOP_K", "10"))
-TOP_K_MODELO = int(os.getenv("TOP_K_MODELO", "2"))
+TOP_K_MODELO = int(os.getenv("TOP_K_MODELO", "1"))
 INCLUIR_MLP = os.getenv("INCLUIR_MLP", "true").lower() == "true"
 
 PASTA_DADOS = Path(__file__).parent.parent.parent / 'dados' / cidade

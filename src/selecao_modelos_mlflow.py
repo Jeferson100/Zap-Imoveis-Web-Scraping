@@ -451,7 +451,7 @@ def otimizar_melhores_incrementos(
             )
 
             pp_mlp = PreprocessadorFactory(
-                numeric_features=numeric_features, categorical_features=categorical_features,
+                numeric_features=num_feats, categorical_features=cat_feats,
             ).criar(
                 scaler=StandardScaler(),
                 imputer_num=SimpleImputer(strategy=imputer_str),
