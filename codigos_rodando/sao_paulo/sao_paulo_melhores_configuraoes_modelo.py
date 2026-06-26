@@ -67,9 +67,14 @@ else:
     dados = indices.calcular_indices(imoveis_df=dados)
 
     df_modelo = dados[
-        (dados["metragem"] > 10)
-        & (dados["tipo_imovel"].isin(["casa", "apartamento"]))
-        & (dados["preco_por_m2"] >= 100)
+        (dados["metragem"] > 20)
+        & (
+            ~dados["tipo_imovel"].isin(["casa", "apartamento"])
+            | (
+                (dados["preco_por_m2"] >= 100)
+                & (dados["metragem"] <= 1000)
+            )
+        )
     ].copy()
 
     train, test = train_test_split(df_modelo, test_size=0.25, random_state=42)
