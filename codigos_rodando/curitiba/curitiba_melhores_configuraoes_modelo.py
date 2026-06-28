@@ -92,7 +92,10 @@ if DELETAR_RUNS:
 
 
 async def main():
-    teste = TesteIncrementalFeaturesAsync(experimento_mlflow=f"imoveis-{cidade}-valor")
+    teste = TesteIncrementalFeaturesAsync(
+        experimento_mlflow=f"imoveis-{cidade}-valor",
+        target_log=True,
+    )
     df = await teste.testar_tratamentos_modelos_incrementais_async(
         train=train, test=test, target_col=TARGET,
         features_testadas=FEATURES_TESTADAS,

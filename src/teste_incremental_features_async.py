@@ -174,6 +174,7 @@ class TesteIncrementalFeaturesAsync:
         experimento_mlflow="teste-incremental-features",
         log_level=logging.INFO,
         max_samples=None,
+        target_log=False,
     ):
         logging.basicConfig(
             level=log_level,
@@ -192,6 +193,7 @@ class TesteIncrementalFeaturesAsync:
         self.max_samples = max_samples
         self.optuna_params_otimizados = {}
         self.usar_mlp_otimizado = usar_mlp_otimizado
+        self.target_log = target_log
 
         if usar_xgboost:
             self._tentar_adicionar_xgboost()
@@ -918,67 +920,68 @@ class TesteIncrementalFeaturesAsync:
             logger.debug("Fallback boxcox->yeojohnson para %s (dados nao positivos)", run_name_base)
             transf_name = "yeojohnson"
         async with sem:
-            run_name = f"{mod_name}|{trat['nome']}|{transf_name}_{run_name_base}_{time.strftime('%Y_%m')}"
-            logger.debug("Task: %s | %s | %s | %s", mod_name, trat["nome"], transf_name, run_name_base)
-            try:
-                if tipo == "optuna":
-                    result = await self._combo_optuna(
-                        loop, trat, mod_name, factory_fn,
-                        num_feats, cat_feats, X_tr, X_te, y_train, y_test,
-                        n_trials_optuna, run_name, n_features, col,
-                        transf_name=transf_name,
-                    )
-                elif tipo == "simples":
-                    result = await self._combo_simples(
-                        loop, trat, mod_name, modelo,
-                        num_feats, cat_feats, X_tr, X_te, y_train, y_test,
-                        run_name, n_features, col,
-                        transf_name=transf_name,
-                    )
-                elif tipo == "mlp_simples":
-                    result = await self._combo_mlp_simples(
-                        loop, trat, num_feats, cat_feats,
-                        X_tr, X_te, y_train, y_test, target_col,
-                        run_name, n_features, col,
-                        transf_name=transf_name,
-                    )
-                else:
-                    result = await self._combo_mlp(
-                        loop, trat, num_feats, cat_feats,
-                        X_tr, X_te, y_train, y_test, target_col,
-                        n_trials_mlp, run_name, n_features, col,
-                        transf_name=transf_name,
-                    )
+            target_transforms = ["none", "log"] if self.target_log else ["none"]
 
-                resultados.append(result)
-                async with lock:
-                    progresso["atual"] += 1
-                r2v = result.get("r2", float("nan"))
-                r2s = f"{r2v:.4f}" if isinstance(r2v, (int, float)) and not np.isnan(r2v) else "FAIL"
-                sys.stdout.write(
-                    f"\r[{progresso['atual']:4d}/{total}] "
-                    f"{n_features:2d}feats {result.get('tratamento', ''):>18} "
-                    f"{result.get('modelo', ''):>18} R2={r2s}     "
-                )
-                sys.stdout.flush()
-            except Exception as exc:
-                logger.warning("Falha %s %s %s: %s", mod_name, trat["nome"], run_name_base, exc)
-                logger.exception("Traceback completo:")
-                resultados.append({
-                    "n_features": n_features,
-                    "ultima_feature": col,
-                    "tratamento": trat["nome"],
-                    "modelo": mod_name or "MLP_opt",
-                    "transform": transf_name,
-                    "rmse": float("nan"), "mae": float("nan"),
-                    "mape": float("nan"), "mdape": float("nan"), "r2": float("nan"),
-                    "rmsle": float("nan"),
-                })
+            for tt in target_transforms:
+                tt_suffix = f"|tgt_{tt}" if self.target_log else ""
+                run_name = f"{mod_name}|{trat['nome']}|{transf_name}_{run_name_base}{tt_suffix}_{time.strftime('%Y_%m')}"
+                logger.debug("Task: %s | %s | %s | target=%s", mod_name, trat["nome"], transf_name, tt)
+                try:
+                    if tipo == "optuna":
+                        result = await self._combo_optuna(
+                            loop, trat, mod_name, factory_fn,
+                            num_feats, cat_feats, X_tr, X_te, y_train, y_test,
+                            n_trials_optuna, run_name, n_features, col,
+                            transf_name=transf_name, target_transform=tt,
+                        )
+                    elif tipo == "simples":
+                        result = await self._combo_simples(
+                            loop, trat, mod_name, modelo,
+                            num_feats, cat_feats, X_tr, X_te, y_train, y_test,
+                            run_name, n_features, col,
+                            transf_name=transf_name, target_transform=tt,
+                        )
+                    elif tipo == "mlp_simples":
+                        result = await self._combo_mlp_simples(
+                            loop, trat, num_feats, cat_feats,
+                            X_tr, X_te, y_train, y_test, target_col,
+                            run_name, n_features, col,
+                            transf_name=transf_name,
+                        )
+                    else:
+                        result = await self._combo_mlp(
+                            loop, trat, num_feats, cat_feats,
+                            X_tr, X_te, y_train, y_test, target_col,
+                            n_trials_mlp, run_name, n_features, col,
+                            transf_name=transf_name,
+                        )
+
+                    result["target_transform"] = tt
+                    resultados.append(result)
+                    async with lock:
+                        progresso["atual"] += 1
+                        pct = progresso["atual"] / total * 100 if total else 0
+                        logger.info("[%d/%d] %s | %s R2=%s",
+                                    progresso["atual"], total,
+                                    f"{n_features}feats".ljust(12),
+                                    run_name.ljust(55),
+                                    result.get("r2", "FAIL"))
+                except Exception as e_tudo:
+                    logger.warning("Falha geral %s: %s", run_name, e_tudo, exc_info=True)
+                    resultados.append({
+                        "n_features": n_features,
+                        "ultima_feature": col,
+                        "tratamento": trat["nome"],
+                        "modelo": mod_name,
+                        "transform": transf_name,
+                        "target_transform": tt,
+                        "status": "erro_geral",
+                    })
 
     async def _combo_optuna(self, loop, trat, mod_name, factory_fn,
                              num_feats, cat_feats, X_tr, X_te,
                              y_train, y_test, n_trials, run_name, n_features, col,
-                             transf_name="none"):
+                             transf_name="none", target_transform="none"):
         def _run():
             imputer_num = SimpleImputer(strategy=trat["imputer_num"])
             imputer_cat = SimpleImputer(strategy="constant", fill_value="desconhecido")
@@ -995,8 +998,10 @@ class TesteIncrementalFeaturesAsync:
             best_params = {}
             erro = ""
             try:
+                y_fit = np.log1p(y_train) if target_transform == "log" else y_train
+
                 otim = OtimizadorOptuna(
-                    preprocessador=pp, X=X_tr, y=y_train,
+                    preprocessador=pp, X=X_tr, y=y_fit,
                     mlflow_manager=self.mlflow_mgr,
                     n_trials=n_trials, n_folds=3, n_jobs=1,
                 )
@@ -1008,6 +1013,7 @@ class TesteIncrementalFeaturesAsync:
                         "tratamento": trat["nome"],
                         "modelo": mod_name,
                         "transform": transf_name,
+                        "target_transform": target_transform,
                         "status": "failed_no_trials",
                     }
                 best_params = estudo.best_params
@@ -1015,8 +1021,11 @@ class TesteIncrementalFeaturesAsync:
                 trial_fixo = optuna.trial.FixedTrial(estudo.best_params)
                 modelo_best = factory_fn(trial_fixo)
                 pipe = Pipeline([("preprocessador", pp), ("modelo", modelo_best)])
-                pipe.fit(X_tr, y_train)
-                y_pred = pipe.predict(X_te)
+                pipe.fit(X_tr, y_fit)
+
+                y_pred_raw = pipe.predict(X_te)
+                y_pred = np.expm1(y_pred_raw) if target_transform == "log" else y_pred_raw
+
                 met = Avaliador.metricas(run_name, y_test, y_pred)
             except Exception as e_train:
                 erro = str(e_train)[:200]
@@ -1029,6 +1038,7 @@ class TesteIncrementalFeaturesAsync:
                     with self.mlflow_mgr.run_session(run_name=run_name):
                         mlflow.set_tag("teste", "tratamentos_modelos")
                         mlflow.set_tag("otimizacao", "optuna")
+                        mlflow.set_tag("target_transformer", target_transform)
                         mlflow.set_tag("scaler", trat["scaler"]().__class__.__name__ if trat["scaler"] else "None")
                         mlflow.set_tag("imputer_num", trat["imputer_num"])
                         mlflow.set_tag("encoder", type(trat["encoder"]()).__name__)
@@ -1060,6 +1070,7 @@ class TesteIncrementalFeaturesAsync:
                 "tratamento": trat["nome"],
                 "modelo": mod_name,
                 "transform": transf_name,
+                "target_transform": target_transform,
                 **met,
             }
 
@@ -1081,7 +1092,7 @@ class TesteIncrementalFeaturesAsync:
     async def _combo_simples(self, loop, trat, mod_name, modelo_factory,
                               num_feats, cat_feats, X_tr, X_te,
                               y_train, y_test, run_name, n_features, col,
-                              transf_name="none"):
+                              transf_name="none", target_transform="none"):
         def _run():
             imputer_num = SimpleImputer(strategy=trat["imputer_num"])
             imputer_cat = SimpleImputer(strategy="constant", fill_value="desconhecido")
@@ -1098,9 +1109,14 @@ class TesteIncrementalFeaturesAsync:
             met = {}
             erro = ""
             try:
+                y_fit = np.log1p(y_train) if target_transform == "log" else y_train
+
                 pipe = Pipeline([("preprocessador", pp), ("modelo", modelo)])
-                pipe.fit(X_tr, y_train)
-                y_pred = pipe.predict(X_te)
+                pipe.fit(X_tr, y_fit)
+
+                y_pred_raw = pipe.predict(X_te)
+                y_pred = np.expm1(y_pred_raw) if target_transform == "log" else y_pred_raw
+
                 met = Avaliador.metricas(run_name, y_test, y_pred)
             except Exception as e_train:
                 erro = str(e_train)[:200]
@@ -1113,13 +1129,14 @@ class TesteIncrementalFeaturesAsync:
                     with self.mlflow_mgr.run_session(run_name=run_name):
                         mlflow.set_tag("teste", "tratamentos_modelos")
                         mlflow.set_tag("otimizacao", "simples")
+                        mlflow.set_tag("target_transformer", target_transform)
                         mlflow.set_tag("scaler", trat["scaler"]().__class__.__name__ if trat["scaler"] else "None")
                         mlflow.set_tag("imputer_num", trat["imputer_num"])
                         mlflow.set_tag("encoder", type(trat["encoder"]()).__name__)
-                        mlflow.set_tag("tratamento", trat["nome"])
-                        mlflow.set_tag("modelo", mod_name)
-                        mlflow.set_tag("n_features", n_features)
-                        mlflow.set_tag("ultima_feature", col)
+                        mlflow.log_param("tratamento", trat["nome"])
+                        mlflow.log_param("modelo", mod_name)
+                        mlflow.log_param("n_features", n_features)
+                        mlflow.log_param("ultima_feature", col)
                         mlflow.log_param("transform", transf_name)
                         mlflow.log_metrics(met)
                         encoder_name = "ordinal" if "Ordinal" in type(trat["encoder"]()).__name__ else "ohe"
@@ -1142,6 +1159,7 @@ class TesteIncrementalFeaturesAsync:
                 "tratamento": trat["nome"],
                 "modelo": mod_name,
                 "transform": transf_name,
+                "target_transform": target_transform,
                 **met,
             }
 
