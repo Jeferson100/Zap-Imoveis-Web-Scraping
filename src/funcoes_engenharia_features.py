@@ -93,6 +93,34 @@ def extrair_sem_rua(train, test):
     return train, test
 
 
+CLUSTER_COLS = [
+    "score_escola_privada", "score_escola_publica", "score_hospitais",
+    "score_mercado", "score_farmacia", "score_parque",
+    "score_seguranca",
+]
+
+
+def criar_clusters_bairro(train, test, random_state=42, save_path=None):
+    from sklearn.cluster import KMeans
+    from sklearn.preprocessing import StandardScaler
+    import joblib
+
+    n = len(train)
+    n_clusters = min(5, max(3, n // 100))
+
+    scaler = StandardScaler()
+    Xs = scaler.fit_transform(train[CLUSTER_COLS].fillna(0))
+
+    km = KMeans(n_clusters=n_clusters, random_state=random_state, n_init="auto")
+    train["bairro_cluster"] = km.fit_predict(Xs)
+    test["bairro_cluster"] = km.predict(scaler.transform(test[CLUSTER_COLS].fillna(0)))
+
+    if save_path:
+        joblib.dump({"kmeans": km, "scaler": scaler}, save_path)
+
+    return train, test
+
+
 def engenharia_features_completa(train, test):
     """Aplica todas as funcoes de engenharia de features."""
     train, test = criar_features_bairro(train, test)
@@ -100,4 +128,5 @@ def engenharia_features_completa(train, test):
     train, test = extrair_novo_lancamento(train, test)
     train, test = extrair_tem_elevador(train, test)
     train, test = extrair_sem_rua(train, test)
+    train, test = criar_clusters_bairro(train, test)
     return train, test

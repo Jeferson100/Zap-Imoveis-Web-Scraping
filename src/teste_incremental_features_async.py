@@ -76,7 +76,7 @@ MODELOS_OTIMIZAVEIS = {
 }
 
 MODELOS_SIMPLES_TRAT = {
-    "Linear": lambda: LinearRegression(),
+    #"Linear": lambda: LinearRegression(),
     #"Ridge": lambda: Ridge(),
     "DecisionTree": lambda: DecisionTreeRegressor(random_state=42),
     "RandomForest": lambda: RandomForestRegressor(

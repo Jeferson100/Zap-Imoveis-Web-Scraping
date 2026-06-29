@@ -26,7 +26,7 @@ from preprocessador import PreprocessadorFactory
 from otimizador_optuna import FactoryModelos
 from mlflow_manager import MLflowManager
 from criando_indices_individuais import CriandoIndicesIndividuais
-from funcoes_engenharia_features import engenharia_features_completa
+from funcoes_engenharia_features import engenharia_features_completa, criar_clusters_bairro
 
 
 logger = logging.getLogger(__name__)
@@ -236,6 +236,11 @@ def treinar_melhor_modelo_geral(
     stats_path = pasta_dados / f"{cidade}_bairro_stats_{mes_ref}.parquet"
     bairro_stats.to_parquet(stats_path)
     logger.info("Bairro stats salvo: %s (%d bairros)", stats_path.name, len(bairro_stats))
+
+    # ── Salvar modelo de cluster para o Streamlit ──
+    cluster_path = pasta_dados / f"{cidade}_cluster_models_{mes_ref}.pkl"
+    criar_clusters_bairro(df_filtrado, df_filtrado.copy(), save_path=cluster_path)
+    logger.info("Cluster models salvo: %s", cluster_path.name)
 
     X_pred = df_filtrado[best_features].copy()
     y_pred_full, y_lo, y_hi = preditor.predict(X_pred)

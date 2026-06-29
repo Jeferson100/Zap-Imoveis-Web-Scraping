@@ -99,12 +99,19 @@ def carregar_modelo_e_stats(pasta, prefixo_name):
         preditor = None
         st.warning("Preditor com intervalo nao encontrado. Exibindo apenas predicao pontual.")
 
-    return modelo, bairro_stats, mes_ref, preditor, feature_names_modelo
+    # ── Carregar modelo de cluster ──
+    cluster_path = pasta / f"{prefixo_name}_cluster_models_{mes_ref}.pkl"
+    cluster_data = joblib.load(cluster_path) if cluster_path.exists() else {}
+    km_cluster = cluster_data.get("kmeans") if cluster_data else None
+    scaler_cluster = cluster_data.get("scaler") if cluster_data else None
+
+    return modelo, bairro_stats, mes_ref, preditor, feature_names_modelo, km_cluster, scaler_cluster
 
 
 def montar_features_predicao(metragem, quartos, banheiros, vagas,
                               tipo_imovel, bairro, novo_lancamento, tem_elevador,
-                              lat, lng, bairro_stats, indices):
+                              lat, lng, bairro_stats, indices,
+                              km_cluster=None, scaler_cluster=None):
     dados = {
         'metragem': metragem,
         'quartos': quartos,
@@ -144,6 +151,18 @@ def montar_features_predicao(metragem, quartos, banheiros, vagas,
                     elif col in bairro_stats.columns:
                         df[col] = bairro_stats[col].mean()
 
+    # ── Cluster intra-bairro ──
+    if km_cluster is not None and scaler_cluster is not None:
+        cluster_cols = ["score_escola_privada", "score_escola_publica", "score_hospitais",
+                        "score_mercado", "score_farmacia", "score_parque", "score_seguranca"]
+        try:
+            Xs = scaler_cluster.transform(df[cluster_cols].fillna(0).values)
+            dados["bairro_cluster"] = int(km_cluster.predict(Xs)[0])
+        except Exception:
+            dados["bairro_cluster"] = 0
+    else:
+        dados["bairro_cluster"] = 0
+
     for col in ALL_FEATURES:
         if col not in df.columns:
             if bairro in bairro_stats.index and col in bairro_stats.columns:
@@ -158,7 +177,7 @@ def gerar_pagina_predicao(cidade_path, prefixo_name, cidade_nome_poi):
     pasta = Path(__file__).resolve().parent.parent / 'dados' / cidade_path
     pasta.mkdir(parents=True, exist_ok=True)
 
-    modelo, bairro_stats, mes_ref, preditor, feature_names = carregar_modelo_e_stats(pasta, prefixo_name)
+    modelo, bairro_stats, mes_ref, preditor, feature_names, km_cluster, scaler_cluster = carregar_modelo_e_stats(pasta, prefixo_name)
 
     indices = None
     try:
@@ -212,6 +231,7 @@ def gerar_pagina_predicao(cidade_path, prefixo_name, cidade_nome_poi):
                 novo_lancamento=novo_lancamento, tem_elevador=tem_elevador,
                 lat=lat, lng=lng,
                 bairro_stats=bairro_stats, indices=indices,
+                km_cluster=km_cluster, scaler_cluster=scaler_cluster,
             )
 
         X_pred_filtrado = X_pred[[c for c in feature_names if c in X_pred.columns]]
