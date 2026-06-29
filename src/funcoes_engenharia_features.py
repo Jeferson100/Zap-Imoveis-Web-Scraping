@@ -106,7 +106,7 @@ def criar_clusters_bairro(train, test, random_state=42, save_path=None):
     import joblib
 
     n = len(train)
-    n_clusters = min(5, max(3, n // 100))
+    n_clusters = 3
 
     scaler = StandardScaler()
     Xs = scaler.fit_transform(train[CLUSTER_COLS].fillna(0))
