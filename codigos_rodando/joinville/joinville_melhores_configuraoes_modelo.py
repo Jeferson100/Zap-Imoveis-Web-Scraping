@@ -55,6 +55,8 @@ else:
             )
         )
     ].copy()
+    df_modelo = df_modelo[df_modelo['tipo_imovel'].isin(['apartamento', 'casa'])]
+    df_modelo = df_modelo[df_modelo['valor_imovel'] < 15000000]
     df_modelo = df_modelo.dropna(subset=["valor_imovel"])
     train, test = train_test_split(df_modelo, test_size=0.25, random_state=42)
     train, test = engenharia_features_completa(train, test)
