@@ -26,7 +26,7 @@ cidade_nome = os.getenv("LOCALIZAZAO_COMPLETA", "Joinville, Santa Catarina, Bras
 
 N_TRIALS = int(os.getenv("N_TRIALS_OPTUNA", "300"))
 SELECTION_MODE = os.getenv("SELECTION_MODE", "combinado")
-TOP_K = int(os.getenv("TOP_K", "10"))
+TOP_K = int(os.getenv("TOP_K", "6"))
 TOP_K_MODELO = int(os.getenv("TOP_K_MODELO", "1"))
 INCLUIR_MLP = os.getenv("INCLUIR_MLP", "true").lower() == "true"
 
