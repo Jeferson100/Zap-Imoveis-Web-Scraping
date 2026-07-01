@@ -377,7 +377,7 @@ def otimizar_melhores_incrementos(
         X_te = test[all_features].copy()
         y_tr = train[target_col].values
         y_te = test[target_col].values
-        target_transform = row["target_transform"]
+        target_transform = row.get("target_transform", "none")
 
         pp = PreprocessadorFactory(
             numeric_features=num_feats, categorical_features=cat_feats,
