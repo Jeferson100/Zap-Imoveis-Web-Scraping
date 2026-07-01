@@ -74,6 +74,7 @@ def treinar_melhor_modelo_geral(
     # ── 2. Melhor configuração (menor rmse_otimizado) ───────────────────
     best_idx = df_otim["rmse_otimizado"].idxmin()
     best = df_otim.loc[best_idx]
+    target_transform = best.get("target_transform", "none")
 
     feat_map = json.loads(best.get("feature_transform_map", "{}"))
     best_features = list(feat_map.keys())
@@ -124,14 +125,16 @@ def treinar_melhor_modelo_geral(
 
     # ── 6. Treinar pipeline com dados de TREINO ─────────────────────────
     pipe = Pipeline([("preprocessador", pp), ("modelo", modelo)])
-    pipe.fit(X_train, y_train)
-    logger.info("Pipeline treinado com %d amostras", len(X_train))
+    y_fit = np.log1p(y_train) if target_transform == "log" else y_train
+    pipe.fit(X_train, y_fit)
+    logger.info("Pipeline treinado com %d amostras (target_transform=%s)", len(X_train), target_transform)
     del X_train, y_train
 
     # ── 7. Preditor com intervalo conformal ──────────────────────────────
     from intervalo_predicao import PreditorComIntervalo
     preditor = PreditorComIntervalo(alpha=0.1)
-    preditor.fit(pipe, X_cal, y_cal)
+    y_cal_fit = np.log1p(y_cal) if target_transform == "log" else y_cal
+    preditor.fit(pipe, X_cal, y_cal_fit)
     del X_cal, y_cal
 
     # ── 8. Logar no MLflow ──────────────────────────────────────────────
@@ -151,6 +154,7 @@ def treinar_melhor_modelo_geral(
         mlflow.set_tag("imputer_num", best["imputer_num"])
         mlflow.set_tag("encoder", best["encoder"])
         mlflow.set_tag("transform", best["transform"])
+        mlflow.set_tag("target_transformer", target_transform)
         mlflow.set_tag("feature_transform_map", best.get("feature_transform_map", ""))
         mlflow.sklearn.log_model(pipe, f"{cidade}_modelo_geral_{mes_ref}")
 
@@ -165,6 +169,12 @@ def treinar_melhor_modelo_geral(
     preditor.save(preditor_path)
     logger.info("Preditor com intervalo salvo: %s", preditor_path.name)
 
+    # ── 9a. Salvar metadado do target_transform ─────────────────────────
+    meta_path = pasta_dados / f"{cidade}_target_transform_{mes_ref}.json"
+    with open(meta_path, "w") as f:
+        json.dump({"target_transformer": target_transform}, f)
+    logger.info("Metadado salvo: %s", meta_path.name)
+
     # ── 9b. Remover modelos de meses anteriores ─────────────────────────
     for f in pasta_dados.glob(f"{cidade}_modelo_geral_*.joblib"):
         if f.name != modelo_path.name:
@@ -174,6 +184,18 @@ def treinar_melhor_modelo_geral(
         if f.name != preditor_path.name:
             f.unlink()
             logger.info("Preditor anterior removido: %s", f.name)
+    for f in pasta_dados.glob(f"{cidade}_bairro_stats_*.parquet"):
+        if f.name != stats_path.name:
+            f.unlink()
+            logger.info("Bairro stats anterior removido: %s", f.name)
+    for f in pasta_dados.glob(f"{cidade}_target_transform_*.json"):
+        if f.name != meta_path.name:
+            f.unlink()
+            logger.info("Target transform anterior removido: %s", f.name)
+    for f in pasta_dados.glob(f"{cidade}_cluster_models_*.pkl"):
+        if f.name != cluster_path.name:
+            f.unlink()
+            logger.info("Cluster models anterior removido: %s", f.name)
 
     # ── 10. Predicao com intervalo no imoveis_limpo ─────────────────────
     logger.info("Gerando predicoes com intervalo no dataset completo...")
@@ -248,7 +270,13 @@ def treinar_melhor_modelo_geral(
     logger.info("Cluster models salvo: %s", cluster_path.name)
 
     X_pred = df_filtrado[best_features].copy()
-    y_pred_full, y_lo, y_hi = preditor.predict(X_pred)
+    y_pred_raw, y_lo_raw, y_hi_raw = preditor.predict(X_pred)
+    if target_transform == "log":
+        y_pred_full = np.expm1(y_pred_raw)
+        y_lo = np.expm1(y_lo_raw)
+        y_hi = np.expm1(y_hi_raw)
+    else:
+        y_pred_full, y_lo, y_hi = y_pred_raw, y_lo_raw, y_hi_raw
 
     pred_series = pd.Series(y_pred_full, index=df_filtrado.index, name="valor_predito")
     lo_series   = pd.Series(y_lo, index=df_filtrado.index, name="valor_predito_lo")

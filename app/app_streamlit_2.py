@@ -105,7 +105,15 @@ def carregar_modelo_e_stats(pasta, prefixo_name):
     km_cluster = cluster_data.get("kmeans") if cluster_data else None
     scaler_cluster = cluster_data.get("scaler") if cluster_data else None
 
-    return modelo, bairro_stats, mes_ref, preditor, feature_names_modelo, km_cluster, scaler_cluster
+    meta_path = pasta / f"{prefixo_name}_target_transform_{mes_ref}.json"
+    if meta_path.exists():
+        with open(meta_path) as f:
+            meta = json.load(f)
+        target_transform = meta.get("target_transformer", "none")
+    else:
+        target_transform = "none"
+
+    return modelo, bairro_stats, mes_ref, preditor, feature_names_modelo, km_cluster, scaler_cluster, target_transform
 
 
 def montar_features_predicao(metragem, quartos, banheiros, vagas,
@@ -177,7 +185,7 @@ def gerar_pagina_predicao(cidade_path, prefixo_name, cidade_nome_poi):
     pasta = Path(__file__).resolve().parent.parent / 'dados' / cidade_path
     pasta.mkdir(parents=True, exist_ok=True)
 
-    modelo, bairro_stats, mes_ref, preditor, feature_names, km_cluster, scaler_cluster = carregar_modelo_e_stats(pasta, prefixo_name)
+    modelo, bairro_stats, mes_ref, preditor, feature_names, km_cluster, scaler_cluster, target_transform = carregar_modelo_e_stats(pasta, prefixo_name)
 
     indices = None
     try:
@@ -235,14 +243,18 @@ def gerar_pagina_predicao(cidade_path, prefixo_name, cidade_nome_poi):
             )
 
         X_pred_filtrado = X_pred[[c for c in feature_names if c in X_pred.columns]]
-        valor_pred = modelo.predict(X_pred_filtrado)[0]
-        valor_pred = max(valor_pred, 0)
+        valor_pred_raw = modelo.predict(X_pred_filtrado)[0]
+        valor_pred = max(np.expm1(valor_pred_raw) if target_transform == "log" else valor_pred_raw, 0)
 
         valor_lo = None
         valor_hi = None
         if preditor is not None:
             try:
-                _, lo, hi = preditor.predict(X_pred_filtrado)
+                y_p, lo, hi = preditor.predict(X_pred_filtrado)
+                if target_transform == "log":
+                    lo, hi = np.expm1(lo), np.expm1(hi)
+                else:
+                    lo, hi = lo, hi
                 valor_lo = max(lo[0], 0)
                 valor_hi = max(hi[0], 0)
             except Exception as e:

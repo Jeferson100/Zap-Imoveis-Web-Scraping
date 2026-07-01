@@ -94,6 +94,7 @@ def buscar_melhores_por_incremento(client, experiment_id, min_features=1, metric
             "feature_history_num_columns": t.get("feature_history_num_columns", ""),
             "feature_history_run_name": t.get("feature_history_run_name", ""),
             "feature_transform_map": t.get("feature_transform_map", "{}"),
+            "target_transformer": t.get("target_transformer", "none"),
             "r2": m.get("r2"),
             "rmse": m.get("rmse"),
             "mae": m.get("mae"),
@@ -134,6 +135,7 @@ def buscar_melhores_top_n(client, experiment_id, n=5, min_features=1, metrica="r
             "feature_history_num_columns": t.get("feature_history_num_columns", ""),
             "feature_history_run_name": t.get("feature_history_run_name", ""),
             "feature_transform_map": t.get("feature_transform_map", "{}"),
+            "target_transformer": t.get("target_transformer", "none"),
             "r2": m.get("r2"),
             "rmse": m.get("rmse"),
             "mae": m.get("mae"),
@@ -174,6 +176,7 @@ def buscar_melhores_por_modelo(client, experiment_id, top_k=1, min_features=1, m
             "feature_history_num_columns": t.get("feature_history_num_columns", ""),
             "feature_history_run_name": t.get("feature_history_run_name", ""),
             "feature_transform_map": t.get("feature_transform_map", "{}"),
+            "target_transformer": t.get("target_transformer", "none"),
             "r2": m.get("r2"),
             "rmse": m.get("rmse"),
             "mae": m.get("mae"),
@@ -374,6 +377,7 @@ def otimizar_melhores_incrementos(
         X_te = test[all_features].copy()
         y_tr = train[target_col].values
         y_te = test[target_col].values
+        target_transform = row.get("target_transformer", "none")
 
         pp = PreprocessadorFactory(
             numeric_features=num_feats, categorical_features=cat_feats,
@@ -392,9 +396,11 @@ def otimizar_melhores_incrementos(
             best_params = {}
             best_cv_rmse = None
             modelo_best = LinearRegression()
+            y_fit = np.log1p(y_tr) if target_transform == "log" else y_tr
             pipe = Pipeline([("preprocessador", pp), ("modelo", modelo_best)])
-            pipe.fit(X_tr, y_tr)
-            y_pred = pipe.predict(X_te)
+            pipe.fit(X_tr, y_fit)
+            y_pred_raw = pipe.predict(X_te)
+            y_pred = np.expm1(y_pred_raw) if target_transform == "log" else y_pred_raw
             met = Avaliador.metricas(run_name, y_te, y_pred)
 
             with mgr.run_session(run_name=f"noopt_{modelo_nome}|{row['tratamento']}|{transform}_{nf}feats",
@@ -412,6 +418,7 @@ def otimizar_melhores_incrementos(
                 mlflow.set_tag("feature_history_columns", row.get("feature_history_columns", ""))
                 mlflow.set_tag("feature_history_num_columns", row.get("feature_history_num_columns", ""))
                 mlflow.set_tag("feature_history_run_name", row.get("feature_history_run_name", ""))
+                mlflow.set_tag("target_transformer", target_transform)
             resultados.append({
                 "n_features": nf,
                 "modelo": modelo_nome,
@@ -492,7 +499,8 @@ def otimizar_melhores_incrementos(
                 for tag in ["modelo","tratamento","n_features","transform",
                             "scaler","imputer_num","encoder",
                             "feature_transform_map","feature_history_columns",
-                            "feature_history_num_columns","feature_history_run_name"]:
+                            "feature_history_num_columns","feature_history_run_name",
+                            "target_transformer"]:
                     mlflow.set_tag(tag, row.get(tag, ""))
             resultados.append({
                 "n_features": nf,
@@ -506,6 +514,7 @@ def otimizar_melhores_incrementos(
                 "feature_history_num_columns": row.get("feature_history_num_columns", ""),
                 "feature_history_run_name": row.get("feature_history_run_name", ""),
                 "feature_transform_map": row.get("feature_transform_map", ""),
+                "target_transform": target_transform,
                 "best_params": json.dumps(best_params),
                 "r2_original": row["r2"],
                 "rmse_original": row["rmse"],
@@ -529,8 +538,10 @@ def otimizar_melhores_incrementos(
             logger.warning(f"Modelo '{modelo_nome}' nao mapeado, pulando")
             continue
 
+        y_fit = np.log1p(y_tr) if target_transform == "log" else y_tr
+
         otim = OtimizadorOptuna(
-            preprocessador=pp, X=X_tr, y=y_tr,
+            preprocessador=pp, X=X_tr, y=y_fit,
             mlflow_manager=None,
             n_trials=n_trials, n_folds=5,
         )
@@ -544,8 +555,9 @@ def otimizar_melhores_incrementos(
         trial_fixo = optuna.trial.FixedTrial(best_params)
         modelo_best = factory(trial_fixo)
         pipe = Pipeline([("preprocessador", pp), ("modelo", modelo_best)])
-        pipe.fit(X_tr, y_tr)
-        y_pred = pipe.predict(X_te)
+        pipe.fit(X_tr, y_fit)
+        y_pred_raw = pipe.predict(X_te)
+        y_pred = np.expm1(y_pred_raw) if target_transform == "log" else y_pred_raw
         met = Avaliador.metricas(f"optuna_{run_name}", y_te, y_pred)
 
         with mgr.run_session(run_name=f"best_{run_name}",
@@ -565,6 +577,7 @@ def otimizar_melhores_incrementos(
             mlflow.set_tag("feature_history_columns", row.get("feature_history_columns", ""))
             mlflow.set_tag("feature_history_num_columns", row.get("feature_history_num_columns", ""))
             mlflow.set_tag("feature_history_run_name", row.get("feature_history_run_name", ""))
+            mlflow.set_tag("target_transformer", target_transform)
 
         resultados.append({
             "n_features": nf,
@@ -578,6 +591,7 @@ def otimizar_melhores_incrementos(
             "feature_history_num_columns": row.get("feature_history_num_columns", ""),
             "feature_history_run_name": row.get("feature_history_run_name", ""),
             "feature_transform_map": row.get("feature_transform_map", ""),
+            "target_transform": target_transform,
             "best_params": json.dumps(best_params),
             "r2_original": row["r2"],
             "rmse_original": row["rmse"],
