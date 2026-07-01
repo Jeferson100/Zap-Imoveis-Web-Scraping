@@ -2709,6 +2709,20 @@ wheels = [
 ]
 
 [[package]]
+name = "pgeocode"
+version = "0.5.0"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "numpy" },
+    { name = "pandas" },
+    { name = "requests" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/91/27/0de1f3890a4b8c1a7ca0bd913251c1f414bf49d8d5d85482a8b95ba6c738/pgeocode-0.5.0.tar.gz", hash = "sha256:37d6caf74e9f2b1e69762811953df5b43fe7f1806833c83bf85a60dd784dff9e", size = 10473 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/26/62/ff5ac22710794b01a6021fb681189f43e8bff224e100cb590ced4c545f7b/pgeocode-0.5.0-py3-none-any.whl", hash = "sha256:de24a5997524ef557a29a1b22443cc1bf5d02c098e0c7a8dd9ea9caf01a6a72a", size = 9772 },
+]
+
+[[package]]
 name = "pillow"
 version = "12.1.1"
 source = { registry = "https://pypi.org/simple" }
@@ -2891,6 +2905,7 @@ dependencies = [
     { name = "optuna" },
     { name = "osmnx" },
     { name = "pandas" },
+    { name = "pgeocode" },
     { name = "pingouin" },
     { name = "playwright" },
     { name = "playwright-stealth" },
@@ -2941,6 +2956,7 @@ requires-dist = [
     { name = "optuna", specifier = ">=4.8.0" },
     { name = "osmnx", specifier = ">=2.1.0" },
     { name = "pandas", specifier = "==2.3.3" },
+    { name = "pgeocode", specifier = ">=0.5.0" },
     { name = "pingouin", specifier = ">=0.5.5" },
     { name = "playwright", specifier = ">=1.58.0" },
     { name = "playwright-stealth", specifier = ">=2.0.1" },

@@ -58,10 +58,15 @@ def treinar_melhor_modelo_geral(
     # ── 1. Carregar resultados da otimização ────────────────────────────
     otim_path = pasta_dados / f"{cidade}_otimizados_melhores_incrementos_{mes_ref}.parquet"
     if not otim_path.exists():
-        raise FileNotFoundError(
-            f"Arquivo nao encontrado: {otim_path}. "
-            "Execute joinville_otimizando_melhores_modelos.py primeiro."
-        )
+        arquivos = sorted(pasta_dados.glob(f"{cidade}_otimizados_melhores_incrementos_*.parquet"))
+        if not arquivos:
+            raise FileNotFoundError(
+                f"Arquivo nao encontrado: {otim_path}. "
+                "Execute joinville_otimizando_melhores_modelos.py primeiro."
+            )
+        otim_path = arquivos[-1]
+        mes_ref = "_".join(otim_path.stem.split("_")[-2:])
+        logger.info("Usando mes alternativo: %s", mes_ref)
 
     df_otim = pd.read_parquet(otim_path)
     logger.info("Resultados carregados: %d linhas", len(df_otim))

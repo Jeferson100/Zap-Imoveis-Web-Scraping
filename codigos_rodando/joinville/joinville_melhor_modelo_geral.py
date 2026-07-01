@@ -17,7 +17,7 @@ warnings.filterwarnings("ignore")
 
 cidade = os.getenv("CIDADE_PASTA")
 cidade_nome = os.getenv("LOCALIZAZAO_COMPLETA")
-MES_REF = os.getenv("MES_REF", datetime.now().strftime("%Y-%m"))
+MES_REF = os.getenv("MES_REF") or datetime.now().strftime("%Y-%m")
 
 logger = logging.getLogger(__name__)
 logger.info("Iniciando treinamento do melhor modelo geral para %s (ref: %s)", cidade, MES_REF)
