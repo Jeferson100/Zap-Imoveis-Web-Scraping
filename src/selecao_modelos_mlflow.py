@@ -396,6 +396,10 @@ def otimizar_melhores_incrementos(
             best_params = {}
             best_cv_rmse = None
             modelo_best = LinearRegression()
+            logger.info(
+                "Treinando %s | tratamento=%s | n_features=%d | target_transform=%s",
+                modelo_nome, row["tratamento"], nf, target_transform,
+            )
             y_fit = np.log1p(y_tr) if target_transform == "log" else y_tr
             pipe = Pipeline([("preprocessador", pp), ("modelo", modelo_best)])
             pipe.fit(X_tr, y_fit)
@@ -453,6 +457,10 @@ def otimizar_melhores_incrementos(
             from sklearn.model_selection import train_test_split
 
             input_dim = X_tr.select_dtypes(include=[np.number]).shape[1]
+            logger.info(
+                "Otimizando %s | tratamento=%s | n_features=%d | target_transform=%s | input_dim=%d",
+                modelo_nome, row["tratamento"], nf, target_transform, input_dim,
+            )
 
             X_tr_mlp, X_val_mlp, y_tr_mlp, y_val_mlp = train_test_split(
                 X_tr, y_tr, test_size=0.25, random_state=42
@@ -537,6 +545,11 @@ def otimizar_melhores_incrementos(
         if not factory:
             logger.warning(f"Modelo '{modelo_nome}' nao mapeado, pulando")
             continue
+
+        logger.info(
+            "Otimizando %s com Optuna | tratamento=%s | n_features=%d | target_transform=%s | n_trials=%d",
+            modelo_nome, row["tratamento"], nf, target_transform, n_trials,
+        )
 
         y_fit = np.log1p(y_tr) if target_transform == "log" else y_tr
 
