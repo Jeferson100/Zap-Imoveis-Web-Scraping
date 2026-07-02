@@ -8,6 +8,7 @@ NUMERIC_FEATURES = [
     "quartos_por_metro", "vagas_por_metro", "banheiros_por_quarto",
     "dist_centro", "sem_rua",
     "lat", "lng",
+    "componente_0", "componente_1", "componente_2", "componente_3",
 ]
 
 CATEGORICAL_FEATURES = [

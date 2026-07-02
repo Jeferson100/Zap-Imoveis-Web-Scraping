@@ -12,13 +12,13 @@ import asyncio
 from criando_indices_individuais import CriandoIndicesIndividuais
 from teste_incremental_features_async import TesteIncrementalFeaturesAsync
 from funcoes_engenharia_features import engenharia_features_completa
+from config_features import NUMERIC_FEATURES, CATEGORICAL_FEATURES
 
 
 load_dotenv()
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
-from config_features import NUMERIC_FEATURES, CATEGORICAL_FEATURES
 
 warnings.filterwarnings("ignore")
 
@@ -28,6 +28,7 @@ MES_REF = os.getenv("MES_REF", datetime.now().strftime("%Y-%m"))
 N_TRIALS_OPTUNA = int(os.getenv("N_TRIALS_OPTUNA", "15"))
 MAX_CONCURRENT = int(os.getenv("MAX_CONCURRENT", "20"))
 TARGET = "valor_imovel"
+INCLUIR_TOPICOS = os.getenv("INCLUIR_TOPICOS", "false").lower() == "true"
 
 PASTA_DADOS = Path(__file__).parent.parent.parent / 'dados' / cidade
 
@@ -66,8 +67,17 @@ else:
 
 logger.info(f"Amostras: treino {len(train):,} | teste {len(test):,}")
 
-logger.info(f"Features: {len(NUMERIC_FEATURES)} numericas + {len(CATEGORICAL_FEATURES)} categoricas")
-FEATURES_TESTADAS = NUMERIC_FEATURES + CATEGORICAL_FEATURES
+TOPICOS_PATH = PASTA_DADOS / f"{cidade}_topicos_modelo.pkl"
+
+if INCLUIR_TOPICOS:
+    from treinar_topicos import treinar_modelo_topicos
+    from utils_topicos import TOPIC_COLS
+    treinar_modelo_topicos(train, test, TOPICOS_PATH)
+    FEATURES_TESTADAS = NUMERIC_FEATURES + CATEGORICAL_FEATURES + TOPIC_COLS
+else:
+    FEATURES_TESTADAS = NUMERIC_FEATURES + CATEGORICAL_FEATURES
+
+logger.info(f"Features: {len(FEATURES_TESTADAS)}")
 
 mlf = MLflowManager(
     nome_experimento=f"imoveis-{cidade}-valor",
@@ -127,4 +137,3 @@ if __name__ == "__main__":
             logger.warning("Nenhum run com metrica r2 encontrado no MLflow")
     else:
         logger.warning(f"Experimento '{mlf.nome_experimento}' nao encontrado no MLflow")
-    

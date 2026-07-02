@@ -5,10 +5,10 @@ from datetime import datetime
 from dotenv import load_dotenv
 import logging
 import warnings
+import joblib
 
 from selecao_modelos_mlflow import otimizar_melhores_incrementos, carregar_dados
 from config_features import NUMERIC_FEATURES, CATEGORICAL_FEATURES
-
 
 
 load_dotenv()
@@ -29,6 +29,7 @@ SELECTION_MODE = os.getenv("SELECTION_MODE", "combinado")
 TOP_K = int(os.getenv("TOP_K", "6"))
 TOP_K_MODELO = int(os.getenv("TOP_K_MODELO", "1"))
 INCLUIR_MLP = os.getenv("INCLUIR_MLP", "true").lower() == "true"
+INCLUIR_TOPICOS = os.getenv("INCLUIR_TOPICOS", "false").lower() == "true"
 
 PASTA_DADOS = Path(__file__).parent.parent.parent / 'dados' / cidade
 
@@ -37,6 +38,17 @@ EXPERIMENTO = f"imoveis-{cidade}-valor"
 logger.info(f"Carregando dados do cache {MES_REF}...")
 
 train, test = carregar_dados(PASTA_DADOS, MES_REF, cidade, cidade_nome=cidade_nome)
+
+if INCLUIR_TOPICOS:
+    from utils_topicos import aplicar_topicos
+    topicos_path = PASTA_DADOS / f"{cidade}_topicos_modelo.pkl"
+    if topicos_path.exists():
+        topicos = joblib.load(topicos_path)
+        aplicar_topicos(train, topicos)
+        aplicar_topicos(test, topicos)
+        logger.info("Topicos aplicados em train/test.")
+    else:
+        logger.warning("Arquivo de topicos nao encontrado: %s", topicos_path)
 
 logger.info(f"Iniciando otimizacao dos melhores modelos por incremento ({N_TRIALS} trials)...")
 

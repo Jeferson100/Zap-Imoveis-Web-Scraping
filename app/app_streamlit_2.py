@@ -1,5 +1,6 @@
 import sys
 from pathlib import Path
+import re
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
@@ -9,12 +10,15 @@ import numpy as np
 import requests
 import time
 import joblib
+import unidecode
 
 from criando_indices_individuais import CriandoIndicesIndividuais
 
 from config_features import NUMERIC_FEATURES, CATEGORICAL_FEATURES
 
 ALL_FEATURES = NUMERIC_FEATURES + CATEGORICAL_FEATURES
+INCLUIR_TOPICOS = os.getenv("INCLUIR_TOPICOS", "false").lower() == "true"
+TOPIC_COLS = ["componente_0", "componente_1", "componente_2", "componente_3"]
 
 CIDADE_POI = {
     "sao_paulo":    "Sao Paulo, Sao Paulo, Brasil",
@@ -113,7 +117,13 @@ def carregar_modelo_e_stats(pasta, prefixo_name):
     else:
         target_transform = "none"
 
-    return modelo, bairro_stats, mes_ref, preditor, feature_names_modelo, km_cluster, scaler_cluster, target_transform
+    # ── Carregar modelos de topicos ──
+    topicos_data = None
+    if INCLUIR_TOPICOS:
+        topicos_path = pasta / f"{prefixo_name}_topicos_modelo.pkl"
+        topicos_data = joblib.load(topicos_path) if topicos_path.exists() else None
+
+    return modelo, bairro_stats, mes_ref, preditor, feature_names_modelo, km_cluster, scaler_cluster, target_transform, topicos_data
 
 
 def montar_features_predicao(metragem, quartos, banheiros, vagas,
@@ -181,11 +191,47 @@ def montar_features_predicao(metragem, quartos, banheiros, vagas,
     return df[ALL_FEATURES]
 
 
+def _aplicar_topicos_descricao(descricao, topicos_data, df_pred):
+    """Aplica TfidfVectorizer + NMF na descricao e adiciona componentes ao DataFrame."""
+    if topicos_data is None or not descricao:
+        for c in TOPIC_COLS:
+            df_pred[c] = 0.0
+        return
+
+    vec = topicos_data["vectorizer"]
+    nmf = topicos_data["nmf"]
+    n_topics = topicos_data.get("n_topics", 4)
+
+    RE_REMOVE = re.compile(
+        r"código\s+do\s+anúncio[\s:\d\-]+|código:\s*\d+|ref\.?:?\s*\d+|"
+        r"ri[\-\s]*\d+|cr[ée]ci[\-\s]*\d+|"
+        r"\b(creci|whatsapp|telefone|contato|celular)\b[\s\d\-\\(\\)]+|"
+        r"\d{7,}|https?\://\S+|www\.\S+",
+        re.IGNORECASE,
+    )
+
+    t = RE_REMOVE.sub(" ", descricao)
+    t = unidecode.unidecode(t)
+    t = re.sub(r"\b\d+\b", " ", t)
+    t = re.sub(r"[^a-zA-Z\s]", " ", t)
+    t = re.sub(r"\s+", " ", t).strip()
+    tokens = [w for w in t.lower().split() if len(w) > 2]
+    desc_limpa = " ".join(tokens)
+
+    X = vec.transform([desc_limpa])
+    W = nmf.transform(X)
+
+    for i in range(n_topics):
+        df_pred[f"componente_{i}"] = W[0, i]
+    for i in range(n_topics, 4):
+        df_pred[f"componente_{i}"] = 0.0
+
+
 def gerar_pagina_predicao(cidade_path, prefixo_name, cidade_nome_poi):
     pasta = Path(__file__).resolve().parent.parent / 'dados' / cidade_path
     pasta.mkdir(parents=True, exist_ok=True)
 
-    modelo, bairro_stats, mes_ref, preditor, feature_names, km_cluster, scaler_cluster, target_transform = carregar_modelo_e_stats(pasta, prefixo_name)
+    modelo, bairro_stats, mes_ref, preditor, feature_names, km_cluster, scaler_cluster, target_transform, topicos_data = carregar_modelo_e_stats(pasta, prefixo_name)
 
     indices = None
     try:
@@ -216,6 +262,12 @@ def gerar_pagina_predicao(cidade_path, prefixo_name, cidade_nome_poi):
             novo_lancamento = st.checkbox("Novo lancamento")
             tem_elevador = st.checkbox("Tem elevador")
 
+        if INCLUIR_TOPICOS:
+            descricao = st.text_area("Descricao (opcional)", height=100,
+                                     help="Descricao do imovel — usada para topicos NMF. Quanto mais detalhes, melhor.")
+        else:
+            descricao = ""
+
         submitted = st.form_submit_button("Prever valor", type="primary")
 
     if submitted:
@@ -241,6 +293,13 @@ def gerar_pagina_predicao(cidade_path, prefixo_name, cidade_nome_poi):
                 bairro_stats=bairro_stats, indices=indices,
                 km_cluster=km_cluster, scaler_cluster=scaler_cluster,
             )
+
+        if INCLUIR_TOPICOS and topicos_data is not None:
+            _aplicar_topicos_descricao(descricao, topicos_data, X_pred)
+
+        for c in TOPIC_COLS:
+            if c not in X_pred.columns:
+                X_pred[c] = 0.0
 
         X_pred_filtrado = X_pred[[c for c in feature_names if c in X_pred.columns]]
         valor_pred_raw = modelo.predict(X_pred_filtrado)[0]

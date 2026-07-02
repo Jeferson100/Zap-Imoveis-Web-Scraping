@@ -34,6 +34,8 @@ logger = logging.getLogger(__name__)
 from config_features import NUMERIC_FEATURES, CATEGORICAL_FEATURES
 
 ALL_FEATURES = NUMERIC_FEATURES + CATEGORICAL_FEATURES
+TOPIC_COLS = ["componente_0", "componente_1", "componente_2", "componente_3"]
+
 
 def treinar_melhor_modelo_geral(
     cidade=None,
@@ -50,6 +52,7 @@ def treinar_melhor_modelo_geral(
     pasta_dados = pasta_dados or Path(__file__).parent.parent / "dados" / cidade
     experimento = experimento or f"imoveis-{cidade}-valor"
     target = "valor_imovel"
+    incluir_topicos = os.getenv("INCLUIR_TOPICOS", "false").lower() == "true"
 
     pasta_dados = Path(pasta_dados)
 
@@ -89,6 +92,23 @@ def treinar_melhor_modelo_geral(
 
     # ── 3. Carregar dados (train = treino, test = calibracao) ───────────
     train, test = carregar_dados(pasta_dados, mes_ref, cidade, cidade_nome=cidade_nome)
+
+    topicos_data = None
+    if incluir_topicos:
+        from utils_topicos import aplicar_topicos
+        topicos_path = pasta_dados / f"{cidade}_topicos_modelo.pkl"
+        if topicos_path.exists():
+            topicos_data = joblib.load(topicos_path)
+            logger.info("Aplicando topicos em train/test...")
+            aplicar_topicos(train, topicos_data)
+            aplicar_topicos(test, topicos_data)
+        else:
+            logger.warning("Topicos nao encontrado: %s", topicos_path)
+
+    for c in TOPIC_COLS:
+        if c not in best_features:
+            best_features.append(c)
+
     X_train, y_train = train[best_features].copy(), train[target].values
     X_cal,   y_cal   = test[best_features].copy(),  test[target].values
     del train, test
@@ -196,6 +216,11 @@ def treinar_melhor_modelo_geral(
         if f.name != cluster_path.name:
             f.unlink()
             logger.info("Cluster models anterior removido: %s", f.name)
+    if incluir_topicos:
+        for f in pasta_dados.glob(f"{cidade}_topicos_modelo.pkl"):
+            if topicos_path and f.name != topicos_path.name:
+                f.unlink()
+                logger.info("Topicos anterior removido: %s", f.name)
 
     # ── 10. Predicao com intervalo no imoveis_limpo ─────────────────────
     logger.info("Gerando predicoes com intervalo no dataset completo...")
@@ -268,6 +293,11 @@ def treinar_melhor_modelo_geral(
     cluster_path = pasta_dados / f"{cidade}_cluster_models_{mes_ref}.pkl"
     criar_clusters_bairro(df_filtrado, df_filtrado.copy(), save_path=cluster_path)
     logger.info("Cluster models salvo: %s", cluster_path.name)
+
+    if topicos_data is not None:
+        from utils_topicos import aplicar_topicos
+        logger.info("Aplicando topicos no dataset completo...")
+        aplicar_topicos(df_filtrado, topicos_data)
 
     X_pred = df_filtrado[best_features].copy()
     y_pred_raw, y_lo_raw, y_hi_raw = preditor.predict(X_pred)
