@@ -30,7 +30,7 @@ def treinar_modelo_topicos(train, test, save_path, n_topics=4, max_features=2000
     lemmas = []
     for doc in nlp.pipe(desc_bruta, batch_size=256, n_process=1):
         tokens = [t.lemma_.lower() for t in doc
-                  if len(t) > 2 and not t.isdigit()
+                  if len(t.text) > 2 and not t.is_digit
                   and t.text not in STOPWORDS_TOTAL]
         lemmas.append(" ".join(tokens))
 
@@ -60,7 +60,7 @@ def treinar_modelo_topicos(train, test, save_path, n_topics=4, max_features=2000
     lemmas_test = []
     for doc in nlp.pipe(desc_test, batch_size=256, n_process=1):
         tokens = [t.lemma_.lower() for t in doc
-                  if len(t) > 2 and not t.isdigit()
+                  if len(t.text) > 2 and not t.is_digit
                   and t.text not in STOPWORDS_TOTAL]
         lemmas_test.append(" ".join(tokens))
 
