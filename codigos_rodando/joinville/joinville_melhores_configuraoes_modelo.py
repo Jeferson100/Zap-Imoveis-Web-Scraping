@@ -90,7 +90,11 @@ mlf.conectar()
 DELETAR_RUNS = True
 if DELETAR_RUNS:
     from selecao_modelos_mlflow import deletar_runs_experimento
-    deletar_runs_experimento(f"imoveis-{cidade}-valor", confirmacao=True)
+    deletar_runs_experimento(
+        f"imoveis-{cidade}-valor",
+        confirmacao=True,
+        databricks_workspace_path=f"/Workspace/Users/sehnemjeferson@gmail.com/imoveis-{cidade}-valor",
+    )
 
 
 async def main():

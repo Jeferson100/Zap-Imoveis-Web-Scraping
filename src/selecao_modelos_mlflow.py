@@ -242,11 +242,14 @@ def carregar_dados(pasta_dados, mes_ref, cidade, cidade_nome=None):
     return train, test
 
 
-def deletar_runs_experimento(experimento_mlflow, confirmacao=False):
+def deletar_runs_experimento(experimento_mlflow, confirmacao=False, databricks_workspace_path=None):
     from mlflow_manager import MLflowManager
     from mlflow.tracking import MlflowClient
 
-    mgr = MLflowManager(nome_experimento=experimento_mlflow)
+    mgr = MLflowManager(
+        nome_experimento=experimento_mlflow,
+        databricks_workspace_path=databricks_workspace_path,
+    )
     mgr.conectar()
     client = MlflowClient(mgr.get_tracking_uri())
 
