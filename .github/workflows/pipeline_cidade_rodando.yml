@@ -74,6 +74,11 @@ on:
       LOCALIZAZAO_COMPLETA:
         required: false
         type: string
+      INCLUIR_TOPICOS:
+        required: false
+        type: string
+        default: "false"
+      
 
 jobs:
   build:
@@ -146,6 +151,7 @@ jobs:
           DATABRICKS_TOKEN: ${{ secrets.DATABRICKS_TOKEN }}
           DATABRICKS_HOST: ${{ inputs.DATABRICKS_HOST }}
           LOCALIZAZAO_COMPLETA: ${{ inputs.LOCALIZAZAO_COMPLETA }}
+          INCLUIR_TOPICOS: ${{ inputs.INCLUIR_TOPICOS }}
 
       - name: Commit e Push
         run: |
