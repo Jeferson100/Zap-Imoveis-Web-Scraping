@@ -195,33 +195,6 @@ def treinar_melhor_modelo_geral(
         json.dump({"target_transformer": target_transform}, f)
     logger.info("Metadado salvo: %s", meta_path.name)
 
-    # ── 9b. Remover modelos de meses anteriores ─────────────────────────
-    for f in pasta_dados.glob(f"{cidade}_modelo_geral_*.joblib"):
-        if f.name != modelo_path.name:
-            f.unlink()
-            logger.info("Modelo anterior removido: %s", f.name)
-    for f in pasta_dados.glob(f"{cidade}_preditor_intervalo_*.joblib"):
-        if f.name != preditor_path.name:
-            f.unlink()
-            logger.info("Preditor anterior removido: %s", f.name)
-    for f in pasta_dados.glob(f"{cidade}_bairro_stats_*.parquet"):
-        if f.name != stats_path.name:
-            f.unlink()
-            logger.info("Bairro stats anterior removido: %s", f.name)
-    for f in pasta_dados.glob(f"{cidade}_target_transform_*.json"):
-        if f.name != meta_path.name:
-            f.unlink()
-            logger.info("Target transform anterior removido: %s", f.name)
-    for f in pasta_dados.glob(f"{cidade}_cluster_models_*.pkl"):
-        if f.name != cluster_path.name:
-            f.unlink()
-            logger.info("Cluster models anterior removido: %s", f.name)
-    if incluir_topicos:
-        for f in pasta_dados.glob(f"{cidade}_topicos_modelo.pkl"):
-            if topicos_path and f.name != topicos_path.name:
-                f.unlink()
-                logger.info("Topicos anterior removido: %s", f.name)
-
     # ── 10. Predicao com intervalo no imoveis_limpo ─────────────────────
     logger.info("Gerando predicoes com intervalo no dataset completo...")
 
@@ -293,6 +266,33 @@ def treinar_melhor_modelo_geral(
     cluster_path = pasta_dados / f"{cidade}_cluster_models_{mes_ref}.pkl"
     criar_clusters_bairro(df_filtrado, df_filtrado.copy(), save_path=cluster_path)
     logger.info("Cluster models salvo: %s", cluster_path.name)
+
+    # ── 9b. Remover modelos de meses anteriores ─────────────────────────
+    for f in pasta_dados.glob(f"{cidade}_modelo_geral_*.joblib"):
+        if f.name != modelo_path.name:
+            f.unlink()
+            logger.info("Modelo anterior removido: %s", f.name)
+    for f in pasta_dados.glob(f"{cidade}_preditor_intervalo_*.joblib"):
+        if f.name != preditor_path.name:
+            f.unlink()
+            logger.info("Preditor anterior removido: %s", f.name)
+    for f in pasta_dados.glob(f"{cidade}_bairro_stats_*.parquet"):
+        if f.name != stats_path.name:
+            f.unlink()
+            logger.info("Bairro stats anterior removido: %s", f.name)
+    for f in pasta_dados.glob(f"{cidade}_target_transform_*.json"):
+        if f.name != meta_path.name:
+            f.unlink()
+            logger.info("Target transform anterior removido: %s", f.name)
+    for f in pasta_dados.glob(f"{cidade}_cluster_models_*.pkl"):
+        if f.name != cluster_path.name:
+            f.unlink()
+            logger.info("Cluster models anterior removido: %s", f.name)
+    if incluir_topicos:
+        for f in pasta_dados.glob(f"{cidade}_topicos_modelo.pkl"):
+            if topicos_path and f.name != topicos_path.name:
+                f.unlink()
+                logger.info("Topicos anterior removido: %s", f.name)
 
     if topicos_data is not None:
         from utils_topicos import aplicar_topicos
