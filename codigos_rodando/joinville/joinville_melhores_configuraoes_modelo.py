@@ -28,11 +28,12 @@ MES_REF = os.getenv("MES_REF", datetime.now().strftime("%Y-%m"))
 N_TRIALS_OPTUNA = int(os.getenv("N_TRIALS_OPTUNA", "15"))
 MAX_CONCURRENT = int(os.getenv("MAX_CONCURRENT", "20"))
 TARGET = "valor_imovel"
-INCLUIR_TOPICOS = os.getenv("INCLUIR_TOPICOS", "false").lower() == "true"
+INCLUIR_TOPICOS = os.getenv("INCLUIR_TOPICOS", "True").lower() == "true"
 
 PASTA_DADOS = Path(__file__).parent.parent.parent / 'dados' / cidade
 
 train_path = PASTA_DADOS / f"{cidade}_train_{MES_REF}.parquet"
+
 test_path  = PASTA_DADOS / f"{cidade}_test_{MES_REF}.parquet"
 
 if train_path.exists() and test_path.exists():
