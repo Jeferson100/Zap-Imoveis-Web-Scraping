@@ -13,7 +13,12 @@ logger = logging.getLogger(__name__)
 
 def treinar_modelo_topicos(train, test, save_path, n_topics=4, max_features=2000):
     logger.info("Treinando modelo de topicos com spaCy...")
-    nlp = spacy.load("pt_core_news_lg")
+    try:
+        nlp = spacy.load("pt_core_news_lg")
+    except OSError:
+        from spacy.cli.download import download as spacy_download
+        spacy_download("pt_core_news_lg")
+        nlp = spacy.load("pt_core_news_lg")
 
     def _limpar_spacy(texto):
         if pd.isna(texto) or not texto:

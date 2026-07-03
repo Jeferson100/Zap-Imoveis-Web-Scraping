@@ -103,7 +103,12 @@ def extrair_topicos(
     logger.info("Registros com descricao: %d", len(df_tipo))
 
     logger.info("Carregando spacy pt_core_news_lg...")
-    nlp = spacy.load("pt_core_news_lg")
+    try:
+        nlp = spacy.load("pt_core_news_lg")
+    except OSError:
+        from spacy.cli.download import download as spacy_download
+        spacy_download("pt_core_news_lg")
+        nlp = spacy.load("pt_core_news_lg")
 
     descricoes = df_tipo["descricao"].astype(str)
     descricoes = descricoes.apply(lambda t: RE_REMOVE.sub(" ", t))
