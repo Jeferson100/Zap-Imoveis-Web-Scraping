@@ -102,12 +102,12 @@ def treinar_melhor_modelo_geral(
             logger.info("Aplicando topicos em train/test...")
             aplicar_topicos(train, topicos_data)
             aplicar_topicos(test, topicos_data)
+            for c in TOPIC_COLS:
+                if c not in best_features:
+                    best_features.append(c)
         else:
             logger.warning("Topicos nao encontrado: %s", topicos_path)
 
-    for c in TOPIC_COLS:
-        if c not in best_features:
-            best_features.append(c)
 
     X_train, y_train = train[best_features].copy(), train[target].values
     X_cal,   y_cal   = test[best_features].copy(),  test[target].values

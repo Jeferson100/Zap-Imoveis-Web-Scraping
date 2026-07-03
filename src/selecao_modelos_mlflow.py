@@ -377,7 +377,7 @@ def otimizar_melhores_incrementos(
         X_te = test[all_features].copy()
         y_tr = train[target_col].values
         y_te = test[target_col].values
-        target_transform = row.get("target_transform", "none")
+        target_transform = row.get("target_transform", row.get("target_transformer", "none"))
 
         pp = PreprocessadorFactory(
             numeric_features=num_feats, categorical_features=cat_feats,
@@ -523,6 +523,7 @@ def otimizar_melhores_incrementos(
                 "feature_history_run_name": row.get("feature_history_run_name", ""),
                 "feature_transform_map": row.get("feature_transform_map", ""),
                 "target_transform": target_transform,
+                "target_transformer": target_transform,
                 "best_params": json.dumps(best_params),
                 "r2_original": row["r2"],
                 "rmse_original": row["rmse"],
@@ -605,6 +606,7 @@ def otimizar_melhores_incrementos(
             "feature_history_run_name": row.get("feature_history_run_name", ""),
             "feature_transform_map": row.get("feature_transform_map", ""),
             "target_transform": target_transform,
+            "target_transformer": target_transform,
             "best_params": json.dumps(best_params),
             "r2_original": row["r2"],
             "rmse_original": row["rmse"],
