@@ -3,6 +3,9 @@ import pandas as pd
 import numpy as np
 import unidecode
 from nltk.corpus import stopwords
+import nltk
+
+nltk.download('stopwords', quiet=True)
 
 TOPIC_COLS = ["componente_0", "componente_1", "componente_2", "componente_3"]
 
