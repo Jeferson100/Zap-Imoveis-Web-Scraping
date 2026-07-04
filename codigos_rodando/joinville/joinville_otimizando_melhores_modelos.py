@@ -40,15 +40,17 @@ logger.info(f"Carregando dados do cache {MES_REF}...")
 train, test = carregar_dados(PASTA_DADOS, MES_REF, cidade, cidade_nome=cidade_nome)
 
 if INCLUIR_TOPICOS:
-    from utils_topicos import aplicar_topicos
     topicos_path = PASTA_DADOS / f"{cidade}_topicos_modelo.pkl"
     if topicos_path.exists():
+        from utils_topicos import aplicar_topicos
         topicos = joblib.load(topicos_path)
         aplicar_topicos(train, topicos)
         aplicar_topicos(test, topicos)
         logger.info("Topicos aplicados em train/test.")
     else:
-        logger.warning("Arquivo de topicos nao encontrado: %s", topicos_path)
+        from treinar_topicos import treinar_modelo_topicos
+        treinar_modelo_topicos(train, test, topicos_path)
+        logger.info("Topicos treinados do zero e salvos: %s", topicos_path.name)
 
 logger.info(f"Iniciando otimizacao dos melhores modelos por incremento ({N_TRIALS} trials)...")
 
