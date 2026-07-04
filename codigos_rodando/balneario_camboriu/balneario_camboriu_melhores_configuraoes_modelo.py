@@ -67,6 +67,12 @@ logger.info(f"Amostras: treino {len(train):,} | teste {len(test):,}")
 logger.info(f"Features: {len(NUMERIC_FEATURES)} numericas + {len(CATEGORICAL_FEATURES)} categoricas")
 FEATURES_TESTADAS = NUMERIC_FEATURES + CATEGORICAL_FEATURES
 
+SCORE_COLS = [c for c in NUMERIC_FEATURES if c.startswith("score_")]
+scores_ausentes = [c for c in SCORE_COLS if c not in train.columns]
+if scores_ausentes:
+    logger.debug("Scores nao encontrados no DataFrame, removendo: %s", scores_ausentes)
+    FEATURES_TESTADAS = [f for f in FEATURES_TESTADAS if f not in scores_ausentes]
+
 mlf = MLflowManager(
     nome_experimento=f"imoveis-{cidade}-valor",
     databricks_workspace_path=f"/Workspace/Users/sehnemjeferson@gmail.com/imoveis-{cidade}-valor",

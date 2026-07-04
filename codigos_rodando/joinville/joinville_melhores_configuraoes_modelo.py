@@ -80,6 +80,12 @@ else:
 
 logger.info(f"Features: {len(FEATURES_TESTADAS)}")
 
+SCORE_COLS = [c for c in NUMERIC_FEATURES if c.startswith("score_")]
+scores_ausentes = [c for c in SCORE_COLS if c not in train.columns]
+if scores_ausentes:
+    logger.debug("Scores nao encontrados no DataFrame, removendo: %s", scores_ausentes)
+    FEATURES_TESTADAS = [f for f in FEATURES_TESTADAS if f not in scores_ausentes]
+
 mlf = MLflowManager(
     nome_experimento=f"imoveis-{cidade}-valor",
     databricks_workspace_path=f"/Workspace/Users/sehnemjeferson@gmail.com/imoveis-{cidade}-valor",

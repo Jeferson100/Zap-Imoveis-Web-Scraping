@@ -1,8 +1,11 @@
+import logging
 import osmnx as ox
 import pandas as pd
 import numpy as np
 from sklearn.neighbors import BallTree
 from pathlib import Path
+
+logger = logging.getLogger(__name__)
 
 
 class CriandoIndicesIndividuais:
@@ -37,8 +40,12 @@ class CriandoIndicesIndividuais:
 
         for nome, tags in downloads:
             print(f"  -> {nome}...")
-            self.pois[nome] = ox.features_from_place(self.cidade, tags)
-            self._extrair_coordenadas(self.pois[nome])
+            try:
+                self.pois[nome] = ox.features_from_place(self.cidade, tags)
+                self._extrair_coordenadas(self.pois[nome])
+            except Exception:
+                logger.warning("Nenhum POI encontrado para '%s' em '%s'", nome, self.cidade)
+                self.pois[nome] = pd.DataFrame()
 
         self._processar_escolas()
 
