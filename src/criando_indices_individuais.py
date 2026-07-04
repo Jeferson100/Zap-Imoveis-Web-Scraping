@@ -45,7 +45,6 @@ class CriandoIndicesIndividuais:
                 self._extrair_coordenadas(self.pois[nome])
             except Exception:
                 logger.warning("Nenhum POI encontrado para '%s' em '%s'", nome, self.cidade)
-                self.pois[nome] = pd.DataFrame()
 
         self._processar_escolas()
 
@@ -97,6 +96,8 @@ class CriandoIndicesIndividuais:
         return "privada"
 
     def _processar_escolas(self):
+        if "escola" not in self.pois:
+            return
         escolas = self.pois["escola"].copy()
         escolas["tipo_escola"] = escolas.apply(self._classificar_escola, axis=1)
         self.pois["escolas_publicas"] = escolas[escolas["tipo_escola"] == "publica"].copy()
@@ -227,11 +228,15 @@ class CriandoIndicesIndividuais:
         }
 
         for nome, raios in configuracao.items():
-            df = self.adicionar_features_poi(df, self.pois[nome], nome, raios)
+            if nome in self.pois:
+                df = self.adicionar_features_poi(df, self.pois[nome], nome, raios)
 
-        scores = self.calcular_scores(df)
-        for col in scores.columns:
-            df[col] = scores[col]
+        pois_base = {"escolas_privadas", "escolas_publicas", "hospital",
+                     "mercado", "farmacia", "parque", "policia"}
+        if pois_base.issubset(self.pois.keys()):
+            scores = self.calcular_scores(df)
+            for col in scores.columns:
+                df[col] = scores[col]
 
         df = self._adicionar_distancia_centro(df)
 
