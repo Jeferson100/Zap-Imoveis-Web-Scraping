@@ -108,12 +108,18 @@ def criar_clusters_bairro(train, test, random_state=42, save_path=None):
     n = len(train)
     n_clusters = 3
 
+    cols_existentes = [c for c in CLUSTER_COLS if c in train.columns]
+    if not cols_existentes:
+        train["bairro_cluster"] = 0
+        test["bairro_cluster"] = 0
+        return train, test
+
     scaler = StandardScaler()
-    Xs = scaler.fit_transform(train[CLUSTER_COLS].fillna(0))
+    Xs = scaler.fit_transform(train[cols_existentes].fillna(0))
 
     km = KMeans(n_clusters=n_clusters, random_state=random_state, n_init="auto")
     train["bairro_cluster"] = km.fit_predict(Xs)
-    test["bairro_cluster"] = km.predict(scaler.transform(test[CLUSTER_COLS].fillna(0)))
+    test["bairro_cluster"] = km.predict(scaler.transform(test[cols_existentes].fillna(0)))
 
     if save_path:
         joblib.dump({"kmeans": km, "scaler": scaler}, save_path)
