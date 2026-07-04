@@ -704,7 +704,8 @@ class TesteIncrementalFeaturesAsync:
             test = test.sample(n=n_test, random_state=42)
 
         categorical_fixas_list = list(categorical_fixas or [])
-        pool = [f for f in features_testadas + [c for c in categorical_features if c in train.columns and c not in features_testadas]
+        features_existentes = [f for f in features_testadas if f in train.columns]
+        pool = [f for f in features_existentes + [c for c in categorical_features if c in train.columns and c not in features_existentes]
                 if f not in categorical_fixas_list]
         y_train = train[target_col].values
         y_test = test[target_col].values
