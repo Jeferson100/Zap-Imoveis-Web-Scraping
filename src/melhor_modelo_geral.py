@@ -68,7 +68,7 @@ def treinar_melhor_modelo_geral(
                 "Execute joinville_otimizando_melhores_modelos.py primeiro."
             )
         otim_path = arquivos[-1]
-        mes_ref = "_".join(otim_path.stem.split("_")[-2:])
+        mes_ref = otim_path.stem.split("_")[-1]
         logger.info("Usando mes alternativo: %s", mes_ref)
 
     df_otim = pd.read_parquet(otim_path)
