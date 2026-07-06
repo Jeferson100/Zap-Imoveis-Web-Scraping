@@ -34,6 +34,7 @@ logger = logging.getLogger(__name__)
 from config_features import NUMERIC_FEATURES, CATEGORICAL_FEATURES
 
 ALL_FEATURES = NUMERIC_FEATURES + CATEGORICAL_FEATURES
+
 TOPIC_COLS = ["componente_0", "componente_1", "componente_2", "componente_3"]
 
 
@@ -76,11 +77,26 @@ def treinar_melhor_modelo_geral(
 
     # ── 2. Melhor configuração (menor rmse_otimizado) ───────────────────
     best_idx = df_otim["rmse_otimizado"].idxmin()
+    
+    logger.info("Melhor indice: %d | rmse_otimizado=%.2f", best_idx, df_otim.loc[best_idx, "rmse_otimizado"])
+    
     best = df_otim.loc[best_idx]
+    
+    logger.info("Melhor config: %s | rmse_otimizado=%.2f | tratamento=%s | n_features=%d",
+                best["modelo"], best["rmse_otimizado"], best["tratamento"], len(best["feature_transform_map"]))
+    
     target_transform = best.get("target_transform", "none")
+    
+    logger.info("Target transform: %s", target_transform)
 
     feat_map = json.loads(best.get("feature_transform_map", "{}"))
+    
+    logger.info("Feature transform map: %s", feat_map)
+    
     best_features = list(feat_map.keys())
+    
+    logger.info("Best features: %s", best_features)
+    
     if not best_features:
         logger.warning("feature_transform_map vazio — usando ALL_FEATURES (%d)", len(ALL_FEATURES))
         best_features = ALL_FEATURES
@@ -103,8 +119,8 @@ def treinar_melhor_modelo_geral(
             aplicar_topicos(train, topicos_data)
             aplicar_topicos(test, topicos_data)
             for c in TOPIC_COLS:
-                if c not in best_features:
-                    best_features.append(c)
+                if c not in NUMERIC_FEATURES:
+                    NUMERIC_FEATURES.append(c)
         else:
             logger.warning("Topicos nao encontrado: %s", topicos_path)
 
@@ -122,6 +138,14 @@ def treinar_melhor_modelo_geral(
 
     best_num_feats = [c for c in best_features if c in NUMERIC_FEATURES]
     best_cat_feats = [c for c in best_features if c in CATEGORICAL_FEATURES]
+    
+    logger.info("Reconstruindo preprocessador: scaler=%s | imputer=%s | encoder=%s | transform=%s",
+        best["scaler"], best["imputer_num"], best["encoder"], best["transform"], 
+    )
+    logger.info(
+        "Features numericas: %d | Features categoricas: %d",
+        len(best_num_feats), len(best_cat_feats),
+    )
 
     pp = PreprocessadorFactory(
         numeric_features=best_num_feats,
@@ -142,6 +166,8 @@ def treinar_melhor_modelo_geral(
 
     trial_fixo = optuna.trial.FixedTrial(best_params)
     modelo = factory(trial_fixo)
+    
+    logger.info("Reconstruindo modelo: %s | best_params=%s", best["modelo"], best_params)
 
     # ── 6. Treinar pipeline com dados de TREINO ─────────────────────────
     pipe = Pipeline([("preprocessador", pp), ("modelo", modelo)])

@@ -7,6 +7,7 @@ import numpy as np
 from scipy.stats import pearsonr, spearmanr
 from pathlib import Path
 from app_streamlit_2 import gerar_pagina_predicao, CIDADE_POI
+import json
 
 FONTES_ZAP_VIVA = ['zap_imoveis', 'viva_real']
 

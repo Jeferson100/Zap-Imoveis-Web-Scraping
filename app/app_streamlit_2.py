@@ -1,7 +1,7 @@
 import sys
 from pathlib import Path
 import re
-
+import json
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 import os
 import streamlit as st
@@ -119,7 +119,7 @@ def carregar_modelo_e_stats(pasta, prefixo_name):
 
     # ── Carregar modelos de topicos ──
     topicos_data = None
-    if INCLUIR_TOPICOS:
+    if any(c.startswith("componente_") for c in feature_names_modelo):
         topicos_path = pasta / f"{prefixo_name}_topicos_modelo.pkl"
         topicos_data = joblib.load(topicos_path) if topicos_path.exists() else None
 
@@ -175,11 +175,11 @@ def montar_features_predicao(metragem, quartos, banheiros, vagas,
                         "score_mercado", "score_farmacia", "score_parque", "score_seguranca"]
         try:
             Xs = scaler_cluster.transform(df[cluster_cols].fillna(0).values)
-            dados["bairro_cluster"] = int(km_cluster.predict(Xs)[0])
+            df["bairro_cluster"] = int(km_cluster.predict(Xs)[0])
         except Exception:
-            dados["bairro_cluster"] = 0
+            df["bairro_cluster"] = 0
     else:
-        dados["bairro_cluster"] = 0
+        df["bairro_cluster"] = 0
 
     for col in ALL_FEATURES:
         if col not in df.columns:
@@ -187,6 +187,9 @@ def montar_features_predicao(metragem, quartos, banheiros, vagas,
                 df[col] = bairro_stats.loc[bairro, col]
             elif col in bairro_stats.columns:
                 df[col] = bairro_stats[col].mean()
+
+    if "sem_rua" not in df.columns:
+        df["sem_rua"] = 0
 
     return df[ALL_FEATURES]
 
@@ -262,7 +265,8 @@ def gerar_pagina_predicao(cidade_path, prefixo_name, cidade_nome_poi):
             novo_lancamento = st.checkbox("Novo lancamento")
             tem_elevador = st.checkbox("Tem elevador")
 
-        if INCLUIR_TOPICOS:
+        modelo_precisa_topicos = any(c.startswith("componente_") for c in feature_names)
+        if modelo_precisa_topicos:
             descricao = st.text_area("Descricao (opcional)", height=100,
                                      help="Descricao do imovel — usada para topicos NMF. Quanto mais detalhes, melhor.")
         else:
@@ -294,7 +298,7 @@ def gerar_pagina_predicao(cidade_path, prefixo_name, cidade_nome_poi):
                 km_cluster=km_cluster, scaler_cluster=scaler_cluster,
             )
 
-        if INCLUIR_TOPICOS and topicos_data is not None:
+        if modelo_precisa_topicos and topicos_data is not None:
             _aplicar_topicos_descricao(descricao, topicos_data, X_pred)
 
         for c in TOPIC_COLS:
@@ -332,16 +336,10 @@ def gerar_pagina_predicao(cidade_path, prefixo_name, cidade_nome_poi):
 
         st.divider()
         with st.expander("Detalhes das features utilizadas"):
-            cols_importantes = ['lat', 'lng', 'valor_bairro_mean',
-                                'metro_quadrado_bairro_mean', 'bairro_rank']
-            for col in cols_importantes:
+            for col in feature_names:
                 if col in X_pred.columns:
-                    st.text(f"{col}: {X_pred[col].values[0]:.4f}")
-
-            st.text(f"Quartos por metro: {X_pred['quartos_por_metro'].values[0]:.4f}")
-            st.text(f"Vagas por metro: {X_pred['vagas_por_metro'].values[0]:.4f}")
-            st.text(f"Banheiros por quarto: {X_pred['banheiros_por_quarto'].values[0]:.4f}")
-
-            for col in X_pred.columns:
-                if col.startswith("score_"):
-                    st.text(f"{col}: {X_pred[col].values[0]:.4f}")
+                    val = X_pred[col].values[0]
+                    if isinstance(val, (int, float)):
+                        st.text(f"{col}: {val:.4f}")
+                    else:
+                        st.text(f"{col}: {val}")
