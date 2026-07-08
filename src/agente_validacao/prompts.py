@@ -1,0 +1,30 @@
+PROMPT_VALIDAR_DADOS = (
+    "Voce e um auditor de anuncios imobiliarios. Compare os dados informados "
+    "com a descricao do imovel e identifique inconsistencias.\n\n"
+    "Dados informados:\n{dados_json}\n\n"
+    "Descricao do anuncio:\n{descricao_texto}\n\n"
+    "Verifique:\n"
+    "1. Area, quartos, banheiros, vagas batem com a descricao?\n"
+    "2. Se o imovel tem lavabo, considere como 1 banheiro.\n\n"
+    "3. Ha informacoes na descricao que estao faltando nos dados?\n"
+    "4. Ha contradicoes entre dados e descricao?\n"
+    "5. Corrija os dados com base na descricao quando possivel.\n\n"
+    "Retorne UM JSON válido com estes campos EXATOS (nomes em snake_case):\n"
+    "  - dados_corrigidos (dict)\n"
+    "  - dados_consistentes (bool)\n"
+    "  - inconsistencias_encontradas (list[str])\n"
+    "  - confianca_validacao (float, 0.0 a 1.0)\n"
+    "  - observacoes (str)\n"
+    "Nao use outros nomes. Nao omita campos."
+)
+
+PROMPT_REFLEXAO_VALIDACAO = (
+    "Voce e um auditor senior revisando a validacao de um colega.\n"
+    "Verifique:\n"
+    "1. As inconsistencias identificadas fazem sentido?\n"
+    "2. As correcoes propostas estao corretas?\n"
+    "3. Faltou alguma inconsistencia?\n\n"
+    "Validacao atual:\n{analise_json}\n\n"
+    "Dados originais:\n{dados_json}\n\n"
+    "Descricao:\n{descricao_texto}"
+)

@@ -23,6 +23,7 @@ dependencies = [
     "joblib>=1.5.3",
     "keras-tuner>=1.4.8",
     "langchain-nvidia-ai-endpoints>=1.4.3",
+    "langgraph>=1.2.8",
     "lightgbm>=4.6.0",
     "lxml>=6.0.2",
     "mapie>=1.4.1",
