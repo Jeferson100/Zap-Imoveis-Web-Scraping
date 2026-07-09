@@ -91,7 +91,7 @@ async def avaliar_potencial_flip(state: SubgrafoPotencialFlipState) -> Dict[str,
     RouterApiNvidia = roteador_api_nvidia.RouterApiNvidia
     router = RouterApiNvidia(
         messages=prompt,
-        model_llm="nvidia/nemotron-3-nano-omni-30b-a3b-reasoning",
+        model_llm="deepseek-ai/deepseek-v4-flash",
         strutured_output=AnalisePotencialFlip,
         api_key=state.api_key,
     )
@@ -139,7 +139,7 @@ async def refletor_potencial_flip(state: SubgrafoPotencialFlipState) -> Dict[str
     RouterApiNvidia = roteador_api_nvidia.RouterApiNvidia
     router = RouterApiNvidia(
         messages=prompt,
-        model_llm="nvidia/nemotron-3-nano-omni-30b-a3b-reasoning",
+        model_llm="deepseek-ai/deepseek-v4-flash",
         strutured_output=FeedbackPotencialFlip,
         api_key=state.api_key,
     )
