@@ -26,6 +26,13 @@ class SubgrafoValidacaoState(BaseModel):
     tentativa: int = 0
     max_tentativas: int = MAX_TENTATIVAS
     api_key: Optional[str] = None
+    possui_erros: Optional[str] = None
+    metragem_corrigida: Optional[float] = None
+    vagas_corrigidas: Optional[int] = None
+    quartos_corrigidos: Optional[int] = None
+    valor_imovel_corrigido: Optional[float] = None
+    tipo_imovel_corrigido: Optional[str] = None
+    bairro_corrigido: Optional[str] = None
 
 
 async def validar_dados(state: SubgrafoValidacaoState) -> Dict[str, Any]:
@@ -50,16 +57,28 @@ async def validar_dados(state: SubgrafoValidacaoState) -> Dict[str, Any]:
         analise = (
             ValidacaoDados(**resultado) if isinstance(resultado, dict) else resultado
         )
-        return {"analise": analise, "tentativa": state.tentativa + 1}
+        return {
+            "analise": analise,
+            "possui_erros": analise.possui_erros,
+            "metragem_corrigida": analise.metragem_corrigida,
+            "vagas_corrigidas": analise.vagas_corrigidas,
+            "quartos_corrigidos": analise.quartos_corrigidos,
+            "valor_imovel_corrigido": analise.valor_imovel_corrigido,
+            "tipo_imovel_corrigido": analise.tipo_imovel_corrigido,
+            "bairro_corrigido": analise.bairro_corrigido,
+            "tentativa": state.tentativa + 1,
+        }
 
     return {
         "analise": ValidacaoDados(
             dados_corrigidos=state.dados_imovel,
             dados_consistentes=False,
+            possui_erros="True",
             inconsistencias_encontradas=["Nao foi possivel validar os dados"],
             confianca_validacao=0,
             observacoes="Falha na extracao estruturada",
         ),
+        "possui_erros": "True",
         "tentativa": state.tentativa + 1,
     }
 

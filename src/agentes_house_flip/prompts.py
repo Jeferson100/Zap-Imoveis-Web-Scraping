@@ -60,23 +60,3 @@ PROMPT_REFLEXAO_DADOS = (
     "Avaliacao atual:\n{analise_json}\n\n"
     "Dados originais:\n{dados_json}"
 )
-
-PROMPT_ANALISAR_DESCRICAO = (
-    "Voce e um especialista em analise de anuncios imobiliarios.\n"
-    "Analise a descricao textual abaixo e extraia:\n"
-    "1. Caracteristicas do imovel (area, quartos, banheiros, vagas, etc.)\n"
-    "2. Qualidade da descricao (0-10)\n"
-    "3. Possiveis exageros ou omissoes\n"
-    "4. Informacoes realmente relevantes\n\n"
-    "Descricao:\n{descricao_texto}"
-)
-
-PROMPT_REFLEXAO_DESCRICAO = (
-    "Voce e um revisor senior de anuncios imobiliarios.\n"
-    "Verifique a analise da descricao:\n"
-    "1. As caracteristicas extraidas estao corretas?\n"
-    "2. A qualidade do texto foi bem avaliada?\n"
-    "3. Exageros foram identificados corretamente?\n\n"
-    "Analise atual:\n{analise_json}\n\n"
-    "Descricao original:\n{descricao_texto}"
-)

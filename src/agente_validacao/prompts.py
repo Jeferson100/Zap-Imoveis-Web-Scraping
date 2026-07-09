@@ -15,6 +15,13 @@ PROMPT_VALIDAR_DADOS = (
     "  - inconsistencias_encontradas (list[str])\n"
     "  - confianca_validacao (float, 0.0 a 1.0)\n"
     "  - observacoes (str)\n"
+    "  - possui_erros (str, 'True' ou 'False')\n"
+    "  - metragem_corrigida (float ou null)\n"
+    "  - vagas_corrigidas (int ou null)\n"
+    "  - quartos_corrigidos (int ou null)\n"
+    "  - valor_imovel_corrigido (float ou null)\n"
+    "  - tipo_imovel_corrigido (str ou null)\n"
+    "  - bairro_corrigido (str ou null)\n"
     "Nao use outros nomes. Nao omita campos."
 )
 

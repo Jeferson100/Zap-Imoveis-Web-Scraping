@@ -45,27 +45,3 @@ class AnaliseDados(BaseModel):
 class FeedbackDados(BaseModel):
     consistente: bool
     feedback: Optional[str] = None
-
-
-class AnaliseDescricao(BaseModel):
-    caracteristicas_extraidas: Dict[str, Any]
-    qualidade_texto: float
-    exageros_identificados: List[str]
-    info_relevante: List[str]
-    conclusao: str
-
-
-class FeedbackDescricao(BaseModel):
-    consistente: bool
-    feedback: Optional[str] = None
-
-
-class AnaliseFinal(BaseModel):
-    score_geral: float
-    potencial_house_flip: str
-    custo_reforma_estimado: float
-    valor_estimado_pos_reforma: float
-    roi_estimado: float
-    riscos: List[str]
-    recomendacoes: List[str]
-    observacoes_finais: str
