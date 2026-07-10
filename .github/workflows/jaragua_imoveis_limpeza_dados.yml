@@ -13,7 +13,7 @@ jobs:
     with:
       cidade_pasta: jaragua
       arquivo_rodando_imovel: jaragua_limpando_dados.py
-      cidade_limpeza: jaragua
+      cidade_limpeza: jaragua do sul
       cidade_localizacao: Jaragua do Sul
       estado_limpeza: sc
       estado_localizacao: SC
