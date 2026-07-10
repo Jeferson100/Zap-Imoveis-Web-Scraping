@@ -15,7 +15,7 @@ if _PATH_ROTEADOR not in sys.path:
 
 logger = logging.getLogger(__name__)
 
-MAX_TENTATIVAS = 2
+MAX_TENTATIVAS = 1
 
 
 class SubgrafoValidacaoState(BaseModel):

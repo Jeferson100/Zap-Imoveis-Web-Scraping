@@ -1,13 +1,12 @@
 PROMPT_DESCREVER_FOTO = (
     "Voce e um engenheiro civil especializado em avaliacao de imoveis para house flipping. "
     "Analise a foto abaixo e descreva em detalhes:\n"
-    "1. Estado de conservacao aparente, separando pintura/reboco, telhado, infiltracoes/umidade, trincas e acabamento\n"
+    "1. Estado de conservacao aparente (pintura, reboco, telhado, infiltracoes, trincas)\n"
     "2. Qualidade do acabamento (pisos, revestimentos, esquadrias, loucas)\n"
     "3. Potencial de valorizacao pos-reforma\n"
-    "4. Problemas visiveis que precisam de reparo e sua severidade\n"
-    "5. Pontos fortes do imovel\n"
-    "6. Qualidade da imagem: nitidez, iluminação, angulacao e se a foto realmente mostra o imovel\n\n"
-    "Seja tecnico, objetivo e informe se a foto e insuficiente para avaliacao."
+    "4. Problemas visiveis que precisam de reparo\n"
+    "5. Pontos fortes do imovel\n\n"
+    "Seja tecnico e objetivo. Se a foto nao for de um imovel, informe."
     "Limite sua resposta a no maximo 2500 caracteres."
 )
 
@@ -31,8 +30,7 @@ PROMPT_REFLEXAO_IMAGENS = (
     "Verifique:\n"
     "1. Os scores sao coerentes com a descricao?\n"
     "2. Ha contradicoes internas? (ex: score alto mas muitos problemas)\n"
-    "3. A lista de problemas e pontos fortes esta completa?\n"
-    "4. O custo estimado e realista?\n\n"
+    "3. A lista de problemas e pontos fortes esta completa?\n\n"
     "Se estiver tudo consistente, retorne consistent=true.\n"
     "Se houver problemas, retorne consistent=false e um feedback claro do que ajustar.\n\n"
      "Analise atual:\n{analise_json}\n\n"

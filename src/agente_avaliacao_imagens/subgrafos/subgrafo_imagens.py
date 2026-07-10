@@ -1,12 +1,12 @@
+import asyncio
 import base64
-import io
 import logging
 import sys
 from pathlib import Path
 from typing import List, Optional, Dict, Any, Literal
 
+import httpx
 import requests
-from PIL import Image
 from langgraph.graph import StateGraph, END
 from pydantic import BaseModel
 
@@ -23,13 +23,14 @@ if _PATH_ROTEADOR not in sys.path:
 
 logger = logging.getLogger(__name__)
 
-MAX_TENTATIVAS = 2
+MAX_TENTATIVAS = 1
 TIMEOUT_DOWNLOAD = 15
 
 
 class SubgrafoImagensState(BaseModel):
     fotos_urls: List[str] = []
     fotos_base64: List[str] = []
+    usar_url_direto: bool = True
     descricoes: List[str] = []
     analise: Optional[AnaliseImagens] = None
     feedback: Optional[str] = None
@@ -38,29 +39,28 @@ class SubgrafoImagensState(BaseModel):
     api_key: Optional[str] = None
 
 
+async def _baixar_foto(url: str) -> Optional[str]:
+    try:
+        resp = requests.get(
+            url, timeout=TIMEOUT_DOWNLOAD,
+            headers={"User-Agent": "Mozilla/5.0"}
+        )
+        if resp.status_code == 200:
+            b64 = base64.b64encode(resp.content).decode("utf-8")
+            logger.info("Foto baixada: %s (%d bytes)", url[:60], len(resp.content))
+            return b64
+        logger.warning("Foto nao acessivel (HTTP %d): %s", resp.status_code, url)
+    except Exception as e:
+        logger.warning("Erro ao baixar foto %s: %s", url[:60], e)
+    return None
+
+
 async def baixar_fotos(state: SubgrafoImagensState) -> Dict[str, Any]:
-    if state.fotos_base64:
+    if state.fotos_base64 or state.usar_url_direto:
         return {"fotos_base64": state.fotos_base64}
 
-    base64_list = []
-    for url in state.fotos_urls:
-        try:
-            resp = requests.get(
-                url, timeout=TIMEOUT_DOWNLOAD,
-                headers={"User-Agent": "Mozilla/5.0"}
-            )
-            if resp.status_code == 200:
-                b64 = base64.b64encode(resp.content).decode("utf-8")
-                base64_list.append(b64)
-                logger.info("Foto baixada: %s (%d bytes)", url[:60], len(resp.content))
-            else:
-                logger.warning("Foto nao acessivel (HTTP %d): %s", resp.status_code, url)
-        except Exception as e:
-            logger.warning("Erro ao baixar foto %s: %s", url[:60], e)
-
-    if not base64_list:
-        logger.warning("Nenhuma foto pode ser baixada.")
-
+    resultados = await asyncio.gather(*[_baixar_foto(url) for url in state.fotos_urls])
+    base64_list = [r for r in resultados if r is not None]
     return {"fotos_base64": base64_list}
 
 
@@ -71,17 +71,17 @@ async def _enviar_vision(
         "model": model,
         "messages": [{"role": "user", "content": content}],
         "temperature": 0.1,
-        "max_tokens": 1000,
+        "max_tokens": 1500,
     }
     try:
         headers = dict(router_vision._headers)
         headers["Content-Type"] = "application/json"
-        response = router_vision.session.post(
-            router_vision.base_url,
-            headers=headers,
-            json=payload,
-            timeout=180,
-        )
+        async with httpx.AsyncClient(timeout=180.0) as client:
+            response = await client.post(
+                router_vision.base_url,
+                headers=headers,
+                json=payload,
+            )
         response.raise_for_status()
         texto = response.json()["choices"][0]["message"]["content"]
         logger.info("Vision OK (%d caracteres)", len(texto))
@@ -95,6 +95,15 @@ async def descrever_fotos(state: SubgrafoImagensState) -> Dict[str, Any]:
     import roteador_api_nvidia
 
     feedback = state.feedback or ""
+    prompt = PROMPT_DESCREVER_FOTO
+    if feedback:
+        prompt += f"\n\nObservacoes da revisao anterior:\n{feedback}"
+
+    use_urls = state.usar_url_direto and bool(state.fotos_urls)
+    sources = state.fotos_urls if use_urls else state.fotos_base64
+    if not sources:
+        logger.error("Nenhuma foto disponivel para descrever.")
+        return {"descricoes": [""], "tentativa": state.tentativa + 1}
 
     RouterApiNvidia = roteador_api_nvidia.RouterApiNvidia
     router_vision = RouterApiNvidia(
@@ -103,35 +112,26 @@ async def descrever_fotos(state: SubgrafoImagensState) -> Dict[str, Any]:
         api_key=state.api_key,
     )
 
-    prompt = PROMPT_DESCREVER_FOTO
-    if feedback:
-        prompt += f"\n\nObservacoes da revisao anterior:\n{feedback}"
+    async def _descrever_uma(source: str, idx: int) -> str:
+        if use_urls:
+            image_payload = {"type": "image_url", "image_url": {"url": source}}
+        else:
+            image_payload = {
+                "type": "image_url",
+                "image_url": {"url": f"data:image/webp;base64,{source}"},
+            }
 
-    fotos_jpeg = []
-    for b64 in state.fotos_base64:
-        try:
-            img_data = base64.b64decode(b64)
-            img = Image.open(io.BytesIO(img_data))
-            buf = io.BytesIO()
-            img.convert("RGB").save(buf, format="JPEG", quality=85)
-            fotos_jpeg.append(base64.b64encode(buf.getvalue()).decode("utf-8"))
-        except Exception:
-            fotos_jpeg.append(b64)
-
-    if not fotos_jpeg:
-        logger.error("Nenhuma foto disponivel para descrever.")
-        return {"descricoes": [""], "tentativa": state.tentativa + 1}
-
-    logger.info("Enviando %d fotos uma por vez...", len(fotos_jpeg))
-    textos = []
-    for i, b64 in enumerate(fotos_jpeg):
         content = [
-            {"type": "text", "text": f"{prompt}\n\n(Foto {i+1} de {len(fotos_jpeg)})"},
-            {"type": "image_url", "image_url": {"url": f"data:image/jpeg;base64,{b64}"}}
+            {"type": "text", "text": f"{prompt}\n\n(Foto {idx+1} de {len(sources)})"},
+            image_payload,
         ]
-        t = await _enviar_vision(router_vision, content)
-        if t:
-            textos.append(t)
+        return await _enviar_vision(router_vision, content)
+
+    logger.info("Descrevendo %d fotos em paralelo...", len(sources))
+    textos = await asyncio.gather(*[
+        _descrever_uma(src, i) for i, src in enumerate(sources)
+    ])
+    textos = [t for t in textos if t]
 
     descricao = "\n\n---\n\n".join(textos) if textos else ""
     descricoes = [descricao] if descricao else [""]

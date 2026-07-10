@@ -7,19 +7,19 @@ from typing import List, Optional, Dict, Any
 from langgraph.graph import StateGraph, END
 from pydantic import BaseModel
 
-from .schemas import AnaliseImagens
-from .utils import converter_numpy
-from .subgrafos.subgrafo_imagens import subgrafo_imagens, SubgrafoImagensState
+from agente_avaliacao_imagens.schemas import AnaliseImagens
+from agente_avaliacao_imagens.utils import converter_numpy
+from agente_avaliacao_imagens.subgrafos.subgrafo_imagens import (
+    subgrafo_imagens,
+    SubgrafoImagensState,
+)
 from agente_validacao.subgrafo_validacao import (
     subgrafo_validacao,
     SubgrafoValidacaoState,
 )
 from agente_validacao.schemas import ValidacaoDados
-from agente_potencial_flip.subgrafo_potencial_flip import (
-    subgrafo_potencial_flip,
-    SubgrafoPotencialFlipState,
-)
-from agente_potencial_flip.schemas import AnalisePotencialFlip
+from .subgrafo_potencial_flip import subgrafo_potencial_flip, SubgrafoPotencialFlipState
+from .schemas import AnalisePotencialFlip
 
 _PATH_ROTEADOR = str(Path(__file__).resolve().parent.parent / "roteador_llms")
 if _PATH_ROTEADOR not in sys.path:
