@@ -6,7 +6,8 @@ from pathlib import Path
 from typing import List, Optional, Dict, Any, Literal
 
 import httpx
-import requests
+from langchain_core.messages import HumanMessage
+from langchain_nvidia_ai_endpoints import ChatNVIDIA
 from langgraph.graph import StateGraph, END
 from pydantic import BaseModel
 
@@ -25,116 +26,83 @@ logger = logging.getLogger(__name__)
 
 MAX_TENTATIVAS = 1
 TIMEOUT_DOWNLOAD = 15
+TAMANHO_LOTE = 5
 
 
 class SubgrafoImagensState(BaseModel):
     fotos_urls: List[str] = []
-    fotos_base64: List[str] = []
-    usar_url_direto: bool = True
     descricoes: List[str] = []
     analise: Optional[AnaliseImagens] = None
     feedback: Optional[str] = None
     tentativa: int = 0
     max_tentativas: int = MAX_TENTATIVAS
     api_key: Optional[str] = None
+    model_nome: str = "qwen/qwen3.5-122b-a10b"
 
 
-async def _baixar_foto(url: str) -> Optional[str]:
+async def _baixar(client: httpx.AsyncClient, url: str) -> Optional[str]:
     try:
-        resp = requests.get(
-            url, timeout=TIMEOUT_DOWNLOAD,
-            headers={"User-Agent": "Mozilla/5.0"}
-        )
-        if resp.status_code == 200:
-            b64 = base64.b64encode(resp.content).decode("utf-8")
-            logger.info("Foto baixada: %s (%d bytes)", url[:60], len(resp.content))
-            return b64
-        logger.warning("Foto nao acessivel (HTTP %d): %s", resp.status_code, url)
+        resp = await client.get(url, timeout=TIMEOUT_DOWNLOAD)
+        ct = resp.headers.get("content-type", "")
+        if resp.status_code == 200 and ct.startswith("image/"):
+            return base64.b64encode(resp.content).decode("utf-8")
+        logger.warning("URL invalida: %s (%s)", url[:60], ct)
     except Exception as e:
-        logger.warning("Erro ao baixar foto %s: %s", url[:60], e)
+        logger.warning("Erro ao baixar %s: %s", url[:60], e)
     return None
 
 
-async def baixar_fotos(state: SubgrafoImagensState) -> Dict[str, Any]:
-    if state.fotos_base64 or state.usar_url_direto:
-        return {"fotos_base64": state.fotos_base64}
-
-    resultados = await asyncio.gather(*[_baixar_foto(url) for url in state.fotos_urls])
-    base64_list = [r for r in resultados if r is not None]
-    return {"fotos_base64": base64_list}
-
-
-async def _enviar_vision(
-    router_vision: Any, content: list, model: str = "nvidia/nemotron-3-nano-omni-30b-a3b-reasoning"
+async def _processar_lote(
+    model: ChatNVIDIA, client: httpx.AsyncClient,
+    urls: list[str], prompt: str, idx: int,
 ) -> str:
-    payload = {
-        "model": model,
-        "messages": [{"role": "user", "content": content}],
-        "temperature": 0.1,
-        "max_tokens": 1500,
-    }
-    try:
-        headers = dict(router_vision._headers)
-        headers["Content-Type"] = "application/json"
-        async with httpx.AsyncClient(timeout=180.0) as client:
-            response = await client.post(
-                router_vision.base_url,
-                headers=headers,
-                json=payload,
-            )
-        response.raise_for_status()
-        texto = response.json()["choices"][0]["message"]["content"]
-        logger.info("Vision OK (%d caracteres)", len(texto))
-        return texto
-    except Exception as e:
-        logger.warning("Falha no vision call: %s", e)
+    bases64 = await asyncio.gather(*[_baixar(client, url) for url in urls])
+    bases64 = [b for b in bases64 if b]
+    if not bases64:
         return ""
+
+    conteudo = [{"type": "text", "text": f"{prompt}\n\n(Lote {idx+1})"}]
+    for b64 in bases64:
+        conteudo.append({
+            "type": "image_url",
+            "image_url": {"url": f"data:image/jpeg;base64,{b64}"}
+        })
+
+    response = await model.ainvoke([HumanMessage(content=conteudo)])
+    return response.content
 
 
 async def descrever_fotos(state: SubgrafoImagensState) -> Dict[str, Any]:
-    import roteador_api_nvidia
-
-    feedback = state.feedback or ""
-    prompt = PROMPT_DESCREVER_FOTO
-    if feedback:
-        prompt += f"\n\nObservacoes da revisao anterior:\n{feedback}"
-
-    use_urls = state.usar_url_direto and bool(state.fotos_urls)
-    sources = state.fotos_urls if use_urls else state.fotos_base64
-    if not sources:
-        logger.error("Nenhuma foto disponivel para descrever.")
+    if not state.fotos_urls:
+        logger.error("Nenhuma URL de foto disponivel.")
         return {"descricoes": [""], "tentativa": state.tentativa + 1}
 
-    RouterApiNvidia = roteador_api_nvidia.RouterApiNvidia
-    router_vision = RouterApiNvidia(
-        messages="",
-        model_llm="nvidia/nemotron-3-nano-omni-30b-a3b-reasoning",
-        api_key=state.api_key,
+    prompt = PROMPT_DESCREVER_FOTO
+    if state.feedback:
+        prompt += f"\n\nObservacoes da revisao anterior:\n{state.feedback}"
+
+    model = ChatNVIDIA(
+        model=state.model_nome,
+        use_responses_api=True,
+        nvidia_api_key=state.api_key,
     )
 
-    async def _descrever_uma(source: str, idx: int) -> str:
-        if use_urls:
-            image_payload = {"type": "image_url", "image_url": {"url": source}}
-        else:
-            image_payload = {
-                "type": "image_url",
-                "image_url": {"url": f"data:image/webp;base64,{source}"},
-            }
+    lotes = [
+        state.fotos_urls[i:i + TAMANHO_LOTE]
+        for i in range(0, len(state.fotos_urls), TAMANHO_LOTE)
+    ]
 
-        content = [
-            {"type": "text", "text": f"{prompt}\n\n(Foto {idx+1} de {len(sources)})"},
-            image_payload,
+    async with httpx.AsyncClient() as client:
+        tarefas = [
+            _processar_lote(model, client, lote, prompt, idx)
+            for idx, lote in enumerate(lotes)
         ]
-        return await _enviar_vision(router_vision, content)
+        textos = await asyncio.gather(*tarefas)
 
-    logger.info("Descrevendo %d fotos em paralelo...", len(sources))
-    textos = await asyncio.gather(*[
-        _descrever_uma(src, i) for i, src in enumerate(sources)
-    ])
     textos = [t for t in textos if t]
-
     descricao = "\n\n---\n\n".join(textos) if textos else ""
     descricoes = [descricao] if descricao else [""]
+
     if not descricao:
         logger.error("Nao foi possivel descrever as fotos.")
     return {"descricoes": descricoes, "tentativa": state.tentativa + 1}
@@ -243,14 +211,12 @@ def decidir_proximo_imagens(
 
 builder = StateGraph(SubgrafoImagensState)
 
-builder.add_node("baixar_fotos", baixar_fotos)
 builder.add_node("descrever_fotos", descrever_fotos)
 builder.add_node("extrair_analise", extrair_analise)
 builder.add_node("refletor_imagens", refletor_imagens)
 
-builder.set_entry_point("baixar_fotos")
+builder.set_entry_point("descrever_fotos")
 
-builder.add_edge("baixar_fotos", "descrever_fotos")
 builder.add_edge("descrever_fotos", "extrair_analise")
 builder.add_edge("extrair_analise", "refletor_imagens")
 
