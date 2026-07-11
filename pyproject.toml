@@ -50,6 +50,7 @@ dependencies = [
     "selenium>=4.40.0",
     "setuptools>=80.10.2",
     "llvmlite>=0.36.0",
+    "numba>=0.60.0",
     "shap>=0.51.0",
     "spacy>=3.8.14",
     "statsmodels>=0.14.6",
@@ -68,9 +69,6 @@ dependencies = [
 [build-system]
 requires = ["setuptools>=77.0.0", "wheel>=0.40.0"]
 build-backend = "setuptools.build_meta"
-
-[tool.uv.extra-build-dependencies]
-numba = ["numpy.distutils"]
 
 [tool.setuptools]
 package-dir = {"" = "src"}
