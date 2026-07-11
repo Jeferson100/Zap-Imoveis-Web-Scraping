@@ -69,6 +69,9 @@ dependencies = [
 requires = ["setuptools>=77.0.0", "wheel>=0.40.0"]
 build-backend = "setuptools.build_meta"
 
+[tool.uv.extra-build-dependencies]
+numba = ["numpy.distutils"]
+
 [tool.setuptools]
 package-dir = {"" = "src"}
 packages = ["scraping_zap_imoveis"]
