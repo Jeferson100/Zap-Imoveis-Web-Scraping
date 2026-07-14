@@ -75,10 +75,11 @@ async def _processar_um_lote(
 
     llm = LlmRouter(conteudo,
                     api_nvidia_models=[
-                    "mistralai/ministral-14b-instruct-2512", 
-                    "mistralai/mistral-large-3-675b-instruct-2512",
-                    "mistralai/ministral-14b-instruct-2512",             
-                    "meta/llama-4-maverick-17b-128e-instruct",      
+                    "nvidia/nemotron-3-nano-omni-30b-a3b-reasoning",
+                    "meta/llama-3.2-11b-vision-instruct",
+                    "nvidia/nemotron-3-nano-omni-30b-a3b-reasoning",
+                    "meta/llama-3.2-90b-vision-instruct",
+                    "mistralai/ministral-14b-instruct-2512",      
                 ])
     response = await llm.llm_router()
     logger.info("Lote %d pronto (%d/%d imagens)", lote_idx + 1, fotos_ok, len(urls))
