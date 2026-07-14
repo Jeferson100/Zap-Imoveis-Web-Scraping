@@ -1,22 +1,16 @@
-from pydantic import BaseModel
-from typing import Any, Dict, List, Optional
+from typing import List, Optional
 
+from pydantic import BaseModel, Field
 
-class CategoriaConservacao(BaseModel):
-    nome: str
-    score: float
-    severidade: str
-    evidencias: List[str]
-    necessidade_reparo: bool
+from .config import MAX_TENTATIVAS
 
 
 class AnaliseImagens(BaseModel):
-    score_conservacao: float
-    score_acabamento: float
-    score_potencial_reforma: float
-    confianca_imagem: float
+    score_conservacao: float = Field(ge=0, le=10)
+    score_acabamento: float = Field(ge=0, le=10)
+    score_potencial_reforma: float = Field(ge=0, le=10)
+    confianca_imagem: float = Field(ge=0, le=10)
     imagem_aceitavel: bool
-    categorias_conservacao: List[CategoriaConservacao]
     problemas_visiveis: List[str]
     pontos_fortes: List[str]
     observacoes: str
@@ -25,23 +19,14 @@ class AnaliseImagens(BaseModel):
 class FeedbackImagens(BaseModel):
     consistente: bool
     feedback: Optional[str] = None
+    inconsistencias: List[str] = []
 
 
-class AnaliseDados(BaseModel):
-    endereco_formatado: str
-    bairro: str
-    cidade: str
-    area_estimada: Optional[float] = None
-    quartos_estimados: Optional[int] = None
-    banheiros_estimados: Optional[int] = None
-    score_localizacao: float
-    score_infraestrutura: float
-    demanda_bairro: float
-    pontos_positivos: List[str]
-    pontos_negativos: List[str]
-    observacoes: str
-
-
-class FeedbackDados(BaseModel):
-    consistente: bool
+class SubgrafoImagensState(BaseModel):
+    fotos_urls: List[str] = []
+    descricao_foto: str = ""
     feedback: Optional[str] = None
+    analise: Optional[AnaliseImagens] = None
+    tentativa: int = 0
+    max_tentativas: int = MAX_TENTATIVAS
+    api_key: Optional[str] = None

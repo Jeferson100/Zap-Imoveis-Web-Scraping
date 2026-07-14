@@ -8,8 +8,8 @@ from langgraph.graph import StateGraph, END
 from pydantic import BaseModel
 
 from agente_avaliacao_imagens.schemas import AnaliseImagens
-from agente_avaliacao_imagens.utils import converter_numpy
-from agente_avaliacao_imagens.subgrafos.subgrafo_imagens import (
+from shared.serialization import converter_numpy
+from agente_avaliacao_imagens.subgrafo_imagens import (
     subgrafo_imagens,
     SubgrafoImagensState,
 )

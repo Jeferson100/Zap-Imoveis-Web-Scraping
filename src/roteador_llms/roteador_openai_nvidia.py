@@ -1,5 +1,7 @@
+import asyncio
 import logging
 import os
+import random
 import re
 from typing import Any, Dict, Optional
 
@@ -7,12 +9,17 @@ from dotenv import load_dotenv
 from openai import AsyncOpenAI
 from pydantic import BaseModel
 
+from .rate_limit import acquire_nvidia_slot, register_429
+
 load_dotenv()
 
 logging.basicConfig(
     level=logging.INFO, format="%(asctime)s %(message)s", datefmt="%m/%d/%Y %I:%M:%S %p"
 )
 logger = logging.getLogger(__name__)
+
+MAX_RETRIES = int(os.getenv("NVIDIA_MAX_RETRIES", "5"))
+RETRY_BASE_DELAY = float(os.getenv("NVIDIA_RETRY_BASE_DELAY", "5.0"))
 
 
 class RouterOpenaiNvidia:
@@ -77,3 +84,31 @@ class RouterOpenaiNvidia:
             ],
         )
         return response.choices[0].message.content or ""
+
+    async def llm_openai_nvidia_multimodal(self) -> str:
+        for attempt in range(MAX_RETRIES):
+            try:
+                async with acquire_nvidia_slot():
+                    response = await self._client.chat.completions.create(
+                        model=self.model_llm,
+                        messages=[{"role": "user", "content": self.messages}],
+                    )
+                    return response.choices[0].message.content or ""
+            except Exception as e:
+                err_str = str(e).lower()
+                if "429" in err_str or "too many requests" in err_str:
+                    register_429()
+                if attempt < MAX_RETRIES - 1:
+                    delay = RETRY_BASE_DELAY * (2**attempt) + random.uniform(0, 2)
+                    logger.warning(
+                        "Retry OpenaiNvidia multimodal %d/%d em %.1fs: %s",
+                        attempt + 1, MAX_RETRIES, delay, e,
+                    )
+                    await asyncio.sleep(delay)
+                    continue
+                logger.error(
+                    "Erro llm_openai_nvidia_multimodal apos %d tentativas: %s",
+                    MAX_RETRIES, e,
+                )
+                raise
+        return ""

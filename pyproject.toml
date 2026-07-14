@@ -64,6 +64,9 @@ dependencies = [
     "webdriver-manager>=4.0.2",
     "xgboost>=3.2.0",
     "zapimoveis-scraper>=0.4.0",
+    "arize-phoenix>=17.28.0",
+    "openinference-instrumentation-langchain>=0.1.67",
+    "arize-phoenix-otel>=0.16.1",
 ]
 
 [build-system]
@@ -72,4 +75,14 @@ build-backend = "setuptools.build_meta"
 
 [tool.setuptools]
 package-dir = {"" = "src"}
-packages = ["scraping_zap_imoveis"]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+include = [
+    "scraping_zap_imoveis*",
+    "agente_avaliacao_imagens*",
+    "agente_validacao*",
+    "agente_potencial_flip*",
+    "roteador_llms*",
+    "shared*",
+]
