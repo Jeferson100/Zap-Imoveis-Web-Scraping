@@ -28,8 +28,8 @@ tracer_provider = register(
     project_name="agente-imoveis",
     api_key=PHOENIX_API_KEY,
     auto_instrument=True,
-    batch=True,
-    protocol="http/protobuf",
+    endpoint="https://app.phoenix.arize.com/s/sehnemjeferson"
+    
 )
 
 cidade = 'joinville'

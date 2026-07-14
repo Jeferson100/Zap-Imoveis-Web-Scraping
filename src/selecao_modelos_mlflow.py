@@ -208,14 +208,21 @@ def carregar_dados(pasta_dados, mes_ref, cidade, cidade_nome=None):
 
     # ── Gerar cache inline a partir do imoveis_limpo ────────────────
     imoveis_path = pasta_dados / f"{cidade}_imoveis_limpo_{mes_ref}.parquet"
-    if not imoveis_path.exists():
-        raise FileNotFoundError(
-            f"Nem cache nem dados limpos encontrados para {cidade}/{mes_ref}. "
-            "Execute coleta e limpeza primeiro."
-        )
 
-    logger.info("Cache não encontrado — gerando de %s ...", imoveis_path.name)
-    dados = pd.read_parquet(imoveis_path)
+    if imoveis_path.exists():
+        dados = pd.read_parquet(imoveis_path)
+        logger.info("Cache não encontrado — gerando de %s ...", imoveis_path.name)
+    else:
+        padrao = f"{cidade}_imoveis_limpo_*_{mes_ref}.parquet"
+        arquivos = sorted(pasta_dados.glob(padrao))
+        if not arquivos:
+            raise FileNotFoundError(
+                f"Nem cache nem dados limpos encontrados para {cidade}/{mes_ref}. "
+                "Execute coleta e limpeza primeiro."
+            )
+        dfs = [pd.read_parquet(a) for a in arquivos]
+        dados = pd.concat(dfs, ignore_index=True)
+        logger.info("Carregados %d fontes: %s linhas", len(arquivos), len(dados))
     cols_obrig = {'descricao', 'bairro', 'metragem', 'preco_por_m2', 'tipo_imovel'}
     if not cols_obrig.issubset(dados.columns):
         raise KeyError(f"Colunas obrigatorias ausentes: {cols_obrig - set(dados.columns)}")
