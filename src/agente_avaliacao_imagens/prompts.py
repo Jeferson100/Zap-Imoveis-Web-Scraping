@@ -55,7 +55,7 @@ For porcelain or ceramic flooring, indicate whether the style appears modern or 
 - If the image does not depict a property or a part of a property, respond only:
   "The image does not contain a property or an environment suitable for evaluation."
 
-Limit your response to a maximum of 1000 characters.
+Limit your response to a maximum of 500 characters.
 
 When multiple images are provided in the same request, describe each image separately and clearly.
 """

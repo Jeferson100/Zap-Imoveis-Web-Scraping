@@ -76,10 +76,15 @@ async def extrair_analise(state: SubgrafoImagensState) -> Dict[str, Any]:
             model_llm=MODEL_TEXTO,
             strutured_output=AnaliseImagens,
             api_key=state.api_key,
-            api_nvidia_models = ["deepseek-ai/deepseek-v4-pro",
+            api_nvidia_models = [
+                                "stepfun-ai/step-3.5-flash",
+                                "stepfun-ai/step-3.5-flash",
+                                "deepseek-ai/deepseek-v4-flash",
+                                 "stepfun-ai/step-3.5-flash",
+                                 "mistralai/mistral-large-3-675b-instruct-2512",
+                                 "google/gemma-4-31b-it",
                                  "z-ai/glm-5.2",
-                                 "qwen/qwen3.5-397b-a17b",
-                                 "qwen/qwen3-next-80b-a3b-instruct",
+                                 "deepseek-ai/deepseek-v4-pro",
                                  "mistralai/mistral-large-3-675b-instruct-2512"],
         )
         resultado = await router.llm_router()
@@ -115,11 +120,16 @@ async def refletor_imagens(state: SubgrafoImagensState) -> Dict[str, Any]:
             model_llm=MODEL_TEXTO,
             strutured_output=FeedbackImagens,
             api_key=state.api_key,
-            api_nvidia_models = ["deepseek-ai/deepseek-v4-pro",
+            api_nvidia_models = [
+                                "stepfun-ai/step-3.5-flash",
+                                "stepfun-ai/step-3.5-flash",
+                                "deepseek-ai/deepseek-v4-flash",
+                                 "stepfun-ai/step-3.5-flash",
+                                 "mistralai/mistral-large-3-675b-instruct-2512",
+                                 "google/gemma-4-31b-it",
                                  "z-ai/glm-5.2",
-                                 "qwen/qwen3.5-397b-a17b",
-                                 "qwen/qwen3-next-80b-a3b-instruct",
-                                 "mistralai/mistral-large-3-675b-instruct-2512"],
+                                 "deepseek-ai/deepseek-v4-pro",
+                                 "mistralai/mistral-large-3-675b-instruct-2512"]
         )
         resultado = await router.llm_router()
         if resultado:
