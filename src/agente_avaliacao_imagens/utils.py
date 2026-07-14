@@ -46,6 +46,7 @@ async def _baixar(client: httpx.AsyncClient, url: str) -> tuple[str, str] | None
     except Exception as e:
         logger.warning("Falha ao baixar %s: %s", url, e)
         return None
+    
 
 
 async def _processar_um_lote(
@@ -72,7 +73,13 @@ async def _processar_um_lote(
         logger.error("Nenhuma imagem valida no lote %d", lote_idx + 1)
         return f"--- Lote {lote_idx + 1} ---\nNenhuma imagem valida neste lote."
 
-    llm = LlmRouter(conteudo)
+    llm = LlmRouter(conteudo,
+                    api_nvidia_models=[
+                    "mistralai/ministral-14b-instruct-2512", 
+                    "mistralai/mistral-large-3-675b-instruct-2512",
+                    "mistralai/ministral-14b-instruct-2512",             
+                    "meta/llama-4-maverick-17b-128e-instruct",      
+                ])
     response = await llm.llm_router()
     logger.info("Lote %d pronto (%d/%d imagens)", lote_idx + 1, fotos_ok, len(urls))
     return f"--- Lote {lote_idx + 1} ---\n{response}"
