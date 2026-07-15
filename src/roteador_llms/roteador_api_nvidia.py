@@ -6,6 +6,7 @@ from typing import Any, Optional
 
 import httpx
 import requests
+from json_repair import repair_json
 from pydantic import BaseModel, ValidationError
 
 logging.basicConfig(
@@ -45,10 +46,27 @@ class RouterApiNvidia:
         """Remove TODOS os caracteres de controle (\\x00-\\x1F, \\x7F)."""
         return re.sub(r'[\x00-\x1F\x7F]', '', text)
 
+    def _reparar_json(self, text: str) -> str:
+        """Tenta reparar JSON malformado (aspas não escapadas, vírgulas faltando, etc.)."""
+        try:
+            json.loads(text)
+            return text  # já válido
+        except json.JSONDecodeError:
+            repaired = repair_json(text, return_objects=False)
+            return repaired if repaired else text
+
     def _extrair_objeto(self, text: str) -> str:
-        """Extrai o primeiro objeto se o JSON for uma lista."""
+        """Extrai o primeiro objeto se o JSON for uma lista ou dict com wrapper."""
         parsed = json.loads(text)
-        if isinstance(parsed, list):
+        # Desembrulha dict com uma única chave que contém o objeto real
+        # Ex: {"AnaliseImagens": {...}} ou {"AnaliseImagens": [{...}]}
+        if isinstance(parsed, dict) and len(parsed) == 1:
+            inner = next(iter(parsed.values()))
+            if isinstance(inner, list):
+                parsed = inner[0] if inner else parsed
+            elif isinstance(inner, dict):
+                parsed = inner
+        elif isinstance(parsed, list):
             parsed = parsed[0]
         return json.dumps(parsed)
 
@@ -84,6 +102,7 @@ class RouterApiNvidia:
             if self.strutured_output:
                 clean_json = self._extract_json(content)
                 clean_json = self._sanitizar_json(clean_json)
+                clean_json = self._reparar_json(clean_json)
                 clean_json = self._extrair_objeto(clean_json)
                 return self.strutured_output.model_validate_json(clean_json)
 
@@ -125,6 +144,7 @@ class RouterApiNvidia:
                 if self.strutured_output:
                     clean_json = self._extract_json(content)
                     clean_json = self._sanitizar_json(clean_json)
+                    clean_json = self._reparar_json(clean_json)
                     clean_json = self._extrair_objeto(clean_json)
                     return self.strutured_output.model_validate_json(clean_json)
 

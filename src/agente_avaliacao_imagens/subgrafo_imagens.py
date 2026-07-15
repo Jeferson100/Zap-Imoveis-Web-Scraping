@@ -4,10 +4,12 @@ from typing import Any, Dict, Literal
 
 from langgraph.graph import END, StateGraph
 
-from roteador_llms.roteador_api_nvidia import RouterApiNvidia
 from roteador_llms.roteador_llms import LlmRouter
 
-from .config import MODEL_TEXTO, TAMANHO_LOTE
+from .config import (
+            #MODEL_TEXTO_EXTRACAO, 
+            TAMANHO_LOTE, 
+            TIMEOUT_LLM)
 from .prompts import (
     PROMPT_EXTRAIR_ANALISE,
     PROMPT_REFLEXAO_IMAGENS,
@@ -15,6 +17,7 @@ from .prompts import (
 )
 from .schemas import AnaliseImagens, FeedbackImagens, SubgrafoImagensState
 from .utils import processar_todos_lotes
+from .retry_handler import retry_com_backoff
 
 logger = logging.getLogger(__name__)
 
@@ -70,33 +73,41 @@ async def extrair_analise(state: SubgrafoImagensState) -> Dict[str, Any]:
     if state.feedback:
         prompt += f"\n\nFeedback para considerar:\n{state.feedback}"
 
-    try:
+    async def _chamar_extracao():
         router = LlmRouter(
             messages=prompt,
-            model_llm=MODEL_TEXTO,
+            #model_llm=MODEL_TEXTO_EXTRACAO,
             strutured_output=AnaliseImagens,
             api_key=state.api_key,
-            api_nvidia_models = [
-                                "stepfun-ai/step-3.5-flash",
-                                "stepfun-ai/step-3.5-flash",
-                                "deepseek-ai/deepseek-v4-flash",
-                                 "stepfun-ai/step-3.5-flash",
-                                 "mistralai/mistral-large-3-675b-instruct-2512",
-                                 "google/gemma-4-31b-it",
-                                 "z-ai/glm-5.2",
-                                 "deepseek-ai/deepseek-v4-pro",
-                                 "mistralai/mistral-large-3-675b-instruct-2512"],
+            timeout=TIMEOUT_LLM,
+            api_nvidia_models=[
+                "deepseek-ai/deepseek-v4-flash",
+                "z-ai/glm-5.2",
+                "mistralai/mistral-large-3-675b-instruct-2512",
+                "google/gemma-4-31b-it",
+                "deepseek-ai/deepseek-v4-pro",
+                "qwen/qwen3.5-397b-a17b",
+            ],
         )
         resultado = await router.llm_router()
         if resultado:
-            analise = (
+            return (
                 AnaliseImagens(**resultado)
                 if isinstance(resultado, dict)
                 else resultado
             )
+
+    try:
+        analise = await retry_com_backoff(
+            _chamar_extracao,
+            max_attempts=2,
+            base_delay=1.0,
+            max_delay=30.0
+        )
+        if analise:
             return {"analise": analise}
     except Exception as e:
-        logger.error("Erro ao extrair analise: %s", e)
+        logger.error("Erro ao extrair analise apos retries: %s", e)
 
     return {"analise": _analise_fallback("Falha na extracao estruturada")}
 
@@ -114,30 +125,39 @@ async def refletor_imagens(state: SubgrafoImagensState) -> Dict[str, Any]:
         descricao=descricao_unificada,
     )
 
-    try:
+    async def _chamar_reflexao():
         router = LlmRouter(
             messages=prompt,
-            model_llm=MODEL_TEXTO,
+            #model_llm=MODEL_TEXTO_EXTRACAO,
             strutured_output=FeedbackImagens,
             api_key=state.api_key,
-            api_nvidia_models = [
-                                "stepfun-ai/step-3.5-flash",
-                                "stepfun-ai/step-3.5-flash",
-                                "deepseek-ai/deepseek-v4-flash",
-                                 "stepfun-ai/step-3.5-flash",
-                                 "mistralai/mistral-large-3-675b-instruct-2512",
-                                 "google/gemma-4-31b-it",
-                                 "z-ai/glm-5.2",
-                                 "deepseek-ai/deepseek-v4-pro",
-                                 "mistralai/mistral-large-3-675b-instruct-2512"]
+            timeout=TIMEOUT_LLM,
+            api_nvidia_models=[
+                "deepseek-ai/deepseek-v4-flash",
+                "z-ai/glm-5.2",
+                "mistralai/mistral-large-3-675b-instruct-2512",
+                "google/gemma-4-31b-it",
+                "deepseek-ai/deepseek-v4-pro",
+                "qwen/qwen3.5-397b-a17b",
+            ],
         )
         resultado = await router.llm_router()
         if resultado:
-            feedback_obj = (
+            return (
                 FeedbackImagens(**resultado)
                 if isinstance(resultado, dict)
                 else resultado
             )
+
+    try:
+        feedback_obj = await retry_com_backoff(
+            _chamar_reflexao,
+            max_attempts=2,
+            base_delay=1.0,
+            max_delay=30.0
+        )
+        
+        if feedback_obj:
             if feedback_obj.consistente:
                 return {"feedback": None}
             partes = []
@@ -147,7 +167,7 @@ async def refletor_imagens(state: SubgrafoImagensState) -> Dict[str, Any]:
                 partes.append("Inconsistencias: " + "; ".join(feedback_obj.inconsistencias))
             return {"feedback": "\n".join(partes) if partes else _FEEDBACK_FALHA_REFLEXAO}
     except Exception as e:
-        logger.error("Erro no refletor de imagens: %s", e)
+        logger.error("Erro no refletor de imagens apos retries: %s", e)
         if state.tentativa < state.max_tentativas:
             return {"feedback": _FEEDBACK_FALHA_REFLEXAO}
 
@@ -168,6 +188,16 @@ def decidir_proximo_imagens(
     return "__end__"
 
 
+def decidir_apos_extracao(
+    state: SubgrafoImagensState,
+) -> Literal["refletor_imagens", "__end__"]:
+    if state.max_tentativas == 0:
+        logger.info("MAX_TENTATIVAS=0: refletor_imagens ignorado.")
+        return "__end__"
+    logger.info("MAX_TENTATIVAS=%d: encaminhando para refletor_imagens.", state.max_tentativas)
+    return "refletor_imagens"
+
+
 builder = StateGraph(SubgrafoImagensState)
 
 builder.add_node("descrever_fotos", descrever_fotos)
@@ -177,7 +207,11 @@ builder.add_node("refletor_imagens", refletor_imagens)
 builder.set_entry_point("descrever_fotos")
 
 builder.add_edge("descrever_fotos", "extrair_analise")
-builder.add_edge("extrair_analise", "refletor_imagens")
+builder.add_conditional_edges(
+    "extrair_analise",
+    decidir_apos_extracao,
+    {"refletor_imagens": "refletor_imagens", "__end__": END},
+)
 
 builder.add_conditional_edges(
     "refletor_imagens",

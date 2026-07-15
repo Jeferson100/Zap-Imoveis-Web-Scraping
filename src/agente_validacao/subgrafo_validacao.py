@@ -36,7 +36,7 @@ class SubgrafoValidacaoState(BaseModel):
 
 
 async def validar_dados(state: SubgrafoValidacaoState) -> Dict[str, Any]:
-    import roteador_api_nvidia
+    
 
     prompt = PROMPT_VALIDAR_DADOS.format(
         dados_json=str(state.dados_imovel),

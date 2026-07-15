@@ -12,11 +12,8 @@ load_dotenv()
 logger = logging.getLogger(__name__)
 
 tracer_provider = register(
-    project_name="agente-imoveis",
-    api_key=os.getenv("PHOENIX_API_KEY"),
-    auto_instrument=True,
-    endpoint="https://app.phoenix.arize.com/s/sehnemjeferson"
-    
+  project_name="agente-imoveis",
+  auto_instrument=True
 )
 
 cidade = 'joinville'

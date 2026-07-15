@@ -67,6 +67,7 @@ dependencies = [
     "arize-phoenix>=17.28.0",
     "openinference-instrumentation-langchain>=0.1.67",
     "arize-phoenix-otel>=0.16.1",
+    "json-repair>=0.61.4",
 ]
 
 [build-system]
