@@ -2,12 +2,14 @@ import logging
 import sys
 from pathlib import Path
 from typing import Any, Dict, Optional, Literal
+from pydantic import BaseModel
 
 from langgraph.graph import StateGraph, END
 from pydantic import BaseModel
 
 from .schemas import ValidacaoDados, FeedbackValidacao
 from .prompts import PROMPT_VALIDAR_DADOS, PROMPT_REFLEXAO_VALIDACAO
+from roteador_llms.roteador_llms import LlmRouter
 
 _PATH_ROTEADOR = str(Path(__file__).resolve().parent.parent / "roteador_llms")
 if _PATH_ROTEADOR not in sys.path:
@@ -15,18 +17,19 @@ if _PATH_ROTEADOR not in sys.path:
 
 logger = logging.getLogger(__name__)
 
-MAX_TENTATIVAS = 1
+MAX_TENTATIVAS = 2
 
 
 class SubgrafoValidacaoState(BaseModel):
     dados_imovel: Dict[str, Any] = {}
     descricao_texto: str = ""
     analise: Optional[ValidacaoDados] = None
+    # "True" = há erros nos dados (re-validar), "False" = dados ok (encerrar)
+    consistente: Literal["True", "False"] = "False"
     feedback: Optional[str] = None
     tentativa: int = 0
     max_tentativas: int = MAX_TENTATIVAS
     api_key: Optional[str] = None
-    possui_erros: Optional[str] = None
     metragem_corrigida: Optional[float] = None
     vagas_corrigidas: Optional[int] = None
     quartos_corrigidos: Optional[int] = None
@@ -37,22 +40,27 @@ class SubgrafoValidacaoState(BaseModel):
 
 async def validar_dados(state: SubgrafoValidacaoState) -> Dict[str, Any]:
     
-
     prompt = PROMPT_VALIDAR_DADOS.format(
         dados_json=str(state.dados_imovel),
         descricao_texto=state.descricao_texto or "Nenhuma descricao fornecida.",
     )
     if state.feedback:
         prompt += f"\n\nFeedback da revisao anterior:\n{state.feedback}"
-
-    RouterApiNvidia = roteador_api_nvidia.RouterApiNvidia
-    router = RouterApiNvidia(
+    router = LlmRouter(
         messages=prompt,
-        model_llm="deepseek-ai/deepseek-v4-flash",
         strutured_output=ValidacaoDados,
         api_key=state.api_key,
+        api_nvidia_models=[
+                "z-ai/glm-5.2",
+                "deepseek-ai/deepseek-v4-flash",
+                "z-ai/glm-5.2",
+                "mistralai/mistral-large-3-675b-instruct-2512",
+                "google/gemma-4-31b-it",
+                "deepseek-ai/deepseek-v4-pro",
+                "qwen/qwen3.5-397b-a17b",
+            ],
     )
-    resultado = await router.ainvoke()
+    resultado = await router.llm_router()
     if resultado:
         analise = (
             ValidacaoDados(**resultado) if isinstance(resultado, dict) else resultado
@@ -84,7 +92,6 @@ async def validar_dados(state: SubgrafoValidacaoState) -> Dict[str, Any]:
 
 
 async def refletor_validacao(state: SubgrafoValidacaoState) -> Dict[str, Any]:
-    import roteador_api_nvidia
 
     if state.analise is None:
         return {"feedback": "Analise vazia, refaca."}
@@ -94,34 +101,43 @@ async def refletor_validacao(state: SubgrafoValidacaoState) -> Dict[str, Any]:
         dados_json=str(state.dados_imovel),
         descricao_texto=state.descricao_texto or "Nenhuma descricao fornecida.",
     )
-
-    RouterApiNvidia = roteador_api_nvidia.RouterApiNvidia
-    router = RouterApiNvidia(
+    router = LlmRouter(
         messages=prompt,
-        model_llm="deepseek-ai/deepseek-v4-flash",
         strutured_output=FeedbackValidacao,
         api_key=state.api_key,
+        api_nvidia_models=[
+                "z-ai/glm-5.2",
+                "deepseek-ai/deepseek-v4-flash",
+                "z-ai/glm-5.2",
+                "mistralai/mistral-large-3-675b-instruct-2512",
+                "google/gemma-4-31b-it",
+                "deepseek-ai/deepseek-v4-pro",
+                "qwen/qwen3.5-397b-a17b",
+            ],
     )
-    resultado = await router.ainvoke()
+    resultado = await router.llm_router()
     if resultado:
         fb = (
             FeedbackValidacao(**resultado)
             if isinstance(resultado, dict)
             else resultado
         )
-        return {"feedback": fb.feedback if not fb.consistente else None}
+        return {"feedback": fb.feedback if not fb.consistente else None,
+                "consistente": fb.consistente,}
     return {"feedback": None}
 
 
 def decidir_proximo_validacao(
     state: SubgrafoValidacaoState,
 ) -> Literal["validar_dados", "__end__"]:
-    if state.feedback and state.tentativa < state.max_tentativas:
+    # "True" = há erros nos dados → re-validar se ainda há tentativas
+    if state.consistente == "True" and state.tentativa < state.max_tentativas:
         logger.info(
-            "Refletor pediu refinamento (tentativa %d/%d)",
+            "Refletor encontrou erros, re-validando (tentativa %d/%d)",
             state.tentativa, state.max_tentativas,
         )
         return "validar_dados"
+
     logger.info("Validacao de dados concluida.")
     return "__end__"
 
