@@ -1,14 +1,11 @@
 import asyncio
 import logging
-import sys
-from pathlib import Path
-from typing import List, Optional, Dict, Any
+from typing import Any, Dict, List, Optional
 
-from langgraph.graph import StateGraph, END
+from langgraph.graph import END, StateGraph
 from pydantic import BaseModel
 
 from agente_avaliacao_imagens.schemas import AnaliseImagens
-from shared.serialization import converter_numpy
 from agente_avaliacao_imagens.subgrafo_imagens import (
     subgrafo_imagens,
     SubgrafoImagensState,
@@ -17,13 +14,12 @@ from agente_validacao.subgrafo_validacao import (
     subgrafo_validacao,
     SubgrafoValidacaoState,
 )
-from agente_validacao.schemas import ValidacaoDados
-from .subgrafo_potencial_flip import subgrafo_potencial_flip, SubgrafoPotencialFlipState
+from .grafo_potencial_flip import (
+    subgrafo_potencial_flip,
+    GrafoPotencialFlipState,
+)
 from .schemas import AnalisePotencialFlip
-
-_PATH_ROTEADOR = str(Path(__file__).resolve().parent.parent / "roteador_llms")
-if _PATH_ROTEADOR not in sys.path:
-    sys.path.insert(0, _PATH_ROTEADOR)
+from shared.serialization import converter_numpy
 
 logger = logging.getLogger(__name__)
 
@@ -32,54 +28,68 @@ class EstadoGlobal(BaseModel):
     fotos_urls: List[str] = []
     dados_imovel: Dict[str, Any] = {}
     descricao_texto: str = ""
-    analise_imagens: Optional[AnaliseImagens] = None
-    analise_validacao: Optional[ValidacaoDados] = None
-    analise_potencial_flip: Optional[AnalisePotencialFlip] = None
     api_key: Optional[str] = None
+    analise_imagens: Optional[AnaliseImagens] = None
+    analise_validacao: Optional[Any] = None
+    analise_flip: Optional[AnalisePotencialFlip] = None
 
 
 async def analisar_imagens_e_validar(state: EstadoGlobal) -> Dict[str, Any]:
-    fotos_state = SubgrafoImagensState(
+    img_state = SubgrafoImagensState(
         fotos_urls=state.fotos_urls,
         api_key=state.api_key,
     )
     val_state = SubgrafoValidacaoState(
         dados_imovel=converter_numpy(state.dados_imovel),
-        descricao_texto=state.descricao_texto,
+        descricao_texto=state.descricao_texto or "",
         api_key=state.api_key,
     )
 
-    fotos_result, val_result = await asyncio.gather(
-        subgrafo_imagens.ainvoke(fotos_state),
+    img_task, val_task = await asyncio.gather(
+        subgrafo_imagens.ainvoke(img_state),
         subgrafo_validacao.ainvoke(val_state),
+        return_exceptions=True,
+    )
+
+    analise_imagens = (
+        img_task.get("analise")
+        if isinstance(img_task, dict) and img_task.get("analise")
+        else None
+    )
+    analise_validacao = (
+        val_task.get("analise")
+        if isinstance(val_task, dict) and val_task.get("analise")
+        else None
     )
 
     return {
-        "analise_imagens": fotos_result.get("analise") if isinstance(fotos_result, dict) else None,
-        "analise_validacao": val_result.get("analise") if isinstance(val_result, dict) else None,
+        "analise_imagens": analise_imagens,
+        "analise_validacao": analise_validacao,
     }
 
 
-async def executar_subgrafo_potencial_flip(state: EstadoGlobal) -> Dict[str, Any]:
-    sub_state = SubgrafoPotencialFlipState(
-        dados_imovel=converter_numpy(state.dados_imovel),
+async def avaliar_flip(state: EstadoGlobal) -> Dict[str, Any]:
+    flip_state = GrafoPotencialFlipState(
+        dados_imovel=state.dados_imovel,
         analise_imagens=state.analise_imagens,
         analise_validacao=state.analise_validacao,
         api_key=state.api_key,
     )
-    result = await subgrafo_potencial_flip.ainvoke(sub_state)
-    analise = result.get("analise") if isinstance(result, dict) else None
-    return {"analise_potencial_flip": analise}
+    resultado = await subgrafo_potencial_flip.ainvoke(flip_state)
+    return {
+        "analise_flip": (
+            resultado.get("analise")
+            if isinstance(resultado, dict)
+            else resultado
+        )
+    }
 
 
 builder = StateGraph(EstadoGlobal)
-
 builder.add_node("analisar_imagens_e_validar", analisar_imagens_e_validar)
-builder.add_node("executar_subgrafo_potencial_flip", executar_subgrafo_potencial_flip)
-
+builder.add_node("avaliar_flip", avaliar_flip)
 builder.set_entry_point("analisar_imagens_e_validar")
-
-builder.add_edge("analisar_imagens_e_validar", "executar_subgrafo_potencial_flip")
-builder.add_edge("executar_subgrafo_potencial_flip", END)
+builder.add_edge("analisar_imagens_e_validar", "avaliar_flip")
+builder.add_edge("avaliar_flip", END)
 
 grafo_principal = builder.compile()

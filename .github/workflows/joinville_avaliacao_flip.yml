@@ -1,0 +1,55 @@
+name: Rodando Avaliacao Flip Joinville
+
+on:
+  schedule:
+    - cron: '0 8 * * 0'
+  workflow_dispatch:
+    inputs:
+      limite_imoveis:
+        description: "Maximo de imoveis para avaliar"
+        required: false
+        default: "1000"
+      max_concorrencia:
+        description: "Paralelismo (MAX_CONCORRENCIA_FLIP)"
+        required: false
+        default: "2"
+
+jobs:
+  avaliacao_flip:
+    runs-on: ubuntu-latest
+    timeout-minutes: 360
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Instalar uv
+        run: pip install uv
+
+      - name: Instalar dependencias
+        run: |
+          uv venv
+          uv pip install -e .
+
+      - name: Rodar avaliacao flip
+        run: uv run codigos_rodando/joinville/joinville_avaliacao_flip.py
+        env:
+          NVIDIA_API_KEY: ${{ secrets.NVIDIA_API_KEY }}
+          PHOENIX_API_KEY: ${{ secrets.PHOENIX_API_KEY }}
+          PHOENIX_COLLECTOR_ENDPOINT: ${{ secrets.PHOENIX_COLLECTOR_ENDPOINT }}
+          MAX_CONCORRENCIA_FLIP: ${{ github.event.inputs.max_concorrencia || '2' }}
+          LIMITE_FLIP: ${{ github.event.inputs.limite_imoveis || '1000' }}
+
+      - name: Commit resultados
+        run: |
+          git config user.name "github-actions"
+          git config user.email "github-actions@github.com"
+          git add dados/joinville/*avaliacao_flip*.parquet
+          git commit -m "Avaliacao Flip Joinville: $(date +'%Y-%m-%d')" || echo "Nada para commitar"
+          git pull --rebase --autostash -X ours origin main
+          git push origin main
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

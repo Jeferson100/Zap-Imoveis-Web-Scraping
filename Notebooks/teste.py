@@ -25,27 +25,36 @@ df = pd.read_parquet(PASTA_DADOS / f'{cidade}_imoveis_limpo_2026-07.parquet')
 sys.path.insert(0, r"C:\Users\jefer\Documents\Ciencia-de-dados\Preco-Imoveis")
 
 from src.agente_avaliacao_imagens.subgrafo_imagens import subgrafo_imagens, SubgrafoImagensState
+from src.agente_validacao.subgrafo_validacao import subgrafo_validacao, SubgrafoValidacaoState
+from src.agente_potencial_flip import grafo_principal, EstadoGlobal
 
 NUM_IMOVEIS = min(10, len(df))
 MAX_IMOVEIS_PARALELOS = int(os.getenv("TESTE_MAX_IMOVEIS_PARALELOS", "2"))
 _imovel_sem = asyncio.Semaphore(MAX_IMOVEIS_PARALELOS)
 
-
+colunas = ['metragem', 'banheiros', 'vagas', 'quartos', 'valor_imovel','bairro','tipo_imovel','p50_bairro','valor_predito',] 
 async def processar_um(i: int) -> tuple[str, dict | Exception]:
     async with _imovel_sem:
-        dados = df.iloc[i]
-        urls = list(dados["fotos"])
-        print(f"[{i+1}/{NUM_IMOVEIS}] {dados['url']}")
+        row = df.iloc[i]
+        url = row['url']
+        dados_selecionados = {col: row[col] for col in colunas}
+        descricao = row['descricao']
+        fotos = row['fotos']
+        print(f"[{i+1}/{NUM_IMOVEIS}] {url}")
         try:
-            response = await subgrafo_imagens.ainvoke(
-                SubgrafoImagensState(fotos_urls=urls)
+            
+            estado = EstadoGlobal(
+                fotos_urls= fotos,
+                dados_imovel=dados_selecionados,
+                descricao_texto=descricao,
+            
             )
-            return dados["url"], response
+            response = await grafo_principal.ainvoke(estado)
+            return url, response
         except Exception as e:
             logger.error("Falha no imovel %d: %s", i, e)
-            return dados["url"], e
-
-
+            return url, e
+        
 async def main():
     tarefas = [processar_um(i) for i in range(NUM_IMOVEIS)]
     resultados = await asyncio.gather(*tarefas, return_exceptions=True)

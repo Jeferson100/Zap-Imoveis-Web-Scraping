@@ -122,7 +122,7 @@ async def refletor_validacao(state: SubgrafoValidacaoState) -> Dict[str, Any]:
             if isinstance(resultado, dict)
             else resultado
         )
-        return {"feedback": fb.feedback if not fb.consistente else None,
+        return {"feedback": fb.feedback,
                 "consistente": fb.consistente,}
     return {"feedback": None}
 

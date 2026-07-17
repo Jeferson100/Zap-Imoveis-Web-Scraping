@@ -1,3 +1,4 @@
+import asyncio
 import json
 import logging
 import os
@@ -137,6 +138,20 @@ class RouterApiNvidia:
                 response = await client.post(
                     self.base_url, headers=self._headers, json=payload
                 )
+
+                if response.status_code == 429:
+                    retry_after = int(response.headers.get("retry-after", 5))
+                    logger.warning(
+                        "Rate limit (429) no modelo %s. Aguardando %ds.",
+                        self.model_llm, retry_after,
+                    )
+                    await asyncio.sleep(retry_after)
+                    raise httpx.HTTPStatusError(
+                        "429 Too Many Requests",
+                        request=response.request,
+                        response=response,
+                    )
+
                 response.raise_for_status()
 
                 content = response.json()["choices"][0]["message"]["content"]
