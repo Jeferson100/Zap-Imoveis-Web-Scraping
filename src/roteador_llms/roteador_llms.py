@@ -9,6 +9,8 @@ from .roteador_cerebras import RouterCerebras
 from .roteador_groq import RouterGroq
 from .roteador_langchain_nvidia import RouterLangChainNvidia
 from .roteador_openai_nvidia import RouterOpenaiNvidia
+from .roteador_openrouter import RouterOpenRouter
+from .roteador_zai import RouterZai
 
 logging.basicConfig(
     level=logging.INFO, format="%(asctime)s %(message)s", datefmt="%m/%d/%Y %I:%M:%S %p"
@@ -76,6 +78,17 @@ class LlmRouter:
                     "nemotron-3-nano-omni-30b-a3b-reasoning",
                 ],
             ),
+            "OpenRouter": kwargs.get(
+                "openrouter_models",
+                ["openrouter/free"],
+            ),
+            "Zai": kwargs.get(
+                "zai_models",
+                [
+                    "GLM-4.7-Flash",
+                    "GLM-4.5-Flash",
+                ],
+            ),
         }
 
     async def _try_provider(
@@ -105,6 +118,15 @@ class LlmRouter:
 
         # Configuração dos provedores: (Nome, Classe do Roteador, Método a chamar)
         providers = [
+            (
+                "Zai",
+                RouterZai,
+                (
+                    "llm_zai_structured"
+                    if self.strutured_output
+                    else "llm_zai"
+                ),
+            ),
             ("API_Nvidia", RouterApiNvidia, "ainvoke"),
             (
                 "Langchain_nvidia",
@@ -132,6 +154,15 @@ class LlmRouter:
                     "llm_structured_openai_nvidia"
                     if self.strutured_output
                     else "llm_openai_nvidia"
+                ),
+            ),
+            (
+                "OpenRouter",
+                RouterOpenRouter,
+                (
+                    "llm_openrouter_structured"
+                    if self.strutured_output
+                    else "llm_openrouter"
                 ),
             ),
         ]

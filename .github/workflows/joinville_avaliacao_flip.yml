@@ -1,8 +1,6 @@
 name: Rodando Avaliacao Flip Joinville
 
 on:
-  schedule:
-    - cron: '0 8 * * 0'
   workflow_dispatch:
     inputs:
       limite_imoveis:
@@ -44,6 +42,7 @@ jobs:
           CEREBRAS_API_KEY: ${{ secrets.CEREBRAS_API_KEY }}
           GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
           PYDANTIC_API_KEY: ${{ secrets.PYDANTIC_API_KEY }}
+          OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
           MAX_CONCORRENCIA_FLIP: ${{ github.event.inputs.max_concorrencia || '2' }}
           LIMITE_FLIP: ${{ github.event.inputs.limite_imoveis || '1000' }}
 

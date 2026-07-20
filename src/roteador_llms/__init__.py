@@ -5,6 +5,8 @@ from .roteador_huggingface import RouterPydanticAI
 from .roteador_langchain_nvidia import RouterLangChainNvidia
 from .roteador_llms import LlmRouter
 from .roteador_openai_nvidia import RouterOpenaiNvidia
+from .roteador_openrouter import RouterOpenRouter
+from .roteador_zai import RouterZai
 
 __all__ = [
     "RouterGroq",
@@ -12,6 +14,8 @@ __all__ = [
     "RouterLangChainNvidia",
     "RouterPydanticAI",
     "RouterOpenaiNvidia",
+    "RouterOpenRouter",
+    "RouterZai",
     "LlmRouter",
     "RouterApiNvidia",
 ]
