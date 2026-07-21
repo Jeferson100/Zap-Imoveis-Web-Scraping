@@ -34,7 +34,7 @@ SEMAFORO = asyncio.Semaphore(MAX_CONCORRENCIA)
 
 CIDADE = "joinville"
 MES_REF = os.getenv("MES_REF") or datetime.now().strftime("%Y-%m")
-LIMITE_IMOVEIS = int(os.getenv("LIMITE_FLIP", "1000"))
+LIMITE_IMOVEIS = int(os.getenv("LIMITE_FLIP", "50"))
 ARQUIVO_DADOS = (
     BASE_DIR / "dados" / CIDADE / f"{CIDADE}_imoveis_limpo_{MES_REF}.parquet"
 )

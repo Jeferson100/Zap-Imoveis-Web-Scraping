@@ -6,11 +6,11 @@ on:
       limite_imoveis:
         description: "Maximo de imoveis para avaliar"
         required: false
-        default: "1000"
+        default: "50"
       max_concorrencia:
         description: "Paralelismo (MAX_CONCORRENCIA_FLIP)"
         required: false
-        default: "2"
+        default: "1"
 
 jobs:
   avaliacao_flip:
@@ -43,8 +43,8 @@ jobs:
           GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
           PYDANTIC_API_KEY: ${{ secrets.PYDANTIC_API_KEY }}
           OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
-          MAX_CONCORRENCIA_FLIP: ${{ github.event.inputs.max_concorrencia || '2' }}
-          LIMITE_FLIP: ${{ github.event.inputs.limite_imoveis || '1000' }}
+          MAX_CONCORRENCIA_FLIP: ${{ github.event.inputs.max_concorrencia || '1' }}
+          LIMITE_FLIP: ${{ github.event.inputs.limite_imoveis || '50' }}
 
       - name: Commit resultados
         run: |

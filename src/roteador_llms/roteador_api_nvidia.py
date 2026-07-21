@@ -59,15 +59,17 @@ class RouterApiNvidia:
     def _extrair_objeto(self, text: str) -> str:
         """Extrai o primeiro objeto se o JSON for uma lista ou dict com wrapper."""
         parsed = json.loads(text)
-        # Desembrulha dict com uma única chave que contém o objeto real
-        # Ex: {"AnaliseImagens": {...}} ou {"AnaliseImagens": [{...}]}
-        if isinstance(parsed, dict) and len(parsed) == 1:
+        # Desembrulha recursivamente wrappers comuns (answer, response, Lote N, etc.)
+        while isinstance(parsed, dict) and len(parsed) == 1:
             inner = next(iter(parsed.values()))
             if isinstance(inner, list):
                 parsed = inner[0] if inner else parsed
+                break
             elif isinstance(inner, dict):
                 parsed = inner
-        elif isinstance(parsed, list):
+            else:
+                break
+        if isinstance(parsed, list):
             parsed = parsed[0]
         return json.dumps(parsed)
 
@@ -87,7 +89,12 @@ class RouterApiNvidia:
             payload["messages"].append(  # type: ignore
                 {
                     "role": "system",
-                    "content": f"Respond EXCLUSIVELY in JSON. Schema: {json.dumps(self.strutured_output.model_json_schema())}",
+                    "content": (
+                        f"Respond EXCLUSIVELY with a raw JSON object matching the schema below. "
+                        f"Do NOT wrap it in 'answer', 'response', 'analysis', or any other key. "
+                        f"Return the fields directly at the top level.\n\n"
+                        f"Schema: {json.dumps(self.strutured_output.model_json_schema())}"
+                    ),
                 }
             )
 
@@ -127,7 +134,12 @@ class RouterApiNvidia:
             payload["messages"].append(  # type: ignore
                 {
                     "role": "system",
-                    "content": f"Respond EXCLUSIVELY in JSON. Schema: {json.dumps(self.strutured_output.model_json_schema())}",
+                    "content": (
+                        f"Respond EXCLUSIVELY with a raw JSON object matching the schema below. "
+                        f"Do NOT wrap it in 'answer', 'response', 'analysis', or any other key. "
+                        f"Return the fields directly at the top level.\n\n"
+                        f"Schema: {json.dumps(self.strutured_output.model_json_schema())}"
+                    ),
                 }
             )
 
