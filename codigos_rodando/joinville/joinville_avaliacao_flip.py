@@ -34,7 +34,9 @@ SEMAFORO = asyncio.Semaphore(MAX_CONCORRENCIA)
 
 CIDADE = "joinville"
 MES_REF = os.getenv("MES_REF") or datetime.now().strftime("%Y-%m")
-LIMITE_IMOVEIS = int(os.getenv("LIMITE_FLIP", "50")) 
+LIMITE_IMOVEIS = int(os.getenv("LIMITE_FLIP", "50"))
+LIMITE_INFERIOR = int(os.getenv("LIMITE_INFERIOR_FLIP", "0"))
+LIMITE_SUPERIOR = int(os.getenv("LIMITE_SUPERIOR_FLIP", str(LIMITE_INFERIOR + LIMITE_IMOVEIS)))
 
 bairro_selecao = os.getenv("BAIRRO_SELECAO")
 
@@ -42,14 +44,15 @@ ARQUIVO_DADOS = (
     BASE_DIR / "dados" / CIDADE / f"{CIDADE}_imoveis_limpo_{MES_REF}.parquet"
 )
 
+RANGE_SUFIXO = f"_{LIMITE_INFERIOR}_{LIMITE_SUPERIOR}"
+
 if bairro_selecao:
-    ARQUIVO_RESULTADO = ( 
-        BASE_DIR / "dados" / CIDADE / f"{CIDADE}_avaliacao_flip_{MES_REF}_{bairro_selecao}.parquet"
-        
+    ARQUIVO_RESULTADO = (
+        BASE_DIR / "dados" / CIDADE / f"{CIDADE}_avaliacao_flip_{MES_REF}{RANGE_SUFIXO}_{bairro_selecao}.parquet"
     )
 else:
     ARQUIVO_RESULTADO = (
-        BASE_DIR / "dados" / CIDADE / f"{CIDADE}_avaliacao_flip_{MES_REF}.parquet"
+        BASE_DIR / "dados" / CIDADE / f"{CIDADE}_avaliacao_flip_{MES_REF}{RANGE_SUFIXO}.parquet"
     )
 
 
@@ -63,10 +66,10 @@ def carregar_imoveis() -> pd.DataFrame:
     if bairro_selecao:
         mask = df["bairro"].str.lower().str.contains(bairro_selecao)
         df = df[mask]
-    df = df.head(LIMITE_IMOVEIS)
+    df = df.iloc[LIMITE_INFERIOR:min(LIMITE_SUPERIOR, len(df))]
     logger.info(
-        "Carregados %d imoveis de %s (filtrados de %d)",
-        len(df), CIDADE, mask.sum(),
+        "Carregados %d imoveis de %s (filtrados de %d, range %d:%d)",
+        len(df), CIDADE, mask.sum(), LIMITE_INFERIOR, LIMITE_INFERIOR + len(df),
     )
     return df.reset_index(drop=True)
 
@@ -103,11 +106,11 @@ def montar_estado(linha: pd.Series) -> EstadoGlobal:
     )
 
 
-async def processar_um(linha: pd.Series, idx: int) -> dict:
+async def processar_um(linha: pd.Series, idx: int, total: int) -> dict:
     async with SEMAFORO:
         estado = montar_estado(linha)
         url = str(linha.get("url", ""))
-        logger.info("[%d/%d] %s", idx + 1, LIMITE_IMOVEIS, url)
+        logger.info("[%d/%d] %s", idx + 1, total, url)
 
         try:
             resultado = await grafo_principal.ainvoke(estado)
@@ -155,7 +158,7 @@ async def main():
         logger.warning("Nenhum imovel encontrado para avaliacao.")
         return
 
-    tarefas = [processar_um(df.iloc[i], i) for i in range(len(df))]
+    tarefas = [processar_um(df.iloc[i], i, len(df)) for i in range(len(df))]
     resultados = await asyncio.gather(*tarefas, return_exceptions=True)
 
     linhas = [r for r in resultados if isinstance(r, dict)]

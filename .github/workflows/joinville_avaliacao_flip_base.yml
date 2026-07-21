@@ -1,0 +1,68 @@
+name: "Avaliacao Flip Joinville (Base)"
+
+on:
+  workflow_call:
+    inputs:
+      limite_inferior:
+        required: true
+        type: string
+      limite_superior:
+        required: true
+        type: string
+      bairro:
+        required: false
+        type: string
+        default: "atiradores"
+      max_concorrencia:
+        required: false
+        type: string
+        default: "1"
+
+jobs:
+  avaliacao_flip:
+    runs-on: ubuntu-latest
+    timeout-minutes: 360
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Instalar uv
+        run: pip install uv
+
+      - name: Instalar dependencias
+        run: |
+          uv venv
+          uv pip install -e .
+          uv pip install huggingface_hub
+
+      - name: Rodar avaliacao flip
+        run: uv run codigos_rodando/joinville/joinville_avaliacao_flip.py
+        env:
+          NVIDIA_API_KEY: ${{ secrets.NVIDIA_API_KEY }}
+          PHOENIX_API_KEY: ${{ secrets.PHOENIX_API_KEY }}
+          PHOENIX_COLLECTOR_ENDPOINT: ${{ secrets.PHOENIX_COLLECTOR_ENDPOINT }}
+          CEREBRAS_API_KEY: ${{ secrets.CEREBRAS_API_KEY }}
+          GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
+          PYDANTIC_API_KEY: ${{ secrets.PYDANTIC_API_KEY }}
+          OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
+          ZAI_API_KEY: ${{ secrets.ZAI_API_KEY }}
+          MAX_CONCORRENCIA_FLIP: ${{ inputs.max_concorrencia }}
+          LIMITE_FLIP: ${{ inputs.limite_superior }}
+          LIMITE_INFERIOR_FLIP: ${{ inputs.limite_inferior }}
+          LIMITE_SUPERIOR_FLIP: ${{ inputs.limite_superior }}
+          BAIRRO_SELECAO: ${{ inputs.bairro }}
+
+      - name: Commit resultados
+        run: |
+          git config user.name "github-actions"
+          git config user.email "github-actions@github.com"
+          git add dados/joinville/*avaliacao_flip*.parquet
+          git commit -m "Avaliacao Flip Joinville [${{ inputs.limite_inferior }}-${{ inputs.limite_superior }}]: $(date +'%Y-%m-%d')" || echo "Nada para commitar"
+          git pull --rebase --autostash -X ours origin main
+          git push origin main
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

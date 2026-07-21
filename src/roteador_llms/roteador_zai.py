@@ -37,6 +37,9 @@ class RouterZai:
         return self._client
 
     async def llm_zai(self) -> Optional[str]:
+        if not isinstance(self.messages, str):
+            logger.warning("Z.ai nao suporta multimodal, pulando")
+            return None
         client = self._get_client()
         if client is None:
             logger.warning("ZAI_API_KEY nao configurada, pulando Z.ai")

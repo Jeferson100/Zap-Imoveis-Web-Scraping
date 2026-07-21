@@ -42,8 +42,7 @@ class RouterLangChainNvidia:
             )
 
         try:
-            llm = ChatNVIDIA(model=self.model_llm, tokenizer_mode="hf")
-            llm.nvidia_structured_output_backend = "xgrammar"
+            llm = ChatNVIDIA(model=self.model_llm)
             llm_strutured = llm.with_structured_output(self.strutured_output)
 
             response = await asyncio.wait_for(
