@@ -34,13 +34,24 @@ SEMAFORO = asyncio.Semaphore(MAX_CONCORRENCIA)
 
 CIDADE = "joinville"
 MES_REF = os.getenv("MES_REF") or datetime.now().strftime("%Y-%m")
-LIMITE_IMOVEIS = int(os.getenv("LIMITE_FLIP", "50"))
+LIMITE_IMOVEIS = int(os.getenv("LIMITE_FLIP", "50")) 
+
+bairro_selecao = os.getenv("BAIRRO_SELECAO")
+
 ARQUIVO_DADOS = (
     BASE_DIR / "dados" / CIDADE / f"{CIDADE}_imoveis_limpo_{MES_REF}.parquet"
 )
-ARQUIVO_RESULTADO = (
-    BASE_DIR / "dados" / CIDADE / f"{CIDADE}_avaliacao_flip_{MES_REF}.parquet"
-)
+
+if bairro_selecao:
+    ARQUIVO_RESULTADO = ( 
+        BASE_DIR / "dados" / CIDADE / f"{CIDADE}_avaliacao_flip_{MES_REF}_{bairro_selecao}.parquet"
+        
+    )
+else:
+    ARQUIVO_RESULTADO = (
+        BASE_DIR / "dados" / CIDADE / f"{CIDADE}_avaliacao_flip_{MES_REF}.parquet"
+    )
+
 
 
 def carregar_imoveis() -> pd.DataFrame:
@@ -48,7 +59,11 @@ def carregar_imoveis() -> pd.DataFrame:
     mask = df["tipo_imovel"].str.lower().isin(
         ["apartamento"]
     )
-    df = df[mask].sort_values(by="preco_por_m2").head(LIMITE_IMOVEIS)
+    df = df[mask].sort_values(by="preco_por_m2")
+    if bairro_selecao:
+        mask = df["bairro"].str.lower().str.contains(bairro_selecao)
+        df = df[mask]
+    df = df.head(LIMITE_IMOVEIS)
     logger.info(
         "Carregados %d imoveis de %s (filtrados de %d)",
         len(df), CIDADE, mask.sum(),

@@ -6,11 +6,15 @@ on:
       limite_imoveis:
         description: "Maximo de imoveis para avaliar"
         required: false
-        default: "50"
+        default: "10"
       max_concorrencia:
         description: "Paralelismo (MAX_CONCORRENCIA_FLIP)"
         required: false
         default: "1"
+      bairro_selecao:
+        description: "Bairro para avaliacao"
+        required: false
+        default: "atiradores"
 
 jobs:
   avaliacao_flip:
@@ -44,7 +48,8 @@ jobs:
           PYDANTIC_API_KEY: ${{ secrets.PYDANTIC_API_KEY }}
           OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
           MAX_CONCORRENCIA_FLIP: ${{ github.event.inputs.max_concorrencia || '1' }}
-          LIMITE_FLIP: ${{ github.event.inputs.limite_imoveis || '50' }}
+          LIMITE_FLIP: ${{ github.event.inputs.limite_imoveis || '10' }}
+          BAIRRO_SELECAO: ${{ github.event.inputs.bairro_selecao || 'atiradores' }}
 
       - name: Commit resultados
         run: |
