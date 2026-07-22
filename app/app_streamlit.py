@@ -129,6 +129,22 @@ def gerar_pagina_analise_imoveis(cidade_pth, cidade_nome, prefixo_arquivo, df=No
         
     df = st.session_state[key_df]
     
+    try:
+        flip_dir = BASE_DIR / "dados" / cidade_pth
+        flip_files = sorted(flip_dir.glob("*avaliacao_flip*.parquet"))
+        if flip_files:
+            df_flip = pd.concat(
+                [pd.read_parquet(f) for f in flip_files], ignore_index=True
+            )
+            df_flip = df_flip.drop_duplicates(subset=["url"])
+            df = df.merge(
+                df_flip[["url", "score_potencial_flip", "potencial_house_flip", "justificativa"]],
+                on="url", how="left",
+            )
+            st.session_state[key_df] = df
+    except Exception:
+        pass
+    
     superior = df['preco_por_m2'].quantile(0.996)
 
     df['preco_por_m2'] = df['preco_por_m2'].replace([np.inf, -np.inf], np.nan)
@@ -378,6 +394,10 @@ def gerar_pagina_analise_imoveis(cidade_pth, cidade_nome, prefixo_arquivo, df=No
             if col in df_filtrado.columns:
                 cols_to_show.append(col)
 
+        for col in ['score_potencial_flip', 'potencial_house_flip', 'justificativa']:
+            if col in df_filtrado.columns:
+                cols_to_show.append(col)
+
         if 'valor_predito' in df_filtrado.columns and 'metragem' in df_filtrado.columns:
             df_filtrado['preco_por_m2_predito'] = (df_filtrado['valor_predito'] / df_filtrado['metragem']).round(0)
             cols_to_show.append('preco_por_m2_predito')
@@ -413,6 +433,9 @@ def gerar_pagina_analise_imoveis(cidade_pth, cidade_nome, prefixo_arquivo, df=No
                 "erro_absoluto": st.column_config.NumberColumn("Erro Absoluto", format="R$ %d"),
                 "erro_percentual": st.column_config.NumberColumn("Erro %", format="%.1f%%"),
                 "preco_por_m2_predito": st.column_config.NumberColumn("Preço/m² Previsto", format="R$ %d"),
+                "score_potencial_flip": st.column_config.NumberColumn("Score Flip", format="%.1f"),
+                "potencial_house_flip": st.column_config.TextColumn("House Flip?"),
+                "justificativa": st.column_config.TextColumn("Justificativa", width="large"),
             },
         )
     else:

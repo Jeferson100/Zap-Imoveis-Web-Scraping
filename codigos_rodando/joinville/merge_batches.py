@@ -9,11 +9,13 @@ BASE_DIR = Path(__file__).resolve().parent.parent.parent
 PASTA_DADOS = BASE_DIR / "dados" / "joinville"
 
 MES_REF = os.getenv("MES_REF") or datetime.now().strftime("%Y-%m")
+
 BAIRRO = os.getenv("BAIRRO_SELECAO") or "atiradores"
 
 logging.basicConfig(
     level=logging.INFO, format="%(asctime)s %(message)s", datefmt="%H:%M:%S"
 )
+
 logger = logging.getLogger(__name__)
 
 
