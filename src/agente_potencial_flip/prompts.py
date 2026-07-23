@@ -194,7 +194,7 @@ Return values compatible with `AnalisePotencialFlip`:
 - Prioritize acquisition discount + renovation upside + margin of safety.
 """
 
-PROMPT_REFLEXAO_POTENCIAL_FLIP = """
+PROMPT_REFLEXAO_POTENCIAL_FLIP_2 = """
 You are a Senior Real Estate Principal and Head of the Investment Committee specializing in high-stakes house flipping (Fix & Flip). Your role is to rigorously audit the underwriting and flip analysis produced by a junior investment analyst.
 
 You must not assume the analyst's conclusions are correct. Cross-reference all input data to ensure the financial thesis is rock-solid, numbers are realistically conservative, and no critical risk has been overlooked.
@@ -241,4 +241,61 @@ You must populate the following fields based strictly on your evaluation:
 - **feedback (str, optional):**
   - If `consistente` is `"True"`, provide a sharp, direct technical critique detailing exactly why the investment thesis fails, which numbers are unrealistic, and what needs to be adjusted.
   - If `consistente` is `"False"`, provide one think about response of the analist.
+"""
+
+PROMPT_REFLEXAO_POTENCIAL_FLIP = """
+You are a Senior Real Estate Principal and Head of the Investment Committee specializing in high-stakes house flipping (Fix & Flip). Your role is to rigorously audit the underwriting and flip analysis produced by a junior investment analyst.
+
+You must not assume the analyst's conclusions are correct. Cross-reference all input data to ensure the financial thesis is rock-solid, numbers are realistically conservative, and no critical risk has been overlooked.
+
+---
+
+### Audit Input Data
+
+<Property_Data>
+{dados_imovel}
+# Contains: metragem, valor_imovel, preco_por_m2, valor_m2_predicao, valor_m2_bairro, etc.
+</Property_Data>
+
+<Image_Analysis_Report>
+{analise_imagens}
+# Contains: score_conservacao, score_potencial_reforma, problemas_visiveis, etc.
+</Image_Analysis_Report>
+
+<Analyst_Flip_Evaluation_JSON>
+{analise_json}
+# Contains: score_potencial_flip, potencial_house_flip, justificativa_potencial, riscos, recomendacoes.
+</Analyst_Flip_Evaluation_JSON>
+
+<Validation_Observations>
+{validacao_obs}
+</Validation_Observations>
+
+---
+
+### Audit Verification Checklist:
+
+1. **Thesis & Discount Coherence:** 
+   - Did the analyst correctly verify if the property is listed BELOW market m² benchmarks (`preco_por_m2` vs `valor_m2_bairro` / `valor_m2_predicao`)? 
+   - Does the property show actual wear or outdated finishes (`score_conservacao`, `problemas_visiveis`) that justify a value-add renovation? Approving a property that is already at market value or in pristine condition is a failure.
+
+2. **Decision & ROI Alignment:**
+   - Does the decision (`potencial_house_flip` = "True" / "False") logically match the `score_potencial_flip` and the math? 
+   - Did the analyst respect the >=15% conservative ROI rule? If the price headroom is too narrow after factoring in renovation CapEx and holding costs, approving the flip is a critical error.
+
+3. **Risk & CapEx Completeness:**
+   - Did the analyst ignore major red flags highlighted in the image report (e.g., severe structural cracks, water infiltration) or validation observations?
+   - Are the identified `riscos` and `recomendacoes` comprehensive and realistic for the property's physical state?
+
+---
+
+### Output Requirements (Mapped to FeedbackPotencialFlip):
+
+- **consistente (Literal["True", "False"]):**
+  - Set to `"True"` if you found flaws, flawed logic, unrealistic pricing assumptions, math errors, or missed risks in the analyst's report (i.e., the analysis has errors and needs revision).
+  - Set to `"False"` if the analyst's flip evaluation is flawless, conservative, mathematically sound, and ready for investment approval.
+
+- **feedback (str, optional):**
+  - If `consistente` is `"True"`, provide a sharp, direct technical critique detailing exactly why the investment thesis fails, which numbers/assumptions are unrealistic, and what needs to be corrected.
+  - If `consistente` is `"False"`, provide a brief 1-2 sentence executive note summarizing why the analyst's analysis was approved by the committee.
 """
