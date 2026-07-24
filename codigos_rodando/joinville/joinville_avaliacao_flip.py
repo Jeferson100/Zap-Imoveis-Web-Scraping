@@ -59,6 +59,11 @@ else:
 
 def carregar_imoveis() -> pd.DataFrame:
     df = pd.read_parquet(ARQUIVO_DADOS)
+    if os.getenv("SNAPSHOT_DATA"):
+        snapshot_path = ARQUIVO_DADOS.with_suffix(".snapshot.parquet")
+        if not snapshot_path.exists():
+            df.to_parquet(snapshot_path)
+        df = pd.read_parquet(snapshot_path)
     mask = df["tipo_imovel"].str.lower().isin(
         ["apartamento"]
     )

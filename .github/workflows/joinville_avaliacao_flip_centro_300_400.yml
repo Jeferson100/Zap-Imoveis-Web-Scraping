@@ -68,7 +68,7 @@ jobs:
         run: |
           git config user.name "github-actions"
           git config user.email "github-actions@github.com"
-          git add dados/joinville/avaliacao_flip_*.parquet
+          git add -A dados/joinville/
           git commit -m "Avaliacao Flip Joinville [0-400]: merge batches centro" || echo "Nada para commitar"
           git pull --rebase --autostash -X ours origin main
           git push origin main

@@ -54,6 +54,7 @@ jobs:
           LIMITE_FLIP: ${{ inputs.limite_superior }}
           LIMITE_INFERIOR_FLIP: ${{ inputs.limite_inferior }}
           LIMITE_SUPERIOR_FLIP: ${{ inputs.limite_superior }}
+          SNAPSHOT_DATA: "true"
           BAIRRO_SELECAO: ${{ inputs.bairro }}
 
       - name: Commit resultados
