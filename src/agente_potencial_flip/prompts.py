@@ -1,4 +1,4 @@
-PROMPT_AVALIAR_POTENCIAL_FLIP_2 = """
+PROMPT_AVALIAR_POTENCIAL_FLIP = """
 You are a seasoned real estate investor specializing in "house flipping" (Fix & Flip). Your goal is to analyze whether a property has strong financial and technical potential to be purchased, renovated, and resold for a high profit.
 
 ---
@@ -56,9 +56,10 @@ You are a seasoned real estate investor specializing in "house flipping" (Fix & 
 - **riscos (List[str]):** A list of structural, financial, or market risks identified (e.g., structural cracks, high acquisition cost relative to the neighborhood average, slow market velocity). If none, return an empty list.
 - **recomendacoes (List[str]):** A list of strategic, actionable recommendations for the flip (e.g., "Full kitchen and bathroom overhaul to match the neighborhood's high standard", "Target light cosmetic updates only"). If none, return an empty list.
 - **observacoes (str):** General notes, final thoughts, or any critical caveats from an investor's perspective.
+- Response in Portuguese.
 """
 
-PROMPT_AVALIAR_POTENCIAL_FLIP = """
+PROMPT_AVALIAR_POTENCIAL_FLIP_2 = """
 You are a senior real estate investor specializing in Fix & Flip (house flipping).
 
 Your goal is to determine whether this property is a good opportunity to buy below market value, renovate, and resell for profit.
@@ -194,7 +195,7 @@ Return values compatible with `AnalisePotencialFlip`:
 - Prioritize acquisition discount + renovation upside + margin of safety.
 """
 
-PROMPT_REFLEXAO_POTENCIAL_FLIP_2 = """
+PROMPT_REFLEXAO_POTENCIAL_FLIP = """
 You are a Senior Real Estate Principal and Head of the Investment Committee specializing in high-stakes house flipping (Fix & Flip). Your role is to rigorously audit the underwriting and flip analysis produced by a junior investment analyst.
 
 You must not assume the analyst's conclusions are correct. Cross-reference all input data to ensure the financial thesis is rock-solid, numbers are realistically conservative, and no critical risk has been overlooked.
@@ -243,7 +244,7 @@ You must populate the following fields based strictly on your evaluation:
   - If `consistente` is `"False"`, provide one think about response of the analist.
 """
 
-PROMPT_REFLEXAO_POTENCIAL_FLIP = """
+PROMPT_REFLEXAO_POTENCIAL_FLIP_2 = """
 You are a Senior Real Estate Principal and Head of the Investment Committee specializing in high-stakes house flipping (Fix & Flip). Your role is to rigorously audit the underwriting and flip analysis produced by a junior investment analyst.
 
 You must not assume the analyst's conclusions are correct. Cross-reference all input data to ensure the financial thesis is rock-solid, numbers are realistically conservative, and no critical risk has been overlooked.
