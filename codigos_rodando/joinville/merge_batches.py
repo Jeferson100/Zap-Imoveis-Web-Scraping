@@ -11,6 +11,7 @@ PASTA_DADOS = BASE_DIR / "dados" / "joinville"
 MES_REF = os.getenv("MES_REF") or datetime.now().strftime("%Y-%m")
 
 BAIRRO = os.getenv("BAIRRO_SELECAO") or "atiradores"
+bairro_slug = BAIRRO.replace(" ", "_")
 
 logging.basicConfig(
     level=logging.INFO, format="%(asctime)s %(message)s", datefmt="%H:%M:%S"
@@ -20,7 +21,7 @@ logger = logging.getLogger(__name__)
 
 
 def main():
-    pattern = f"joinville_avaliacao_flip_*_*_{BAIRRO}.parquet"
+    pattern = f"joinville_avaliacao_flip_*_*_{bairro_slug}.parquet"
     arquivos = sorted(PASTA_DADOS.glob(pattern))
 
     if not arquivos:
@@ -36,7 +37,7 @@ def main():
         return int(partes[-3]), int(partes[-2])
 
 
-    saida = PASTA_DADOS / f"avaliacao_flip_{MES_REF}_{BAIRRO}.parquet"
+    saida = PASTA_DADOS / f"avaliacao_flip_{MES_REF}_{bairro_slug}.parquet"
     
     merged.to_parquet(saida, index=False)
 

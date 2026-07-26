@@ -39,6 +39,7 @@ LIMITE_INFERIOR = int(os.getenv("LIMITE_INFERIOR_FLIP", "0"))
 LIMITE_SUPERIOR = int(os.getenv("LIMITE_SUPERIOR_FLIP", str(LIMITE_INFERIOR + LIMITE_IMOVEIS)))
 
 bairro_selecao = os.getenv("BAIRRO_SELECAO")
+bairro_slug = bairro_selecao.replace(" ", "_") if bairro_selecao else None
 
 ARQUIVO_DADOS = (
     BASE_DIR / "dados" / CIDADE / f"{CIDADE}_imoveis_limpo_{MES_REF}.parquet"
@@ -48,7 +49,7 @@ RANGE_SUFIXO = f"_{LIMITE_INFERIOR}_{LIMITE_SUPERIOR}"
 
 if bairro_selecao:
     ARQUIVO_RESULTADO = (
-        BASE_DIR / "dados" / CIDADE / f"{CIDADE}_avaliacao_flip_{MES_REF}{RANGE_SUFIXO}_{bairro_selecao}.parquet"
+        BASE_DIR / "dados" / CIDADE / f"{CIDADE}_avaliacao_flip_{MES_REF}{RANGE_SUFIXO}_{bairro_slug}.parquet"
     )
 else:
     ARQUIVO_RESULTADO = (
