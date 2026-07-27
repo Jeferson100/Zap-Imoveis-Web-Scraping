@@ -1,7 +1,7 @@
-name: "Avaliacao Flip Joinville -Bairro America (Batches 300-400)"
+name: "Avaliacao Flip Joinville - Bairro Saguacu (Batches 300-400)"
 on:
   workflow_run:
-    workflows: ["Avaliacao Flip Joinville -Bairro America (Batches 200-300)"]
+    workflows: ["Avaliacao Flip Joinville - Bairro Saguacu (Batches 200-300)"]
     types:
       - completed
   workflow_dispatch:
@@ -11,7 +11,7 @@ jobs:
     with:
       limite_inferior: "300"
       limite_superior: "320"
-      bairro: "america"
+      bairro: "saguacu"
     secrets: inherit
 
   batch_320_340:
@@ -19,7 +19,7 @@ jobs:
     with:
       limite_inferior: "320"
       limite_superior: "340"
-      bairro: "america"
+      bairro: "saguacu"
     secrets: inherit
 
   batch_340_360:
@@ -27,7 +27,7 @@ jobs:
     with:
       limite_inferior: "340"
       limite_superior: "360"
-      bairro: "america"
+      bairro: "saguacu"
     secrets: inherit
 
   batch_360_380:
@@ -35,7 +35,7 @@ jobs:
     with:
       limite_inferior: "360"
       limite_superior: "380"
-      bairro: "america"
+      bairro: "saguacu"
     secrets: inherit
 
   batch_380_400:
@@ -43,7 +43,7 @@ jobs:
     with:
       limite_inferior: "380"
       limite_superior: "400"
-      bairro: "america"
+      bairro: "saguacu"
     secrets: inherit
 
   merge:
@@ -65,13 +65,13 @@ jobs:
       - name: Juntar batches
         run: uv run codigos_rodando/joinville/merge_batches.py
         env:
-          BAIRRO_SELECAO: "america"
+          BAIRRO_SELECAO: "saguacu"
       - name: Commit merge
         run: |
           git config user.name "github-actions"
           git config user.email "github-actions@github.com"
           git add -A dados/joinville/
-          git commit -m "Avaliacao Flip Joinville [0-400]: merge batches america" || echo "Nada para commitar"
+          git commit -m "Avaliacao Flip Joinville [0-400]: merge batches saguacu" || echo "Nada para commitar"
           git pull --rebase --autostash -X ours origin main
           git push origin main
         env:
