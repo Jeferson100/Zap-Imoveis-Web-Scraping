@@ -1,0 +1,45 @@
+name: "Avaliacao Flip Joinville - Bairro Santo Antonio (Batches 0-100)"
+on:
+  schedule:
+    - cron: '0 9 6 1,2,3,4,5,6,7,8,9,10,11,12 *'
+  workflow_dispatch:
+jobs:
+  batch_0_20:
+    uses: ./.github/workflows/joinville_avaliacao_flip_base.yml
+    with:
+      limite_inferior: "0"
+      limite_superior: "20"
+      bairro: "santo antonio"
+    secrets: inherit
+
+  batch_20_40:
+    uses: ./.github/workflows/joinville_avaliacao_flip_base.yml
+    with:
+      limite_inferior: "20"
+      limite_superior: "40"
+      bairro: "santo antonio"
+    secrets: inherit
+
+  batch_40_60:
+    uses: ./.github/workflows/joinville_avaliacao_flip_base.yml
+    with:
+      limite_inferior: "40"
+      limite_superior: "60"
+      bairro: "santo antonio"
+    secrets: inherit
+
+  batch_60_80:
+    uses: ./.github/workflows/joinville_avaliacao_flip_base.yml
+    with:
+      limite_inferior: "60"
+      limite_superior: "80"
+      bairro: "santo antonio"
+    secrets: inherit
+
+  batch_80_100:
+    uses: ./.github/workflows/joinville_avaliacao_flip_base.yml
+    with:
+      limite_inferior: "80"
+      limite_superior: "100"
+      bairro: "santo antonio"
+    secrets: inherit

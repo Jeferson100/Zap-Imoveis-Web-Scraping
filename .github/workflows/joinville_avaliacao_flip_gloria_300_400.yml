@@ -1,0 +1,78 @@
+name: "Avaliacao Flip Joinville - Bairro Gloria (Batches 300-400)"
+on:
+  workflow_run:
+    workflows: ["Avaliacao Flip Joinville - Bairro Gloria (Batches 200-300)"]
+    types:
+      - completed
+  workflow_dispatch:
+jobs:
+  batch_300_320:
+    uses: ./.github/workflows/joinville_avaliacao_flip_base.yml
+    with:
+      limite_inferior: "300"
+      limite_superior: "320"
+      bairro: "gloria"
+    secrets: inherit
+
+  batch_320_340:
+    uses: ./.github/workflows/joinville_avaliacao_flip_base.yml
+    with:
+      limite_inferior: "320"
+      limite_superior: "340"
+      bairro: "gloria"
+    secrets: inherit
+
+  batch_340_360:
+    uses: ./.github/workflows/joinville_avaliacao_flip_base.yml
+    with:
+      limite_inferior: "340"
+      limite_superior: "360"
+      bairro: "gloria"
+    secrets: inherit
+
+  batch_360_380:
+    uses: ./.github/workflows/joinville_avaliacao_flip_base.yml
+    with:
+      limite_inferior: "360"
+      limite_superior: "380"
+      bairro: "gloria"
+    secrets: inherit
+
+  batch_380_400:
+    uses: ./.github/workflows/joinville_avaliacao_flip_base.yml
+    with:
+      limite_inferior: "380"
+      limite_superior: "400"
+      bairro: "gloria"
+    secrets: inherit
+
+  merge:
+    needs: [batch_300_320, batch_320_340, batch_340_360, batch_360_380, batch_380_400]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: 'refs/heads/main'
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Instalar uv
+        run: pip install uv
+      - name: Instalar dependencias
+        run: |
+          uv venv
+          uv pip install -e .
+      - name: Juntar batches
+        run: uv run codigos_rodando/joinville/merge_batches.py
+        env:
+          BAIRRO_SELECAO: "gloria"
+      - name: Commit merge
+        run: |
+          git config user.name "github-actions"
+          git config user.email "github-actions@github.com"
+          git add -A dados/joinville/
+          git commit -m "Avaliacao Flip Joinville [0-400]: merge batches gloria" || echo "Nada para commitar"
+          git pull --rebase --autostash -X ours origin main
+          git push origin main
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
