@@ -1,7 +1,7 @@
 name: "Avaliacao Flip Joinville - Bairro Gloria (Batches 0-100)"
 on:
   schedule:
-    - cron: '0 9 6 1,2,3,4,5,6,7,8,9,10,11,12 *'
+    - cron: '0 9 9 1,2,3,4,5,6,7,8,9,10,11,12 *'
   workflow_dispatch:
 jobs:
   batch_0_20:
