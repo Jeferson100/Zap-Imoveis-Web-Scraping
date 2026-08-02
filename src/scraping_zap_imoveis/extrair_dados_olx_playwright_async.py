@@ -1,12 +1,20 @@
 import asyncio
+import datetime
+import html as html_mod
+import json
 import logging
 import random
+import re
 from dataclasses import dataclass, field
 from typing import Optional, List
 
 from playwright.async_api import async_playwright, BrowserContext, Page
-from playwright_stealth import Stealth
-import re
+
+try:
+    from playwright_stealth import Stealth
+    _STEALTH_OK = True
+except Exception:
+    _STEALTH_OK = False
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
 logger = logging.getLogger(__name__)
@@ -42,19 +50,34 @@ class OLXScraperAsync:
         self._context: Optional[BrowserContext] = None
 
     async def __aenter__(self):
+        # O navegador só é iniciado sob demanda (_ensure_browser) no fallback Playwright.
+        self._pw_cm = None
+        self._playwright = None
+        self._browser = None
+        self._context: Optional[BrowserContext] = None
+        self._page = None
+        return self
+
+    async def _ensure_browser(self):
+        """Inicia o navegador Playwright apenas quando necessário (fallback)."""
+        if self._browser is not None:
+            return
         try:
-            self._pw_cm = Stealth().use_async(async_playwright())
+            pw = async_playwright()
+            if _STEALTH_OK:
+                self._pw_cm = Stealth().use_async(pw)
+            else:
+                self._pw_cm = pw
             self._playwright = await self._pw_cm.__aenter__()
             self._browser = await self._playwright.chromium.launch(headless=self.headless)
             self._context = await self._browser.new_context(
-            user_agent=(
-                "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
-                "AppleWebKit/537.36 (KHTML, like Gecko) "
-                "Chrome/120.0.0.0 Safari/537.36"
-            )
+                user_agent=(
+                    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
+                    "AppleWebKit/537.36 (KHTML, like Gecko) "
+                    "Chrome/120.0.0.0 Safari/537.36"
+                )
             )
             self._page = await self._context.new_page()
-            return self
         except Exception as e:
             logger.error("Erro ao inicializar navegador: %s", e)
             raise
@@ -291,6 +314,174 @@ class OLXScraperAsync:
         )
 
     async def extrair_anuncio(self, url: str) -> dict:
+        dados = await self._extrair_anuncio_curl(url)
+        if dados is not None:
+            logger.info("Anúncio extraído via curl_cffi: %s", url)
+            return dados
+
+        logger.warning("curl_cffi falhou para %s. Caindo para Playwright.", url)
+        return await self._extrair_anuncio_playwright(url)
+
+    # ---------------------------------------------------------------
+    # Modo primário: curl_cffi (parse do HTML/JSON server-rendered)
+    # ---------------------------------------------------------------
+    async def _extrair_anuncio_curl(self, url: str) -> Optional[dict]:
+        return await asyncio.to_thread(self._extrair_anuncio_curl_sync, url)
+
+    def _extrair_anuncio_curl_sync(self, url: str) -> Optional[dict]:
+        try:
+            from curl_cffi import requests as cr
+        except ImportError:
+            logger.error("curl_cffi não está instalado. Usando fallback.")
+            return None
+
+        try:
+            resp = cr.get(url, impersonate="chrome", timeout=35000)
+            if resp.status_code != 200:
+                logger.warning("curl_cffi retornou status %s para %s", resp.status_code, url)
+                return None
+            return self._parse_html_anuncio(url, resp.text)
+        except Exception as e:
+            logger.warning("Erro curl_cffi em %s: %s", url, e)
+            return None
+
+    def _parse_html_anuncio(self, url: str, html_text: str) -> dict:
+        """Extrai os dados do anúncio a partir do HTML server-rendered da OLX."""
+        # O HTML server-rendered escapa as aspas dos JSON embutidos (&quot;). 
+        # Decodificar antes facilita os regex abaixo.
+        html_text = html_mod.unescape(html_text)
+
+        def attr_value(name: str) -> Optional[str]:
+            # Ex.: {"name":"size","label":"Área útil","value":"62m²"}
+            m = re.search(r'"name"\s*:\s*"' + re.escape(name) + r'"[^}]*?"value"\s*:\s*"([^"]+)"', html_text)
+            return m.group(1) if m else None
+
+        def limpar_numero(texto: Optional[str]) -> Optional[int]:
+            if not texto:
+                return None
+            digitos = re.sub(r"\D", "", texto)
+            return int(digitos) if digitos else None
+
+        def limpar_numero_quebrado(texto: Optional[str]) -> Optional[int]:
+            if not texto:
+                return None
+            digitos = re.sub(r"[^0-9.,]", "", texto)
+            digitos = digitos.replace(".", "").replace(",", ".")
+            try:
+                return int(float(digitos))
+            except ValueError:
+                return None
+
+        # ---- Valor do imóvel (JSON-LD / dataLayer): "price":"360000"
+        valor_imovel = None
+        m = re.search(r'"price"\s*:\s*"([\d.]+)"', html_text)
+        if m:
+            valor_imovel = int(m.group(1).replace(".", ""))
+        else:
+            m = re.search(r'"price"\s*:\s*(\d+)', html_text)
+            if m:
+                valor_imovel = int(m.group(1))
+
+        # ---- Atributos estruturados
+        metragem_raw = attr_value("size") or attr_value("area")
+        quartos_raw = attr_value("rooms")
+        banheiros_raw = attr_value("bathrooms")
+        vagas_raw = attr_value("garage_spaces")
+        condo_raw = attr_value("condominio")
+        iptu_raw = attr_value("iptu")
+
+        # ---- Título
+        titulo = None
+        m = re.search(r'property="og:title" content="([^"]+)"', html_text)
+        if m:
+            titulo = html_mod.unescape(m.group(1)).strip()
+        else:
+            m = re.search(r"<h1[^>]*>(.*?)</h1>", html_text, re.S)
+            if m:
+                titulo = html_mod.unescape(re.sub(r"<[^>]+>", "", m.group(1))).strip()
+
+        # ---- Descrição
+        descricao = None
+        m = re.search(r'property="og:description" content="([^"]*)"', html_text)
+        if m:
+            descricao = re.sub(r"<[^>]+>", " ", html_mod.unescape(m.group(1)))
+            descricao = re.sub(r"\s+", " ", descricao).strip()
+        else:
+            m = re.search(r'"description"\s*:\s*"((?:[^"\\]|\\.)*)"', html_text)
+            if m:
+                try:
+                    descricao = json.loads('"' + m.group(1) + '"')
+                    descricao = re.sub(r"<[^>]+>", " ", descricao)
+                    descricao = html_mod.unescape(descricao)
+                    descricao = re.sub(r"\s+", " ", descricao).strip()
+                except Exception:
+                    descricao = None
+
+        # ---- Data de criação (epoch "adDate" no dataLayer)
+        data_criacao = None
+        m = re.search(r'"adDate"\s*:\s*(\d+)', html_text)
+        if m:
+            try:
+                ts = int(m.group(1))
+                dt = datetime.datetime.utcfromtimestamp(ts)
+                data_criacao = dt.strftime("%Y-%m-%d %H:%M:%S")
+            except Exception:
+                data_criacao = None
+
+        # ---- Fotos
+        fotos = list(dict.fromkeys(re.findall(r'https://img\.olx\.com\.br/images/[^"\s\\]+', html_text)))
+
+        # ---- Endereço (bairro/município via JSON de propriedades)
+        endereco = None
+        bairro = None
+        municipio = None
+        uf = None
+        m = re.search(r'"label"\s*:\s*"Bairro"\s*,\s*"value"\s*:\s*"([^"]+)"', html_text)
+        if m:
+            bairro = html_mod.unescape(m.group(1))
+        m = re.search(r'"label"\s*:\s*"Munic[uí]pio"\s*,\s*"value"\s*:\s*"([^"]+)"', html_text)
+        if m:
+            municipio = html_mod.unescape(m.group(1))
+        m = re.search(r'"addressRegion"\s*:\s*"([^"]+)"', html_text)
+        if m:
+            uf = m.group(1)
+
+        partes_endereco = []
+        if bairro:
+            partes_endereco.append(bairro)
+        if municipio:
+            partes_endereco.append(municipio)
+        if uf:
+            partes_endereco.append(uf)
+        if partes_endereco:
+            endereco = ", ".join(partes_endereco)
+
+        dados = DadosImovel(
+            url=url,
+            titulo=titulo,
+            valor_imovel=valor_imovel,
+            metragem=limpar_numero_quebrado(metragem_raw),
+            quartos=limpar_numero(quartos_raw),
+            banheiros=limpar_numero(banheiros_raw),
+            vagas=limpar_numero(vagas_raw),
+            condominio=limpar_numero_quebrado(condo_raw),
+            iptu=limpar_numero_quebrado(iptu_raw),
+            endereco=endereco,
+            descricao=descricao,
+            data_criacao=data_criacao,
+            fotos=fotos,
+        )
+
+        # Só considera sucesso se ao menos valor ou título vieram (página de anúncio real)
+        if dados.valor_imovel is None and not dados.titulo:
+            return None
+        return dados.to_dict()
+
+    # ---------------------------------------------------------------
+    # Fallback: Playwright (implementação original)
+    # ---------------------------------------------------------------
+    async def _extrair_anuncio_playwright(self, url: str) -> dict:
+        await self._ensure_browser()
         for tentativa in range(1, self.MAX_RETRIES + 1):
             try:
                 logger.info(f"Processando {tentativa}/{self.MAX_RETRIES}: {url}")
