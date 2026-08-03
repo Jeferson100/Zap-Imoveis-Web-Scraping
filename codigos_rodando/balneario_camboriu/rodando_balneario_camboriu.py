@@ -29,7 +29,11 @@ if __name__ == "__main__":
         #(f"uv run {cidade}_coleta_dados_zap_imoveis.py", "Scraper Zap Imóveis"),
         #(f"uv run {cidade}_coleta_dados_viva_real.py", "Scraper Viva Real"),
         #(f"uv run {cidade}_coleta_dados_chave_mao.py", "Scraper Chave na Mão"),
-        (f"uv run {cidade}_coleta_dados_olx.py", "Scraper OLX"),
+        (f"uv run {cidade}_coleta_dados_olx_0_95.py", "Scraper OLX"),
+        (f"uv run {cidade}_coleta_dados_olx_96_130.py", "Scraper OLX"),
+        (f"uv run {cidade}_coleta_dados_olx_131_160.py", "Scraper OLX"),
+        (f"uv run {cidade}_coleta_dados_olx_161_240.py", "Scraper OLX"),
+        (f"uv run {cidade}_coleta_dados_olx_241_infinito.py", "Scraper OLX"),
         #(f"uv run {cidade}_limpando_dados_imoveis.py", "Processamento de Dados"),
         #(f"uv run {cidade}_criando_indice_localizacao.py", "Criação do Índice de Localização")
     ]

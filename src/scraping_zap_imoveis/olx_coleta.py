@@ -1,6 +1,8 @@
 import asyncio
 import logging
 import json
+import os
+import time
 import warnings
 from .extrair_dados_olx_playwright_async import OLXScraperAsync
 from .link_anuncios_olx_playwright_async import OLXScraperLinksAsync
@@ -344,16 +346,28 @@ class OLXColeta:
         return self.lista_dados
      
 
-    def _save_to_json(self, filename):
+    def _save_to_json(self, filename, tentativas=5, espera=0.6):
         if not self.lista_dados:
             logger.warning("Nenhum dado coletado para salvar.")
             return
 
-        with open(filename, "w", encoding="utf-8") as f:
-            # Garante que salve como lista de dicts
-            data_to_save = [d.to_dict() if hasattr(d, 'to_dict') else d for d in self.lista_dados]
-            json.dump(data_to_save, f, indent=4, ensure_ascii=False)
-        logger.info(f"Dados salvos em {filename}. Total: {len(self.lista_dados)} imóveis.")
+        data_to_save = [d.to_dict() if hasattr(d, 'to_dict') else d for d in self.lista_dados]
+        temp_filename = str(filename) + '.tmp'
+
+        for tentativa in range(1, tentativas + 1):
+            try:
+                with open(temp_filename, 'w', encoding='utf-8') as f:
+                    json.dump(data_to_save, f, indent=4, ensure_ascii=False)
+                os.replace(temp_filename, str(filename))
+                logger.info(f"Dados salvos em {filename}. Total: {len(self.lista_dados)} imóveis.")
+                return
+            except OSError as e:
+                if tentativa < tentativas:
+                    logger.warning(f"Falha ao salvar JSON (tentativa {tentativa}/{tentativas}): {e}. Tentando novamente...")
+                    time.sleep(espera)
+                else:
+                    logger.error(f"Não foi possível salvar JSON em {filename}: {e}")
+                    raise
     
     def _save_to_parquet(self, filename):
         # 1. Converte a lista de objetos para uma lista de dicionários
