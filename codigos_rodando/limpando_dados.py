@@ -294,48 +294,56 @@ def limpando_dados(
 
     pasta_dados.mkdir(parents=True, exist_ok=True)
 
-    if name_arquivo_zap is not None:
-        df_zap, arquivo_zap      = carregar_parquet(pasta_dados, name_arquivo_zap)
-        if not df_zap.empty:
-            df_zap['fonte'] = 'zap_imoveis'
-        df_zap_endereco_limpo = df_zap['endereco'].apply(lambda x: limpa_endereco_apply_zap(x, cidade_limpeza, estado_limpeza))
-        df_zap_endereco =  pd.concat([df_zap, df_zap_endereco_limpo], axis=1)
-        
-        arquivo_ref = arquivo_zap
-        logger.info(f"Quantidade de dados ZAP: {len(df_zap)}")
+    # DataFrames de saída — sempre definidos para o concat final nunca falhar
+    df_zap_endereco = pd.DataFrame()
+    df_vivareal_endereco = pd.DataFrame()
+    df_chave_mao_endereco = pd.DataFrame()
+    df_olx_endereco = pd.DataFrame()
 
-        
+    arquivo_zap = None
+    arquivo_vivareal = None
+    arquivo_chave_mao = None
+    arquivo_olx = None
+
+    if name_arquivo_zap is not None:
+        df_zap, arquivo_zap = carregar_parquet(pasta_dados, name_arquivo_zap)
+        if not df_zap.empty and 'endereco' in df_zap.columns:
+            df_zap['fonte'] = 'zap_imoveis'
+            df_zap_endereco_limpo = df_zap['endereco'].apply(lambda x: limpa_endereco_apply_zap(x, cidade_limpeza, estado_limpeza))
+            df_zap_endereco = pd.concat([df_zap, df_zap_endereco_limpo], axis=1)
+            logger.info(f"Quantidade de dados ZAP: {len(df_zap)}")
+        else:
+            logger.warning(f"Nenhum dado ZAP para processar. Pulando...")
+
     if name_arquivo_vivareal is not None:
         df_vivareal, arquivo_vivareal = carregar_parquet(pasta_dados, name_arquivo_vivareal)
-        if not df_vivareal.empty:
+        if not df_vivareal.empty and 'endereco' in df_vivareal.columns:
             df_vivareal['fonte'] = 'viva_real'
-        df_vivareal_endereco_limpo = df_vivareal['endereco'].apply(lambda x: limpa_endereco_apply_zap(x, cidade_limpeza, estado_limpeza))
-        df_vivareal_endereco =  pd.concat([df_vivareal, df_vivareal_endereco_limpo], axis=1)
-        
-        arquivo_ref = arquivo_vivareal
-        logger.info(f"Quantidade de dados Vivareal: {len(df_vivareal)}")
-    
+            df_vivareal_endereco_limpo = df_vivareal['endereco'].apply(lambda x: limpa_endereco_apply_zap(x, cidade_limpeza, estado_limpeza))
+            df_vivareal_endereco = pd.concat([df_vivareal, df_vivareal_endereco_limpo], axis=1)
+            logger.info(f"Quantidade de dados Vivareal: {len(df_vivareal)}")
+        else:
+            logger.warning(f"Nenhum dado Vivareal para processar. Pulando...")
+
     if name_arquivo_chave_mao is not None:
         df_chave_mao, arquivo_chave_mao = carregar_parquet(pasta_dados, name_arquivo_chave_mao)
-        if not df_chave_mao.empty:
+        if not df_chave_mao.empty and 'endereco' in df_chave_mao.columns:
             df_chave_mao['fonte'] = 'chave_mao'
-        df_chave_mao_endereco_limpo = df_chave_mao['endereco'].apply(lambda x: limpa_endereco_apply_chave_mao(x, cidade_limpeza, estado_limpeza))
-        df_chave_mao_endereco =  pd.concat([df_chave_mao, df_chave_mao_endereco_limpo], axis=1)
-        
-        arquivo_ref = arquivo_chave_mao
-        logger.info(f"Quantidade de dados Chave Mao: {len(df_chave_mao)}")
-    
+            df_chave_mao_endereco_limpo = df_chave_mao['endereco'].apply(lambda x: limpa_endereco_apply_chave_mao(x, cidade_limpeza, estado_limpeza))
+            df_chave_mao_endereco = pd.concat([df_chave_mao, df_chave_mao_endereco_limpo], axis=1)
+            logger.info(f"Quantidade de dados Chave Mao: {len(df_chave_mao)}")
+        else:
+            logger.warning(f"Nenhum dado Chave Mao para processar. Pulando...")
+
     if name_arquivo_olx is not None:
-        df_olx, arquivo_olx = carregar_json(pasta_dados,name_arquivo_olx)
-        if not df_olx.empty:
+        df_olx, arquivo_olx = carregar_json(pasta_dados, name_arquivo_olx)
+        if not df_olx.empty and 'endereco' in df_olx.columns:
             df_olx['fonte'] = 'olx'
-        df_olx_endereco_limpo = df_olx['endereco'].apply(lambda x: limpa_endereco_apply_olx(x, cidade_limpeza, estado_limpeza))
-        df_olx_endereco =  pd.concat([df_olx, df_olx_endereco_limpo], axis=1)
-        
-        arquivo_ref = arquivo_olx
-        logger.info(f"Quantidade de dados OLX: {len(df_olx)}")
-    else:
-        logger.info("Arquivo de OLX não encontrado.")
+            df_olx_endereco_limpo = df_olx['endereco'].apply(lambda x: limpa_endereco_apply_olx(x, cidade_limpeza, estado_limpeza))
+            df_olx_endereco = pd.concat([df_olx, df_olx_endereco_limpo], axis=1)
+            logger.info(f"Quantidade de dados OLX: {len(df_olx)}")
+        else:
+            logger.warning(f"Nenhum dado OLX para processar. Pulando...")
         
     #df_zap_endereco_limpo = df_zap['endereco'].apply(lambda x: limpa_endereco_apply_zap(x, cidade_limpeza, estado_limpeza))
     #df_vivareal_endereco_limpo = df_vivareal['endereco'].apply(lambda x: limpa_endereco_apply_zap(x, cidade_limpeza, estado_limpeza))
@@ -398,7 +406,12 @@ def limpando_dados(
     
     df_limpo = df_limpo.groupby('bairro').filter(lambda x: len(x) > 1)
     
-    data_ref    = arquivo_ref.stem.split('_')[-1]
+    # Usa a primeira fonte que realmente carregou um arquivo
+    data_ref = "sem_data"
+    for arquivo in (arquivo_zap, arquivo_vivareal, arquivo_chave_mao, arquivo_olx):
+        if arquivo is not None:
+            data_ref = arquivo.stem.split('_')[-1]
+            break
     
     caminho_saida = pasta_dados / f'{name_arquivo_saida}_{data_ref}.parquet'
     
@@ -422,25 +435,43 @@ def limpando_dados(
 
         # 2. Só deleta se a metade (50%) ou mais da coluna ESTIVER preenchida
         if porcentagem_vazio < 50:
-            logger.info("✅ Dados de localização validados. Procedendo com a deleção dos arquivos temporários.")
-            
-            if name_arquivo_zap is not None:
-                deletar_arquivo(arquivo_zap)
-                logger.info("✅ Arquivo Zap deletado.")
-            
-            if name_arquivo_vivareal is not None:
-                deletar_arquivo(arquivo_vivareal)
-                logger.info("✅ Arquivo Vivareal deletado.")
-            
-            if name_arquivo_chave_mao is not None:
-                deletar_arquivo(arquivo_chave_mao)
-                logger.info("✅ Arquivo Chave Mao deletado.")
-            
-            if name_arquivo_olx is not None:
-                deletar_arquivo(arquivo_olx)
-                logger.info("✅ Arquivo OLX deletado.")
-            
-            logger.info("✅ Arquivos originais deletados.")
+            fontes_esperadas = [
+                ("ZAP",       arquivo_zap,       name_arquivo_zap),
+                ("Vivareal",  arquivo_vivareal,  name_arquivo_vivareal),
+                ("Chave Mao", arquivo_chave_mao, name_arquivo_chave_mao),
+                ("OLX",       arquivo_olx,       name_arquivo_olx),
+            ]
+
+            fontes_faltando = [
+                nome for nome, arquivo, solicitado in fontes_esperadas
+                if solicitado is not None and arquivo is None
+            ]
+
+            if fontes_faltando:
+                logger.warning(
+                    f"⚠️ Fonte(s) ausente(s): {', '.join(fontes_faltando)}. "
+                    "Nenhum arquivo original será deletado."
+                )
+            else:
+                logger.info("✅ Dados de localização validados. Procedendo com a deleção dos arquivos temporários.")
+
+                if name_arquivo_zap is not None:
+                    deletar_arquivo(arquivo_zap)
+                    logger.info("✅ Arquivo Zap deletado.")
+
+                if name_arquivo_vivareal is not None:
+                    deletar_arquivo(arquivo_vivareal)
+                    logger.info("✅ Arquivo Vivareal deletado.")
+
+                if name_arquivo_chave_mao is not None:
+                    deletar_arquivo(arquivo_chave_mao)
+                    logger.info("✅ Arquivo Chave Mao deletado.")
+
+                if name_arquivo_olx is not None:
+                    deletar_arquivo(arquivo_olx)
+                    logger.info("✅ Arquivo OLX deletado.")
+
+                logger.info("✅ Arquivos originais deletados.")
         else:
             logger.warning("⚠️ ALERTA: Mais de 50% da coluna 'lat' está vazia!")
             logger.warning("Os arquivos originais foram MANTIDOS para conferência.")
