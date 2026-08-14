@@ -30,12 +30,32 @@ jobs:
       arquivo_rodando_imovel: joinville_coleta_alugueis_zap.py
 
   juncao_aluguel_joinville:
-    needs:
-      - coleta_aluguel_chave_mao_joinville
-      - coleta_aluguel_olx_joinville
-      - coleta_aluguel_vivareal_joinville
-      - coleta_aluguel_zap_joinville
-    uses: ./.github/workflows/pipeline_cidade_rodando.yml
-    with:
-      cidade_pasta: joinville
-      arquivo_rodando_imovel: joinville_juncao_dados_aluguel.py
+      needs: [coleta_aluguel_chave_mao_joinville, coleta_aluguel_olx_joinville, coleta_aluguel_vivareal_joinville, coleta_aluguel_zap_joinville, juncao_aluguel_joinville]
+      runs-on: ubuntu-latest
+      steps:
+        - uses: actions/checkout@v4
+          with:
+            ref: 'refs/heads/main'
+        - uses: actions/setup-python@v5
+          with:
+            python-version: "3.12"
+        - name: Instalar uv
+          run: pip install uv
+        - name: Instalar dependencias
+          run: |
+            uv venv
+            uv pip install -e .
+        - name: Juntar batches
+          run: uv run codigos_rodando/joinville/joinville_juncao_dados_aluguel.py
+        - name: Commit merge
+          run: |
+            git config user.name "github-actions"
+            git config user.email "github-actions@github.com"
+            git add -A dados/joinville/
+            git commit -m "Merge de batches de coleta de aluguel"
+            git pull --rebase --autostash -X ours origin main
+            git push origin main
+          env:
+            GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+            cidade_pasta: joinville
+
