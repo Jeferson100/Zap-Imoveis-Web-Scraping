@@ -152,9 +152,9 @@ from scraping_zap_imoveis import ChavesMaoColeta
 
 output_file = "chaves_mao_alugueis.parquet"
     
-#URL_TEMPLATE_NEW = "https://www.chavesnamao.com.br/imoveis-para-alugar/sc-joinville/?pg=1"
+URL_TEMPLATE_NEW = "https://www.chavesnamao.com.br/imoveis-para-alugar/sc-joinville/?pg=1"
 
-URL_TEMPLATE_NEW = "https://www.chavesnamao.com.br/imoveis-a-venda/sc-joinville/?pg=1"
+#URL_TEMPLATE_NEW = "https://www.chavesnamao.com.br/imoveis-a-venda/sc-joinville/?pg=1"
     
 orchestrator = ChavesMaoColeta(URL_TEMPLATE_NEW, 
                                 headless=True,

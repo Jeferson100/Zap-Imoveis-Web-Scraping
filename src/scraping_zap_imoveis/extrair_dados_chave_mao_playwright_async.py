@@ -83,14 +83,50 @@ class ChavesNaMaoScraperAsync:
             return "0"
         return "".join(filter(str.isdigit, valor))
 
+    def _normalizar_valor_monetario(self, valor: str | None) -> str | None:
+        if not valor:
+            return None
+        valor_normalizado = re.sub(r"[^0-9]", "", valor)
+        return valor_normalizado or None
+
+    async def _extrair_valor_imovel(self) -> str | None:
+        try:
+            scripts = await self._page.locator('script[type="application/ld+json"]').all_inner_texts()
+            for script in scripts:
+                if not script:
+                    continue
+                match = re.search(r'"price"\s*:\s*"([^"]+)"', script, re.I)
+                if match:
+                    return self._normalizar_valor_monetario(match.group(1))
+        except Exception:
+            pass
+
+        try:
+            body_text = await self._page.locator('body').inner_text()
+            padroes = [
+                r'(?i)(?:preço|valor do imóvel|valor)\s*[:\-]?\s*R\$\s*([\d\.\,]+)',
+                r'(?i)aluguel\s*[:\-]?\s*R\$\s*([\d\.\,]+)\s*(?:/mês)?',
+                r'(?i)aluguel\s*\+\s*condomínio\s*R\$\s*([\d\.\,]+)',
+            ]
+            for padrao in padroes:
+                match = re.search(padrao, body_text)
+                if match:
+                    return self._normalizar_valor_monetario(match.group(1))
+        except Exception:
+            pass
+
+        valor_raw = await self._get_text('span.style_clamp__m7txb')
+        if valor_raw:
+            return self._normalizar_valor_monetario(valor_raw)
+
+        return None
+
     async def _extrair_dados_da_pagina(self, url: str) -> DadosImovel:
         # Extração de condomínio e IPTU
         condo_raw = await self._get_text('p:has-text("Condomínio") + p')
         iptu_raw = await self._get_text('p:has-text("IPTU") + p')
 
-        # Valor de venda
-        valor_raw = await self._get_text('span.style_clamp__m7txb')
-        valor_limpo = valor_raw.replace('R$', '').replace('.', '').strip() if valor_raw else None
+        valor_limpo = await self._extrair_valor_imovel()
 
         return DadosImovel(
             url=url,
