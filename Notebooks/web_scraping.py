@@ -162,6 +162,7 @@ if __name__ == "__main__":
     # Teste com a URL de Joinville
     #url = "https://www.zapimoveis.com.br/aluguel/imoveis/sc+joinville/?onde=%2CSanta+Catarina%2CJoinville%2C%2C%2C%2C%2Ccity%2CBR%3ESanta+Catarina%3ENULL%3EJoinville%2C-26.304376%2C-48.846374%2C&areaMaxima=100&areaMinima=10"
     
-    url = "https://www.vivareal.com.br/venda/santa-catarina/joinville/?onde=%2CSanta+Catarina%2CJoinville%2C%2C%2C%2C%2Ccity%2CBR%3ESanta+Catarina%3ENULL%3EJoinville%2C-26.304376%2C-48.846374%2C&areaMaxima=50&areaMinima=20"
+    #url = "https://www.vivareal.com.br/venda/santa-catarina/joinville/?onde=%2CSanta+Catarina%2CJoinville%2C%2C%2C%2C%2Ccity%2CBR%3ESanta+Catarina%3ENULL%3EJoinville%2C-26.304376%2C-48.846374%2C&areaMaxima=50&areaMinima=20"
+    url = "https://www.zapimoveis.com.br/imovel/aluguel-casa-3-quartos-com-piscina-gloria-joinville-sc-306m2-id-2820626281/?source=ranking%2Crp"
     total = asyncio.run(get_total_pages_by_count(url))
     print(f"Resultado Final: {total}")

@@ -9,7 +9,7 @@ import re
 
 from playwright.sync_api import Playwright, sync_playwright
 
-def run(playwright: Playwright) -> None:
+"""def run(playwright: Playwright) -> None:
     # Lançando o navegador
     browser = playwright.chromium.launch(headless=True)
     context = browser.new_context(
@@ -140,5 +140,28 @@ def run(playwright: Playwright) -> None:
     browser.close()
 
 with sync_playwright() as playwright:
-    run(playwright)
+    run(playwright)"""
+    
+import asyncio
+import sys
+from pathlib import Path
+    
+sys.path.append(str(Path(__file__).parent.parent))
+
+from scraping_zap_imoveis import ChavesMaoColeta
+
+output_file = "chaves_mao_alugueis.parquet"
+    
+#URL_TEMPLATE_NEW = "https://www.chavesnamao.com.br/imoveis-para-alugar/sc-joinville/?pg=1"
+
+URL_TEMPLATE_NEW = "https://www.chavesnamao.com.br/imoveis-a-venda/sc-joinville/?pg=1"
+    
+orchestrator = ChavesMaoColeta(URL_TEMPLATE_NEW, 
+                                headless=True,
+                                max_concurrency=3)
+
+resultado = asyncio.run(orchestrator.run(
+        output_file=str(output_file),
+        total_pages=1
+    ))
     
