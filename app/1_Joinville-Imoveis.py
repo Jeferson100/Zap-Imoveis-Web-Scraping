@@ -6,4 +6,4 @@ prefixo_name = 'joinville'
 
 cidade_path = 'joinville'
 
-gerar_pagina_analise_imoveis(cidade_path, cidade_nome, prefixo_name)
+gerar_pagina_analise_imoveis(cidade_path, cidade_nome, prefixo_name, habilitar_aluguel=True)

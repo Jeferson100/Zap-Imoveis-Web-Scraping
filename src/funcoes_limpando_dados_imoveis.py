@@ -523,7 +523,11 @@ def limpar_metragem(dados) -> float:
     try:
         if not dados:
             return 0.0
-            
+
+        # Já veio numérico (int/float): evita o "49.0" -> "490" do str()
+        if isinstance(dados, (int, float)):
+            return float(dados)
+
         # Garante que seja string e remove 'm²', espaços e unidades extras
         valor = str(dados).lower().replace('m²', '').replace('m2', '').strip()
 

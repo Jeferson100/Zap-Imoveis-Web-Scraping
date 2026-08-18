@@ -71,7 +71,7 @@ def carregar_mais_recentes_por_fonte(cidade_path: str, prefixo_name: str, base_d
     return df_limpo, data_mais_recente
 
 
-def gerar_pagina_analise_imoveis(cidade_pth, cidade_nome, prefixo_arquivo, df=None, data_mais_recente=None):
+def gerar_pagina_analise_imoveis(cidade_pth, cidade_nome, prefixo_arquivo, df=None, data_mais_recente=None, habilitar_predicao=True, sufixo_titulo="Zap Imóveis", habilitar_aluguel=False):
     """
     Função para gerar automaticamente a estrutura da página de análise.
     cidade_nome: Ex: "Joinville"
@@ -79,8 +79,21 @@ def gerar_pagina_analise_imoveis(cidade_pth, cidade_nome, prefixo_arquivo, df=No
     """
     st.set_page_config(page_title=f"Análise de Imóveis {cidade_nome}", layout="wide")
 
-    modo = st.sidebar.radio("Modo", ["Análise", "Predição"])
-    if modo == "Predição":
+    opcoes = ["Análise"]
+    if habilitar_aluguel:
+        opcoes.append("Aluguéis")
+    if habilitar_predicao:
+        opcoes.append("Predição")
+
+    modo = st.sidebar.radio("Modo", opcoes) if len(opcoes) > 1 else "Análise"
+
+    prefixo_uso = prefixo_arquivo
+    sufixo_uso  = sufixo_titulo
+
+    if modo == "Aluguéis":
+        prefixo_uso = prefixo_arquivo + "_aluguel"
+        sufixo_uso  = "Aluguéis"
+    elif modo == "Predição":
         cidade_pasta = cidade_pth.split("/")[0]
         cidade_nome_poi = CIDADE_POI.get(cidade_pasta, cidade_nome)
         gerar_pagina_predicao(cidade_pth, prefixo_arquivo, cidade_nome_poi)
@@ -95,8 +108,10 @@ def gerar_pagina_analise_imoveis(cidade_pth, cidade_nome, prefixo_arquivo, df=No
         </style>
         """, unsafe_allow_html=True)
     
+    key_base = f"{cidade_nome.lower()}_{prefixo_uso.replace('/', '_').replace(' ', '_')}"
+
     if df is not None:
-        key_df = f"df_{cidade_nome.lower()}"
+        key_df = f"df_{key_base}"
         if key_df not in st.session_state:
             st.session_state[key_df] = df
     else:
@@ -110,19 +125,19 @@ def gerar_pagina_analise_imoveis(cidade_pth, cidade_nome, prefixo_arquivo, df=No
                 
             #arquivo_mais_recente = max(arquivos, key=lambda f: f.stem.split('_')[-1])
             
-            arquivos = list(pasta.glob(f'{prefixo_arquivo}_imoveis_limpo_*.parquet'))
+            arquivos = list(pasta.glob(f'{prefixo_uso}_imoveis_limpo_*.parquet'))
             if not arquivos:
-                st.error(f"Nenhum arquivo encontrado com prefixo '{prefixo_arquivo}' em '{pasta}'.")
+                st.error(f"Nenhum arquivo encontrado com prefixo '{prefixo_uso}' em '{pasta}'.")
                 return
             arquivo_mais_recente = max(arquivos, key=lambda f: f.stem.split('_')[-1])
         
             data_mais_recente = arquivo_mais_recente.stem.split('_')[-1]
             
         except Exception:
-            st.error(f"Erro: Não foi possível encontrar arquivos com prefixo '{prefixo_arquivo}' em '{pasta}'. Verifique se os arquivos estão no local correto e seguem o padrão de nomenclatura.")
+            st.error(f"Erro: Não foi possível encontrar arquivos com prefixo '{prefixo_uso}' em '{pasta}'. Verifique se os arquivos estão no local correto e seguem o padrão de nomenclatura.")
             return
                 
-        key_df = f"df_{cidade_nome.lower()}"
+        key_df = f"df_{key_base}"
         
         if key_df not in st.session_state:
             st.session_state[key_df] = pd.read_parquet(arquivo_mais_recente)
@@ -170,7 +185,7 @@ def gerar_pagina_analise_imoveis(cidade_pth, cidade_nome, prefixo_arquivo, df=No
     
     df[cols_num] = df[cols_num].fillna(0)
 
-    st.title(f"🏠 Análise de Imóveis {cidade_nome} - Zap Imóveis")
+    st.title(f"🏠 Análise de Imóveis {cidade_nome} - {sufixo_uso}")
 
     st.subheader(f'Atualizado em: {data_mais_recente}')
 
