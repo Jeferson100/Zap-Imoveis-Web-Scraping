@@ -1,0 +1,78 @@
+name: "Avaliacao Flip Joinville - Bairro Bucarein (Batches 200-300)"
+on:
+  workflow_run:
+    workflows: ["Avaliacao Flip Joinville - Bairro Bucarein (Batches 100-200)"]
+    types:
+      - completed
+  workflow_dispatch:
+jobs:
+  batch_200_220:
+    uses: ./.github/workflows/joinville_avaliacao_flip_base.yml
+    with:
+      limite_inferior: "200"
+      limite_superior: "220"
+      bairro: "bucarein"
+    secrets: inherit
+
+  batch_220_240:
+    uses: ./.github/workflows/joinville_avaliacao_flip_base.yml
+    with:
+      limite_inferior: "220"
+      limite_superior: "240"
+      bairro: "bucarein"
+    secrets: inherit
+
+  batch_240_260:
+    uses: ./.github/workflows/joinville_avaliacao_flip_base.yml
+    with:
+      limite_inferior: "240"
+      limite_superior: "260"
+      bairro: "bucarein"
+    secrets: inherit
+
+  batch_260_280:
+    uses: ./.github/workflows/joinville_avaliacao_flip_base.yml
+    with:
+      limite_inferior: "260"
+      limite_superior: "280"
+      bairro: "bucarein"
+    secrets: inherit
+
+  batch_280_300:
+    uses: ./.github/workflows/joinville_avaliacao_flip_base.yml
+    with:
+      limite_inferior: "280"
+      limite_superior: "300"
+      bairro: "bucarein"
+    secrets: inherit
+
+  merge:
+    needs: [batch_200_220, batch_220_240, batch_240_260, batch_260_280, batch_280_300]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: 'refs/heads/main'
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Instalar uv
+        run: pip install uv
+      - name: Instalar dependencias
+        run: |
+          uv venv
+          uv pip install -e .
+      - name: Juntar batches
+        run: uv run codigos_rodando/joinville/merge_batches.py
+        env:
+          BAIRRO_SELECAO: "bucarein"
+      - name: Commit merge
+        run: |
+          git config user.name "github-actions"
+          git config user.email "github-actions@github.com"
+          git add -A dados/joinville/
+          git commit -m "Avaliacao Flip Joinville [0-300]: merge batches bucarein" || echo "Nada para commitar"
+          git pull --rebase --autostash -X ours origin main
+          git push origin main
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
