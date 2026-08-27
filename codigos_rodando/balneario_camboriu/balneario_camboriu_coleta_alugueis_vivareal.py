@@ -30,13 +30,13 @@ sys.path.append(str(Path(__file__).parent.parent))
 
 from scraping_zap_imoveis import VivaRealColeta
 
-URL_TEMPLATE = "https://www.vivareal.com.br/aluguel/santa-catarina/joinville/?onde=%2CSanta+Catarina%2CJoinville%2C%2C%2C%2C%2Ccity%2CBR%3ESanta+Catarina%3ENULL%3EJoinville%2C-26.304376%2C-48.846374%2C&pagina={pagina}"
+URL_TEMPLATE = "https://www.vivareal.com.br/aluguel/santa-catarina/balneario-camboriu/?onde=%2CSanta+Catarina%2CBalne%C3%A1rio+Cambori%C3%BA%2C%2C%2C%2C%2Ccity%2CBR%3ESanta+Catarina%3ENULL%3EBalneario+Camboriu%2C-26.997984%2C-48.63258%2C&pagina={pagina}"
 
 sys.path.append('..')
     
 now = time.strftime("%Y-%m")
 
-area_ranges = {#'0': '50',  
+area_ranges = {#'0': '50',
                '51': '100','101': '3000000',}
 
 total_paginas = 50
