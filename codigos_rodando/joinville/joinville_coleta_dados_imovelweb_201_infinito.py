@@ -33,8 +33,8 @@ URL_TEMPLATE = "https://www.imovelweb.com.br/imoveis-venda-joinville-sc-{area_mi
 
 area_ranges = {
             
-               '201': '250','251': '300','301': '400','401': '500','501': '600','601': '3000000',
-
+               '201': '250','251': '300','301': '400',        
+                '401': '500','501': '600','601': '3000000',
                }
 
 headless = os.getenv("HEADLESS", "True").lower() == "true"

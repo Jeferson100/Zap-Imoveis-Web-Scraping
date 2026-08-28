@@ -37,10 +37,12 @@ if __name__ == "__main__":
         #(f"uv run {cidade}_limpando_dados_imoveis.py", "Processamento de Dados"),
         #(f"uv run {cidade}_criando_indice_localizacao.py", "Criação do Índice de Localização")
         #(f"uv run {cidade}_coleta_alugueis_chave_mao.py", "Scraper Chave na Mão"),
-        (f"uv run {cidade}_coleta_alugueis_olx.py", "Scraper OLX"),
+        (f"uv run {cidade}_coleta_dados_imovelweb_0_100.py", "Scraper Imovelweb"),
+        (f"uv run {cidade}_coleta_dados_imovelweb_101_200.py", "Scraper Imovelweb"),
+        (f"uv run {cidade}_coleta_dados_imovelweb_201_infinito.py", "Scraper Imovelweb"),
         #(f"uv run {cidade}_coleta_alugueis_zap.py", "Scraper Zap Imóveis"),
-        (f"uv run {cidade}_coleta_alugueis_vivareal.py", "Scraper Viva Real"),
-        (f"uv run {cidade}_juncao_dados_aluguel.py", "Junção de Dados de Aluguel"),
+        #(f"uv run {cidade}_coleta_alugueis_vivareal.py", "Scraper Viva Real"),
+        #(f"uv run {cidade}_juncao_dados_aluguel.py", "Junção de Dados de Aluguel"),
     ]
 
     for comando, nome in fluxo:
