@@ -86,8 +86,22 @@ class ChavesNaMaoScraperAsync:
     def _normalizar_valor_monetario(self, valor: str | None) -> str | None:
         if not valor:
             return None
-        valor_normalizado = re.sub(r"[^0-9]", "", valor)
-        return valor_normalizado or None
+        v = str(valor).strip()
+        v = re.sub(r"[^\d.,]", "", v)
+        if not v:
+            return None
+        if "," in v and "." in v:
+            v = v.replace(".", "").replace(",", ".")
+        elif "," in v:
+            v = v.replace(",", ".")
+        elif "." in v:
+            partes = v.split(".")
+            if len(partes[-1]) == 3 and len(partes) > 1:
+                v = v.replace(".", "")
+        try:
+            return str(int(float(v)))
+        except Exception:
+            return re.sub(r"[^0-9]", "", v) or None
 
     async def _extrair_valor_imovel(self) -> str | None:
         try:
@@ -95,6 +109,12 @@ class ChavesNaMaoScraperAsync:
             for script in scripts:
                 if not script:
                     continue
+                match = re.search(r'"price"\s*:\s*"?([\d.,]+)"?', script, re.I)
+                if match:
+                    return self._normalizar_valor_monetario(match.group(1))
+                match = re.search(r'"rawPrice"\s*:\s*"?([\d.,]+)"?', script, re.I)
+                if match:
+                    return self._normalizar_valor_monetario(match.group(1))
                 match = re.search(r'"price"\s*:\s*"([^"]+)"', script, re.I)
                 if match:
                     return self._normalizar_valor_monetario(match.group(1))

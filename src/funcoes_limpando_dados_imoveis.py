@@ -498,6 +498,78 @@ def limpa_endereco_apply_olx(endereco, cidade='joinville', estado='sc'):
     return pd.Series(dados)
 
 
+class TratadorEnderecoImovelWeb:
+    def __init__(self, cidade='joinville', estado='sc'):
+        self.cidade = self._normalizar(cidade)
+        self.estado = self._normalizar(estado)
+
+    def _normalizar(self, texto: str) -> str:
+        if not texto or texto.lower() in ["none", "nan"]:
+            return ""
+        return unicodedata.normalize('NFD', texto).encode('ascii', 'ignore').decode('utf-8').lower().strip()
+
+    def _limpar_prefixo_rua(self, nome_rua: str) -> str:
+        if not nome_rua or nome_rua.lower() in ["s/r", ""]:
+            return "s/r"
+        rua = re.sub(r'^(r\.?|rua|avenida|av\.?|estrada|alameda|travessa|rodovia|servidao)\s+', '', nome_rua.strip(), flags=re.IGNORECASE)
+        rua = re.sub(r'\bal\s+', '', rua, flags=re.IGNORECASE)
+        return self._normalizar(rua) or "s/r"
+
+    def tratar(self, endereco_raw: str) -> dict:
+        if not endereco_raw:
+            return self._vazio()
+        texto = endereco_raw.replace('\xa0', ' ').replace('\n', ', ').strip()
+        texto = re.sub(r',\s*Pirabeiraba\s*\(Pirabeiraba\),\s*Joinville\s*-\s*SC', '', texto, flags=re.I)
+        texto = re.sub(r'\s*\(.*\)', '', texto)
+        texto = re.sub(r'(\D)\s+(\d+)\s*,', r'\1, \2,', texto)
+        texto = re.sub(r'\s+', ' ', texto)
+        partes = [p.strip() for p in texto.split(',') if p.strip()]
+        rua, bairro, cidade, estado, cep = "s/r", "s/b", "s/c", "s/e", "s/c"
+        try:
+            if partes and partes[-1].isdigit() and len(partes[-1]) == 8:
+                cep = partes.pop(-1)
+            if partes and len(partes[-1]) == 2:
+                estado = partes.pop(-1)
+            elif partes and re.search(r'.+\s*-\s*[A-Z]{2}$', partes[-1], re.I):
+                m = re.search(r'(.+)\s*-\s*([A-Z]{2})$', partes.pop(-1), re.I)
+                if m:
+                    cidade, estado = m.group(1).strip(), m.group(2).strip()
+            if partes:
+                cidade_val = partes.pop(-1) if cidade == "s/c" else cidade
+                if cidade_val != "s/c":
+                    cidade = cidade_val
+            if len(partes) >= 2:
+                rua, bairro = partes[0], partes[-1]
+                if re.match(r'^\d', bairro.strip()):
+                    bairro = partes[0] if len(partes) == 2 else bairro
+            elif len(partes) == 1:
+                bairro = partes[0]
+            if 'pirabeiraba' in f"{rua} {bairro}".lower():
+                bairro = 'pirabeiraba'
+            if re.match(r'^\d', bairro.strip()):
+                bairro = "s/b"
+            numero = "s/n"
+            if len(partes) >= 2 and re.match(r'^\d', partes[1].strip()):
+                numero = partes[1].strip()
+            elif len(partes) >= 2:
+                m2 = re.search(r'\d+', partes[1])
+                if m2:
+                    numero = m2.group(0)
+            return {'rua': self._limpar_prefixo_rua(rua), 'numero': self._normalizar(numero) or "s/n",
+                    'bairro': self._normalizar(bairro) or "s/b", 'cidade': self._normalizar(cidade) or self.cidade or "s/c",
+                    'estado': self._normalizar(estado) or self.estado or "s/e", 'cep': cep}
+        except Exception:
+            return self._vazio()
+
+    def _vazio(self) -> dict:
+        return {'rua': 's/r', 'numero': 's/n', 'bairro': 's/b', 'cidade': self.cidade or "s/c", 'estado': self.estado or "s/e", 'cep': 's/c'}
+
+
+def limpa_endereco_apply_imovelweb(endereco, cidade='joinville', estado='sc'):
+    tratador = TratadorEnderecoImovelWeb(cidade, estado)
+    return pd.Series(tratador.tratar(endereco))
+
+
 def pirabeiraba_dona_francisca(bairro):
     if 'pirabeiraba' in bairro.lower() or 'dona francisca' in bairro.lower():
         return 'pirabeiraba'
@@ -517,6 +589,28 @@ def pirabeiraba_dona_francisca(bairro):
     except Exception as e:
         logger.warning("Erro ao limpar metragem: %s, dados no formato %s", e,dados)
         return 0.0"""
+
+
+def limpar_idade(valor):
+    try:
+        if valor is None or (isinstance(valor, float) and pd.isna(valor)):
+            return pd.NA
+        s = str(valor).strip()
+        if not s or s.lower() in ("none", "nan", ""):
+            return pd.NA
+        s_low = s.lower()
+        import unicodedata
+        s_norm = unicodedata.normalize('NFD', s_low).encode('ascii', 'ignore').decode('utf-8').lower().strip()
+        if s_norm in ("breve lancamento", "breve lancamento"):
+            return pd.NA
+        if s_norm in ("em construcao", "em construcao"):
+            return 0
+        m = re.search(r'(\d+)', s_norm)
+        if m:
+            return float(m.group(1))
+        return pd.NA
+    except Exception:
+        return pd.NA
 
 
 def limpar_metragem(dados) -> float:

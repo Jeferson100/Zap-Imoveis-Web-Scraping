@@ -19,7 +19,8 @@ from funcoes_limpando_dados_imoveis import (limpar_valor_iptu,
                                             geocodificar_dataframe,
                                             limpa_endereco_apply_zap, 
                                             limpa_endereco_apply_chave_mao, 
-                                            limpa_endereco_apply_olx,)
+                                            limpa_endereco_apply_olx,
+                                            limpa_endereco_apply_imovelweb,)
 import time
 from datetime import datetime
 import json
@@ -115,6 +116,14 @@ async def limpando_dados_cidades(pd_data, batch, pasta_dados: Path, cidade_limpe
     pd_data_garagem['vagas'] = pd_data_garagem['vagas'].apply(limpar_vagas)
 
     logger.info(f"Coluna 'vagas' limpa. Registros restantes: {pd_data_garagem.shape}")
+
+    from funcoes_limpando_dados_imoveis import limpar_idade
+    if 'idade' in pd_data_garagem.columns:
+        pd_data_garagem['idade'] = pd_data_garagem['idade'].apply(limpar_idade)
+        logger.info(f"Coluna 'idade' limpa. Registros restantes: {pd_data_garagem.shape}")
+    else:
+        pd_data_garagem['idade'] = pd.NA
+        logger.info(f"Coluna 'idade' criada como pd.NA (fonte sem idade). Registros: {pd_data_garagem.shape}")
 
     pd_data_tipo_imovel = pd_data_garagem.copy()
 
@@ -277,6 +286,7 @@ def limpando_dados(
          name_arquivo_vivareal: str = None, 
          name_arquivo_chave_mao: str = None,
          name_arquivo_olx: str = None, 
+         name_arquivo_imovelweb: str = None,
          batch: int = 1,
          tipo_async: bool = False,
          cidade_localizacao: str = 'Joinville', 
@@ -299,11 +309,13 @@ def limpando_dados(
     df_vivareal_endereco = pd.DataFrame()
     df_chave_mao_endereco = pd.DataFrame()
     df_olx_endereco = pd.DataFrame()
+    df_imovelweb_endereco = pd.DataFrame()
 
     arquivo_zap = None
     arquivo_vivareal = None
     arquivo_chave_mao = None
     arquivo_olx = None
+    arquivo_imovelweb = None
 
     if name_arquivo_zap is not None:
         df_zap, arquivo_zap = carregar_parquet(pasta_dados, name_arquivo_zap)
@@ -344,6 +356,16 @@ def limpando_dados(
             logger.info(f"Quantidade de dados OLX: {len(df_olx)}")
         else:
             logger.warning(f"Nenhum dado OLX para processar. Pulando...")
+
+    if name_arquivo_imovelweb is not None:
+        df_imovelweb, arquivo_imovelweb = carregar_parquet(pasta_dados, name_arquivo_imovelweb)
+        if not df_imovelweb.empty and 'endereco' in df_imovelweb.columns:
+            df_imovelweb['fonte'] = 'imovelweb'
+            df_imovelweb_endereco_limpo = df_imovelweb['endereco'].apply(lambda x: limpa_endereco_apply_imovelweb(x, cidade_limpeza, estado_limpeza))
+            df_imovelweb_endereco = pd.concat([df_imovelweb, df_imovelweb_endereco_limpo], axis=1)
+            logger.info(f"Quantidade de dados ImovelWeb: {len(df_imovelweb)}")
+        else:
+            logger.warning(f"Nenhum dado ImovelWeb para processar. Pulando...")
         
     #df_zap_endereco_limpo = df_zap['endereco'].apply(lambda x: limpa_endereco_apply_zap(x, cidade_limpeza, estado_limpeza))
     #df_vivareal_endereco_limpo = df_vivareal['endereco'].apply(lambda x: limpa_endereco_apply_zap(x, cidade_limpeza, estado_limpeza))
@@ -359,7 +381,8 @@ def limpando_dados(
                     df_zap_endereco if name_arquivo_zap is not None else pd.DataFrame(), 
                     df_vivareal_endereco if name_arquivo_vivareal is not None else pd.DataFrame(),
                     df_chave_mao_endereco if name_arquivo_chave_mao is not None else pd.DataFrame(),
-                    df_olx_endereco if name_arquivo_olx is not None else pd.DataFrame()], 
+                    df_olx_endereco if name_arquivo_olx is not None else pd.DataFrame(),
+                    df_imovelweb_endereco if name_arquivo_imovelweb is not None else pd.DataFrame()], 
                    axis=0, ignore_index=True)
     
     #logger.info(f"Total de registros carregados: {len(df)} (zap: {len(df_zap)} | vivareal: {len(df_vivareal)} | chave_mao: {len(df_chave_mao)} | olx: {len(df_olx)})")
@@ -408,7 +431,7 @@ def limpando_dados(
     
     # Usa a primeira fonte que realmente carregou um arquivo
     data_ref = "sem_data"
-    for arquivo in (arquivo_zap, arquivo_vivareal, arquivo_chave_mao, arquivo_olx):
+    for arquivo in (arquivo_zap, arquivo_vivareal, arquivo_chave_mao, arquivo_olx, arquivo_imovelweb):
         if arquivo is not None:
             data_ref = arquivo.stem.split('_')[-1]
             break
@@ -440,6 +463,7 @@ def limpando_dados(
                 ("Vivareal",  arquivo_vivareal,  name_arquivo_vivareal),
                 ("Chave Mao", arquivo_chave_mao, name_arquivo_chave_mao),
                 ("OLX",       arquivo_olx,       name_arquivo_olx),
+                ("ImovelWeb", arquivo_imovelweb, name_arquivo_imovelweb),
             ]
 
             fontes_faltando = [
@@ -470,6 +494,10 @@ def limpando_dados(
                 if name_arquivo_olx is not None:
                     deletar_arquivo(arquivo_olx)
                     logger.info("✅ Arquivo OLX deletado.")
+
+                if name_arquivo_imovelweb is not None:
+                    deletar_arquivo(arquivo_imovelweb)
+                    logger.info("✅ Arquivo ImovelWeb deletado.")
 
                 logger.info("✅ Arquivos originais deletados.")
         else:

@@ -44,4 +44,8 @@ consolidar_jsons('olx', cidade, PASTA_DADOS)
 
 logger.info(f"Dados consolidados para Olx.")
 
+consolidar_parquet('imovelweb', cidade, PASTA_DADOS)
+
+logger.info(f"Dados consolidados para ImovelWeb.")
+
 logger.info(f"Arquivos consolidados em: {PASTA_DADOS}")

@@ -66,6 +66,8 @@ class DadosImovelImovelWeb:
     url: str
     titulo: Optional[str] = None
     metragem: Optional[str] = None
+    metragem_total: Optional[str] = None
+    metragem_util: Optional[str] = None
     quartos: Optional[str] = None
     suites: Optional[str] = None
     banheiros: Optional[str] = None
@@ -182,7 +184,11 @@ class ImovelWebDadosImovelAsync:
         if endereco and uf:
             endereco = f"{endereco} - {uf}"
 
-        metragem = _feature(main_features, "CFT100") or _feature(main_features, "CFT101")
+        total = _feature(main_features, "CFT100")
+        util = _feature(main_features, "CFT101")
+        metragem_total = f"{total} m²" if total else None
+        metragem_util = f"{util} m²" if util else None
+        metragem = metragem_total or metragem_util
         condominio = aviso.get("expenses")
         if condominio == "0":
             condominio = None
@@ -203,7 +209,9 @@ class ImovelWebDadosImovelAsync:
         return DadosImovelImovelWeb(
             url=self.url,
             titulo=aviso.get("postingTitle") or aviso.get("generatedTitle"),
-            metragem=f"{metragem} m²" if metragem else None,
+            metragem=metragem,
+            metragem_total=metragem_total,
+            metragem_util=metragem_util,
             quartos=_feature(main_features, "CFT2"),
             suites=_feature(main_features, "CFT4"),
             banheiros=_feature(main_features, "CFT3"),
@@ -226,12 +234,19 @@ class ImovelWebDadosImovelAsync:
     async def _extrair_fallback(self, page: Page) -> DadosImovelImovelWeb:
         titulo = await page.title()
         match_valor = re.search(r"R\$\s*[\d.]+", titulo)
-        match_metragem = re.search(r"(\d[\d.,]*)\s*m2", titulo, re.IGNORECASE)
+        tot = re.search(r"(\d[\d.,]*)\s*m²\s*tot", titulo, re.IGNORECASE)
+        util = re.search(r"(\d[\d.,]*)\s*m²\s*útil", titulo, re.IGNORECASE)
+        generic = re.search(r"(\d[\d.,]*)\s*m2", titulo, re.IGNORECASE)
+        metragem_total = f"{tot.group(1)} m²" if tot else (f"{generic.group(1)} m²" if generic else None)
+        metragem_util = f"{util.group(1)} m²" if util else None
+        metragem = metragem_total or metragem_util
         return DadosImovelImovelWeb(
             url=self.url,
             titulo=titulo,
             valor_imovel=match_valor.group(0) if match_valor else None,
-            metragem=match_metragem.group(0) if match_metragem else None,
+            metragem=metragem,
+            metragem_total=metragem_total,
+            metragem_util=metragem_util,
         )
 
     async def _extrair_dados_da_pagina(self, page: Page) -> DadosImovelImovelWeb:
