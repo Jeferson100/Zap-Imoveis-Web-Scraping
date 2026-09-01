@@ -819,14 +819,32 @@ def limpar_data_publicacao(data_publicacao) -> str:
     return unicodedata.normalize('NFD', data_publicacao_limpa).encode('ascii', 'ignore').decode('utf-8')
 
 def converter_para_data(data_publicacao) -> str:
+    if not data_publicacao or (isinstance(data_publicacao, float) and pd.isna(data_publicacao)):
+        return None
+    v = str(data_publicacao).strip()
+    if "T" in v and ("Z" in v or re.match(r"\d{4}-\d{2}-\d{2}", v)):
+        try:
+            dt = pd.to_datetime(v, utc=True)
+            return dt.strftime("%d/%m/%Y")
+        except Exception:
+            pass
+    if re.match(r"\d{2}/\d{2}/\d{4}", v):
+        return v
+    if "/" in v and ("às" in v or "as" in v.lower()):
+        try:
+            m = re.search(r"(\d{2}/\d{2})", v)
+            if m:
+                return f"{m.group(1)}/{datetime.now().year}"
+        except Exception:
+            pass
     try:
-        data_limpa = limpar_data_publicacao(data_publicacao)
+        data_limpa = limpar_data_publicacao(v)
         partes = data_limpa.split(' de ')
         dia = partes[0].strip().zfill(2)
-        mes = MESES[partes[1].strip()]
+        mes = MESES[partes[1].strip().lower()]
         ano = partes[2].strip()
         return f"{dia}/{mes}/{ano}"
-    except (KeyError, IndexError, AttributeError):
+    except (KeyError, IndexError, AttributeError, TypeError):
         return None
 """
 MESES = {
