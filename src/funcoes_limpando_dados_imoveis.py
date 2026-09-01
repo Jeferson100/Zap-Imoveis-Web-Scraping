@@ -52,30 +52,30 @@ class LimpaEndereco:
         return unicodedata.normalize('NFD', texto).encode('ascii', 'ignore').decode('utf-8').lower().strip()
 
     def explit_rua_bairro_numero(self):
-        # Tenta identificar o padrão ZAP (muitos hifens) ou Chaves na Mão (muitas vírgulas)
-        # Padronizamos para facilitar: trocamos " - " por ", " onde fizer sentido
         temp_end = self.endereco.replace(' - ', ', ')
         partes = [p.strip() for p in temp_end.split(',') if p.strip()]
-        
-        rua, numero, bairro = "", "s/n", ""
-
+        if len(partes) >= 2 and re.match(r'^[A-Z]{2}$', partes[-1].strip(), re.I) and re.search(r'joinville', partes[-2], re.I):
+            partes = partes[:-2]
+        elif partes and re.search(r'joinville', partes[-1], re.I):
+            partes.pop(-1)
+        rua, numero, bairro = (partes[0] if partes else ""), "s/n", ""
         if len(partes) >= 3:
-            # Caso padrão: [Rua, Número, Bairro, Cidade/Estado]
             rua = partes[0]
-            # Tenta verificar se a segunda parte é número
-            if any(char.isdigit() for char in partes[1]):
-                numero = partes[1]
-                bairro = partes[2]
+            cand_num = partes[1]
+            if any(c.isdigit() for c in cand_num):
+                m = re.search(r'\d+', cand_num)
+                numero = m.group(0) if m else cand_num
+                bairro = partes[-1]
             else:
-                # Se não for número, assume que é [Rua, Bairro, Cidade...]
-                numero = "s/n"
-                bairro = partes[1]
-        
+                bairro = partes[-1]
         elif len(partes) == 2:
-            # Caso curto: [Bairro, Cidade/Estado] ou [Rua, Bairro]
             rua = ""
-            bairro = partes[0]
-        
+            bairro = partes[-1]
+        if "bairro" in bairro.lower():
+            bairro = bairro.lower().split("bairro")[-1]
+        bairro = bairro.strip(" ,.-")
+        if re.match(r'^\d+$', bairro) or bairro.lower() in ("s/n", "s/b", ""):
+            bairro = "s/b"
         return rua, numero, bairro
 
     def limpar_rua(self) -> str:
@@ -544,9 +544,11 @@ class TratadorEnderecoImovelWeb:
                     bairro = partes[0] if len(partes) == 2 else bairro
             elif len(partes) == 1:
                 bairro = partes[0]
+            if 'bairro' in bairro.lower():
+                bairro = bairro.lower().split('bairro')[-1].strip(' ,.-')
             if 'pirabeiraba' in f"{rua} {bairro}".lower():
                 bairro = 'pirabeiraba'
-            if re.match(r'^\d', bairro.strip()):
+            if re.match(r'^\d+$', bairro.strip()) or not bairro.strip():
                 bairro = "s/b"
             numero = "s/n"
             if len(partes) >= 2 and re.match(r'^\d', partes[1].strip()):

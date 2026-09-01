@@ -269,15 +269,18 @@ def deletar_arquivo(arquivo: Path | None):
 def normalizar_bairros(bairro, mapeamento):
     if not isinstance(bairro, str):
         return bairro
-        
-    bairro_low = bairro.lower()
-    
+    b = bairro.strip().lower()
+    if re.match(r'^\d+$', b) or b in ("s/n", "s/b", ""):
+        return "s/b"
+    b_norm = unicodedata.normalize('NFD', b).encode('ascii', 'ignore').decode('utf-8')
     for nome_correto, variacoes in mapeamento.items():
-        # Verifica se qualquer uma das variações está contida no nome original
-        if any(v in bairro_low for v in variacoes):
+        if any(v in b_norm for v in variacoes):
             return nome_correto
-            
-    return bairro 
+    if "bairro" in b:
+        b = b.split("bairro")[-1].strip(" ,.-")
+        if b:
+            return b
+    return bairro
         
 def limpando_dados(
          name_arquivo_saida: str,
