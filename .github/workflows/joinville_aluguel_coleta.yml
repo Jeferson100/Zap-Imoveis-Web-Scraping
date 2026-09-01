@@ -30,7 +30,7 @@ jobs:
       arquivo_rodando_imovel: joinville_coleta_alugueis_zap.py
 
   juncao_aluguel_joinville:
-      needs: [coleta_aluguel_chave_mao_joinville, coleta_aluguel_olx_joinville, coleta_aluguel_vivareal_joinville, coleta_aluguel_zap_joinville, juncao_aluguel_joinville]
+      needs: [coleta_aluguel_chave_mao_joinville, coleta_aluguel_olx_joinville, coleta_aluguel_vivareal_joinville, coleta_aluguel_zap_joinville]
       runs-on: ubuntu-latest
       steps:
         - uses: actions/checkout@v4
