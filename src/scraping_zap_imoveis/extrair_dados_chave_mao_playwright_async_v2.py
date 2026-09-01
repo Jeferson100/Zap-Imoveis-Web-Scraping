@@ -15,8 +15,6 @@ class DadosImovel:
     url: str
     titulo: Optional[str] = None
     metragem: Optional[str] = None
-    metragem_total: Optional[str] = None
-    metragem_util: Optional[str] = None
     banheiros: Optional[str] = None
     vagas: Optional[str] = None
     quartos: Optional[str] = None
@@ -143,47 +141,17 @@ class ChavesNaMaoScraperAsync:
 
         return None
 
-    async def _extrair_metragens(self) -> tuple[Optional[str], Optional[str]]:
-        total = util = None
-        try:
-            html = await self._page.content()
-            m = re.search(r'"area"\s*:\s*\{\s*"total"\s*:\s*"(?P<tot>[^"]+)"[^}]*"useful"\s*:\s*"(?P<util>[^"]+)"', html)
-            if m:
-                tot, ut = m.group("tot"), m.group("util")
-                total = None if tot in ("$undefined", "") else tot
-                util = None if ut in ("$undefined", "") else ut
-        except Exception:
-            pass
-        if not total:
-            t = await self._get_text('p[aria-label="area-total"] b')
-            if t:
-                total = re.sub(r"[^\d.,]", "", t) or None
-        if not util:
-            u = await self._get_text('p[aria-label="area-util"] b')
-            if u:
-                util = re.sub(r"[^\d.,]", "", u) or None
-        if not total and not util:
-            g = await self._get_text('b.row.spacing:has-text("m²")')
-            if g:
-                total = re.sub(r"[^\d.,]", "", g) or None
-        metragem_total = f"{total} m²" if total else None
-        metragem_util = f"{util} m²" if util else None
-        return metragem_total, metragem_util
-
     async def _extrair_dados_da_pagina(self, url: str) -> DadosImovel:
+        # Extração de condomínio e IPTU
         condo_raw = await self._get_text('p:has-text("Condomínio") + p')
         iptu_raw = await self._get_text('p:has-text("IPTU") + p')
 
         valor_limpo = await self._extrair_valor_imovel()
-        metragem_total, metragem_util = await self._extrair_metragens()
-        metragem = metragem_total or metragem_util
 
         return DadosImovel(
             url=url,
             titulo=await self._get_text('h1.styles_typography__xG9rg'),
-            metragem=metragem,
-            metragem_total=metragem_total,
-            metragem_util=metragem_util,
+            metragem=await self._get_text('b.row.spacing:has-text("m²")'),
             valor_imovel=valor_limpo,
             quartos=await self._get_text("b:has(svg path[d^='M112.867 767.316'])"),
             banheiros=self._limpar_valor(await self._get_text('p[aria-label="Banheiros"] b')),
