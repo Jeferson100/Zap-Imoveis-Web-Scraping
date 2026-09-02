@@ -35,6 +35,9 @@ class DadosImovel:
     descricao: Optional[str] = None
     data_criacao: Optional[str] = None
     fotos: List[str] = field(default_factory=list)
+    caracteristicas: List[str] = field(default_factory=list)
+    caracteristicas_privativa: List[str] = field(default_factory=list)
+    caracteristicas_comum: List[str] = field(default_factory=list)
 
     def to_dict(self) -> dict:
         return self.__dict__
@@ -266,6 +269,27 @@ class OLXScraperAsync:
             return None
             
 
+    async def _extrair_caracteristicas(self) -> tuple[List[str], List[str]]:
+        priv, comum = [], []
+        try:
+            html = await self._page.content()
+            m_priv = re.search(r'"name"\s*:\s*"re_features".*?"values"\s*:\s*\[(.*?)\]', html, re.S)
+            if m_priv:
+                priv = re.findall(r'"label"\s*:\s*"([^"]+)"', m_priv.group(1))
+            m_com = re.search(r'"name"\s*:\s*"re_complex_features".*?"values"\s*:\s*\[(.*?)\]', html, re.S)
+            if m_com:
+                comum = re.findall(r'"label"\s*:\s*"([^"]+)"', m_com.group(1))
+            if priv or comum:
+                return [html_mod.unescape(p).strip() for p in priv if p.strip()], [html_mod.unescape(c).strip() for c in comum if c.strip()]
+        except Exception:
+            pass
+        try:
+            priv = await self._page.locator('div.advc-optional-subsection:has-text("Características do imóvel") span.typo-body-small').all_inner_texts()
+            comum = await self._page.locator('div.advc-optional-subsection:has-text("Características do condomínio") span.typo-body-small').all_inner_texts()
+            return [p.strip() for p in priv if p.strip()], [c.strip() for c in comum if c.strip()]
+        except Exception:
+            return [], []
+
     async def _extrair_dados_da_pagina(self, url: str) -> DadosImovel:
         (
             metragem_raw,
@@ -296,6 +320,7 @@ class OLXScraperAsync:
         )
         
         valor_imovel = await self._get_valor_imovel()
+        priv, comum = await self._extrair_caracteristicas()
 
         return DadosImovel(
             url=url,
@@ -310,7 +335,10 @@ class OLXScraperAsync:
             endereco=endereco,
             descricao=descricao,
             data_criacao=data_criacao,
-            fotos=fotos
+            fotos=fotos,
+            caracteristicas=[],
+            caracteristicas_privativa=priv,
+            caracteristicas_comum=comum,
         )
 
     async def extrair_anuncio(self, url: str) -> dict:
@@ -456,6 +484,20 @@ class OLXScraperAsync:
         if partes_endereco:
             endereco = ", ".join(partes_endereco)
 
+        def extract_features(name: str) -> List[str]:
+            m = re.search(r'"name"\s*:\s*"' + re.escape(name) + r'".*?"values"\s*:\s*\[(.*?)\]', html_text, re.S)
+            if m and m.group(1).strip():
+                labs = re.findall(r'"label"\s*:\s*"([^"]+)"', m.group(1))
+                if labs:
+                    return [html_mod.unescape(l).strip() for l in labs if l.strip()]
+            v = attr_value(name)
+            if v:
+                return [html_mod.unescape(s).strip() for s in v.split(",") if s.strip()]
+            return []
+
+        priv = extract_features("re_features")
+        comum = extract_features("re_complex_features")
+
         dados = DadosImovel(
             url=url,
             titulo=titulo,
@@ -470,6 +512,9 @@ class OLXScraperAsync:
             descricao=descricao,
             data_criacao=data_criacao,
             fotos=fotos,
+            caracteristicas=[],
+            caracteristicas_privativa=priv,
+            caracteristicas_comum=comum,
         )
 
         # Só considera sucesso se ao menos valor ou título vieram (página de anúncio real)

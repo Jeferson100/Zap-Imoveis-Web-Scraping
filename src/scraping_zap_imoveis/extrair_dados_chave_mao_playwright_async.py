@@ -27,6 +27,8 @@ class DadosImovel:
     descricao: Optional[str] = None
     data_criacao: Optional[str] = None
     caracteristicas: List[str] = field(default_factory=list)
+    caracteristicas_privativa: List[str] = field(default_factory=list)
+    caracteristicas_comum: List[str] = field(default_factory=list)
     fotos: List[str] = field(default_factory=list)
     link_maps: Optional[str] = None
 
@@ -170,6 +172,34 @@ class ChavesNaMaoScraperAsync:
         metragem_util = f"{util} m²" if util else None
         return metragem_total, metragem_util
 
+    async def _extrair_caracteristicas(self) -> tuple[List[str], List[str]]:
+        priv, comum = [], []
+        try:
+            html = await self._page.content()
+            m_priv = re.search(r'"privativeItems"\s*:\s*\[(.*?)\]', html, re.S)
+            if m_priv:
+                priv = re.findall(r'"name"\s*:\s*"([^"]+)"', m_priv.group(1))
+            m_com = re.search(r'"commonItems"\s*:\s*\[(.*?)\]', html, re.S)
+            if m_com:
+                comum = re.findall(r'"name"\s*:\s*"([^"]+)"', m_com.group(1))
+        except Exception:
+            pass
+        if not priv and not comum:
+            try:
+                if await self._page.locator('div.style_optionalItemsContainer__7e5rw').count() > 0:
+                    spans = await self._page.locator('div.style_optionalItemsContainer__7e5rw span').all()
+                    for sp in spans:
+                        titulo = (await sp.locator('b').inner_text()).strip().lower() if await sp.locator('b').count() > 0 else ""
+                        itens = await sp.locator('ul li p.styles_text-body-sm-medium__FWa10').all_inner_texts()
+                        itens = [i.strip() for i in itens if i.strip()]
+                        if "privativa" in titulo:
+                            priv = itens
+                        elif "comum" in titulo:
+                            comum = itens
+            except Exception:
+                pass
+        return [p.strip() for p in priv if p.strip()], [c.strip() for c in comum if c.strip()]
+
     async def _extrair_dados_da_pagina(self, url: str) -> DadosImovel:
         condo_raw = await self._get_text('p:has-text("Condomínio") + p')
         iptu_raw = await self._get_text('p:has-text("IPTU") + p')
@@ -177,6 +207,7 @@ class ChavesNaMaoScraperAsync:
         valor_limpo = await self._extrair_valor_imovel()
         metragem_total, metragem_util = await self._extrair_metragens()
         metragem = metragem_total or metragem_util
+        priv, comum = await self._extrair_caracteristicas()
 
         return DadosImovel(
             url=url,
@@ -192,6 +223,9 @@ class ChavesNaMaoScraperAsync:
             descricao=await self._get_text('p[aria-label="descrição"]'),
             condominio=self._limpar_valor(condo_raw),
             iptu=self._limpar_valor(iptu_raw),
+            caracteristicas=[],
+            caracteristicas_privativa=priv,
+            caracteristicas_comum=comum,
             fotos=await self._get_fotos(),
             link_maps=await self._get_mapa(),
         )

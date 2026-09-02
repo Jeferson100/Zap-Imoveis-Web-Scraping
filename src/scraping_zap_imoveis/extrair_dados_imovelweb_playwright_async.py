@@ -82,6 +82,8 @@ class DadosImovelImovelWeb:
     descricao: Optional[str] = None
     data_criacao: Optional[str] = None
     caracteristicas: List[str] = field(default_factory=list)
+    caracteristicas_privativa: List[str] = field(default_factory=list)
+    caracteristicas_comum: List[str] = field(default_factory=list)
     fotos: List[str] = field(default_factory=list)
     lat: Optional[str] = None
     lng: Optional[str] = None
@@ -193,12 +195,18 @@ class ImovelWebDadosImovelAsync:
         if condominio == "0":
             condominio = None
 
-        caracteristicas = []
-        for grupo in (aviso.get("generalFeatures") or {}).values():
+        caracteristicas, priv, comum = [], [], []
+        for grupo_nome, grupo in (aviso.get("generalFeatures") or {}).items():
             for item in (grupo or {}).values():
                 label = item.get("label")
                 valor = item.get("value")
-                caracteristicas.append(f"{label}: {valor}" if valor else label)
+                entry = f"{label}: {valor}" if valor not in (None, "") else label
+                caracteristicas.append(entry)
+                nome_norm = grupo_nome.strip().lower()
+                if "privativa" in nome_norm:
+                    priv.append(entry)
+                elif "comuns" in nome_norm or "comum" in nome_norm:
+                    comum.append(entry)
 
         fotos = [
             foto.get("url1200x1200")
@@ -226,6 +234,8 @@ class ImovelWebDadosImovelAsync:
             descricao=_limpar_descricao(aviso.get("description")),
             data_criacao=aviso.get("publicationDateFormatted"),
             caracteristicas=caracteristicas,
+            caracteristicas_privativa=priv,
+            caracteristicas_comum=comum,
             fotos=fotos,
             lat=_decodificar_coordenada(aviso.get("mapLat")),
             lng=_decodificar_coordenada(aviso.get("mapLng")),

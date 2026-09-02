@@ -1,6 +1,7 @@
 import asyncio
 import logging
 import random
+import re
 import sys
 import time
 from dataclasses import dataclass, field
@@ -45,6 +46,8 @@ class DadosImovel:
     descricao: Optional[str] = None
     data_criacao: Optional[str] = None
     caracteristicas: List[str] = field(default_factory=list)
+    caracteristicas_privativa: List[str] = field(default_factory=list)
+    caracteristicas_comum: List[str] = field(default_factory=list)
     fotos: List[str] = field(default_factory=list)
     link_maps: Optional[str] = None
 
@@ -167,6 +170,22 @@ class ZapScraperDadosImovelAsync:
             logger.debug("Erro ao extrair link maps: %s", e)
             return None
 
+    async def _extrair_caracteristicas(self, page: Page) -> tuple[List[str], List[str]]:
+        priv, comum = [], []
+        try:
+            html = await page.content()
+            m_priv = re.search(r'"privativeItems"\s*:\s*\[(.*?)\]', html, re.S)
+            if m_priv:
+                priv = re.findall(r'"name"\s*:\s*"([^"]+)"', m_priv.group(1))
+            m_com = re.search(r'"commonItems"\s*:\s*\[(.*?)\]', html, re.S)
+            if m_com:
+                comum = re.findall(r'"name"\s*:\s*"([^"]+)"', m_com.group(1))
+        except Exception:
+            pass
+        if not priv and not comum:
+            return [], []
+        return [p.strip() for p in priv if p.strip()], [c.strip() for c in comum if c.strip()]
+
     async def _extrair_dados_da_pagina(self, page: Page) -> DadosImovel:
         """Extrai todos os dados de uma página já carregada."""
         # Dispara todas as extrações em paralelo
@@ -194,6 +213,7 @@ class ZapScraperDadosImovelAsync:
             self._extrair_links_imagens(page),
             self._extrair_link_maps(page),
         )
+        priv, comum = await self._extrair_caracteristicas(page)
 
         return DadosImovel(
             valor_imovel=valor_venda,
@@ -209,6 +229,8 @@ class ZapScraperDadosImovelAsync:
             titulo=titulo,
             descricao=descricao,
             caracteristicas=caracteristicas,
+            caracteristicas_privativa=priv,
+            caracteristicas_comum=comum,
             link_maps=link_maps,
             fotos=fotos,
         )
