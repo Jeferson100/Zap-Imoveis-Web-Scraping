@@ -320,12 +320,28 @@ def limpando_dados(
     arquivo_olx = None
     arquivo_imovelweb = None
 
+    def _safe_concat_endereco(df_original: pd.DataFrame, df_parsed: pd.DataFrame) -> pd.DataFrame:
+        if df_parsed is None or df_parsed.empty:
+            return df_original
+        overlap = set(df_original.columns) & set(df_parsed.columns)
+        if overlap:
+            logger.warning(f"Colunas sobrepostas {overlap} - removendo do original")
+            df_original = df_original.drop(columns=list(overlap))
+        if 'uf' in df_original.columns and 'estado' in df_parsed.columns:
+            df_original = df_original.drop(columns=['uf'])
+        df_out = pd.concat([df_original, df_parsed], axis=1)
+        if df_out.columns.duplicated().any():
+            dups = df_out.columns[df_out.columns.duplicated()].tolist()
+            logger.warning(f"Colunas duplicadas remanescentes {dups} - deduplicando")
+            df_out = df_out.loc[:, ~df_out.columns.duplicated(keep='last')]
+        return df_out
+
     if name_arquivo_zap is not None:
         df_zap, arquivo_zap = carregar_parquet(pasta_dados, name_arquivo_zap)
         if not df_zap.empty and 'endereco' in df_zap.columns:
             df_zap['fonte'] = 'zap_imoveis'
             df_zap_endereco_limpo = df_zap['endereco'].apply(lambda x: limpa_endereco_apply_zap(x, cidade_limpeza, estado_limpeza))
-            df_zap_endereco = pd.concat([df_zap, df_zap_endereco_limpo], axis=1)
+            df_zap_endereco = _safe_concat_endereco(df_zap, df_zap_endereco_limpo)
             logger.info(f"Quantidade de dados ZAP: {len(df_zap)}")
         else:
             logger.warning(f"Nenhum dado ZAP para processar. Pulando...")
@@ -335,7 +351,7 @@ def limpando_dados(
         if not df_vivareal.empty and 'endereco' in df_vivareal.columns:
             df_vivareal['fonte'] = 'viva_real'
             df_vivareal_endereco_limpo = df_vivareal['endereco'].apply(lambda x: limpa_endereco_apply_zap(x, cidade_limpeza, estado_limpeza))
-            df_vivareal_endereco = pd.concat([df_vivareal, df_vivareal_endereco_limpo], axis=1)
+            df_vivareal_endereco = _safe_concat_endereco(df_vivareal, df_vivareal_endereco_limpo)
             logger.info(f"Quantidade de dados Vivareal: {len(df_vivareal)}")
         else:
             logger.warning(f"Nenhum dado Vivareal para processar. Pulando...")
@@ -345,7 +361,7 @@ def limpando_dados(
         if not df_chave_mao.empty and 'endereco' in df_chave_mao.columns:
             df_chave_mao['fonte'] = 'chave_mao'
             df_chave_mao_endereco_limpo = df_chave_mao['endereco'].apply(lambda x: limpa_endereco_apply_chave_mao(x, cidade_limpeza, estado_limpeza))
-            df_chave_mao_endereco = pd.concat([df_chave_mao, df_chave_mao_endereco_limpo], axis=1)
+            df_chave_mao_endereco = _safe_concat_endereco(df_chave_mao, df_chave_mao_endereco_limpo)
             logger.info(f"Quantidade de dados Chave Mao: {len(df_chave_mao)}")
         else:
             logger.warning(f"Nenhum dado Chave Mao para processar. Pulando...")
@@ -355,7 +371,7 @@ def limpando_dados(
         if not df_olx.empty and 'endereco' in df_olx.columns:
             df_olx['fonte'] = 'olx'
             df_olx_endereco_limpo = df_olx['endereco'].apply(lambda x: limpa_endereco_apply_olx(x, cidade_limpeza, estado_limpeza))
-            df_olx_endereco = pd.concat([df_olx, df_olx_endereco_limpo], axis=1)
+            df_olx_endereco = _safe_concat_endereco(df_olx, df_olx_endereco_limpo)
             logger.info(f"Quantidade de dados OLX: {len(df_olx)}")
         else:
             logger.warning(f"Nenhum dado OLX para processar. Pulando...")
@@ -365,7 +381,7 @@ def limpando_dados(
         if not df_imovelweb.empty and 'endereco' in df_imovelweb.columns:
             df_imovelweb['fonte'] = 'imovelweb'
             df_imovelweb_endereco_limpo = df_imovelweb['endereco'].apply(lambda x: limpa_endereco_apply_imovelweb(x, cidade_limpeza, estado_limpeza))
-            df_imovelweb_endereco = pd.concat([df_imovelweb, df_imovelweb_endereco_limpo], axis=1)
+            df_imovelweb_endereco = _safe_concat_endereco(df_imovelweb, df_imovelweb_endereco_limpo)
             logger.info(f"Quantidade de dados ImovelWeb: {len(df_imovelweb)}")
         else:
             logger.warning(f"Nenhum dado ImovelWeb para processar. Pulando...")
