@@ -294,7 +294,7 @@ class ZapImoveisColeta:
 
 if __name__ == "__main__":
 
-    URL_TEMPLATE = "https://www.zapimoveis.com.br/venda/imoveis/sc+joinville/?transacao=venda&onde=%2CSanta+Catarina%2CJoinville%2C%2C%2C%2C%2Ccity%2CBR%3ESanta+Catarina%3ENULL%3EJoinville%2C-26.304376%2C-48.846374%2C&page={pagina}"
+    URL_TEMPLATE = "https://www.zapimoveis.com.br/venda/imoveis/sc+joinville/?transacao=venda&onde=%2CSanta+Catarina%2CJoinville%2C%2C%2C%2C%2Ccity%2CBR%3ESanta+Catarina%3ENULL%3EJoinville%2C-26.304376%2C-48.846374%2C&pagina={pagina}"
 
     orchestrator = ZapImoveisColeta(URL_TEMPLATE, headless=True, max_concurrency=3)
     

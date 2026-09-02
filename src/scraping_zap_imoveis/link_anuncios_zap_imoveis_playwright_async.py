@@ -141,35 +141,32 @@ class ZapScraperLinksAsync:
             page = await self._context.new_page()
             try:
                 await page.add_init_script(ANTI_DETECT_JS)
-
-                await page.goto(url, wait_until="domcontentloaded", timeout=60000)
-
+                await page.goto(url, wait_until="networkidle", timeout=60000)
                 await asyncio.sleep(random.uniform(2, 4))
-
                 await page.evaluate("window.scrollTo(0, document.body.scrollHeight / 3)")
                 await asyncio.sleep(random.uniform(0.5, 1.5))
                 await page.evaluate("window.scrollTo(0, document.body.scrollHeight * 2 / 3)")
                 await asyncio.sleep(random.uniform(0.5, 1.5))
                 await page.evaluate("window.scrollTo(0, document.body.scrollHeight)")
-
-                seletor = 'a.olx-core-surface[href*="/imovel/"]'
-                links = await page.locator(seletor).evaluate_all(
-                    "nodes => nodes.map(n => n.href)"
-                )
-
+                seletores = ['li[data-cy="rp-property-cd"] a[href*="/imovel/"]', 'a[href*="/imovel/"]']
+                links = []
+                for seletor in seletores:
+                    try:
+                        await page.wait_for_selector(seletor, timeout=15000)
+                        links = await page.locator(seletor).evaluate_all("nodes => nodes.map(n => n.href)")
+                        if links:
+                            break
+                    except Exception:
+                        continue
                 if links:
                     logger.info("Links encontrados para a URL %s", url)
                     return list(set(links))
-
                 logger.warning(f"Tentativa {i+1}: Nenhum link encontrado na {url}")
-
             except Exception as e:
                 logger.error(f"Tentativa {i+1} falhou para {url}: {e}")
             finally:
                 await page.close()
-
             await asyncio.sleep(random.uniform(15, 30))
-
         return []
 
 
