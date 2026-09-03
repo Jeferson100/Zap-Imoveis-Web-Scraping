@@ -142,7 +142,8 @@ def gerar_pagina_analise_imoveis(cidade_pth, cidade_nome, prefixo_arquivo, df=No
         if key_df not in st.session_state:
             st.session_state[key_df] = pd.read_parquet(arquivo_mais_recente)
         
-    df = st.session_state[key_df]
+    df_base = st.session_state[key_df].copy()
+    df = df_base.copy()
     
     try:
         flip_dir = BASE_DIR / "dados" / cidade_pth
@@ -156,7 +157,6 @@ def gerar_pagina_analise_imoveis(cidade_pth, cidade_nome, prefixo_arquivo, df=No
                 df_flip[["url", "score_potencial_flip", "potencial_house_flip", "justificativa"]],
                 on="url", how="left",
             )
-            st.session_state[key_df] = df
     except Exception:
         pass
     
@@ -188,112 +188,286 @@ def gerar_pagina_analise_imoveis(cidade_pth, cidade_nome, prefixo_arquivo, df=No
     st.title(f"🏠 Análise de Imóveis {cidade_nome} - {sufixo_uso}")
 
     st.subheader(f'Atualizado em: {data_mais_recente}')
+    
+    """def _clear_all():
+        # Zera as seleções dos multiselects atribuindo uma lista vazia
+        for k in ['bairro_sel', 'tipo_sel', 'rua_sel', 'faixa_sel', 'fonte_sel']:
+            if k in st.session_state:
+                st.session_state[k] = []
+            
+        # 2. Reseta explicitamente os valores min/max dos inputs numéricos para o total do df original
+        st.session_state['preco_min_num'] = int(df['preco_por_m2'].min())
+        st.session_state['preco_max_num'] = int(df['preco_por_m2'].max())
+        
+        st.session_state['quartos_min'] = int(df['quartos'].min())
+        st.session_state['quartos_max'] = int(df['quartos'].max())
+        
+        st.session_state['area_min'] = int(df['metragem'].min())
+        st.session_state['area_max'] = int(df['metragem'].max())
+        
+        st.session_state['valor_min'] = float(df['valor_imovel'].min())
+        st.session_state['valor_max'] = float(df['valor_imovel'].max())
+        
+        st.session_state['vagas_min'] = int(df['vagas'].min())
+        st.session_state['vagas_max'] = int(df['vagas'].max())
+        
+        st.session_state['desvio_min'] = float(df['desvio_mediana'].min())
+        st.session_state['desvio_max'] = float(df['desvio_mediana'].max())
 
     st.sidebar.header('Filtros')
+    
+    st.sidebar.button('🔄 Limpar Filtros', use_container_width=True, key='btn_zerar_tudo', on_click=_clear_all)
 
+    # --- 1. SELEÇÕES DE CATEGORIA ---
     bairros_opcoes = sorted(df['bairro'].unique().tolist())
-
-    bairro_selecionado = st.sidebar.multiselect('Selecione o bairro:', bairros_opcoes, default=[])
+    st.sidebar.markdown('**Bairro:**')
+    bairro_selecionado = st.sidebar.multiselect('', bairros_opcoes, label_visibility="collapsed", key='bairro_sel')
 
     tipos_opcoes = sorted(df['tipo_imovel'].unique().tolist())
-
-    tipo_selecionado = st.sidebar.multiselect('Tipo de imóvel:', tipos_opcoes)
-
-    faixas_opcoes = sorted(df['faixa'].unique().tolist())
-
-    faixas_selecionado = st.sidebar.multiselect(
-        "Padrão do imóvel no bairro (preço/m²):",
-        faixas_opcoes,
-        help="""
-        Classificação baseada na distribuição de preço por m² 
-        dentro do mesmo bairro e tipo de imóvel.
-
-        A divisão é feita por quartis:
-        • Barato → até o 25º percentil  
-        • Medio_baixo→ entre 25º e 50º  
-        • Medio_alto→ entre 50º e 75º  
-        • Alto_padrão → acima do 75º percentil
-        """
-        )
+    st.sidebar.markdown('**Tipo de imóvel:**')
+    tipo_selecionado = st.sidebar.multiselect('', tipos_opcoes, label_visibility="collapsed", key='tipo_sel')
 
     rua_opcoes = sorted(df['rua'].unique().tolist())
+    st.sidebar.markdown('**Rua:**')
+    rua_selecionada = st.sidebar.multiselect('', rua_opcoes, label_visibility="collapsed", key='rua_sel')
 
-    rua_selecionada = st.sidebar.multiselect(
-        "Selecione a rua:",
-        rua_opcoes,
-        )
-    
-    fonte_opcoes = sorted(df['fonte'].unique().tolist())
-
-    fonte_selecionada = st.sidebar.multiselect(
-        "Selecione a fonte:",
-        fonte_opcoes,
-        )
-
-    preco_min, preco_max = st.sidebar.slider(
-        'Nivel de preço por metro quadrado(R$):',
-        min_value=int(df['preco_por_m2'].min()),
-        max_value=int(df['preco_por_m2'].max()),
-        value=(int(df['preco_por_m2'].min()), int(df['preco_por_m2'].max()))
-    )
-
-    # Filtro de quartos
-    quartos_min, quartos_max = st.sidebar.slider(
-        'Número de quartos:',
-        min_value=int(df['quartos'].min()),
-        max_value=int(df['quartos'].max()),
-        value=(int(df['quartos'].min()), int(df['quartos'].max()))
-    )
-
-    # Filtro de metragem
-    area_min, area_max = st.sidebar.slider(
-        'Metragem (m²):',
-        min_value=int(df['metragem'].min()),
-        max_value=int(df['metragem'].max()),
-        value=(int(df['metragem'].min()), int(df['metragem'].max()))
-    )
-
-    desvio_mediana_min = float(df['desvio_mediana'].min())
-    desvio_mediana_max = float(df['desvio_mediana'].max())
-    desvio_mediana_range = st.sidebar.slider(
-        'Desvio do preço por m² em relação ao preço mediano do bairro:',
-        min_value=desvio_mediana_min,
-        max_value=desvio_mediana_max,
-        value=(desvio_mediana_min, desvio_mediana_max)
-    )
-    desvio_mediana_min, desvio_mediana_max = desvio_mediana_range
-
-    vaga_garagem_min, vaga_garagem_max  = st.sidebar.slider(
-        'Vagas de Garagens:',
-        min_value=int(df['vagas'].min()),
-        max_value=int(df['vagas'].max()),
-        value=(int(df['vagas'].min()), int(df['vagas'].max()))
-    )
-
-    # Aplicar filtros
-    df_filtrado = df.copy()
+    # DataFrame intermediário focado APENAS no filtro categórico
+    df_cat = df.copy()
     if bairro_selecionado:
-        df_filtrado = df_filtrado[df_filtrado['bairro'].isin(bairro_selecionado)]
+        df_cat = df_cat[df_cat['bairro'].isin(bairro_selecionado)]
     if tipo_selecionado:
-        df_filtrado = df_filtrado[df_filtrado['tipo_imovel'].isin(tipo_selecionado)]
-    if faixas_selecionado:
-        df_filtrado = df_filtrado[df_filtrado['faixa'].isin(faixas_selecionado)]
+        df_cat = df_cat[df_cat['tipo_imovel'].isin(tipo_selecionado)]
     if rua_selecionada:
-        df_filtrado = df_filtrado[df_filtrado['rua'].isin(rua_selecionada)]
+        df_cat = df_cat[df_cat['rua'].isin(rua_selecionada)]
+
+    # --- 2. FILTROS NUMÉRICOS (DINÂMICOS BASEADOS EM df_cat) ---
+
+    # Função auxiliar para pegar min/max dinâmicos com fallback de segurança
+    def get_bounds(df_sub, col, is_float=False):
+        if df_sub.empty:
+            v_min, v_max = df[col].min(), df[col].max()
+        else:
+            v_min, v_max = df_sub[col].min(), df_sub[col].max()
+        return float(v_min) if is_float else int(v_min), float(v_max) if is_float else int(v_max)
+
+    # Preço por m²
+    min_m2, max_m2 = get_bounds(df_cat, 'preco_por_m2')
+    st.sidebar.markdown('**Preço por metro quadrado(R$):**')
+    col_min, col_max = st.sidebar.columns(2)
+    # Usando key dinâmica para resetar o estado visual do componente quando a categoria muda
+    cat_key = f"{len(bairro_selecionado)}_{len(tipo_selecionado)}_{len(rua_selecionada)}"
+
+    preco_min = col_min.number_input('Mín R$', min_value=min_m2, max_value=max_m2, value=min_m2, step=100, key=f'preco_min_{cat_key}')
+    preco_max = col_max.number_input('Máx R$', min_value=min_m2, max_value=max_m2, value=max_m2, step=100, key=f'preco_max_{cat_key}')
+
+    # Quartos
+    q_min, q_max = get_bounds(df_cat, 'quartos')
+    st.sidebar.markdown('**Número de quartos:**')
+    cq1, cq2 = st.sidebar.columns(2)
+    quartos_min = cq1.number_input('Mín quartos', min_value=q_min, max_value=q_max, value=q_min, step=1, key=f'quartos_min_{cat_key}')
+    quartos_max = cq2.number_input('Máx quartos', min_value=q_min, max_value=q_max, value=q_max, step=1, key=f'quartos_max_{cat_key}')
+
+    # Metragem
+    a_min, a_max = get_bounds(df_cat, 'metragem')
+    st.sidebar.markdown('**Metragem:**')
+    ca1, ca2 = st.sidebar.columns(2)
+    area_min = ca1.number_input('Mín m²', min_value=a_min, max_value=a_max, value=a_min, step=10, key=f'area_min_{cat_key}')
+    area_max = ca2.number_input('Máx m²', min_value=a_min, max_value=a_max, value=a_max, step=10, key=f'area_max_{cat_key}')
+
+    # Valor Imóvel
+    v_min, v_max = get_bounds(df_cat, 'valor_imovel', is_float=True)
+    st.sidebar.markdown('**Valor do imóvel (R$):**')
+    cv1, cv2 = st.sidebar.columns(2)
+    valor_min = cv1.number_input('Mín R$', min_value=v_min, max_value=v_max, value=v_min, step=1000.0, key=f'valor_min_{cat_key}')
+    valor_max = cv2.number_input('Máx R$', min_value=v_min, max_value=v_max, value=v_max, step=1000.0, key=f'valor_max_{cat_key}')
+
+    # Vagas
+    vg_min, vg_max = get_bounds(df_cat, 'vagas')
+    st.sidebar.markdown('**Vagas de Garagens:**')
+    cg1, cg2 = st.sidebar.columns(2)
+    vaga_garagem_min = cg1.number_input('Mín vagas', min_value=vg_min, max_value=vg_max, value=vg_min, step=1, key=f'vagas_min_{cat_key}')
+    vaga_garagem_max = cg2.number_input('Máx vagas', min_value=vg_min, max_value=vg_max, value=vg_max, step=1, key=f'vagas_max_{cat_key}')
+
+    # Desvio Mediana
+    d_min, d_max = get_bounds(df_cat, 'desvio_mediana', is_float=True)
+    st.sidebar.markdown('**Desvio da mediana do bairro:**')
+    cd1, cd2 = st.sidebar.columns(2)
+    desvio_mediana_min = cd1.number_input('Mín desvio', min_value=d_min, max_value=d_max, value=d_min, step=0.1, key=f'desvio_min_{cat_key}')
+    desvio_mediana_max = cd2.number_input('Máx desvio', min_value=d_min, max_value=d_max, value=d_max, step=0.1, key=f'desvio_max_{cat_key}')
+
+    # --- 3. APLICAÇÃO FINAL DOS FILTROS ---
+    df_filtrado = df_cat[
+        (df_cat['preco_por_m2'] >= min(preco_min, preco_max)) &
+        (df_cat['preco_por_m2'] <= max(preco_min, preco_max)) &
+        (df_cat['quartos'] >= min(quartos_min, quartos_max)) &
+        (df_cat['quartos'] <= max(quartos_min, quartos_max)) &
+        (df_cat['metragem'] >= min(area_min, area_max)) &
+        (df_cat['metragem'] <= max(area_min, area_max)) &
+        (df_cat['valor_imovel'] >= min(valor_min, valor_max)) &
+        (df_cat['valor_imovel'] <= max(valor_min, valor_max)) &
+        (df_cat['desvio_mediana'] >= min(desvio_mediana_min, desvio_mediana_max)) &
+        (df_cat['desvio_mediana'] <= max(desvio_mediana_min, desvio_mediana_max)) &
+        (df_cat['vagas'] >= min(vaga_garagem_min, vaga_garagem_max)) &
+        (df_cat['vagas'] <= max(vaga_garagem_min, vaga_garagem_max))
+    ]
+
+    # Demais seleções secundárias (Fonte e Faixa)
+    fonte_opcoes = sorted(df['fonte'].unique().tolist())
+    st.sidebar.markdown('**Fonte:**')
+    fonte_selecionada = st.sidebar.multiselect('', fonte_opcoes, label_visibility="collapsed", key='fonte_sel')
+
+    faixas_opcoes = sorted(df['faixa'].unique().tolist())
+    st.sidebar.markdown('**Faixa:**')
+    faixas_selecionado = st.sidebar.multiselect('', faixas_opcoes, label_visibility="collapsed", key='faixa_sel')
+
     if fonte_selecionada:
         df_filtrado = df_filtrado[df_filtrado['fonte'].isin(fonte_selecionada)]
-    df_filtrado = df_filtrado[
-        (df_filtrado['preco_por_m2'] >= preco_min) &
-        (df_filtrado['preco_por_m2'] <= preco_max) &
-        (df_filtrado['quartos'] >= quartos_min) &
-        (df_filtrado['quartos'] <= quartos_max) &
-        (df_filtrado['metragem'] >= area_min) &
-        (df_filtrado['metragem'] <= area_max) &
-        (df_filtrado['desvio_mediana'] >= desvio_mediana_min) &
-        (df_filtrado['desvio_mediana'] <= desvio_mediana_max) &
-        (df_filtrado['vagas'] >= vaga_garagem_min) &
-        (df_filtrado['vagas'] <= vaga_garagem_max)
+
+    if faixas_selecionado:
+        df_filtrado = df_filtrado[df_filtrado['faixa'].isin(faixas_selecionado)]"""
+    
+    if 'reset_counter' not in st.session_state:
+        st.session_state['reset_counter'] = 0
+
+    def _clear_all():
+        # 1. Zera todas as seleções dos multiselects
+        multiselect_keys = ['bairro_sel', 'tipo_sel', 'rua_sel', 'faixa_sel', 'fonte_sel']
+        for k in multiselect_keys:
+            if k in st.session_state:
+                st.session_state[k] = []
+                
+        # 2. Incrementa o contador para forçar a recriação das chaves
+        st.session_state['reset_counter'] += 1
+        r_id = st.session_state['reset_counter']
+        
+        # 3. Força os valores dos number_inputs a voltarem para o Mín/Máx do DataFrame original
+        st.session_state[f'preco_min_{r_id}'] = int(df['preco_por_m2'].min())
+        st.session_state[f'preco_max_{r_id}'] = int(df['preco_por_m2'].max())
+        
+        st.session_state[f'quartos_min_{r_id}'] = int(df['quartos'].min())
+        st.session_state[f'quartos_max_{r_id}'] = int(df['quartos'].max())
+        
+        st.session_state[f'area_min_{r_id}'] = int(df['metragem'].min())
+        st.session_state[f'area_max_{r_id}'] = int(df['metragem'].max())
+        
+        st.session_state[f'valor_min_{r_id}'] = float(df['valor_imovel'].min())
+        st.session_state[f'valor_max_{r_id}'] = float(df['valor_imovel'].max())
+        
+        st.session_state[f'vagas_min_{r_id}'] = int(df['vagas'].min())
+        st.session_state[f'vagas_max_{r_id}'] = int(df['vagas'].max())
+        
+        st.session_state[f'desvio_min_{r_id}'] = float(df['desvio_mediana'].min())
+        st.session_state[f'desvio_max_{r_id}'] = float(df['desvio_mediana'].max())
+
+    st.sidebar.header('Filtros')
+    st.sidebar.button('🔄 Limpar Filtros', use_container_width=True, key='btn_zerar_tudo', on_click=_clear_all)
+
+    # Chave de reset usada nos componentes
+    r_id = st.session_state['reset_counter']
+
+    # --- 1. SELEÇÕES DE CATEGORIA PRINCIPAIS ---
+    bairros_opcoes = sorted(df['bairro'].unique().tolist())
+    st.sidebar.markdown('**Bairro:**')
+    bairro_selecionado = st.sidebar.multiselect('', bairros_opcoes, label_visibility="collapsed", key='bairro_sel')
+
+    tipos_opcoes = sorted(df['tipo_imovel'].unique().tolist())
+    st.sidebar.markdown('**Tipo de imóvel:**')
+    tipo_selecionado = st.sidebar.multiselect('', tipos_opcoes, label_visibility="collapsed", key='tipo_sel')
+
+    rua_opcoes = sorted(df['rua'].unique().tolist())
+    st.sidebar.markdown('**Rua:**')
+    rua_selecionada = st.sidebar.multiselect('', rua_opcoes, label_visibility="collapsed", key='rua_sel')
+
+    # DataFrame intermediário focado apenas nas categorias selecionadas
+    df_cat = df.copy()
+    if bairro_selecionado:
+        df_cat = df_cat[df_cat['bairro'].isin(bairro_selecionado)]
+    if tipo_selecionado:
+        df_cat = df_cat[df_cat['tipo_imovel'].isin(tipo_selecionado)]
+    if rua_selecionada:
+        df_cat = df_cat[df_cat['rua'].isin(rua_selecionada)]
+
+    # --- 2. FILTROS NUMÉRICOS ---
+
+    def get_bounds(df_sub, col, is_float=False):
+        if df_sub.empty:
+            v_min, v_max = df[col].min(), df[col].max()
+        else:
+            v_min, v_max = df_sub[col].min(), df_sub[col].max()
+        return float(v_min) if is_float else int(v_min), float(v_max) if is_float else int(v_max)
+
+    # Preço por m²
+    min_m2, max_m2 = get_bounds(df_cat, 'preco_por_m2')
+    st.sidebar.markdown('**Preço por metro quadrado(R$):**')
+    col_min, col_max = st.sidebar.columns(2)
+    preco_min = col_min.number_input('Mín R$', min_value=min_m2, max_value=max_m2, value=min_m2, step=100, key=f'preco_min_{r_id}')
+    preco_max = col_max.number_input('Máx R$', min_value=min_m2, max_value=max_m2, value=max_m2, step=100, key=f'preco_max_{r_id}')
+
+    # Quartos
+    q_min, q_max = get_bounds(df_cat, 'quartos')
+    st.sidebar.markdown('**Número de quartos:**')
+    cq1, cq2 = st.sidebar.columns(2)
+    quartos_min = cq1.number_input('Mín quartos', min_value=q_min, max_value=q_max, value=q_min, step=1, key=f'quartos_min_{r_id}')
+    quartos_max = cq2.number_input('Máx quartos', min_value=q_min, max_value=q_max, value=q_max, step=1, key=f'quartos_max_{r_id}')
+
+    # Metragem
+    a_min, a_max = get_bounds(df_cat, 'metragem')
+    st.sidebar.markdown('**Metragem:**')
+    ca1, ca2 = st.sidebar.columns(2)
+    area_min = ca1.number_input('Mín m²', min_value=a_min, max_value=a_max, value=a_min, step=10, key=f'area_min_{r_id}')
+    area_max = ca2.number_input('Máx m²', min_value=a_min, max_value=a_max, value=a_max, step=10, key=f'area_max_{r_id}')
+
+    # Valor Imóvel
+    v_min, v_max = get_bounds(df_cat, 'valor_imovel', is_float=True)
+    st.sidebar.markdown('**Valor do imóvel (R$):**')
+    cv1, cv2 = st.sidebar.columns(2)
+    valor_min = cv1.number_input('Mín R$', min_value=v_min, max_value=v_max, value=v_min, step=1000.0, key=f'valor_min_{r_id}')
+    valor_max = cv2.number_input('Máx R$', min_value=v_min, max_value=v_max, value=v_max, step=1000.0, key=f'valor_max_{r_id}')
+
+    # Vagas
+    vg_min, vg_max = get_bounds(df_cat, 'vagas')
+    st.sidebar.markdown('**Vagas de Garagens:**')
+    cg1, cg2 = st.sidebar.columns(2)
+    vaga_garagem_min = cg1.number_input('Mín vagas', min_value=vg_min, max_value=vg_max, value=vg_min, step=1, key=f'vagas_min_{r_id}')
+    vaga_garagem_max = cg2.number_input('Máx vagas', min_value=vg_min, max_value=vg_max, value=vg_max, step=1, key=f'vagas_max_{r_id}')
+
+    # Desvio Mediana
+    d_min, d_max = get_bounds(df_cat, 'desvio_mediana', is_float=True)
+    st.sidebar.markdown('**Desvio da mediana do bairro:**')
+    cd1, cd2 = st.sidebar.columns(2)
+    desvio_mediana_min = cd1.number_input('Mín desvio', min_value=d_min, max_value=d_max, value=d_min, step=0.1, key=f'desvio_min_{r_id}')
+    desvio_mediana_max = cd2.number_input('Máx desvio', min_value=d_min, max_value=d_max, value=d_max, step=0.1, key=f'desvio_max_{r_id}')
+
+    # --- 3. SELEÇÕES DE CATEGORIA SECUNDÁRIAS ---
+    faixas_opcoes = sorted(df['faixa'].unique().tolist())
+    st.sidebar.markdown('**Faixa: Padrão do imóvel no bairro (preço/m²):**')
+    faixas_selecionado = st.sidebar.multiselect('', faixas_opcoes, label_visibility="collapsed", key='faixa_sel')
+
+    fonte_opcoes = sorted(df['fonte'].unique().tolist())
+    st.sidebar.markdown('**Fonte:**')
+    fonte_selecionada = st.sidebar.multiselect('', fonte_opcoes, label_visibility="collapsed", key='fonte_sel')
+
+    # --- 4. APLICAÇÃO DOS FILTROS NO DATAFRAME ---
+    df_filtrado = df_cat[
+        (df_cat['preco_por_m2'] >= min(preco_min, preco_max)) &
+        (df_cat['preco_por_m2'] <= max(preco_min, preco_max)) &
+        (df_cat['quartos'] >= min(quartos_min, quartos_max)) &
+        (df_cat['quartos'] <= max(quartos_min, quartos_max)) &
+        (df_cat['metragem'] >= min(area_min, area_max)) &
+        (df_cat['metragem'] <= max(area_min, area_max)) &
+        (df_cat['valor_imovel'] >= min(valor_min, valor_max)) &
+        (df_cat['valor_imovel'] <= max(valor_min, valor_max)) &
+        (df_cat['desvio_mediana'] >= min(desvio_mediana_min, desvio_mediana_max)) &
+        (df_cat['desvio_mediana'] <= max(desvio_mediana_min, desvio_mediana_max)) &
+        (df_cat['vagas'] >= min(vaga_garagem_min, vaga_garagem_max)) &
+        (df_cat['vagas'] <= max(vaga_garagem_min, vaga_garagem_max))
     ]
+
+    if fonte_selecionada:
+        df_filtrado = df_filtrado[df_filtrado['fonte'].isin(fonte_selecionada)]
+
+    if faixas_selecionado:
+        df_filtrado = df_filtrado[df_filtrado['faixa'].isin(faixas_selecionado)]
 
     col_principal1, col_principal2 = st.columns([1.2,1.8])
     

@@ -280,15 +280,19 @@ class OLXScraperAsync:
             if m_com:
                 comum = re.findall(r'"label"\s*:\s*"([^"]+)"', m_com.group(1))
             if priv or comum:
-                return [html_mod.unescape(p).strip() for p in priv if p.strip()], [html_mod.unescape(c).strip() for c in comum if c.strip()]
+                priv = [html_mod.unescape(p).strip() for p in priv if p.strip()]
+                comum = [html_mod.unescape(c).strip() for c in comum if c.strip()]
+            else:
+                raise Exception("fallback")
         except Exception:
-            pass
-        try:
-            priv = await self._page.locator('div.advc-optional-subsection:has-text("Características do imóvel") span.typo-body-small').all_inner_texts()
-            comum = await self._page.locator('div.advc-optional-subsection:has-text("Características do condomínio") span.typo-body-small').all_inner_texts()
-            return [p.strip() for p in priv if p.strip()], [c.strip() for c in comum if c.strip()]
-        except Exception:
-            return [], []
+            try:
+                priv = await self._page.locator('div.advc-optional-subsection:has-text("Características do imóvel") span.typo-body-small').all_inner_texts()
+                comum = await self._page.locator('div.advc-optional-subsection:has-text("Características do condomínio") span.typo-body-small').all_inner_texts()
+                priv = [p.strip() for p in priv if p.strip()]
+                comum = [c.strip() for c in comum if c.strip()]
+            except Exception:
+                return [], []
+        return priv, comum
 
     async def _extrair_dados_da_pagina(self, url: str) -> DadosImovel:
         (

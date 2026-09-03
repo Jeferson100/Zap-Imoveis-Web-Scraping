@@ -577,6 +577,28 @@ def pirabeiraba_dona_francisca(bairro):
         return 'pirabeiraba'
     return bairro
 
+
+def _forcar_areas(priv: List[str], comum: List[str]) -> tuple[List[str], List[str]]:
+    termos_privativa = ["churrasqueira", "closet", "lavabo", "sacada", "mobiliado"]
+    termos_comum = ["quadra"]
+    mover_para_comum = [s for s in priv if any(t in s.lower() for t in termos_comum)]
+    if mover_para_comum:
+        priv = [s for s in priv if not any(t in s.lower() for t in termos_comum)]
+        comum_low = [c.lower() for c in comum]
+        for term in termos_comum:
+            if any(term in s.lower() for s in mover_para_comum) and not any(term in c for c in comum_low):
+                comum.append("Quadra poliesportiva")
+    mover_para_priv = [s for s in comum if any(t in s.lower() for t in termos_privativa)]
+    if mover_para_priv:
+        comum = [s for s in comum if not any(t in s.lower() for t in termos_privativa)]
+        priv_low = [p.lower() for p in priv]
+        for term, titulo in [("churrasqueira", "Churrasqueira"), ("closet", "Closet"), ("lavabo", "Lavabo"), ("sacada", "Sacada"), ("mobiliado", "Mobiliado")]:
+            if any(term in s.lower() for s in mover_para_priv) and not any(term in p for p in priv_low):
+                if term == "churrasqueira" and any("parrilla" in s.lower() for s in mover_para_priv):
+                    titulo = "Churrasqueira (parrilla)"
+                priv.append(titulo)
+    return priv, comum
+
 """def limpar_metragem(dados) -> float:
     try:
         if not dados or not isinstance(dados, str):
