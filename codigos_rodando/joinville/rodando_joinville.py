@@ -27,13 +27,13 @@ if __name__ == "__main__":
    
     fluxo = [
         #(f"uv run {cidade}_coleta_dados_zap_imoveis.py", "Scraper Zap Imóveis"),
-       (f"uv run {cidade}_coleta_dados_viva_real.py", "Scraper Viva Real"),
+       #(f"uv run {cidade}_coleta_dados_viva_real.py", "Scraper Viva Real"),
         #(f"uv run {cidade}_coleta_dados_chave_mao.py", "Scraper Chave na Mão"),
-        #(f"uv run {cidade}_coleta_dados_olx_0_67.py", "Scraper OLX"),
-        #(f"uv run {cidade}_coleta_dados_olx_68_90.py", "Scraper OLX"),
-        #(f"uv run {cidade}_coleta_dados_olx_91_125.py", "Scraper OLX"),
-        #(f"uv run {cidade}_coleta_dados_olx_126_195.py", "Scraper OLX"),
-        #(f"uv run {cidade}_coleta_dados_olx_196_infinito.py", "Scraper OLX"),
+        (f"uv run {cidade}_coleta_dados_olx_0_67.py", "Scraper OLX"),
+        (f"uv run {cidade}_coleta_dados_olx_68_90.py", "Scraper OLX"),
+        (f"uv run {cidade}_coleta_dados_olx_91_125.py", "Scraper OLX"),
+        (f"uv run {cidade}_coleta_dados_olx_126_195.py", "Scraper OLX"),
+        (f"uv run {cidade}_coleta_dados_olx_196_infinito.py", "Scraper OLX"),
         #(f"uv run {cidade}_limpando_dados_imoveis.py", "Processamento de Dados"),
         #(f"uv run {cidade}_criando_indice_localizacao.py", "Criação do Índice de Localização")
         #(f"uv run {cidade}_coleta_alugueis_chave_mao.py", "Scraper Chave na Mão"),
