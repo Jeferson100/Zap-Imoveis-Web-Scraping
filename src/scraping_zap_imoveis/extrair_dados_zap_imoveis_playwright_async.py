@@ -147,8 +147,16 @@ class ZapScraperDadosImovelAsync:
     async def _extrair_links_imagens(self, page: Page) -> List[str]:
         links = []
         try:
+            await page.wait_for_selector('[data-testid="carousel-photos"]', timeout=10000)
+            #await page.wait_for_timeout(2000)
+
+            carousel = page.locator('[data-testid="carousel-photos"]')
+            if await carousel.count():
+                await carousel.scroll_into_view_if_needed()
+                #await page.wait_for_timeout(1000)
+
             sources = page.locator(
-                'ul[data-testid="carousel-photos"] source[type="image/webp"]'
+                '[data-testid="carousel-photos"] picture source[srcset*="resizedimgs"]'
             )
             count = await sources.count()
             for i in range(count):
@@ -157,7 +165,14 @@ class ZapScraperDadosImovelAsync:
                     url_alta_res = srcset.split(",")[-1].strip().split(" ")[0]
                     links.append(url_alta_res)
 
-            logger.info("Encontradas imagens")
+            if not links:
+                html = await page.content()
+                img_urls = re.findall(r'"image"\s*:\s*\[(.*?)\]', html, re.S)
+                if img_urls:
+                    urls = re.findall(r'"([^"]+)"', img_urls[0])
+                    links = urls
+
+            logger.info(f"Encontradas {len(links)} imagens")
         except Exception as e:
             logger.error("Erro ao extrair imagens: %s", e)
 
@@ -170,21 +185,76 @@ class ZapScraperDadosImovelAsync:
             logger.debug("Erro ao extrair link maps: %s", e)
             return None
 
+    _ATRIBUTOS_BASICOS = re.compile(
+        r"^\s*(\d+([.,]\d+)?\s*m[²2]|\d+\s*(quarto|banheiro|vaga|su[ií]te)s?)\s*$",
+        re.I,
+    )
+
+    async def _expandir_lista_caracteristicas(self, page: Page, painel) -> None:
+        btn = painel.locator('button[data-cy="ldp-TextCollapse-btn"]').first
+        try:
+            if await btn.count() == 0:
+                return
+            texto = (await btn.inner_text(timeout=1500)).lower()
+            if "mostrar mais" in texto:
+                await btn.click()
+                await page.wait_for_timeout(400)
+        except Exception:
+            return
+
+    async def _itens_amenities(self, painel) -> List[str]:
+        textos = await painel.locator(
+            'ul[data-testid="amenities-list"] li span.amenities-item-text'
+        ).all_text_contents()
+        vistos = set()
+        itens = []
+        for texto in textos:
+            limpo = texto.strip()
+            if not limpo or limpo in vistos:
+                continue
+            vistos.add(limpo)
+            itens.append(limpo)
+        return itens
+
     async def _extrair_caracteristicas(self, page: Page) -> tuple[List[str], List[str]]:
         priv, comum = [], []
         try:
-            html = await page.content()
-            m_priv = re.search(r'"privativeItems"\s*:\s*\[(.*?)\]', html, re.S)
-            if m_priv:
-                priv = re.findall(r'"name"\s*:\s*"([^"]+)"', m_priv.group(1))
-            m_com = re.search(r'"commonItems"\s*:\s*\[(.*?)\]', html, re.S)
-            if m_com:
-                comum = re.findall(r'"name"\s*:\s*"([^"]+)"', m_com.group(1))
-        except Exception:
-            pass
-        if not priv and not comum:
-            return [], []
-        return [p.strip() for p in priv if p.strip()], [c.strip() for c in comum if c.strip()]
+            aba_imovel = page.locator("#unitAmenities")
+            if await aba_imovel.count():
+                await aba_imovel.click()
+                painel = page.locator("#panel-unitAmenities")
+                await painel.wait_for(state="visible", timeout=5000)
+                await self._expandir_lista_caracteristicas(page, painel)
+                priv = await self._itens_amenities(painel)
+
+            aba_condo = page.locator("#sectionAmenities")
+            if await aba_condo.count():
+                await aba_condo.click()
+                painel = page.locator("#panel-sectionAmenities")
+                await painel.wait_for(state="visible", timeout=5000)
+                await self._expandir_lista_caracteristicas(page, painel)
+                comum = await self._itens_amenities(painel)
+
+            if not priv and not comum:
+                secao = page.locator("#amenities-section")
+                if await secao.count():
+                    await self._expandir_lista_caracteristicas(page, secao)
+                    priv = await self._itens_amenities(secao)
+
+            if not priv and not comum:
+                html = await page.content()
+                m_priv = re.search(r'"privativeItems"\s*:\s*\[(.*?)\]', html, re.S)
+                if m_priv:
+                    priv = re.findall(r'"name"\s*:\s*"([^"]+)"', m_priv.group(1))
+                m_com = re.search(r'"commonItems"\s*:\s*\[(.*?)\]', html, re.S)
+                if m_com:
+                    comum = re.findall(r'"name"\s*:\s*"([^"]+)"', m_com.group(1))
+        except Exception as e:
+            logger.debug("Erro ao extrair caracteristicas privativa/comum: %s", e)
+
+        priv = [p for p in priv if p and not self._ATRIBUTOS_BASICOS.match(p)]
+        comum = [c for c in comum if c]
+        return priv, comum
 
     async def _extrair_dados_da_pagina(self, page: Page) -> DadosImovel:
         """Extrai todos os dados de uma página já carregada."""
@@ -247,7 +317,7 @@ class ZapScraperDadosImovelAsync:
             try:
                 await page.add_init_script(ANTI_DETECT_JS)
                 logger.info("Tentativa %d/%d — %s", tentativa, self.MAX_RETRIES, self.url)
-                await page.goto(self.url, wait_until="domcontentloaded", timeout=30000)
+                await page.goto(self.url, wait_until="networkidle", timeout=30000)
                 dados = await self._extrair_dados_da_pagina(page)
                 logger.info("Dados extraídos com sucesso")
                 return dados
