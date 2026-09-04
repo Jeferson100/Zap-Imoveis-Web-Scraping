@@ -19,7 +19,7 @@ import requests
 from tqdm import tqdm
 import re
 import unicodedata
-from typing import Optional, Tuple
+from typing import Optional, Tuple, List
 import unicodedata
 
 warnings.filterwarnings("ignore")

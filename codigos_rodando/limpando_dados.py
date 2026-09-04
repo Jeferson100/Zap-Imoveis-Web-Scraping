@@ -26,6 +26,8 @@ from datetime import datetime
 import json
 from pathlib import Path
 import re
+import unicodedata
+from typing import List
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
