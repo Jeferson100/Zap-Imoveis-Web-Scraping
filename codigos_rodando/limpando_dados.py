@@ -96,7 +96,7 @@ async def limpando_dados_cidades(pd_data, batch, pasta_dados: Path, cidade_limpe
 
     pd_data_ano_publicacao['data_criacao'] = pd_data_ano_publicacao['data_criacao'].apply(converter_para_data)
 
-    pd_data_ano_publicacao['dias_publicacao'] = (pd.to_datetime(datetime.now().strftime('%Y-%m-%d')) - pd.to_datetime(pd_data_ano_publicacao['data_criacao'], format='%d/%m/%Y')).dt.days
+    pd_data_ano_publicacao['dias_publicacao'] = (pd.to_datetime(datetime.now().strftime('%Y-%m-%d')) - pd.to_datetime(pd_data_ano_publicacao['data_criacao'], format='%d/%m/%Y', errors='coerce')).dt.days
     
     logger.info(f"Coluna 'data_criacao' limpa. Registros restantes: {pd_data_ano_publicacao.shape}")
 
@@ -450,7 +450,11 @@ def limpando_dados(
     logger.info(f"Coluna 'bairro' corrigida...")
     
     df_limpo = df_limpo.groupby('bairro').filter(lambda x: len(x) > 1)
-    
+
+    for col in ('lat', 'lng'):
+        if col in df_limpo.columns:
+            df_limpo[col] = pd.to_numeric(df_limpo[col], errors='coerce')
+
     # Usa a primeira fonte que realmente carregou um arquivo
     data_ref = "sem_data"
     for arquivo in (arquivo_zap, arquivo_vivareal, arquivo_chave_mao, arquivo_olx, arquivo_imovelweb):

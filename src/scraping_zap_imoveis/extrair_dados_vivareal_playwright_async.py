@@ -1,4 +1,5 @@
 import asyncio
+import json
 import logging
 import random
 import re
@@ -145,6 +146,31 @@ class VivaRealDadosImovelAsync:
         except Exception:
             return await self._safe_get_text(page, "iptu", is_testid=True)
 
+    async def _extrair_preco_via_jsonld(self, page: Page) -> Optional[str]:
+        """Extrai o preço via JSON-LD (fallback robusto quando o CSS selector falha)."""
+        try:
+            scripts = page.locator('script[type="application/ld+json"]')
+            count = await scripts.count()
+            for i in range(count):
+                content = await scripts.nth(i).inner_text(timeout=2000)
+                data = json.loads(content)
+                if data.get("@type") == "Product":
+                    price = data.get("offers", {}).get("price")
+                    if price is not None:
+                        valor = f"R$ {price:,.0f}".replace(",", "X").replace(".", ",").replace("X", ".")
+                        logger.debug("Preço extraído via JSON-LD: %s", valor)
+                        return valor
+        except Exception as e:
+            logger.debug("Falha ao extrair preço via JSON-LD: %s", e)
+        return None
+
+    async def _extrair_preco_css_ou_jsonld(self, page: Page) -> Optional[str]:
+        """Tenta o CSS selector; se falhar, usa JSON-LD como fallback."""
+        valor = await self._safe_get_text(page, "span.typo-title-small.font-bold.text-nowrap")
+        if valor:
+            return valor
+        return await self._extrair_preco_via_jsonld(page)
+
     async def _extrair_links_imagens(self, page: Page) -> List[str]:
         links = []
         try:
@@ -267,7 +293,7 @@ class VivaRealDadosImovelAsync:
             self._safe_get_text(page, "xpath=//p[text()='Banheiros']/following-sibling::div/p"),
             self._safe_get_text(page, "xpath=//p[text()='Vagas']/following-sibling::div/p"),
             self._safe_get_text(page, "xpath=//p[text()='Quartos']/following-sibling::div/p"),
-            self._safe_get_text(page, ".value-item__value-highlight .value-item__value"),
+            self._extrair_preco_css_ou_jsonld(page),
             self._safe_get_text(page, "condoFee", is_testid=True),
             self._safe_get_text(page, "location-address", is_testid=True),
             self._extrair_iptu(page),

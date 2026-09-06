@@ -1,0 +1,47 @@
+================================================================================
+CLICKING 'Mostrar mais' IN AMENITIES SECTION
+================================================================================
+
+Full amenities-list HTML after click:
+<ul class="grid grid-cols-2 gap-x-4 gap-y-2 w-full" data-testid="amenities-list"><li class="flex items-center text-neutral-120 gap-1" itemprop="floorSize"><span aria-label="floorSize"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" class="text-feedback-success-100"><path d="M12 2a10 10 0 1 1 0 20 10 10 0 0 1 0-20Zm0 1.5a8.5 8.5 0 1 0 0 17 8.5 8.5 0 0 0 0-17Zm-1.25 9.94 4.47-4.47a.75.75 0 0 1 1.13.98l-.07.08-5 5a.75.75 0 0 1-.98.07l-.08-.07-2.5-2.5a.75.75 0 0 1 .98-1.13l.08.07 1.97 1.97Z" fill="currentColor"></path></svg></span><span class="amenities-item-text" data-cy="ldp-propertyFeatures-txt">34 m┬▓ </span></li><li class="flex items-center text-neutral-120 gap-1" itemprop="numberOfRooms"><span aria-label="numberOfRooms"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" class="text-feedback-success-100"><path d="M12 2a10 10 0 1 1 0 20 10 10 0 0 1 0-20Zm0 1.5a8.5 8.5 0 1 0 0 17 8.5 8.5 0 0 0 0-17Zm-1.25 9.94 4.47-4.47a.75.75 0 0 1 1.13.98l-.07.08-5 5a.75.75 0 0 1-.98.07l-.08-.07-2.5-2.5a.75.75 0 0 1 .98-1.13l.08.07 1.97 1.97Z" fill="currentColor"></path></svg></span><span class="amenities-item-text" data-cy="ldp-propertyFeatures-txt">0 quartos</span></li><li class="flex items-center text-neutral-120 gap-1" itemprop="numberOfBathroomsTotal"><span aria-label="numberOfBathroomsTotal"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" class="text-feedback-success-100"><path d="M12 2a10 10 0 1 1 0 20 10 10 0 0 1 0-20Zm0 1.5a8.5 8.5 0 1 0 0 17 8.5 8.5 0 0 0 0-17Zm-1.25 9.94 4.47-4.47a.75.75 0 0 1 1.13.98l-.07.08-5 5a.75.75 0 0 1-.98.07l-.08-.07-2.5-2.5a.75.75 0 0 1 .98-1.13l.08.07 1.97 1.97Z" fill="currentColor"></path></svg></span><span class="amenities-item-text" data-cy="ldp-propertyFeatures-txt">1 banheiro</span></li><li class="flex items-center text-neutral-120 gap-1" itemprop="numberOfParkingSpaces"><span aria-label="numberOfParkingSpaces"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" class="text-feedback-success-100"><path d="M12 2a10 10 0 1 1 0 20 10 10 0 0 1 0-20Zm0 1.5a8.5 8.5 0 1 0 0 17 8.5 8.5 0 0 0 0-17Zm-1.25 9.94 4.47-4.47a.75.75 0 0 1 1.13.98l-.07.08-5 5a.75.75 0 0 1-.98.07l-.08-.07-2.5-2.5a.75.75 0 0 1 .98-1.13l.08.07 1.97 1.97Z" fill="currentColor"></path></svg></span><span class="amenities-item-text" data-cy="ldp-propertyFeatures-txt">0 vagas</span></li><li class="flex items-center text-neutral-120 gap-1" itemprop="numberOfSuites"><span aria-label="numberOfSuites"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" class="text-feedback-success-100"><path d="M12 2a10 10 0 1 1 0 20 10 10 0 0 1 0-20Zm0 1.5a8.5 8.5 0 1 0 0 17 8.5 8.5 0 0 0 0-17Zm-1.25 9.94 4.47-4.47a.75.75 0 0 1 1.13.98l-.07.08-5 5a.75.75 0 0 1-.98.07l-.08-.07-2.5-2.5a.75.75 0 0 1 .98-1.13l.08.07 1.97 1.97Z" fill="currentColor"></path></svg></span><span class="amenities-item-text" data-cy="ldp-propertyFeatures-txt">0 su├¡tes</span></li></ul>
+
+================================================================================
+CONDOM├ìNIO TAB CONTENT
+================================================================================
+
+Trying to click Condom├¡nio tab...
+
+Condom├¡nio panel after click (first 5000 chars):
+<div class="olx-tabs__tabpanel olx-tabs__tabpanel--selected" data-ds-component="DS-TabPanel" id="panel-sectionAmenities" role="tabpanel" aria-labelledby="sectionAmenities" aria-hidden="false"><div class=""><div data-cy="ldp-TextCollapse"><div class="TextCollapse-module-scss-module__JmQPqq__wrapper" style="max-height: 64px;"><div><ul class="grid grid-cols-2 gap-x-4 gap-y-2 w-full" data-testid="amenities-list"><li class="amenities-item" itemprop="ELEVATOR"><span aria-label="Elevador"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" class="text-feedback-success-100"><path d="M12 2a10 10 0 1 1 0 20 10 10 0 0 1 0-20Zm0 1.5a8.5 8.5 0 1 0 0 17 8.5 8.5 0 0 0 0-17Zm-1.25 9.94 4.47-4.47a.75.75 0 0 1 1.13.98l-.07.08-5 5a.75.75 0 0 1-.98.07l-.08-.07-2.5-2.5a.75.75 0 0 1 .98-1.13l.08.07 1.97 1.97Z" fill="currentColor"></path></svg></span><span class="amenities-item-text" data-cy="ldp-propertyFeatures-txt">Elevador</span></li></ul></div></div></div></div></div>
+
+================================================================================
+ALL TAB PANEL CONTENT
+================================================================================
+
+  Panel #0: id=panel-sectionAmenities
+    Class: olx-tabs__tabpanel olx-tabs__tabpanel--selected
+    Text: Elevador
+    HTML (first 2000 chars): <div class="olx-tabs__tabpanel olx-tabs__tabpanel--selected" data-ds-component="DS-TabPanel" id="panel-sectionAmenities" role="tabpanel" aria-labelledby="sectionAmenities" aria-hidden="false"><div class=""><div data-cy="ldp-TextCollapse"><div class="TextCollapse-module-scss-module__JmQPqq__wrapper" style="max-height: 64px;"><div><ul class="grid grid-cols-2 gap-x-4 gap-y-2 w-full" data-testid="amenities-list"><li class="amenities-item" itemprop="ELEVATOR"><span aria-label="Elevador"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" class="text-feedback-success-100"><path d="M12 2a10 10 0 1 1 0 20 10 10 0 0 1 0-20Zm0 1.5a8.5 8.5 0 1 0 0 17 8.5 8.5 0 0 0 0-17Zm-1.25 9.94 4.47-4.47a.75.75 0 0 1 1.13.98l-.07.08-5 5a.75.75 0 0 1-.98.07l-.08-.07-2.5-2.5a.75.75 0 0 1 .98-1.13l.08.07 1.97 1.97Z" fill="currentColor"></path></svg></span><span class="amenities-item-text" data-cy="ldp-propertyFeatures-txt">Elevador</span></li></ul></div></div></div></div></div>
+
+================================================================================
+WINDOW DATA CHECK
+================================================================================
+  No window state found
+
+================================================================================
+dmData CHECK
+================================================================================
+  dmData: {"visitor":{},"inventory":{"negocio":"SALE","state":"undefined","city":"undefined","zone":"undefined","nbh":"undefined","bairro_vip":"__","cidade_vip":"_"}}
+
+================================================================================
+ALL JSON-CONTAINING SCRIPTS
+================================================================================
+
+================================================================================
+FULL AMENITIES SECTION HTML (from DOM)
+================================================================================
+<div class="olx-tabs AmenitiesTabs-module-scss-module__BTAcCG__amenitiesTabsWrapper" data-ds-component="DS-Tabs"><div class="olx-tabs__navigation"><div class="olx-tabs__scroll-container" role="none"><div role="tablist" class="olx-tabs__tablist"><button class="olx-tabs__tab" data-ds-component="DS-Tab" id="unitAmenities" role="tab" type="button" aria-controls="panel-unitAmenities" tabindex="-1" aria-selected="false" aria-setsize="2" aria-posinset="1"><span class="olx-tabs__tab-label">Im├│vel</span></button><button class="olx-tabs__tab olx-tabs__tab--active" data-ds-component="DS-Tab" id="sectionAmenities" role="tab" type="button" aria-controls="panel-sectionAmenities" tabindex="0" aria-selected="true" aria-setsize="2" aria-posinset="2"><span class="olx-tabs__tab-label">Condom├¡nio</span></button></div></div></div><div class="olx-tabs__panels"><div class="olx-tabs__tabpanel olx-tabs__tabpanel--selected" data-ds-component="DS-TabPanel" id="panel-sectionAmenities" role="tabpanel" aria-labelledby="sectionAmenities" aria-hidden="false"><div class=""><div data-cy="ldp-TextCollapse"><div class="TextCollapse-module-scss-module__JmQPqq__wrapper" style="max-height: 64px;"><div><ul class="grid grid-cols-2 gap-x-4 gap-y-2 w-full" data-testid="amenities-list"><li class="amenities-item" itemprop="ELEVATOR"><span aria-label="Elevador"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" class="text-feedback-success-100"><path d="M12 2a10 10 0 1 1 0 20 10 10 0 0 1 0-20Zm0 1.5a8.5 8.5 0 1 0 0 17 8.5 8.5 0 0 0 0-17Zm-1.25 9.94 4.47-4.47a.75.75 0 0 1 1.13.98l-.07.08-5 5a.75.75 0 0 1-.98.07l-.08-.07-2.5-2.5a.75.75 0 0 1 .98-1.13l.08.07 1.97 1.97Z" fill="currentColor"></path></svg></span><span class="amenities-item-text" data-cy="ldp-propertyFeatures-txt">Elevador</span></li></ul></div></div></div></div></div></div></div>
+
+================================================================================
+COMPLETE INSPECTION DONE
+================================================================================

@@ -1252,6 +1252,12 @@ def _calcular_centroides(df):
     existentes = df.dropna(subset=['lat', 'lng'])
     if existentes.empty:
         return {}
+    existentes = existentes.copy()
+    existentes['lat'] = pd.to_numeric(existentes['lat'], errors='coerce')
+    existentes['lng'] = pd.to_numeric(existentes['lng'], errors='coerce')
+    existentes = existentes.dropna(subset=['lat', 'lng'])
+    if existentes.empty:
+        return {}
     return existentes.groupby('bairro')[['lat', 'lng']].mean().to_dict('index')
 
 
