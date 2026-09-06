@@ -206,7 +206,7 @@ class ChavesNaMaoScraperAsync:
 
         valor_limpo = await self._extrair_valor_imovel()
         metragem_total, metragem_util = await self._extrair_metragens()
-        metragem = metragem_total or metragem_util
+        metragem = metragem_util or metragem_total
         priv, comum = await self._extrair_caracteristicas()
 
         return DadosImovel(
