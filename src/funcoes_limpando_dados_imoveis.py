@@ -991,37 +991,51 @@ def transformar_vagas(valor):
 def classificar_tipo_imovel(descricao) -> str:
     if not isinstance(descricao, str):
         return 'outros'
-    
+
     descricao_lower = descricao.lower()
-    
+
     # Ordem importa: tipos mais específicos primeiro
     TIPOS = {
         'apartamento': [
             'apartamento', 'apto', 'ap ', 'ap.', 'apartarmento', 'aparamento',
-            'cobertura', 'flat', 'kitnet', 'studio', 'penthouse', 'loft',
-            'residenz', 'residence', 'tower', 'apartments', 'edifício', 'ed.',
-            'mansões suspensas', 'soft' # Comum em 'Apto Soft'
+            'cobertura', 'flat', 'kitnet', 'kitinete', 'studio', 'penthouse', 'loft',
+            'residenz', 'residence', 'tower', 'apartments', 'edifício', 'edificio', 'ed.',
+            'mansões suspensas', 'soft',
+            'lançamento', 'lancamento', 'lanço', 'lanco',
+            'empreendimento',
+            'condomínio club', 'condominio club',
+            'giardino',
         ],
         'casa': [
-            'casa', 'sobrado', 'geminado', 'germinado', 'triplex', 'duplex', 
-            'residência', 'villa', 'mansion', 'mansão', 'casa de condomínio',
-            'casa comercial', 'casa de vila', 'residencia'
+            'casa', 'sobrado', 'geminado', 'germinado', 'triplex', 'duplex',
+            'residência', 'residencia', 'villa', 'mansion', 'mansão',
+            'casa de condomínio', 'casa comercial', 'casa de vila',
         ],
         'terreno': [
-            'terreno', 'lote', 'loteamento', 'área urbana', 'propriedade exclusiva'
+            'terreno', 'lote', 'loteamento', 'área urbana', 'area urbana',
+            'propriedade exclusiva',
+            'área à venda', 'area à venda', 'area a venda',
+            'área industrial', 'area industrial',
         ],
         'comercial': [
-            'sala comercial', 'loja', 'ponto comercial', 'prédio comercial', 
-            'conjunto comercial', 'escritório', 'consultório', 'comercial/residencial'
+            'sala comercial', 'sala à venda', 'sala,',
+            'loja', 'ponto comercial', 'prédio comercial',
+            'conjunto comercial', 'escritório', 'consultório',
+            'comercial/residencial',
+            'imóvel comercial', 'imovel comercial',
         ],
         'galpao': [
-            'galpão', 'depósito', 'armazém', 'pavilhão', 'barracão'
+            'galpão', 'galpao', 'depósito', 'deposito', 'armazém', 'armazem',
+            'pavilhão', 'pavilhao', 'barracão', 'barracao',
         ],
         'rural': [
-            'fazenda', 'sítio', 'chácara', 'área rural', 'haras'
+            'fazenda', 'sítio', 'sitio', 'chácara', 'chacara',
+            'área rural', 'area rural', 'haras',
         ],
         'predio_inteiro': [
-            'hotel', 'motel', 'pousada', 'prédio inteiro', 'edifício inteiro'
+            'hotel', 'motel', 'pousada', 'prédio inteiro', 'predio inteiro',
+            'edifício inteiro', 'edificio inteiro',
+            'prédio à venda', 'predio à venda', 'predio a venda',
         ],
     }
 
@@ -1030,20 +1044,23 @@ def classificar_tipo_imovel(descricao) -> str:
         if any(palavra in descricao_lower for palavra in palavras):
             return tipo
 
-    # 2. Heurística extra para títulos genéricos (Ex: "Imóvel para venda possui 91m² com 2 quartos")
-    # Geralmente, se tem quartos e metragem baixa em títulos genéricos, é 'casa' ou 'apartamento'.
-    # Como padrão de segurança para o seu modelo, se contiver 'quartos' ou 'suítes' e não foi pego antes:
-    if any(p in descricao_lower for p in ['quarto', 'suíte', 'dormitório']):
-        return 'apartamento' # Ou 'casa', mas apartamento é estatisticamente mais comum em anúncios genéricos
+    # 2. Heurísticas extras para títulos genéricos
+    if any(p in descricao_lower for p in ['quarto', 'suíte', 'suite', 'dormitório', 'dormitorio']):
+        return 'apartamento'
+
+    if 'comercial' in descricao_lower:
+        return 'comercial'
 
     return 'outros'
 
+
 def reclassificar_outros(descricao) -> str:
     try:
-        i_split = descricao.split(',')[0].strip().lower()
-        resultado = classificar_tipo_imovel(i_split)
+        if not isinstance(descricao, str) or not descricao.strip():
+            return 'outros'
+        resultado = classificar_tipo_imovel(descricao)
         return resultado
-    except:
+    except Exception:
         return 'outros'
 
 async def extrair_coords_url(link_maps: str) -> tuple:

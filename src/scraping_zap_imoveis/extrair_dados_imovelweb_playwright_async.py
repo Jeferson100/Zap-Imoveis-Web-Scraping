@@ -190,7 +190,7 @@ class ImovelWebDadosImovelAsync:
         util = _feature(main_features, "CFT101")
         metragem_total = f"{total} m²" if total else None
         metragem_util = f"{util} m²" if util else None
-        metragem = metragem_total or metragem_util
+        metragem = metragem_util or metragem_total
         condominio = aviso.get("expenses")
         if condominio == "0":
             condominio = None
@@ -249,7 +249,7 @@ class ImovelWebDadosImovelAsync:
         generic = re.search(r"(\d[\d.,]*)\s*m2", titulo, re.IGNORECASE)
         metragem_total = f"{tot.group(1)} m²" if tot else (f"{generic.group(1)} m²" if generic else None)
         metragem_util = f"{util.group(1)} m²" if util else None
-        metragem = metragem_total or metragem_util
+        metragem = metragem_util or metragem_total
         return DadosImovelImovelWeb(
             url=self.url,
             titulo=titulo,
