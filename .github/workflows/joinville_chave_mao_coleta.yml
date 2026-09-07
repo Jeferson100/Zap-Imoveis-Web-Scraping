@@ -29,8 +29,23 @@ jobs:
       cidade_pasta: joinville
       arquivo_rodando_imovel: joinville_coleta_dados_chave_mao_151_270.py
   
-  coleta_chave_mao_271_infinito:
+  coleta_chave_mao_271_500:
     uses: ./.github/workflows/pipeline_cidade_rodando.yml
     with:
       cidade_pasta: joinville
-      arquivo_rodando_imovel: joinville_coleta_dados_chave_mao_271_infinito.py
+      arquivo_rodando_imovel: joinville_coleta_dados_chave_mao_271_500.py
+  coleta_chave_mao_501_infinito:
+    uses: ./.github/workflows/pipeline_cidade_rodando.yml
+    with:
+      cidade_pasta: joinville
+      arquivo_rodando_imovel: joinville_coleta_dados_chave_mao_501_infinito.py
+  
+  juncao_chave_mao:
+    needs: [coleta_chave_mao_0_70, coleta_chave_mao_71_100, coleta_chave_mao_101_150, coleta_chave_mao_151_270, coleta_chave_mao_271_500, coleta_chave_mao_501_infinito]
+    uses: ./.github/workflows/pipeline_cidade_rodando.yml
+    with:
+      cidade_pasta: joinville
+      arquivo_rodando_imovel: joinville_juncao_dados.py
+  
+  
+  
