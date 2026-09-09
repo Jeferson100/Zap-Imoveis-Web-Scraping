@@ -342,7 +342,7 @@ modelos_candidatos = {
     "gradient_boosting": factory.gradient_boosting,
     "lightgbm": factory.lightgbm,
     "catboost": factory.catboost,
-    "hist_gradient_boosting": factory.hist_gb,
+    "hist_gb": factory.hist_gb,
 }
 
 logger.info("Modelos candidatos: %s", list(modelos_candidatos.keys()))
