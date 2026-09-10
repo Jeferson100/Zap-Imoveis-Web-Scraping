@@ -455,6 +455,90 @@ def limpando_dados(
         if col in df_limpo.columns:
             df_limpo[col] = pd.to_numeric(df_limpo[col], errors='coerce')
 
+    # ── Predição de idade (se modelo treinado existir) ────────────────
+    import json
+    import joblib
+
+    logger.info("🔍 Buscando modelos de idade treinados...")
+    metadados_idade = sorted(pasta_dados.glob(f"*_preditor_idade_*.json"))
+    joblibs_idade = sorted(pasta_dados.glob(f"*_preditor_idade_*.joblib"))
+
+    logger.info("Metadados encontrados: %d | Modelos encontrados: %d",
+                len(metadados_idade), len(joblibs_idade))
+
+    if metadados_idade and joblibs_idade:
+        try:
+            meta_path = metadados_idade[-1]
+            joblib_path = joblibs_idade[-1]
+
+            logger.info("Usando metadado: %s", meta_path.name)
+            logger.info("Usando modelo: %s", joblib_path.name)
+
+            with open(meta_path, 'r', encoding='utf-8') as f:
+                metadados = json.load(f)
+
+            features_num = metadados.get("features_numericas", [])
+            features_cat = metadados.get("features_categoricas", [])
+            modelo_nome = metadados.get("modelo", "desconhecido")
+
+            logger.info("Modelo: %s | Features num: %d | Features cat: %d",
+                        modelo_nome, len(features_num), len(features_cat))
+
+            logger.info("Carregando modelo...")
+            modelo_idade = joblib.load(joblib_path)
+
+            logger.info("Preparando features para predição...")
+            df_pred = df_limpo.copy()
+
+            for col in features_num:
+                if col in df_pred.columns:
+                    df_pred[col] = pd.to_numeric(df_pred[col], errors="coerce")
+
+            if "bairro" in df_pred.columns:
+                df_pred["bairro"] = df_pred["bairro"].fillna("desconhecido").astype(str)
+
+            if "quartos_por_metro" in features_num:
+                df_pred["quartos_por_metro"] = df_pred.get("quartos", 0) / df_pred["metragem"].replace(0, np.nan)
+            if "vagas_por_metro" in features_num:
+                df_pred["vagas_por_metro"] = df_pred.get("vagas", 0) / df_pred["metragem"].replace(0, np.nan)
+            if "banheiros_por_quarto" in features_num:
+                df_pred["banheiros_por_quarto"] = df_pred.get("banheiros", 0) / df_pred.get("quartos", 1).replace(0, np.nan)
+
+            logger.info("Predizendo idade para %d registros...", len(df_pred))
+            all_features = features_num + features_cat
+            X_pred = df_pred[all_features]
+            df_limpo["predicao_idade"] = modelo_idade.predict(X_pred)
+
+            logger.info("✅ predicao_idade adicionada com sucesso (modelo: %s)", joblib_path.name)
+
+            # Deletar versões anteriores (manter o mais recente)
+            if len(metadados_idade) > 1:
+                antigos_meta = metadados_idade[:-1]
+                antigos_joblib = joblibs_idade[:-1]
+
+                for meta in antigos_meta:
+                    try:
+                        meta.unlink()
+                        logger.info("🗑️ Metadado antigo removido: %s", meta.name)
+                    except Exception as e:
+                        logger.warning("Erro ao remover metadado %s: %s", meta.name, e)
+
+                for jb in antigos_joblib:
+                    try:
+                        jb.unlink()
+                        logger.info("🗑️ Modelo antigo removido: %s", jb.name)
+                    except Exception as e:
+                        logger.warning("Erro ao remover modelo %s: %s", jb.name, e)
+
+                logger.info("🗑️ %d versões antigas removidas (metadados + modelos)", len(antigos_meta))
+            else:
+                logger.info("ℹ️ Apenas 1 versão encontrada. Nenhum arquivo removido.")
+
+        except Exception as e:
+            logger.warning("⚠️ Erro ao predizer idade: %s. Coluna predicao_idade não adicionada.", e)
+    else:
+        logger.info("ℹ️ Nenhum modelo de idade encontrado. Coluna predicao_idade não adicionada.")
+
     # Usa a primeira fonte que realmente carregou um arquivo
     data_ref = "sem_data"
     for arquivo in (arquivo_zap, arquivo_vivareal, arquivo_chave_mao, arquivo_olx, arquivo_imovelweb):
