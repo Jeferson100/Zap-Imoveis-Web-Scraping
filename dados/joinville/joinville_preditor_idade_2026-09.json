@@ -1,0 +1,46 @@
+{
+  "modelo": "hist_gb",
+  "params": {
+    "max_iter": 800,
+    "max_depth": 9,
+    "learning_rate": 0.041209922254512275,
+    "min_samples_leaf": 22,
+    "l2_regularization": 3.3966781336261036
+  },
+  "features_numericas": [
+    "metragem",
+    "quartos",
+    "banheiros",
+    "vagas",
+    "suites",
+    "lat",
+    "lng",
+    "valor_imovel",
+    "condominio",
+    "preco_por_m2",
+    "dias_publicacao",
+    "quartos_por_metro",
+    "vagas_por_metro",
+    "banheiros_por_quarto"
+  ],
+  "features_categoricas": [
+    "bairro",
+    "tipo_imovel"
+  ],
+  "metricas_cv": {
+    "rmse": 3.0292748405810626,
+    "n_folds": 5,
+    "n_trials": 80
+  },
+  "metricas_teste": {
+    "rmse": 1.003040445825371,
+    "mae": 0.32846787468415656,
+    "mape": Infinity,
+    "mdape": 1.5872110546119034,
+    "r2": 0.990418219985535,
+    "rmsle": 0.14392764503212366
+  },
+  "n_amostras": 4477,
+  "data_treino": "2026-09-10T00:15:51.841860",
+  "arquivo_dados": "/home/runner/work/Zap-Imoveis-Web-Scraping/Zap-Imoveis-Web-Scraping/dados/joinville/joinville_imovelweb_2026-09.parquet"
+}
