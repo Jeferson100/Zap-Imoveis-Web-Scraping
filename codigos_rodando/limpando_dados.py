@@ -38,6 +38,32 @@ warnings.filterwarnings("ignore")
 
 start_time = time.time()
 
+CARAC_COMUM_FLAGS = [
+    "elevador", "piscina", "churrasqueira_parrilla",
+    "playground", "fitness_sala_de_ginastica",
+]
+
+CARAC_PRIVADA_FLAGS = [
+    "varanda", "lavanderia", "piscina", "ar_condicionado",
+]
+
+
+def _normalizar_item(item):
+    return (
+        item.lower()
+        .replace(" ", "_")
+        .replace("/", "_")
+        .replace("(", "")
+        .replace(")", "")
+    )
+
+
+def processar_flags(lista, prefixo, flags):
+    if not isinstance(lista, list) or len(lista) == 0:
+        return {f"{prefixo}_{f}": 0 for f in flags}
+    itens_norm = [_normalizar_item(i) for i in lista]
+    return {f"{prefixo}_{f}": 1 if f in itens_norm else 0 for f in flags}
+
 async def limpando_dados_cidades(pd_data, batch, pasta_dados: Path, cidade_limpeza = 'joinville', estado_limpeza = 'sc', cidade_localizacao = 'Joinville', estado_localizacao = 'SC',  tipo_async=True,  pais='Brasil'): 
        
     logger.info("Iniciando o processo de limpeza de dados de imóveis...")    
@@ -502,8 +528,34 @@ def limpando_dados(
                 df_pred["quartos_por_metro"] = df_pred.get("quartos", 0) / df_pred["metragem"].replace(0, np.nan)
             if "vagas_por_metro" in features_num:
                 df_pred["vagas_por_metro"] = df_pred.get("vagas", 0) / df_pred["metragem"].replace(0, np.nan)
-            if "banheiros_por_quarto" in features_num:
-                df_pred["banheiros_por_quarto"] = df_pred.get("banheiros", 0) / df_pred.get("quartos", 1).replace(0, np.nan)
+
+            if "n_carac_comum" in features_num:
+                df_pred["n_carac_comum"] = df_pred["caracteristicas_comum"].apply(
+                    lambda x: len(x) if isinstance(x, list) else 0
+                )
+            if "n_carac_privada" in features_num:
+                df_pred["n_carac_privada"] = df_pred["caracteristicas_privativa"].apply(
+                    lambda x: len(x) if isinstance(x, list) else 0
+                )
+
+            tem_comum = any(f.startswith("comum_") for f in features_num)
+            tem_priv = any(f.startswith("priv_") for f in features_num)
+            if tem_comum or tem_priv:
+                for idx, row in df_pred.iterrows():
+                    if tem_comum:
+                        for flag, val in processar_flags(row.get("caracteristicas_comum", []), "comum", CARAC_COMUM_FLAGS).items():
+                            if flag in features_num:
+                                df_pred.at[idx, flag] = val
+                    if tem_priv:
+                        for flag, val in processar_flags(row.get("caracteristicas_privativa", []), "priv", CARAC_PRIVADA_FLAGS).items():
+                            if flag in features_num:
+                                df_pred.at[idx, flag] = val
+
+                for prefixo, flags in [("comum", CARAC_COMUM_FLAGS), ("priv", CARAC_PRIVADA_FLAGS)]:
+                    for f in flags:
+                        col = f"{prefixo}_{f}"
+                        if col in df_pred.columns and col in features_num:
+                            df_pred[col] = df_pred[col].astype(int)
 
             logger.info("Predizendo idade para %d registros...", len(df_pred))
             all_features = features_num + features_cat
