@@ -45,9 +45,10 @@ def _cleanup_transform(X):
 class PreprocessadorFactory:
     """Cria ColumnTransformers para pre-processamento de features."""
 
-    def __init__(self, numeric_features, categorical_features):
+    def __init__(self, numeric_features, categorical_features, categorical_max_categories=None):
         self.numeric_features = list(numeric_features)
         self.categorical_features = list(categorical_features)
+        self.categorical_max_categories = categorical_max_categories or {}
 
     def criar(
         self,
@@ -63,8 +64,6 @@ class PreprocessadorFactory:
             imputer_cat = SimpleImputer(strategy="constant", fill_value="desconhecido")
         if scaler is None:
             scaler = StandardScaler()
-        if encoder is None:
-            encoder = OneHotEncoder(handle_unknown="ignore", max_categories=30, sparse_output=False)
 
         transform_step = TRANSFORMACOES.get(transform) if isinstance(transform, str) else transform
         numeric_steps = [
@@ -79,16 +78,31 @@ class PreprocessadorFactory:
         numeric_steps.append(("scaler", scaler))
 
         numeric_pipe = Pipeline(numeric_steps)
-        categorical_pipe = Pipeline([
-            ("imputer", imputer_cat),
-            ("ohe", encoder),
-        ])
 
         transformers = []
         if self.numeric_features:
             transformers.append(("num", numeric_pipe, self.numeric_features))
+
         if self.categorical_features:
-            transformers.append(("cat", categorical_pipe, self.categorical_features))
+            groups = {}
+            for feat in self.categorical_features:
+                mc = self.categorical_max_categories.get(feat, 30)
+                groups.setdefault(mc, []).append(feat)
+
+            if encoder is not None and len(groups) <= 1:
+                cat_pipe = Pipeline([
+                    ("imputer", imputer_cat),
+                    ("ohe", encoder),
+                ])
+                transformers.append(("cat", cat_pipe, self.categorical_features))
+            else:
+                for i, (mc, feats) in enumerate(groups.items()):
+                    ohe = OneHotEncoder(handle_unknown="ignore", max_categories=mc, sparse_output=False)
+                    cat_pipe = Pipeline([
+                        ("imputer", imputer_cat),
+                        ("ohe", ohe),
+                    ])
+                    transformers.append((f"cat_{i}", cat_pipe, feats))
 
         return ColumnTransformer(transformers)
 

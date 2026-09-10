@@ -62,12 +62,38 @@ MAPA_BAIRROS = {
 }
 
 NUMERIC_FEATURES = [
-    "metragem", "quartos", "banheiros", "vagas", "suites",
-    "lat", "lng", "valor_imovel", "condominio",
+    "metragem", "quartos", "vagas",
+    "valor_imovel", "condominio",
     "preco_por_m2", "dias_publicacao",
 ]
 
 CATEGORICAL_FEATURES = ["bairro", "tipo_imovel"]
+
+CARAC_COMUM_FLAGS = [
+    "elevador", "piscina", "churrasqueira_parrilla",
+    "playground", "fitness_sala_de_ginastica",
+]
+
+CARAC_PRIVADA_FLAGS = [
+    "varanda", "lavanderia", "piscina", "ar_condicionado",
+]
+
+
+def _normalizar_item(item):
+    return (
+        item.lower()
+        .replace(" ", "_")
+        .replace("/", "_")
+        .replace("(", "")
+        .replace(")", "")
+    )
+
+
+def processar_flags(lista, prefixo, flags):
+    if not isinstance(lista, list) or len(lista) == 0:
+        return {f"{prefixo}_{f}": 0 for f in flags}
+    itens_norm = [_normalizar_item(i) for i in lista]
+    return {f"{prefixo}_{f}": 1 if f in itens_norm else 0 for f in flags}
 
 
 # ── Funções auxiliares ────────────────────────────────────────────────
@@ -307,8 +333,24 @@ if "bairro" in df.columns:
 
 df["quartos_por_metro"] = df.get("quartos", 0) / df["metragem"].replace(0, np.nan)
 df["vagas_por_metro"] = df.get("vagas", 0) / df["metragem"].replace(0, np.nan)
-df["banheiros_por_quarto"] = df.get("banheiros", 0) / df.get("quartos", 1).replace(0, np.nan)
-numeric_features += ["quartos_por_metro", "vagas_por_metro", "banheiros_por_quarto"]
+numeric_features += ["quartos_por_metro", "vagas_por_metro"]
+
+df["n_carac_comum"] = df["caracteristicas_comum"].apply(lambda x: len(x) if isinstance(x, list) else 0)
+df["n_carac_privada"] = df["caracteristicas_privativa"].apply(lambda x: len(x) if isinstance(x, list) else 0)
+numeric_features += ["n_carac_comum", "n_carac_privada"]
+
+for idx, row in df.iterrows():
+    for flag, val in processar_flags(row.get("caracteristicas_comum", []), "comum", CARAC_COMUM_FLAGS).items():
+        df.at[idx, flag] = val
+    for flag, val in processar_flags(row.get("caracteristicas_privativa", []), "priv", CARAC_PRIVADA_FLAGS).items():
+        df.at[idx, flag] = val
+
+for prefixo, flags in [("comum", CARAC_COMUM_FLAGS), ("priv", CARAC_PRIVADA_FLAGS)]:
+    for f in flags:
+        col = f"{prefixo}_{f}"
+        if col in df.columns:
+            df[col] = df[col].astype(int)
+            numeric_features.append(col)
 
 logger.info("Features numéricas (%d): %s", len(numeric_features), numeric_features)
 logger.info("Features categóricas (%d): %s", len(categorical_features), categorical_features)
@@ -326,9 +368,11 @@ logger.info("Target stats: mean=%.2f, std=%.2f, min=%.0f, max=%.0f",
 
 # ── 6. Criar pré-processador ─────────────────────────────────────────
 logger.info("[ETAPA 6/11] Criando pré-processador...")
+CATEGORICAL_MAX_CATEGORIES = {"bairro": 10, "tipo_imovel": 4}
 preprocessador = PreprocessadorFactory(
     numeric_features=numeric_features,
     categorical_features=categorical_features,
+    categorical_max_categories=CATEGORICAL_MAX_CATEGORIES,
 ).criar()
 logger.info("✓ Pré-processador criado")
 
@@ -372,6 +416,7 @@ pipeline_final = Pipeline([
     ("preprocessador", PreprocessadorFactory(
         numeric_features=numeric_features,
         categorical_features=categorical_features,
+        categorical_max_categories=CATEGORICAL_MAX_CATEGORIES,
     ).criar()),
     ("modelo", modelo_fn(_TrialStub(melhor_params))),
 ])
