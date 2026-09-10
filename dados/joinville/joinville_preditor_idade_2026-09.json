@@ -1,46 +1,52 @@
 {
-  "modelo": "hist_gb",
+  "modelo": "gradient_boosting",
   "params": {
-    "max_iter": 800,
-    "max_depth": 9,
-    "learning_rate": 0.041209922254512275,
-    "min_samples_leaf": 22,
-    "l2_regularization": 3.3966781336261036
+    "n_estimators": 200,
+    "max_depth": 8,
+    "learning_rate": 0.07815050801145722,
+    "subsample": 0.7373794316941379,
+    "min_samples_leaf": 2
   },
   "features_numericas": [
     "metragem",
     "quartos",
-    "banheiros",
     "vagas",
-    "suites",
-    "lat",
-    "lng",
     "valor_imovel",
     "condominio",
     "preco_por_m2",
     "dias_publicacao",
     "quartos_por_metro",
     "vagas_por_metro",
-    "banheiros_por_quarto"
+    "n_carac_comum",
+    "n_carac_privada",
+    "comum_elevador",
+    "comum_piscina",
+    "comum_churrasqueira_parrilla",
+    "comum_playground",
+    "comum_fitness_sala_de_ginastica",
+    "priv_varanda",
+    "priv_lavanderia",
+    "priv_piscina",
+    "priv_ar_condicionado"
   ],
   "features_categoricas": [
     "bairro",
     "tipo_imovel"
   ],
   "metricas_cv": {
-    "rmse": 3.0292748405810626,
+    "rmse": 3.1144325148437852,
     "n_folds": 5,
     "n_trials": 80
   },
   "metricas_teste": {
-    "rmse": 1.003040445825371,
-    "mae": 0.32846787468415656,
+    "rmse": 0.48111275791942565,
+    "mae": 0.2120792542395266,
     "mape": Infinity,
-    "mdape": 1.5872110546119034,
-    "r2": 0.990418219985535,
-    "rmsle": 0.14392764503212366
+    "mdape": 2.614144054013899,
+    "r2": 0.9977955357934288,
+    "rmsle": 0.09244442572359367
   },
   "n_amostras": 4477,
-  "data_treino": "2026-09-10T00:15:51.841860",
+  "data_treino": "2026-09-10T17:43:37.670619",
   "arquivo_dados": "/home/runner/work/Zap-Imoveis-Web-Scraping/Zap-Imoveis-Web-Scraping/dados/joinville/joinville_imovelweb_2026-09.parquet"
 }
