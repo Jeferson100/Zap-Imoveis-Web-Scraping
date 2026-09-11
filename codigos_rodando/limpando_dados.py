@@ -96,6 +96,33 @@ async def limpando_dados_cidades(pd_data, batch, pasta_dados: Path, cidade_limpe
 
     logger.info(f"Coluna 'metragem' limpa. Registros restantes: {pd_data_metragem.shape}")
 
+    for col in ('metragem_util', 'metragem_total'):
+        if col in pd_data_metragem.columns:
+            pd_data_metragem[col] = pd_data_metragem[col].apply(limpar_metragem)
+            pd_data_metragem.loc[pd_data_metragem[col] == 0.0, col] = np.nan
+
+    if 'metragem_util' in pd_data_metragem.columns and 'metragem_total' in pd_data_metragem.columns:
+        tem_util = pd_data_metragem['metragem_util'].notna()
+        tem_total_sem_util = pd_data_metragem['metragem_total'].notna() & ~tem_util
+
+        pd_data_metragem['metragem'] = np.where(
+            tem_util,
+            pd_data_metragem['metragem_util'],
+            np.where(
+                tem_total_sem_util,
+                pd_data_metragem['metragem_total'] * 0.70,
+                pd_data_metragem['metragem']
+            )
+        )
+    elif 'metragem_util' in pd_data_metragem.columns:
+        tem_util = pd_data_metragem['metragem_util'].notna()
+        pd_data_metragem.loc[tem_util, 'metragem'] = pd_data_metragem.loc[tem_util, 'metragem_util']
+    elif 'metragem_total' in pd_data_metragem.columns:
+        tem_total = pd_data_metragem['metragem_total'].notna()
+        pd_data_metragem.loc[tem_total, 'metragem'] = pd_data_metragem.loc[tem_total, 'metragem_total'] * 0.70
+
+    logger.info(f"Metragem util/total processada. Registros restantes: {pd_data_metragem.shape}")
+
     pd_data_valor_imovel = pd_data_metragem.copy()
 
     try:
