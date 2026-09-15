@@ -10,7 +10,7 @@ const CIDADES_NOMES = {
     'florianopolis': 'Florianópolis',
     'blumenau': 'Blumenau',
     'balneario_camboriu': 'Balneário Camboriú',
-    'balneario_picarras': 'Balneário Picarras',
+    'balneario_picaras': 'Balneário Picarras',
     'itajai': 'Itajaí',
     'itapema': 'Itapema',
     'itapoa': 'Itapoá',

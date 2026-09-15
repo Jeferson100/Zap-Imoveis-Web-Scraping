@@ -10,7 +10,7 @@ CIDADES = {
     'florianopolis': 'Florianópolis',
     'blumenau': 'Blumenau',
     'balneario_camboriu': 'Balneário Camboriú',
-    'balneario_picarras': 'Balneário Picarras',
+    'balneario_picaras': 'Balneário Picarras',
     'itajai': 'Itajaí',
     'itapema': 'Itapema',
     'itapoa': 'Itapoá',
@@ -25,21 +25,58 @@ dados_aluguel_cidades = {}
 cidades_com_aluguel = []
 
 
+def _carregar_sao_paulo(base_dir):
+    """Carrega todos os bairros de São Paulo de subdiretórios."""
+    pasta = base_dir / 'dados' / 'sao_paulo'
+    subpastas = [d for d in pasta.iterdir() if d.is_dir()]
+    if not subpastas:
+        print('  Nenhum bairro encontrado em sao_paulo/.')
+        return None, None
+
+    dfs = []
+    data_ref = ''
+    for subpasta in sorted(subpastas):
+        bairro = subpasta.name
+        arquivos = list(subpasta.glob(f'sao_paulo_{bairro}_imoveis_limpo_*.parquet'))
+        if not arquivos:
+            continue
+        arq = max(arquivos, key=lambda f: f.stem.split('_')[-1])
+        data_ref = arq.stem.split('_')[-1]
+        print(f'  Carregando {bairro}: {arq.name}...')
+        df = pd.read_parquet(arq)
+        if 'bairro' not in df.columns or df['bairro'].isna().all():
+            df['bairro'] = bairro.replace('-', ' ').title()
+        dfs.append(df)
+
+    if not dfs:
+        print('  Nenhum dado encontrado para São Paulo.')
+        return None, None
+
+    df = pd.concat(dfs, ignore_index=True)
+    print(f'  Total: {len(df)} imóveis de {len(dfs)} bairros ({data_ref})')
+    return df, data_ref
+
+
 def exportar_cidade(cidade, base_dir):
-    pasta_dados = base_dir / 'dados' / cidade
-    if not pasta_dados.exists():
-        print(f'  Pasta {pasta_dados} não encontrada. Pulando.')
-        return None, None
+    if cidade == 'sao_paulo':
+        df, data_ref = _carregar_sao_paulo(base_dir)
+        if df is None:
+            return None, None
+    else:
+        pasta_dados = base_dir / 'dados' / cidade
+        if not pasta_dados.exists():
+            print(f'  Pasta {pasta_dados} não encontrada. Pulando.')
+            return None, None
 
-    arquivos = list(pasta_dados.glob(f'{cidade}_imoveis_limpo_*.parquet'))
-    if not arquivos:
-        print(f'  Nenhum parquet encontrado para {cidade}. Pulando.')
-        return None, None
+        arquivos = list(pasta_dados.glob(f'{cidade}_imoveis_limpo_*.parquet'))
+        if not arquivos:
+            print(f'  Nenhum parquet encontrado para {cidade}. Pulando.')
+            return None, None
 
-    arquivo = max(arquivos, key=lambda f: f.stem.split('_')[-1])
-    data_ref = arquivo.stem.split('_')[-1]
-    print(f'  Carregando {arquivo.name}...')
-    df = pd.read_parquet(arquivo)
+        arquivo = max(arquivos, key=lambda f: f.stem.split('_')[-1])
+        data_ref = arquivo.stem.split('_')[-1]
+        print(f'  Carregando {arquivo.name}...')
+        df = pd.read_parquet(arquivo)
 
     cols_base = [
         'url', 'titulo', 'bairro', 'rua', 'tipo_imovel', 'fonte',
