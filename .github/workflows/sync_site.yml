@@ -1,0 +1,46 @@
+name: Sincronizar Site Analise-imoveis
+on:
+  workflow_run:
+    workflows: ["Rodando Exportacao Site Joinville"]
+    types:
+      - completed
+  workflow_dispatch:
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    if: ${{ github.event.workflow_run.conclusion == 'success' || github.event_name == 'workflow_dispatch' }}
+    steps:
+      - name: Copiar arquivos do repo
+        uses: actions/checkout@v4
+
+      - name: Sincronizar site_estatico para Analise-imoveis
+        run: |
+          echo "=== Sincronizando site_estatico/ para Analise-imoveis ==="
+
+          # Clonar o repo do site
+          git clone https://${{ secrets.SITE_SYNC_TOKEN }}@github.com/Jeferson100/Analise-imoveis.git /tmp/site
+
+          # Limpar conteudo antigo (manter .git)
+          find /tmp/site -maxdepth 1 ! -name '.git' ! -name '.' -exec rm -rf {} +
+
+          # Copiar tudo de site_estatico
+          cp -r site_estatico/index.html /tmp/site/
+          cp -r site_estatico/css /tmp/site/
+          cp -r site_estatico/js /tmp/site/
+          cp -r site_estatico/data /tmp/site/
+
+          # Configurar git
+          cd /tmp/site
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+          # Verificar se ha mudancas
+          if git diff --quiet && git diff --staged --quiet; then
+            echo "Nenhuma mudanca detectada."
+          else
+            git add -A
+            git commit -m "Atualizacao mensal: $(date +'%Y-%m')"
+            git push origin main
+            echo "Push realizado com sucesso!"
+          fi
