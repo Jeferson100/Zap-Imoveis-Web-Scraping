@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Análise de Imóveis</title>
+    <link rel="stylesheet" href="css/style.css">
+    <script src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+</head>
+<body>
+    <header>
+        <div class="header-title">
+            <h1 id="titulo-app">🏠 Análise de Imóveis</h1>
+        </div>
+        <div class="header-controls">
+            <select id="cidade-select">
+                <option value="joinville">Joinville</option>
+                <option value="florianopolis">Florianópolis</option>
+                <option value="blumenau">Blumenau</option>
+                <option value="balneario_camboriu">Balneário Camboriú</option>
+                <option value="balneario_picarras">Balneário Picarras</option>
+                <option value="itajai">Itajaí</option>
+                <option value="itapema">Itapema</option>
+                <option value="itapoa">Itapoá</option>
+                <option value="jaragua">Jaraguá do Sul</option>
+                <option value="curitiba">Curitiba</option>
+                <option value="sao_paulo">São Paulo</option>
+            </select>
+            <select id="modo-select" class="hidden">
+                <option value="venda">Venda</option>
+                <option value="aluguel">Aluguel</option>
+            </select>
+            <span id="data-atualizacao" class="badge"></span>
+        </div>
+    </header>
+
+    <div class="container">
+        <aside class="sidebar" id="sidebar">
+            <h3>Filtros</h3>
+            <button id="btn-limpar" class="btn-limpar">🔄 Limpar Filtros</button>
+
+            <div class="filter-group">
+                <label class="checkbox-inline">
+                    <input type="checkbox" id="remover-outliers">
+                    Remover Outliers (IQR)
+                </label>
+            </div>
+
+            <div class="filter-group">
+                <label>Bairro</label>
+                <div class="search-box">
+                    <input type="text" id="busca-bairro" placeholder="Buscar bairro...">
+                </div>
+                <div id="filtro-bairro" class="checkbox-list"></div>
+            </div>
+
+            <div class="filter-group">
+                <label>Tipo de Imóvel</label>
+                <div id="filtro-tipo" class="checkbox-list checkbox-list-small"></div>
+            </div>
+
+            <div class="filter-group">
+                <label>Fonte</label>
+                <div id="filtro-fonte" class="checkbox-list checkbox-list-small"></div>
+            </div>
+
+            <div class="filter-group">
+                <label>Rua</label>
+                <div class="search-box">
+                    <input type="text" id="busca-rua" placeholder="Buscar rua...">
+                </div>
+                <div id="filtro-rua" class="checkbox-list checkbox-list-small"></div>
+            </div>
+
+            <div class="filter-group">
+                <label>Vagas</label>
+                <div class="range-row">
+                    <input type="number" id="vagas-min" placeholder="Mín" min="0" step="1">
+                    <input type="number" id="vagas-max" placeholder="Máx" min="0" step="1">
+                </div>
+            </div>
+
+            <div class="filter-group">
+                <label>Preço/m² (R$)</label>
+                <div class="range-row">
+                    <input type="number" id="preco-min" placeholder="Mín" min="0" step="100">
+                    <input type="number" id="preco-max" placeholder="Máx" min="0" step="100">
+                </div>
+            </div>
+
+            <div class="filter-group">
+                <label>Metragem (m²)</label>
+                <div class="range-row">
+                    <input type="number" id="metragem-min" placeholder="Mín" min="0" step="10">
+                    <input type="number" id="metragem-max" placeholder="Máx" min="0" step="10">
+                </div>
+            </div>
+
+            <div class="filter-group">
+                <label>Quartos</label>
+                <div class="range-row">
+                    <input type="number" id="quartos-min" placeholder="Mín" min="0" step="1">
+                    <input type="number" id="quartos-max" placeholder="Máx" min="0" step="1">
+                </div>
+            </div>
+
+            <div class="filter-group">
+                <label>Valor do Imóvel (R$)</label>
+                <div class="range-row">
+                    <input type="number" id="valor-min" placeholder="Mín" min="0" step="10000">
+                    <input type="number" id="valor-max" placeholder="Máx" min="0" step="10000">
+                </div>
+            </div>
+
+            <div class="filter-group">
+                <label>Desvio da Mediana</label>
+                <div class="range-row">
+                    <input type="number" id="desvio-min" placeholder="Mín" step="0.1">
+                    <input type="number" id="desvio-max" placeholder="Máx" step="0.1">
+                </div>
+            </div>
+
+            <div id="count-filtrados" class="count-badge"></div>
+        </aside>
+
+        <main class="main-content">
+            <section class="resumo">
+                <div class="card card-total">
+                    <h4>Total de Imóveis</h4>
+                    <span id="metric-total" class="metric-value">-</span>
+                </div>
+            </section>
+            <div class="resumo-divider"></div>
+            <section class="resumo resumo-grupos">
+                <div class="card-group">
+                    <h4>📍 Preço por m²</h4>
+                    <div class="metric-row">
+                        <div class="metric-item"><span class="metric-label">Médio</span><span id="metric-ppm2-media" class="metric-value">-</span></div>
+                        <div class="metric-item"><span class="metric-label">Mediano</span><span id="metric-ppm2-mediana" class="metric-value">-</span></div>
+                    </div>
+                </div>
+                <div class="card-group">
+                    <h4>💰 Valor do Imóvel</h4>
+                    <div class="metric-row">
+                        <div class="metric-item"><span class="metric-label">Médio</span><span id="metric-valor-media" class="metric-value">-</span></div>
+                        <div class="metric-item"><span class="metric-label">Mediano</span><span id="metric-valor-mediana" class="metric-value">-</span></div>
+                    </div>
+                </div>
+                <div class="card-group">
+                    <h4>📐 Dimensões</h4>
+                    <div class="metric-row">
+                        <div class="metric-item"><span class="metric-label">Área Média</span><span id="metric-area" class="metric-value">-</span></div>
+                        <div class="metric-item"><span class="metric-label">Área Mediana</span><span id="metric-area-mediana" class="metric-value">-</span></div>
+                    </div>
+                </div>
+            </section>
+
+            <section class="charts-row">
+                <div id="chart-bairros" class="chart-container"></div>
+                <div id="chart-composicao" class="chart-container"></div>
+            </section>
+
+            <section class="full-width">
+                <h2>📋 Lista de Imóveis</h2>
+                <table id="tabela-imoveis" class="display" style="width:100%">
+                    <thead>
+                        <tr>
+                            <th>Link</th>
+                            <th>Título</th>
+                            <th>Bairro</th>
+                            <th>Tipo</th>
+                            <th>Preço</th>
+                            <th>Preço/m²</th>
+                            <th>Área</th>
+                            <th>Quartos</th>
+                            <th>Banheiros</th>
+                            <th>Vagas</th>
+                            <th>Preço Predit.</th>
+                            <th>Pred. Min</th>
+                            <th>Pred. Max</th>
+                            <th>Dias Pub.</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </section>
+
+            <section class="full-width">
+                <h2>🗺️ Mapa dos Imóveis</h2>
+                <div id="mapa"></div>
+            </section>
+
+            <section class="charts-row">
+                <div id="chart-histograma" class="chart-container"></div>
+                <div id="chart-boxplot" class="chart-container"></div>
+            </section>
+        </main>
+    </div>
+
+    <script src="js/app.js?v=6"></script>
+</body>
+</html>
