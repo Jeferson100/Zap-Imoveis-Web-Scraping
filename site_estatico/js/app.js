@@ -3,6 +3,7 @@ let mapa = null;
 let markers = [];
 let modoAtual = 'venda';
 let cidadesComAluguel = [];
+let cidadesComPredicao = ['joinville', 'balneario_camboriu'];
 
 const CIDADES_NOMES = {
     'joinville': 'Joinville',
@@ -102,18 +103,41 @@ document.addEventListener('DOMContentLoaded', () => {
 
     carregarDados(cidadeInicial);
 
-    document.getElementById('cidade-select').addEventListener('change', (e) => {
+    document.getElementById('cidade-select').addEventListener('change', async (e) => {
         configurarModoAluguel(e.target.value);
         atualizarCabecalhoTabela();
-        carregarDados(e.target.value);
+
+        if (modoAtual === 'predicao') {
+            modeloJson = null;
+            configPredicao = null;
+            if (typeof carregarPredicao === 'function') {
+                await carregarPredicao(e.target.value);
+            }
+        } else {
+            carregarDados(e.target.value);
+        }
     });
 
-    document.getElementById('modo-select').addEventListener('change', (e) => {
+    document.getElementById('modo-select').addEventListener('change', async (e) => {
         modoAtual = e.target.value;
         const cidade = document.getElementById('cidade-select').value;
         atualizarTitulo(cidade);
         atualizarCabecalhoTabela();
-        carregarDados(cidade);
+
+        const secaoPred = document.getElementById('secao-predicao');
+        const secoesNormais = document.querySelectorAll('.main-content > section:not(#secao-predicao)');
+
+        if (modoAtual === 'predicao') {
+            secoesNormais.forEach(s => s.style.display = 'none');
+            secaoPred.style.display = '';
+            if (typeof carregarPredicao === 'function' && (!modeloJson || !configPredicao)) {
+                await carregarPredicao(cidade);
+            }
+        } else {
+            secaoPred.style.display = 'none';
+            secoesNormais.forEach(s => s.style.display = '');
+            carregarDados(cidade);
+        }
     });
 
     document.getElementById('btn-limpar').addEventListener('click', limparFiltros);
@@ -147,8 +171,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
 function configurarModoAluguel(cidade) {
     const modoSelect = document.getElementById('modo-select');
-    if (cidadesComAluguel.includes(cidade)) {
+    if (cidadesComAluguel.includes(cidade) || cidadesComPredicao.includes(cidade)) {
         modoSelect.classList.remove('hidden');
+        const opts = modoSelect.options;
+        for (let i = opts.length - 1; i >= 0; i--) {
+            if (opts[i].value === 'aluguel') opts[i].disabled = !cidadesComAluguel.includes(cidade);
+            if (opts[i].value === 'predicao') opts[i].disabled = !cidadesComPredicao.includes(cidade);
+        }
     } else {
         modoSelect.classList.add('hidden');
         modoAtual = 'venda';
@@ -158,7 +187,9 @@ function configurarModoAluguel(cidade) {
 
 function atualizarTitulo(cidade) {
     const nome = CIDADES_NOMES[cidade] || cidade;
-    const sufixo = modoAtual === 'aluguel' ? 'Aluguéis' : 'Venda';
+    let sufixo = 'Venda';
+    if (modoAtual === 'aluguel') sufixo = 'Aluguéis';
+    else if (modoAtual === 'predicao') sufixo = 'Predição';
     document.getElementById('titulo-app').textContent = '🏠 Análise de Imóveis ' + nome + ' - ' + sufixo;
     atualizarLabelsSidebar();
 }

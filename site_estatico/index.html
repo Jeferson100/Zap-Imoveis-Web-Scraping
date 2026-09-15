@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Análise de Imóveis</title>
-    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/style.css?v=8">
     <script src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
@@ -31,6 +31,7 @@
             <select id="modo-select" class="hidden">
                 <option value="venda">Venda</option>
                 <option value="aluguel">Aluguel</option>
+                <option value="predicao">Predição</option>
             </select>
             <span id="data-atualizacao" class="badge"></span>
         </div>
@@ -126,6 +127,49 @@
         </aside>
 
         <main class="main-content">
+            <section id="secao-predicao" class="full-width" style="display:none;">
+                <h2>🔮 Predição de Valor</h2>
+                <div id="pred-form-container">
+                    <div class="pred-form-grid">
+                        <div class="pred-form-col">
+                            <label>Rua (opcional)</label>
+                            <input type="text" id="pred-rua" placeholder="Rua...">
+                            <label>Número (opcional)</label>
+                            <input type="number" id="pred-numero" placeholder="Nº" min="0">
+                            <label>Metragem (m²)</label>
+                            <input type="number" id="pred-metragem" value="70" min="10" max="10000">
+                            <label>Quartos</label>
+                            <input type="number" id="pred-quartos" value="3" min="1" max="20">
+                            <label>Banheiros</label>
+                            <input type="number" id="pred-banheiros" value="2" min="1" max="20">
+                            <label>Idade do Imóvel (anos)</label>
+                            <input type="number" id="pred-idade" value="0" min="0" max="200" placeholder="0 = novo">
+                        </div>
+                        <div class="pred-form-col">
+                            <label>Vagas</label>
+                            <input type="number" id="pred-vagas" value="1" min="0" max="20">
+                            <label>Tipo</label>
+                            <select id="pred-tipo">
+                                <option value="apartamento">Apartamento</option>
+                                <option value="casa">Casa</option>
+                            </select>
+                            <label>Bairro</label>
+                            <select id="pred-bairro"></select>
+                            <label class="checkbox-inline">
+                                <input type="checkbox" id="pred-novo"> Novo lançamento
+                            </label>
+                            <label class="checkbox-inline">
+                                <input type="checkbox" id="pred-elevador"> Tem elevador
+                            </label>
+                            <label>Descrição (opcional)</label>
+                            <textarea id="pred-descricao" rows="3" placeholder="Descricao do imovel..."></textarea>
+                        </div>
+                    </div>
+                    <button id="pred-btn" class="pred-btn" onclick="executarPredicao()">Prever Valor</button>
+                </div>
+                <div id="pred-resultado"></div>
+            </section>
+
             <section class="resumo">
                 <div class="card card-total">
                     <h4>Total de Imóveis</h4>
@@ -199,6 +243,7 @@
         </main>
     </div>
 
-    <script src="js/app.js?v=6"></script>
+    <script src="js/predicao.js?v=8"></script>
+    <script src="js/app.js?v=8"></script>
 </body>
 </html>

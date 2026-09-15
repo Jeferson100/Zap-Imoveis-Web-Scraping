@@ -129,7 +129,8 @@ def carregar_modelo_e_stats(pasta, prefixo_name):
 def montar_features_predicao(metragem, quartos, banheiros, vagas,
                               tipo_imovel, bairro, novo_lancamento, tem_elevador,
                               lat, lng, bairro_stats, indices,
-                              km_cluster=None, scaler_cluster=None):
+                              km_cluster=None, scaler_cluster=None,
+                              predicao_idade=0):
     dados = {
         'metragem': metragem,
         'quartos': quartos,
@@ -144,6 +145,7 @@ def montar_features_predicao(metragem, quartos, banheiros, vagas,
         'quartos_por_metro': quartos / (metragem + 1),
         'vagas_por_metro': vagas / (metragem + 1),
         'banheiros_por_quarto': banheiros / (quartos + 1),
+        'predicao_idade': predicao_idade,
     }
 
     if bairro in bairro_stats.index:
@@ -264,6 +266,8 @@ def gerar_pagina_predicao(cidade_path, prefixo_name, cidade_nome_poi):
             bairro = st.selectbox("Bairro", sorted(bairro_stats.index.tolist()))
             novo_lancamento = st.checkbox("Novo lancamento")
             tem_elevador = st.checkbox("Tem elevador")
+            predicao_idade = st.number_input("Idade do imovel (anos)", 0, 200, 0,
+                                              help="0 = novo/construcao")
 
         modelo_precisa_topicos = any(c.startswith("componente_") for c in feature_names)
         if modelo_precisa_topicos:
@@ -296,6 +300,7 @@ def gerar_pagina_predicao(cidade_path, prefixo_name, cidade_nome_poi):
                 lat=lat, lng=lng,
                 bairro_stats=bairro_stats, indices=indices,
                 km_cluster=km_cluster, scaler_cluster=scaler_cluster,
+                predicao_idade=predicao_idade,
             )
 
         if modelo_precisa_topicos and topicos_data is not None:

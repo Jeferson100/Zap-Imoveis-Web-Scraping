@@ -505,3 +505,160 @@ header h1 {
         grid-template-columns: 1fr;
     }
 }
+
+/* ── Predição ── */
+.pred-form-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.5rem;
+    margin-bottom: 1rem;
+}
+
+.pred-form-col label {
+    display: block;
+    font-weight: 600;
+    font-size: 0.8rem;
+    color: #555;
+    margin-top: 0.5rem;
+    margin-bottom: 0.2rem;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+}
+
+.pred-form-col .checkbox-inline {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    cursor: pointer;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: #333;
+    padding: 0.3rem 0;
+    text-transform: none;
+    letter-spacing: 0;
+}
+
+.pred-form-col input[type="text"],
+.pred-form-col input[type="number"],
+.pred-form-col select,
+.pred-form-col textarea {
+    width: 100%;
+    padding: 0.5rem;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 0.9rem;
+    background: #fafafa;
+}
+
+.pred-form-col input:focus,
+.pred-form-col select:focus,
+.pred-form-col textarea:focus {
+    outline: none;
+    border-color: #1565c0;
+}
+
+.pred-btn {
+    padding: 0.8rem 2rem;
+    background: #1565c0;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-size: 1rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.pred-btn:hover {
+    background: #0d47a1;
+}
+
+.pred-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.pred-card {
+    background: white;
+    border-radius: 12px;
+    padding: 1rem;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
+}
+
+.pred-card-principal {
+    text-align: center;
+    padding: 1.5rem;
+    background: linear-gradient(135deg, #e3f2fd, #bbdefb);
+    border-radius: 12px;
+    margin-bottom: 1rem;
+}
+
+.pred-label {
+    font-size: 0.85rem;
+    color: #555;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.pred-valor {
+    font-size: 2.5rem;
+    font-weight: 800;
+    color: #1565c0;
+}
+
+.pred-intervalo {
+    font-size: 0.9rem;
+    color: #666;
+    margin-top: 0.3rem;
+}
+
+.pred-cards-row {
+    display: flex;
+    gap: 1rem;
+    margin-bottom: 1rem;
+}
+
+.pred-cards-row .pred-card {
+    flex: 1;
+    text-align: center;
+}
+
+.pred-valor-sm {
+    font-size: 1.3rem;
+    font-weight: 700;
+    color: #1565c0;
+}
+
+.pred-detalhes {
+    background: #f5f5f5;
+    border-radius: 8px;
+    padding: 1rem;
+    margin-top: 1rem;
+}
+
+.pred-detalhes summary {
+    cursor: pointer;
+    font-weight: 600;
+    color: #333;
+}
+
+.pred-detalhes pre {
+    font-size: 0.75rem;
+    max-height: 300px;
+    overflow-y: auto;
+    background: white;
+    padding: 0.8rem;
+    border-radius: 4px;
+    border: 1px solid #ddd;
+    margin-top: 0.5rem;
+}
+
+@media (max-width: 768px) {
+    .pred-form-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .pred-cards-row {
+        flex-direction: column;
+    }
+}
