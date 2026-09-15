@@ -86,6 +86,16 @@ jobs:
     steps:
       - name: Copia os arquivos do repo
         uses: actions/checkout@v4
+        with:
+          sparse-checkout: |
+            codigos_rodando/
+            dados/
+            src/
+            app/
+            scripts/
+            pyproject.toml
+            Makefile
+          sparse-checkout-cone-mode: false
 
       - name: Instalar o Python
         uses: actions/setup-python@v5
