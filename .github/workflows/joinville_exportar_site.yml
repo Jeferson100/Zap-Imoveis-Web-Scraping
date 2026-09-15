@@ -1,0 +1,14 @@
+name: Rodando Exportacao Site Joinville
+on:
+  workflow_run:
+    workflows: ["Rodando Predicao Valores Joinville"]
+    types:
+      - completed
+  workflow_dispatch:
+
+jobs:
+  exportar:
+    uses: ./.github/workflows/pipeline_cidade_rodando.yml
+    with:
+      cidade_pasta: joinville
+      arquivo_rodando_imovel: joinville_exportar_site.py

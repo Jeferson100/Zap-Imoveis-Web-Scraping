@@ -1,3 +1,4 @@
+import os
 import pandas as pd
 import numpy as np
 import json
@@ -235,7 +236,7 @@ def main():
         print(f'  [{status}] {nome} ({cid})')
 
     print()
-    escolha = input('Cidade para exportar (ou "todas"): ').strip().lower()
+    escolha = os.environ.get('CIDADE_EXPORTAR', 'todas').strip().lower()
 
     if escolha == 'todas':
         cidades_exportar = list(CIDADES.keys())

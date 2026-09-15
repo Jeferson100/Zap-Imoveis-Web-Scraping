@@ -1,6 +1,7 @@
 # Preço Imóveis 🏠
 
 [![Streamlit](https://img.shields.io/badge/Streamlit-100000?style=for-the-badge&logo=streamlit&logoColor=white)](https://avaliacao-imoveis.streamlit.app/) 
+[![Site](https://img.shields.io/badge/Site-100000?style=for-the-badge&logo=github&logoColor=white)](https://jeferson100.github.io/Analise-imoveis/)
 [![Python](https://img.shields.io/badge/Python-3.12+-3776ab?style=for-the-badge&logo=python&logoColor=white)](https://python.org)
 [![License](https://img.shields.io/badge/License-MIT-green?style=for-the-badge)](LICENSE)
 [![Playwright](https://img.shields.io/badge/Playwright-45B7D1?style=for-the-badge&logo=microsoft&logoColor=white)](https://playwright.dev/python/)
