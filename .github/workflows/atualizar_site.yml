@@ -1,10 +1,13 @@
 name: Atualizar Site Estatico
 on:
   push:
+    branches: [main]
+    paths:
+      - 'dados/**'
   workflow_dispatch:
 
 jobs:
-  exportar-e-sincronizar:
+  exportar:
     runs-on: ubuntu-latest
     steps:
       - name: Copiar arquivos do repo
@@ -34,5 +37,6 @@ jobs:
           source .venv/bin/activate
           python scripts/exportar_modelo_js.py
 
-      - name: Sincronizar com Analise-imoveis
-        uses: ./.github/workflows/sync_site.yml
+  sincronizar:
+    needs: exportar
+    uses: ./.github/workflows/sync_site.yml
