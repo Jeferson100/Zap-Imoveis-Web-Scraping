@@ -124,4 +124,3 @@ site_estatico/
 | **Deploy** | GitHub Pages | Hospedagem estatica gratuita |
 
 ---
-

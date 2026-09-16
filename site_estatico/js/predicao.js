@@ -34,6 +34,14 @@ function carregarPredicao(cidade) {
         bairroStats = results[1];
         clusterData = results[2];
 
+        if (Array.isArray(bairroStats)) {
+            var dict = {};
+            bairroStats.forEach(function(item) {
+                dict[item.bairro] = item;
+            });
+            bairroStats = dict;
+        }
+
         if (!modeloJson) {
             console.error('Modelo nao encontrado para', cidade);
             return false;
@@ -218,9 +226,9 @@ function montarFeatures(inputs) {
 
     if (bairroStats && bairroStats[inputs.bairro]) {
         var bs = bairroStats[inputs.bairro];
-        features.metro_quadrado_bairro_mean = bs.metro_quadrado_bairro_mean || 0;
-        features.metro_quadrado_bairro_median = bs.metro_quadrado_bairro_median || 0;
-        features.valor_bairro_mean = bs.valor_bairro_mean || 0;
+        features.metro_quadrado_bairro_mean = bs.media_ppm2 || bs.metro_quadrado_bairro_mean || 0;
+        features.metro_quadrado_bairro_median = bs.mediana_ppm2 || bs.metro_quadrado_bairro_median || 0;
+        features.valor_bairro_mean = bs.mediana_valor || bs.valor_bairro_mean || 0;
         features.bairro_rank = bs.bairro_rank || 0;
         features.bairro_cluster = bs.bairro_cluster !== undefined ? bs.bairro_cluster : 0;
     } else {
