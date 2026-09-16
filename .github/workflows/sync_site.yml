@@ -22,10 +22,15 @@ jobs:
 
       - name: Sincronizar site_estatico para Analise-imoveis
         run: |
+          set -e
           echo "=== Sincronizando site_estatico/ para Analise-imoveis ==="
 
           # Clonar o repo do site
-          git clone https://${{ secrets.SITE_SYNC_TOKEN }}@github.com/Jeferson100/Analise-imoveis.git /tmp/site
+          if ! git clone https://${{ secrets.SITE_SYNC_TOKEN }}@github.com/Jeferson100/Analise-imoveis.git /tmp/site; then
+            echo "ERRO: Falha ao clonar repo Analise-imoveis"
+            echo "Verifique se o secret SITE_SYNC_TOKEN e valido"
+            exit 1
+          fi
 
           # Limpar conteudo antigo (manter .git)
           find /tmp/site -maxdepth 1 ! -name '.git' ! -name '.' -exec rm -rf {} +
