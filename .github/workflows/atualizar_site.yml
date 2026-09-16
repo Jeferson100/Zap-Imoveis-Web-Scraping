@@ -1,9 +1,7 @@
 name: Atualizar Site Estatico
 on:
   push:
-    branches: [main]
-    paths:
-      - 'dados/**'
+  workflow_dispatch:
 
 jobs:
   exportar-e-sincronizar:
