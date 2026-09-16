@@ -40,3 +40,4 @@ jobs:
   sincronizar:
     needs: exportar
     uses: ./.github/workflows/sync_site.yml
+    secrets: inherit
