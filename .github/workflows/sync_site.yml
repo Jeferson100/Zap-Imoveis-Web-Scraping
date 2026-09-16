@@ -25,24 +25,32 @@ jobs:
           set -e
           echo "=== Sincronizando site_estatico/ para Analise-imoveis ==="
 
+          # Limpar clone anterior
+          rm -rf /tmp/site
+
           # Clonar o repo do site
           if ! git clone https://${{ secrets.SITE_SYNC_TOKEN }}@github.com/Jeferson100/Analise-imoveis.git /tmp/site; then
             echo "ERRO: Falha ao clonar repo Analise-imoveis"
-            echo "Verifique se o secret SITE_SYNC_TOKEN e valido"
+            exit 1
+          fi
+
+          # Verificar se clone e valido
+          if [ ! -d "/tmp/site/.git" ]; then
+            echo "ERRO: Clone nao criou diretorio valido"
             exit 1
           fi
 
           # Limpar conteudo antigo (manter .git)
-          find /tmp/site -maxdepth 1 ! -name '.git' ! -name '.' -exec rm -rf {} +
+          cd /tmp/site
+          find . -maxdepth 1 ! -name '.git' ! -name '.' -exec rm -rf {} +
 
           # Copiar tudo de site_estatico
-          cp -r site_estatico/index.html /tmp/site/
-          cp -r site_estatico/css /tmp/site/
-          cp -r site_estatico/js /tmp/site/
-          cp -r site_estatico/data /tmp/site/
+          cp -r "$GITHUB_WORKSPACE/site_estatico/index.html" .
+          cp -r "$GITHUB_WORKSPACE/site_estatico/css" .
+          cp -r "$GITHUB_WORKSPACE/site_estatico/js" .
+          cp -r "$GITHUB_WORKSPACE/site_estatico/data" .
 
           # Configurar git
-          cd /tmp/site
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
 
@@ -51,7 +59,7 @@ jobs:
             echo "Nenhuma mudanca detectada."
           else
             git add -A
-            git commit -m "Atualizacao mensal: $(date +'%Y-%m')"
+            git commit -m "Atualizacao: $(date +'%Y-%m-%d %H:%M')"
             git push origin main
             echo "Push realizado com sucesso!"
           fi
