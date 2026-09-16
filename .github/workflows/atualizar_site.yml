@@ -1,0 +1,40 @@
+name: Atualizar Site Estatico
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'dados/**'
+
+jobs:
+  exportar-e-sincronizar:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Copiar arquivos do repo
+        uses: actions/checkout@v4
+
+      - name: Instalar Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Instalar dependencias
+        run: |
+          pip install uv
+          uv venv
+          source .venv/bin/activate
+          make uv_install
+
+      - name: Exportar dados do site
+        run: |
+          source .venv/bin/activate
+          python scripts/exportar_dados.py
+        env:
+          CIDADE_EXPORTAR: todas
+
+      - name: Exportar modelos JS
+        run: |
+          source .venv/bin/activate
+          python scripts/exportar_modelo_js.py
+
+      - name: Sincronizar com Analise-imoveis
+        uses: ./.github/workflows/sync_site.yml
