@@ -276,21 +276,25 @@ class TesteIncrementalFeaturesAsync:
         X_te_s = X_te_proc[idx_te] if isinstance(X_te_proc, np.ndarray) else X_te_proc.iloc[idx_te]
 
         model = xgb.XGBRegressor(n_estimators=100, max_depth=6,
-                                 random_state=42, verbosity=0)
-        model.fit(X_tr_s, y_tr_s)
+                                 random_state=42, verbosity=0,
+                                 enable_categorical=False)
+        model.fit(np.asarray(X_tr_s, dtype=np.float64), y_tr_s)
 
-        # FIX: Garantir que não há dtype 'category' nos dados para SHAP
-        if isinstance(X_te_s, pd.DataFrame):
-            X_te_s_shap = X_te_s.copy()
-            cat_cols = X_te_s_shap.select_dtypes(include=['category']).columns
-            if len(cat_cols) > 0:
-                X_te_s_shap[cat_cols] = X_te_s_shap[cat_cols].astype('object')
-        else:
-            X_te_s_shap = X_te_s
+        X_te_np = np.asarray(X_te_s, dtype=np.float64)
 
-        explainer = shap.Explainer(model, X_te_s_shap,
-                                   feature_perturbation='tree_path_dependent')
-        importances = np.abs(explainer(X_te_s_shap).values).mean(axis=0)
+        try:
+            # API antiga/estável do TreeExplainer: garante que
+            # feature_perturbation seja respeitado em qualquer versão do SHAP
+            tree_explainer = shap.TreeExplainer(
+                model, X_te_np, feature_perturbation="tree_path_dependent"
+            )
+            shap_values = tree_explainer.shap_values(X_te_np)
+            if hasattr(shap_values, "values"):  # compat: nova API retorna Explanation
+                shap_values = shap_values.values
+            importances = np.abs(np.asarray(shap_values)).mean(axis=0)
+        except Exception as exc:
+            logger.warning("SHAP indisponível (%s). Usando importância gain do XGBoost.", exc)
+            importances = np.asarray(model.feature_importances_, dtype=float)
 
         # Agrega importancias OHE de volta para as features originais
         if preprocessor is not None and len(importances) != len(feat_names):
