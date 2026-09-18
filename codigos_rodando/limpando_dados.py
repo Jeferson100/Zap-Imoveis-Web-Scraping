@@ -41,10 +41,12 @@ start_time = time.time()
 CARAC_COMUM_FLAGS = [
     "elevador", "piscina", "churrasqueira_parrilla",
     "playground", "fitness_sala_de_ginastica",
+    "salao", "academia", "spa", "churrasqueira",  # NOVOS
 ]
 
 CARAC_PRIVADA_FLAGS = [
     "varanda", "lavanderia", "piscina", "ar_condicionado",
+    "churrasqueira", "closet",     # NOVOS
 ]
 
 
@@ -583,6 +585,21 @@ def limpando_dados(
                         col = f"{prefixo}_{f}"
                         if col in df_pred.columns and col in features_num:
                             df_pred[col] = df_pred[col].astype(int)
+
+            # ── Suites (extraído de caracteristicas) ──────────────────────────
+            def extrair_suites(arr):
+                if not isinstance(arr, (list, tuple, np.ndarray)):
+                    return np.nan
+                for item in arr:
+                    s = str(item).lower()
+                    if 'suíte' in s or 'suite' in s:
+                        if '0 su' in s: return 0
+                        for n in range(1, 7):
+                            if f'{n} su' in s: return n
+                return np.nan
+
+            df_limpo['suites'] = df_limpo['caracteristicas'].apply(extrair_suites)
+            logger.info("Coluna 'suites' extraída de caracteristicas.")
 
             logger.info("Predizendo idade para %d registros...", len(df_pred))
             all_features = features_num + features_cat
