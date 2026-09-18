@@ -224,6 +224,20 @@ function montarFeatures(inputs) {
         predicao_idade: inputs.idade || 0,
     };
 
+    // Novas amenities
+    features.suites = parseInt(inputs.suites) || 0;
+    features.priv_churrasqueira = inputs.priv_churrasqueira;
+    features.priv_varanda = inputs.priv_varanda;
+    features.priv_piscina = inputs.priv_piscina;
+    features.priv_closet = inputs.priv_closet;
+    features.comum_piscina = inputs.comum_piscina;
+    features.comum_elevador = inputs.comum_elevador;
+    features.comum_salao = inputs.comum_salao;
+    features.comum_churrasqueira = inputs.comum_churrasqueira;
+    features.comum_playground = inputs.comum_playground;
+    features.comum_academia = inputs.comum_academia;
+    features.comum_spa = inputs.comum_spa;
+
     if (bairroStats && bairroStats[inputs.bairro]) {
         var bs = bairroStats[inputs.bairro];
         features.metro_quadrado_bairro_mean = bs.media_ppm2 || bs.metro_quadrado_bairro_mean || 0;
@@ -415,6 +429,20 @@ function executarPredicao() {
     var numero = parseInt(document.getElementById('pred-numero').value) || 0;
     var descricao = document.getElementById('pred-descricao').value || '';
     var idade = parseInt(document.getElementById('pred-idade').value) || 0;
+    
+    // Novas amenities
+    var suites = document.getElementById('pred-suites').value || 0;
+    var priv_churrasqueira = document.getElementById('pred-priv-churrasqueira').checked ? 1 : 0;
+    var priv_varanda = document.getElementById('pred-priv-varanda').checked ? 1 : 0;
+    var priv_piscina = document.getElementById('pred-priv-piscina').checked ? 1 : 0;
+    var priv_closet = document.getElementById('pred-priv-closet').checked ? 1 : 0;
+    var comum_piscina = document.getElementById('pred-comum-piscina').checked ? 1 : 0;
+    var comum_elevador = document.getElementById('pred-comum-elevador').checked ? 1 : 0;
+    var comum_salao = document.getElementById('pred-comum-salao').checked ? 1 : 0;
+    var comum_churrasqueira = document.getElementById('pred-comum-churrasqueira').checked ? 1 : 0;
+    var comum_playground = document.getElementById('pred-comum-playground').checked ? 1 : 0;
+    var comum_academia = document.getElementById('pred-comum-academia').checked ? 1 : 0;
+    var comum_spa = document.getElementById('pred-comum-spa').checked ? 1 : 0;
 
     var resultDiv = document.getElementById('pred-resultado');
     var btn = document.getElementById('pred-btn');
@@ -431,6 +459,18 @@ function executarPredicao() {
             novo_lancamento: novoLancamento, tem_elevador: temElevador,
             lat: coords.lat, lng: coords.lng, descricao: descricao,
             cidade: cidade, idade: idade,
+            suites: suites,
+            priv_churrasqueira: priv_churrasqueira,
+            priv_varanda: priv_varanda,
+            priv_piscina: priv_piscina,
+            priv_closet: priv_closet,
+            comum_piscina: comum_piscina,
+            comum_elevador: comum_elevador,
+            comum_salao: comum_salao,
+            comum_churrasqueira: comum_churrasqueira,
+            comum_playground: comum_playground,
+            comum_academia: comum_academia,
+            comum_spa: comum_spa,
         });
 
         try {

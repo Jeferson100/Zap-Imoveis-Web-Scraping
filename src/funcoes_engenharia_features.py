@@ -1,4 +1,5 @@
 import pandas as pd
+import numpy as np
 
 PADRAO_NOVO_LANCAMENTO = r'''
     \bnovo\b|\bnova\b|\blan[çc]amento\b|\bpr[eé]-?lan[çc]amento\b|
@@ -93,6 +94,76 @@ def extrair_sem_rua(train, test):
     return train, test
 
 
+def extrair_amenidades(df):
+    """Extrai amenities das arrays caracteristicas_privativa/comum e caracteristicas."""
+    df = df.copy()
+    
+    def check_arr(arr, term):
+        if isinstance(arr, np.ndarray):
+            return any(term in str(item).lower() for item in arr)
+        return False
+    
+    # PRIVADAS (4)
+    df['priv_churrasqueira'] = df['caracteristicas_privativa'].apply(
+        lambda arr: 1 if check_arr(arr, 'churr') else 0
+    )
+    df['priv_varanda'] = df['caracteristicas_privativa'].apply(
+        lambda arr: 1 if check_arr(arr, 'varanda') else 0
+    )
+    df['priv_piscina'] = df['caracteristicas_privativa'].apply(
+        lambda arr: 1 if check_arr(arr, 'piscina') else 0
+    )
+    df['priv_closet'] = df['caracteristicas_privativa'].apply(
+        lambda arr: 1 if check_arr(arr, 'closet') else 0
+    )
+    
+    # COMUNS (7)
+    df['comum_piscina'] = df['caracteristicas_comum'].apply(
+        lambda arr: 1 if check_arr(arr, 'piscina') else 0
+    )
+    df['comum_elevador'] = df['caracteristicas_comum'].apply(
+        lambda arr: 1 if check_arr(arr, 'elevador') else 0
+    )
+    df['comum_salao'] = df['caracteristicas_comum'].apply(
+        lambda arr: 1 if check_arr(arr, 'salão') or check_arr(arr, 'salao') else 0
+    )
+    df['comum_churrasqueira'] = df['caracteristicas_comum'].apply(
+        lambda arr: 1 if check_arr(arr, 'churr') else 0
+    )
+    df['comum_playground'] = df['caracteristicas_comum'].apply(
+        lambda arr: 1 if check_arr(arr, 'playground') else 0
+    )
+    df['comum_academia'] = df['caracteristicas_comum'].apply(
+        lambda arr: 1 if check_arr(arr, 'fitness') or check_arr(arr, 'academia') else 0
+    )
+    df['comum_spa'] = df['caracteristicas_comum'].apply(
+        lambda arr: 1 if check_arr(arr, 'spa') or check_arr(arr, 'sauna') else 0
+    )
+    
+    # SUITES - extraído de caracteristicas
+    def extrair_suites(arr):
+        if not isinstance(arr, np.ndarray):
+            return np.nan
+        for item in arr:
+            s = str(item).lower()
+            if 'suíte' in s or 'suite' in s:
+                if '0 su' in s: return 0
+                for n in range(1, 7):
+                    if f'{n} su' in s: return n
+        return np.nan
+    
+    df['suites'] = df['caracteristicas'].apply(extrair_suites)
+    
+    return df
+
+
+def extrair_amenidades_train_test(train, test):
+    """Aplica extração de amenities em train e test."""
+    train = extrair_amenidades(train)
+    test = extrair_amenidades(test)
+    return train, test
+
+
 CLUSTER_COLS = [
     "score_escola_privada", "score_escola_publica", "score_hospitais",
     "score_mercado", "score_farmacia", "score_parque",
@@ -134,5 +205,6 @@ def engenharia_features_completa(train, test):
     train, test = extrair_novo_lancamento(train, test)
     train, test = extrair_tem_elevador(train, test)
     train, test = extrair_sem_rua(train, test)
+    train, test = extrair_amenidades_train_test(train, test)
     train, test = criar_clusters_bairro(train, test)
     return train, test
