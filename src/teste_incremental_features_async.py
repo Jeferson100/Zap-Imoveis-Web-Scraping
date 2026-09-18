@@ -275,7 +275,7 @@ class TesteIncrementalFeaturesAsync:
         idx_te = np.random.RandomState(42).choice(len(X_te_proc), n_te, replace=False)
         X_te_s = X_te_proc[idx_te] if isinstance(X_te_proc, np.ndarray) else X_te_proc.iloc[idx_te]
 
-model = xgb.XGBRegressor(n_estimators=100, max_depth=6,
+        model = xgb.XGBRegressor(n_estimators=100, max_depth=6,
                                  random_state=42, verbosity=0)
         model.fit(X_tr_s, y_tr_s)
 
