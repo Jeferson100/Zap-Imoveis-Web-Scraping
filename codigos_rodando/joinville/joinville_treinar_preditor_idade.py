@@ -353,6 +353,7 @@ for prefixo, flags in [("comum", CARAC_COMUM_FLAGS), ("priv", CARAC_PRIVADA_FLAG
             numeric_features.append(col)
 
 logger.info("Features numéricas (%d): %s", len(numeric_features), numeric_features)
+
 logger.info("Features categóricas (%d): %s", len(categorical_features), categorical_features)
 
 # ── 5. Split train/test ──────────────────────────────────────────────

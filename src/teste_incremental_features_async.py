@@ -278,7 +278,7 @@ class TesteIncrementalFeaturesAsync:
         model = xgb.XGBRegressor(n_estimators=100, max_depth=6,
                                  random_state=42, verbosity=0)
         model.fit(X_tr_s, y_tr_s)
-        explainer = shap.Explainer(model, X_te_s)
+        explainer = shap.Explainer(model, X_te_s, feature_perturbation='tree_path_dependent')
         importances = np.abs(explainer(X_te_s).values).mean(axis=0)
 
         # Agrega importancias OHE de volta para as features originais
