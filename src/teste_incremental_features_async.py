@@ -275,11 +275,22 @@ class TesteIncrementalFeaturesAsync:
         idx_te = np.random.RandomState(42).choice(len(X_te_proc), n_te, replace=False)
         X_te_s = X_te_proc[idx_te] if isinstance(X_te_proc, np.ndarray) else X_te_proc.iloc[idx_te]
 
-        model = xgb.XGBRegressor(n_estimators=100, max_depth=6,
+model = xgb.XGBRegressor(n_estimators=100, max_depth=6,
                                  random_state=42, verbosity=0)
         model.fit(X_tr_s, y_tr_s)
-        explainer = shap.Explainer(model, X_te_s, feature_perturbation='tree_path_dependent')
-        importances = np.abs(explainer(X_te_s).values).mean(axis=0)
+
+        # FIX: Garantir que não há dtype 'category' nos dados para SHAP
+        if isinstance(X_te_s, pd.DataFrame):
+            X_te_s_shap = X_te_s.copy()
+            cat_cols = X_te_s_shap.select_dtypes(include=['category']).columns
+            if len(cat_cols) > 0:
+                X_te_s_shap[cat_cols] = X_te_s_shap[cat_cols].astype('object')
+        else:
+            X_te_s_shap = X_te_s
+
+        explainer = shap.Explainer(model, X_te_s_shap,
+                                   feature_perturbation='tree_path_dependent')
+        importances = np.abs(explainer(X_te_s_shap).values).mean(axis=0)
 
         # Agrega importancias OHE de volta para as features originais
         if preprocessor is not None and len(importances) != len(feat_names):
