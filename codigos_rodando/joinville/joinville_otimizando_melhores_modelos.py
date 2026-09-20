@@ -29,7 +29,7 @@ N_TRIALS = int(os.getenv("N_TRIALS_OPTUNA", "300"))
 
 SELECTION_MODE = os.getenv("SELECTION_MODE", "combinado")
 
-TOP_K = int(os.getenv("TOP_K", "3"))
+TOP_K = int(os.getenv("TOP_K", "5"))
 
 TOP_K_MODELO = int(os.getenv("TOP_K_MODELO", "1"))
 

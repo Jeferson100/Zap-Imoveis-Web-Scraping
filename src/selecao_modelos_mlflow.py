@@ -290,7 +290,7 @@ def otimizar_melhores_incrementos(
     numeric_features,
     categorical_features,
     n_trials=15,
-    min_features=1,
+    min_features=10,
     target_col="valor_imovel",
     metrica="r2",
     selection_mode="features",
