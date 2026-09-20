@@ -23,5 +23,6 @@ NUMERIC_FEATURES = [
 
 CATEGORICAL_FEATURES = [
     "tipo_imovel", "bairro", "novo_lancamento", "tem_elevador",
-    "dist_centro_faixa", "bairro_cluster",
+    #"dist_centro_faixa", 
+    "bairro_cluster",
 ]
