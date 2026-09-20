@@ -22,7 +22,7 @@ from selecao_modelos_mlflow import (
     ENCODER_MAP,
     MODEL_KEY_MAP,
 )
-from preprocessador import PreprocessadorFactory
+from preprocessador import PreprocessadorFactory, SKOPS_TRUSTED_TYPES
 from otimizador_optuna import FactoryModelos
 from mlflow_manager import MLflowManager
 from criando_indices_individuais import CriandoIndicesIndividuais
@@ -202,7 +202,10 @@ def treinar_melhor_modelo_geral(
         mlflow.set_tag("transform", best["transform"])
         mlflow.set_tag("target_transformer", target_transform)
         mlflow.set_tag("feature_transform_map", best.get("feature_transform_map", ""))
-        mlflow.sklearn.log_model(pipe, f"{cidade}_modelo_geral_{mes_ref}")
+        mlflow.sklearn.log_model(
+            pipe, f"{cidade}_modelo_geral_{mes_ref}",
+            skops_trusted_types=SKOPS_TRUSTED_TYPES,
+        )
 
     logger.info("Run salva: %s", run_name)
 

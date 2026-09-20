@@ -42,6 +42,18 @@ def _cleanup_transform(X):
     return np.nan_to_num(X, nan=0.0, posinf=1e10, neginf=-1e10)
 
 
+# Tipos confiáveis para serialização skops usada pelo mlflow.sklearn.log_model.
+# O pipeline contém funções custom (_replace_inf/_cleanup_transform) e modelos
+# de árvore (sklearn.tree._tree.Tree) que o skops bloqueia por padrão.
+# Todos são gerados no próprio processo de treino, portanto seguros.
+SKOPS_TRUSTED_TYPES = [
+    "numpy.dtype",
+    "preprocessador._replace_inf",
+    "preprocessador._cleanup_transform",
+    "sklearn.tree._tree.Tree",
+]
+
+
 class PreprocessadorFactory:
     """Cria ColumnTransformers para pre-processamento de features."""
 
@@ -163,7 +175,7 @@ class TreinadorPipeline:
             if mlflow_manager:
                 mlflow.log_params({f"modelo__{k}": str(v)[:100] for k, v in estimador.get_params().items()})
                 mlflow.log_metrics(met)
-                mlflow.sklearn.log_model(pipe, name=nome)
+                mlflow.sklearn.log_model(pipe, name=nome, skops_trusted_types=SKOPS_TRUSTED_TYPES)
             return pipe, met
         finally:
             if mlflow_manager:

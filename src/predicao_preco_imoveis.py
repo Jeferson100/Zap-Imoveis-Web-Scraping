@@ -12,6 +12,8 @@ from mlflow.tracking.client import MlflowClient
 from sklearn.metrics import mean_absolute_error, mean_absolute_percentage_error, mean_squared_error, mean_squared_log_error, r2_score
 from sklearn.pipeline import Pipeline
 
+from preprocessador import SKOPS_TRUSTED_TYPES
+
 
 def listar_experimentos_mlflow():
     """Lista todos os experimentos e runs do MLflow."""
@@ -185,7 +187,7 @@ def treinar_pipeline_com_mlflow(nome, estimador, X_tr, y_tr, X_te, y_te, criar_p
             ])
             pipe.fit(X_tr, y_tr)
             pred = pipe.predict(X_te)
-            mlflow.sklearn.log_model(pipe, name=nome)
+            mlflow.sklearn.log_model(pipe, name=nome, skops_trusted_types=SKOPS_TRUSTED_TYPES)
             trained_model = pipe
 
             if hasattr(estimador, "get_params"):
