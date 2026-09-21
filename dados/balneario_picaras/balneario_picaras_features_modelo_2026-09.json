@@ -1,0 +1,32 @@
+{
+  "features": [
+    "metragem",
+    "tipo_imovel"
+  ],
+  "features_numericas": [
+    "metragem"
+  ],
+  "features_categoricas": [
+    "tipo_imovel"
+  ],
+  "n_features": 2,
+  "modelo": "CatBoost",
+  "tratamento": "robust_median_ohe",
+  "transform": "none",
+  "scaler": "RobustScaler",
+  "imputer_num": "median",
+  "encoder": "OneHotEncoder",
+  "target_transform": "none",
+  "best_params": {
+    "iterations": 250,
+    "depth": 4,
+    "learning_rate": 0.1886833855846677,
+    "l2_leaf_reg": 1.7197689110123644,
+    "subsample": 0.941149261754806
+  },
+  "rmse_otimizado": 1030015.3206688558,
+  "r2_otimizado": 0.7638882626896442,
+  "mes_ref": "2026-09",
+  "data_treino": "2026-09-21T17:01:55.459951",
+  "fonte": "backfill-otimizados"
+}

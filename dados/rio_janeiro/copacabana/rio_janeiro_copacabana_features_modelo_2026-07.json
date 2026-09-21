@@ -1,0 +1,37 @@
+{
+  "features": [
+    "metragem",
+    "vagas",
+    "quartos",
+    "banheiros",
+    "score_hospitais"
+  ],
+  "features_numericas": [
+    "metragem",
+    "vagas",
+    "quartos",
+    "banheiros",
+    "score_hospitais"
+  ],
+  "features_categoricas": [],
+  "n_features": 5,
+  "modelo": "GradientBoosting",
+  "tratamento": "std_median_ohe",
+  "transform": "log",
+  "scaler": "StandardScaler",
+  "imputer_num": "median",
+  "encoder": "OneHotEncoder",
+  "target_transform": "none",
+  "best_params": {
+    "n_estimators": 150,
+    "max_depth": 8,
+    "learning_rate": 0.052955718515741046,
+    "subsample": 0.8350578829219771,
+    "min_samples_leaf": 1
+  },
+  "rmse_otimizado": 1652184.7469419604,
+  "r2_otimizado": 0.6944345556014401,
+  "mes_ref": "2026-07",
+  "data_treino": "2026-09-21T17:01:57.445622",
+  "fonte": "backfill-joblib+otimizados"
+}

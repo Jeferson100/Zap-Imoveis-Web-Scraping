@@ -1,0 +1,50 @@
+{
+  "features": [
+    "metragem",
+    "quartos",
+    "banheiros",
+    "vagas",
+    "lng",
+    "lat",
+    "dist_centro",
+    "sem_rua",
+    "novo_lancamento",
+    "tipo_imovel",
+    "tem_elevador"
+  ],
+  "features_numericas": [
+    "metragem",
+    "quartos",
+    "banheiros",
+    "vagas",
+    "lng",
+    "lat",
+    "dist_centro",
+    "sem_rua",
+    "tem_elevador"
+  ],
+  "features_categoricas": [
+    "novo_lancamento",
+    "tipo_imovel"
+  ],
+  "n_features": 11,
+  "modelo": "RandomForest",
+  "tratamento": "quantile_median_ord",
+  "transform": "none",
+  "scaler": "QuantileTransformer",
+  "imputer_num": "median",
+  "encoder": "OrdinalEncoder",
+  "target_transform": "log",
+  "best_params": {
+    "n_estimators": 200,
+    "max_depth": 15,
+    "min_samples_leaf": 2,
+    "min_samples_split": 14,
+    "max_features": "log2"
+  },
+  "rmse_otimizado": 42904006.25336536,
+  "r2_otimizado": 0.005629481526073121,
+  "mes_ref": "2026-08",
+  "data_treino": "2026-09-21T17:01:57.398356",
+  "fonte": "backfill-joblib+otimizados"
+}

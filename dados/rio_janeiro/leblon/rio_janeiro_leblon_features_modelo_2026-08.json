@@ -1,0 +1,54 @@
+{
+  "features": [
+    "metragem",
+    "banheiros",
+    "dist_centro",
+    "vagas",
+    "quartos",
+    "sem_rua",
+    "lng",
+    "bairro",
+    "novo_lancamento",
+    "tem_elevador",
+    "tipo_imovel",
+    "bairro_cluster",
+    "dist_centro_faixa"
+  ],
+  "features_numericas": [
+    "metragem",
+    "banheiros",
+    "dist_centro",
+    "vagas",
+    "quartos",
+    "sem_rua",
+    "lng",
+    "tem_elevador",
+    "bairro_cluster",
+    "dist_centro_faixa"
+  ],
+  "features_categoricas": [
+    "bairro",
+    "novo_lancamento",
+    "tipo_imovel"
+  ],
+  "n_features": 13,
+  "modelo": "GradientBoosting",
+  "tratamento": "power_median_ohe",
+  "transform": "log",
+  "scaler": "PowerTransformer",
+  "imputer_num": "median",
+  "encoder": "OneHotEncoder",
+  "target_transform": "log",
+  "best_params": {
+    "n_estimators": 200,
+    "max_depth": 8,
+    "learning_rate": 0.025960150256356455,
+    "subsample": 0.8391105893637091,
+    "min_samples_leaf": 10
+  },
+  "rmse_otimizado": 19852748.992556747,
+  "r2_otimizado": 0.03361845675740249,
+  "mes_ref": "2026-08",
+  "data_treino": "2026-09-21T17:01:57.487914",
+  "fonte": "backfill-otimizados"
+}

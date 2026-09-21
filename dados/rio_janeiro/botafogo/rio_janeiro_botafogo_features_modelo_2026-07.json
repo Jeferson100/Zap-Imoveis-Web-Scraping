@@ -1,0 +1,31 @@
+{
+  "features": [
+    "metragem",
+    "vagas"
+  ],
+  "features_numericas": [
+    "metragem",
+    "vagas"
+  ],
+  "features_categoricas": [],
+  "n_features": 2,
+  "modelo": "RandomForest",
+  "tratamento": "quantile_median_ord",
+  "transform": "yeojohnson",
+  "scaler": "QuantileTransformer",
+  "imputer_num": "median",
+  "encoder": "OrdinalEncoder",
+  "target_transform": "none",
+  "best_params": {
+    "n_estimators": 100,
+    "max_depth": 11,
+    "min_samples_leaf": 1,
+    "min_samples_split": 2,
+    "max_features": 0.7
+  },
+  "rmse_otimizado": 1993493.5176077553,
+  "r2_otimizado": 0.3599603644046745,
+  "mes_ref": "2026-07",
+  "data_treino": "2026-09-21T17:01:57.407865",
+  "fonte": "backfill-otimizados"
+}

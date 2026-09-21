@@ -1,0 +1,33 @@
+{
+  "features": [
+    "metragem",
+    "quartos",
+    "banheiros"
+  ],
+  "features_numericas": [
+    "metragem",
+    "quartos",
+    "banheiros"
+  ],
+  "features_categoricas": [],
+  "n_features": 3,
+  "modelo": "RandomForest",
+  "tratamento": "minmax_mean_ohe",
+  "transform": "yeojohnson",
+  "scaler": "MinMaxScaler",
+  "imputer_num": "mean",
+  "encoder": "OneHotEncoder",
+  "target_transform": "none",
+  "best_params": {
+    "n_estimators": 100,
+    "max_depth": 15,
+    "min_samples_leaf": 8,
+    "min_samples_split": 8,
+    "max_features": "sqrt"
+  },
+  "rmse_otimizado": 11570745.260344433,
+  "r2_otimizado": 0.06514166344471006,
+  "mes_ref": "2026-08",
+  "data_treino": "2026-09-21T17:01:57.551339",
+  "fonte": "backfill-joblib+otimizados"
+}

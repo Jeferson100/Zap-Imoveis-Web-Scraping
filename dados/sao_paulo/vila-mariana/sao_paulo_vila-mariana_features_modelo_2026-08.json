@@ -1,0 +1,29 @@
+{
+  "features": [
+    "banheiros"
+  ],
+  "features_numericas": [
+    "banheiros"
+  ],
+  "features_categoricas": [],
+  "n_features": 1,
+  "modelo": "CatBoost",
+  "tratamento": "quantile_median_ord",
+  "transform": "sqrt",
+  "scaler": "QuantileTransformer",
+  "imputer_num": "median",
+  "encoder": "OrdinalEncoder",
+  "target_transform": "none",
+  "best_params": {
+    "iterations": 100,
+    "depth": 4,
+    "learning_rate": 0.017554377596210292,
+    "l2_leaf_reg": 8.517550241554702,
+    "subsample": 0.9686737840829253
+  },
+  "rmse_otimizado": 26751792.75353923,
+  "r2_otimizado": 0.018633461708571053,
+  "mes_ref": "2026-08",
+  "data_treino": "2026-09-21T17:01:57.977660",
+  "fonte": "backfill-otimizados"
+}

@@ -1,0 +1,62 @@
+{
+  "features": [
+    "banheiros",
+    "score_escola_publica",
+    "score_escola_privada",
+    "metragem",
+    "score_parque",
+    "quartos",
+    "vagas",
+    "lat",
+    "score_mercado",
+    "score_farmacia",
+    "score_hospitais",
+    "dist_centro",
+    "sem_rua",
+    "score_seguranca",
+    "score_educacao",
+    "tem_elevador",
+    "tipo_imovel"
+  ],
+  "features_numericas": [
+    "banheiros",
+    "score_escola_publica",
+    "score_escola_privada",
+    "metragem",
+    "score_parque",
+    "quartos",
+    "vagas",
+    "lat",
+    "score_mercado",
+    "score_farmacia",
+    "score_hospitais",
+    "dist_centro",
+    "sem_rua",
+    "score_seguranca",
+    "score_educacao",
+    "tem_elevador"
+  ],
+  "features_categoricas": [
+    "tipo_imovel"
+  ],
+  "n_features": 17,
+  "modelo": "RandomForest",
+  "tratamento": "raw_zero_ord",
+  "transform": "yeojohnson",
+  "scaler": "NoneType",
+  "imputer_num": "constant",
+  "encoder": "OrdinalEncoder",
+  "target_transform": "log",
+  "best_params": {
+    "n_estimators": 150,
+    "max_depth": 15,
+    "min_samples_leaf": 4,
+    "min_samples_split": 14,
+    "max_features": 0.7
+  },
+  "rmse_otimizado": 19395687.172008146,
+  "r2_otimizado": 0.008693201538723883,
+  "mes_ref": "2026-08",
+  "data_treino": "2026-09-21T17:01:57.963122",
+  "fonte": "backfill-joblib+otimizados"
+}

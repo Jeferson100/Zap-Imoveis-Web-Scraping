@@ -1,0 +1,40 @@
+{
+  "features": [
+    "quartos",
+    "banheiros",
+    "metragem",
+    "metro_quadrado_bairro_median",
+    "tipo_imovel",
+    "tem_elevador"
+  ],
+  "features_numericas": [
+    "quartos",
+    "banheiros",
+    "metragem",
+    "metro_quadrado_bairro_median",
+    "tem_elevador"
+  ],
+  "features_categoricas": [
+    "tipo_imovel"
+  ],
+  "n_features": 6,
+  "modelo": "GradientBoosting",
+  "tratamento": "quantile_median_ord",
+  "transform": "none",
+  "scaler": "QuantileTransformer",
+  "imputer_num": "median",
+  "encoder": "OrdinalEncoder",
+  "target_transform": "log",
+  "best_params": {
+    "n_estimators": 200,
+    "max_depth": 8,
+    "learning_rate": 0.014052282594170715,
+    "subsample": 0.6057221297265316,
+    "min_samples_leaf": 10
+  },
+  "rmse_otimizado": 478338.61274415505,
+  "r2_otimizado": 0.5534894542586244,
+  "mes_ref": "2026-07",
+  "data_treino": "2026-09-21T17:01:57.112140",
+  "fonte": "backfill-joblib+otimizados"
+}

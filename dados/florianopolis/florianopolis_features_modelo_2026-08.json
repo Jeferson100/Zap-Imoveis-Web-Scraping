@@ -1,0 +1,46 @@
+{
+  "features": [
+    "metragem",
+    "banheiros",
+    "valor_bairro_mean",
+    "metro_quadrado_bairro_mean",
+    "vagas",
+    "quartos",
+    "dist_centro",
+    "score_hospitais",
+    "tipo_imovel"
+  ],
+  "features_numericas": [
+    "metragem",
+    "banheiros",
+    "valor_bairro_mean",
+    "metro_quadrado_bairro_mean",
+    "vagas",
+    "quartos",
+    "dist_centro",
+    "score_hospitais"
+  ],
+  "features_categoricas": [
+    "tipo_imovel"
+  ],
+  "n_features": 9,
+  "modelo": "GradientBoosting",
+  "tratamento": "std_median_ohe",
+  "transform": "sqrt",
+  "scaler": "StandardScaler",
+  "imputer_num": "median",
+  "encoder": "OneHotEncoder",
+  "target_transform": "none",
+  "best_params": {
+    "n_estimators": 150,
+    "max_depth": 8,
+    "learning_rate": 0.1205712628744377,
+    "subsample": 0.8394633936788146,
+    "min_samples_leaf": 2
+  },
+  "rmse_otimizado": 1074125.857498481,
+  "r2_otimizado": 0.8161678135075943,
+  "mes_ref": "2026-08",
+  "data_treino": "2026-09-21T17:01:57.059177",
+  "fonte": "backfill-joblib+otimizados"
+}

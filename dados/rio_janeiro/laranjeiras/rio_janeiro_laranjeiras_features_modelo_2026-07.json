@@ -1,0 +1,29 @@
+{
+  "features": [
+    "metragem"
+  ],
+  "features_numericas": [
+    "metragem"
+  ],
+  "features_categoricas": [],
+  "n_features": 1,
+  "modelo": "GradientBoosting",
+  "tratamento": "quantile_median_ord",
+  "transform": "sqrt",
+  "scaler": "QuantileTransformer",
+  "imputer_num": "median",
+  "encoder": "OrdinalEncoder",
+  "target_transform": "none",
+  "best_params": {
+    "n_estimators": 150,
+    "max_depth": 8,
+    "learning_rate": 0.018403245054277165,
+    "subsample": 0.9456367093526263,
+    "min_samples_leaf": 1
+  },
+  "rmse_otimizado": 26226633.558051575,
+  "r2_otimizado": -0.004650431211377315,
+  "mes_ref": "2026-07",
+  "data_treino": "2026-09-21T17:01:57.481534",
+  "fonte": "backfill-otimizados"
+}

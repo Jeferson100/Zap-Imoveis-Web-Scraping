@@ -1,0 +1,37 @@
+{
+  "features": [
+    "metragem",
+    "quartos",
+    "vagas",
+    "lat",
+    "banheiros"
+  ],
+  "features_numericas": [
+    "metragem",
+    "quartos",
+    "vagas",
+    "lat",
+    "banheiros"
+  ],
+  "features_categoricas": [],
+  "n_features": 5,
+  "modelo": "CatBoost",
+  "tratamento": "power_median_ohe",
+  "transform": "none",
+  "scaler": "PowerTransformer",
+  "imputer_num": "median",
+  "encoder": "OneHotEncoder",
+  "target_transform": "log",
+  "best_params": {
+    "iterations": 300,
+    "depth": 8,
+    "learning_rate": 0.11024711953195061,
+    "l2_leaf_reg": 8.446568524008809,
+    "subsample": 0.7294805567168786
+  },
+  "rmse_otimizado": 12467716.588822694,
+  "r2_otimizado": 0.12273005849210161,
+  "mes_ref": "2026-08",
+  "data_treino": "2026-09-21T17:01:57.467107",
+  "fonte": "backfill-otimizados"
+}

@@ -1,0 +1,62 @@
+{
+  "features": [
+    "banheiros",
+    "metragem",
+    "quartos",
+    "vagas",
+    "score_escola_privada",
+    "sem_rua",
+    "score_escola_publica",
+    "quartos_por_metro",
+    "vagas_por_metro",
+    "banheiros_por_quarto",
+    "dist_centro",
+    "novo_lancamento",
+    "tem_elevador",
+    "tipo_imovel",
+    "bairro",
+    "dist_centro_faixa",
+    "bairro_cluster"
+  ],
+  "features_numericas": [
+    "banheiros",
+    "metragem",
+    "quartos",
+    "vagas",
+    "score_escola_privada",
+    "sem_rua",
+    "score_escola_publica",
+    "quartos_por_metro",
+    "vagas_por_metro",
+    "banheiros_por_quarto",
+    "dist_centro",
+    "tem_elevador",
+    "dist_centro_faixa",
+    "bairro_cluster"
+  ],
+  "features_categoricas": [
+    "novo_lancamento",
+    "tipo_imovel",
+    "bairro"
+  ],
+  "n_features": 17,
+  "modelo": "GradientBoosting",
+  "tratamento": "std_median_ohe",
+  "transform": "sqrt",
+  "scaler": "StandardScaler",
+  "imputer_num": "median",
+  "encoder": "OneHotEncoder",
+  "target_transform": "log",
+  "best_params": {
+    "n_estimators": 200,
+    "max_depth": 8,
+    "learning_rate": 0.017152743230431658,
+    "subsample": 0.6067917484450385,
+    "min_samples_leaf": 9
+  },
+  "rmse_otimizado": 9003090.754184766,
+  "r2_otimizado": 0.03726033402662077,
+  "mes_ref": "2026-08",
+  "data_treino": "2026-09-21T17:01:57.474795",
+  "fonte": "backfill-otimizados"
+}
