@@ -58,6 +58,7 @@ function carregarPredicao(cidade) {
 
         console.log('Predicao JSON carregada:', cidade, '|', modeloJson.ensemble.type,
             '|', modeloJson.ensemble.n_estimators, 'trees');
+        renderizarFormularioPredicao();
         popularBairrosPredicao();
         return true;
     });
@@ -73,6 +74,145 @@ function popularBairrosPredicao() {
         opt.value = b;
         opt.textContent = b;
         sel.appendChild(opt);
+    });
+}
+
+// ── Formulário dinâmico: só mostra inputs das features do modelo carregado ──
+var DERIVADAS = ['lat', 'lng', 'dist_centro', 'dist_centro_faixa',
+    'score_escola_privada', 'score_escola_publica', 'score_hospitais',
+    'score_mercado', 'score_farmacia', 'score_parque', 'score_seguranca', 'score_educacao',
+    'metro_quadrado_bairro_mean', 'metro_quadrado_bairro_median', 'valor_bairro_mean',
+    'bairro_rank', 'bairro_cluster', 'quartos_por_metro', 'vagas_por_metro',
+    'banheiros_por_quarto', 'sem_rua', 'componente_0', 'componente_1',
+    'componente_2', 'componente_3'];
+
+var WIDGETS = {
+    metragem:         { tipo: 'number',   rotulo: 'Metragem (m²)', min: 10, max: 10000, padrao: 70, grupo: 'imovel' },
+    quartos:          { tipo: 'number',   rotulo: 'Quartos', min: 0, max: 20, padrao: 3, grupo: 'imovel' },
+    banheiros:        { tipo: 'number',   rotulo: 'Banheiros', min: 0, max: 20, padrao: 2, grupo: 'imovel' },
+    vagas:            { tipo: 'number',   rotulo: 'Vagas', min: 0, max: 20, padrao: 1, grupo: 'imovel' },
+    suites:           { tipo: 'select',   rotulo: 'Suítes', opcoes: [['','Não informado'],['0','0'],['1','1'],['2','2'],['3','3'],['4','4'],['5','5+']], grupo: 'imovel' },
+    tipo_imovel:      { tipo: 'select',   rotulo: 'Tipo', opcoes: [['apartamento','Apartamento'],['casa','Casa']], grupo: 'imovel' },
+    predicao_idade:   { tipo: 'number',   rotulo: 'Idade do imóvel (anos)', min: 0, max: 200, padrao: 0, ajuda: '0 = novo', grupo: 'imovel' },
+    bairro:           { tipo: 'select_bairro', rotulo: 'Bairro', grupo: 'local' },
+    novo_lancamento:  { tipo: 'checkbox', rotulo: 'Novo lançamento', grupo: 'flags' },
+    tem_elevador:     { tipo: 'checkbox', rotulo: 'Tem elevador', grupo: 'flags' },
+    priv_churrasqueira: { tipo: 'checkbox', rotulo: 'Churrasqueira', grupo: 'priv' },
+    priv_varanda:     { tipo: 'checkbox', rotulo: 'Varanda', grupo: 'priv' },
+    priv_piscina:     { tipo: 'checkbox', rotulo: 'Piscina', grupo: 'priv' },
+    priv_closet:      { tipo: 'checkbox', rotulo: 'Closet', grupo: 'priv' },
+    comum_piscina:    { tipo: 'checkbox', rotulo: 'Piscina', grupo: 'comum' },
+    comum_elevador:   { tipo: 'checkbox', rotulo: 'Elevador', grupo: 'comum' },
+    comum_salao:      { tipo: 'checkbox', rotulo: 'Salão de festas', grupo: 'comum' },
+    comum_churrasqueira: { tipo: 'checkbox', rotulo: 'Churrasqueira', grupo: 'comum' },
+    comum_playground: { tipo: 'checkbox', rotulo: 'Playground', grupo: 'comum' },
+    comum_academia:   { tipo: 'checkbox', rotulo: 'Academia/Fitness', grupo: 'comum' },
+    comum_spa:        { tipo: 'checkbox', rotulo: 'Spa/Sauna', grupo: 'comum' },
+};
+
+var GRUPOS_PRED = [
+    ['imovel', '🏠 Imóvel'],
+    ['local', '📍 Localização'],
+    ['flags', '⚙️ Características'],
+    ['priv', '🛋️ Privativas'],
+    ['comum', '🏢 Comuns'],
+    ['extras', '➕ Outras variáveis do modelo'],
+];
+
+function idCampo(feature) {
+    var mapa = { tipo_imovel: 'pred-tipo', bairro: 'pred-bairro',
+        novo_lancamento: 'pred-novo', tem_elevador: 'pred-elevador',
+        predicao_idade: 'pred-idade' };
+    if (mapa[feature]) return mapa[feature];
+    return 'pred-' + feature.replace(/_/g, '-');
+}
+
+function renderizarFormularioPredicao() {
+    var box = document.getElementById('pred-form-dinamico');
+    if (!box || !modeloJson) return;
+    box.innerHTML = '';
+    var feats = modeloJson.feature_names || [];
+    var temTopicos = feats.some(function(f) { return f.indexOf('componente_') === 0; });
+
+    function criarCampo(feature, cfg) {
+        var wrap = document.createElement('div');
+        var id = idCampo(feature);
+        if (cfg.tipo === 'checkbox') {
+            var lab = document.createElement('label');
+            lab.className = 'checkbox-inline';
+            var inp = document.createElement('input');
+            inp.type = 'checkbox'; inp.id = id;
+            inp.setAttribute('data-feature', feature);
+            lab.appendChild(inp);
+            lab.appendChild(document.createTextNode(' ' + cfg.rotulo));
+            wrap.appendChild(lab);
+        } else if (cfg.tipo === 'select' || cfg.tipo === 'select_bairro') {
+            var lab2 = document.createElement('label');
+            lab2.textContent = cfg.rotulo;
+            var sel = document.createElement('select');
+            sel.id = id;
+            sel.setAttribute('data-feature', feature);
+            (cfg.opcoes || []).forEach(function(op) {
+                var o = document.createElement('option');
+                o.value = op[0]; o.textContent = op[1];
+                sel.appendChild(o);
+            });
+            lab2.appendChild(sel);
+            wrap.appendChild(lab2);
+        } else {
+            var lab3 = document.createElement('label');
+            lab3.textContent = cfg.rotulo;
+            var num = document.createElement('input');
+            num.type = 'number'; num.id = id;
+            num.setAttribute('data-feature', feature);
+            if (cfg.min !== undefined) num.min = cfg.min;
+            if (cfg.max !== undefined) num.max = cfg.max;
+            if (cfg.padrao !== undefined) num.value = cfg.padrao;
+            if (cfg.ajuda) num.placeholder = cfg.ajuda;
+            lab3.appendChild(num);
+            wrap.appendChild(lab3);
+        }
+        return wrap;
+    }
+
+    GRUPOS_PRED.forEach(function(g) {
+        var col = document.createElement('div');
+        col.className = 'pred-form-col';
+        var titulo = document.createElement('h4');
+        titulo.textContent = g[1];
+        col.appendChild(titulo);
+        var tem = false;
+        feats.forEach(function(f) {
+            if (DERIVADAS.indexOf(f) !== -1) return;
+            var cfg = WIDGETS[f] ||
+                { tipo: 'number', rotulo: f, padrao: 0, grupo: 'extras' };
+            if ((cfg.grupo || 'extras') !== g[0]) return;
+            col.appendChild(criarCampo(f, cfg));
+            tem = true;
+        });
+        if (g[0] === 'local') {
+            [['pred-rua', 'text', 'Rua (opcional)', 'Rua...'],
+             ['pred-numero', 'number', 'Número (opcional)', 'Nº']].forEach(function(c) {
+                var lab = document.createElement('label');
+                lab.textContent = c[2];
+                var inp = document.createElement('input');
+                inp.type = c[1]; inp.id = c[0]; inp.placeholder = c[3] || '';
+                if (c[1] === 'number') inp.min = 0;
+                lab.appendChild(inp);
+                col.appendChild(lab);
+            });
+            tem = true;
+            if (temTopicos) {
+                var labd = document.createElement('label');
+                labd.textContent = 'Descrição (opcional)';
+                var ta = document.createElement('textarea');
+                ta.id = 'pred-descricao'; ta.rows = 3;
+                ta.placeholder = 'Detalhes do imóvel...';
+                labd.appendChild(ta);
+                col.appendChild(labd);
+            }
+        }
+        if (tem) box.appendChild(col);
     });
 }
 
@@ -201,10 +341,10 @@ function aplicarTopicos(descricao) {
 }
 
 function montarFeatures(inputs) {
-    var metragem = inputs.metragem;
-    var quartos = inputs.quartos;
-    var banheiros = inputs.banheiros;
-    var vagas = inputs.vagas;
+    var metragem = inputs.metragem || 70;
+    var quartos = (inputs.quartos !== undefined && inputs.quartos !== null && inputs.quartos !== '') ? inputs.quartos : 3;
+    var banheiros = (inputs.banheiros !== undefined && inputs.banheiros !== null && inputs.banheiros !== '') ? inputs.banheiros : 2;
+    var vagas = inputs.vagas || 0;
 
     var features = {
         metragem: metragem,
@@ -220,23 +360,16 @@ function montarFeatures(inputs) {
         quartos_por_metro: quartos / (metragem + 1),
         vagas_por_metro: vagas / (metragem + 1),
         banheiros_por_quarto: banheiros / (quartos + 1),
-        sem_rua: 0,
+        sem_rua: inputs.rua ? 0 : 1,
         predicao_idade: inputs.idade || 0,
     };
 
-    // Novas amenities
-    features.suites = parseInt(inputs.suites) || 0;
-    features.priv_churrasqueira = inputs.priv_churrasqueira;
-    features.priv_varanda = inputs.priv_varanda;
-    features.priv_piscina = inputs.priv_piscina;
-    features.priv_closet = inputs.priv_closet;
-    features.comum_piscina = inputs.comum_piscina;
-    features.comum_elevador = inputs.comum_elevador;
-    features.comum_salao = inputs.comum_salao;
-    features.comum_churrasqueira = inputs.comum_churrasqueira;
-    features.comum_playground = inputs.comum_playground;
-    features.comum_academia = inputs.comum_academia;
-    features.comum_spa = inputs.comum_spa;
+    // Amenities + qualquer feature futura: merge genérico de inputs.extras
+    if (inputs.extras) {
+        Object.keys(inputs.extras).forEach(function(k) {
+            if (features[k] === undefined) features[k] = inputs.extras[k];
+        });
+    }
 
     if (bairroStats && bairroStats[inputs.bairro]) {
         var bs = bairroStats[inputs.bairro];
@@ -417,32 +550,47 @@ function executarPredicao() {
         return;
     }
 
-    var metragem = parseInt(document.getElementById('pred-metragem').value) || 70;
-    var quartos = parseInt(document.getElementById('pred-quartos').value) || 3;
-    var banheiros = parseInt(document.getElementById('pred-banheiros').value) || 2;
-    var vagas = parseInt(document.getElementById('pred-vagas').value) || 1;
-    var tipoImovel = document.getElementById('pred-tipo').value || 'apartamento';
-    var bairro = document.getElementById('pred-bairro').value;
-    var novoLancamento = document.getElementById('pred-novo').checked || false;
-    var temElevador = document.getElementById('pred-elevador').checked || false;
-    var rua = document.getElementById('pred-rua').value || '';
-    var numero = parseInt(document.getElementById('pred-numero').value) || 0;
-    var descricao = document.getElementById('pred-descricao').value || '';
-    var idade = parseInt(document.getElementById('pred-idade').value) || 0;
-    
-    // Novas amenities
-    var suites = document.getElementById('pred-suites').value || 0;
-    var priv_churrasqueira = document.getElementById('pred-priv-churrasqueira').checked ? 1 : 0;
-    var priv_varanda = document.getElementById('pred-priv-varanda').checked ? 1 : 0;
-    var priv_piscina = document.getElementById('pred-priv-piscina').checked ? 1 : 0;
-    var priv_closet = document.getElementById('pred-priv-closet').checked ? 1 : 0;
-    var comum_piscina = document.getElementById('pred-comum-piscina').checked ? 1 : 0;
-    var comum_elevador = document.getElementById('pred-comum-elevador').checked ? 1 : 0;
-    var comum_salao = document.getElementById('pred-comum-salao').checked ? 1 : 0;
-    var comum_churrasqueira = document.getElementById('pred-comum-churrasqueira').checked ? 1 : 0;
-    var comum_playground = document.getElementById('pred-comum-playground').checked ? 1 : 0;
-    var comum_academia = document.getElementById('pred-comum-academia').checked ? 1 : 0;
-    var comum_spa = document.getElementById('pred-comum-spa').checked ? 1 : 0;
+    // Coleta genérica: lê todo [data-feature] renderizado pelo modelo da vez
+    var inputs = { cidade: cidade };
+    var catFeats = (configPredicao && configPredicao.features_categoricas) || [];
+    Array.prototype.forEach.call(
+        document.querySelectorAll('#pred-form-dinamico [data-feature]'),
+        function(el) {
+            var f = el.getAttribute('data-feature');
+            if (el.type === 'checkbox') { inputs[f] = el.checked ? 1 : 0; return; }
+            if (catFeats.indexOf(f) !== -1 || el.tagName === 'SELECT') {
+                if (f === 'suites') inputs[f] = el.value || 0;
+                else inputs[f] = el.value;
+                return;
+            }
+            inputs[f] = parseFloat(el.value);
+            if (isNaN(inputs[f])) inputs[f] = 0;
+        }
+    );
+    // Helpers de geocoding (não são features do modelo)
+    var ruaEl = document.getElementById('pred-rua');
+    var numeroEl = document.getElementById('pred-numero');
+    var descEl = document.getElementById('pred-descricao');
+    var rua = (ruaEl && ruaEl.value) || '';
+    var numero = (numeroEl && parseInt(numeroEl.value)) || 0;
+    var descricao = (descEl && descEl.value) || '';
+    inputs.rua = rua; inputs.numero = numero; inputs.descricao = descricao;
+    // Aliases que montarFeatures espera
+    inputs.idade = inputs.predicao_idade || 0;
+    inputs.tipo_imovel = inputs.tipo_imovel || 'apartamento';
+    inputs.novo_lancamento = inputs.novo_lancamento ? 1 : 0;
+    inputs.tem_elevador = inputs.tem_elevador ? 1 : 0;
+    // Extras genéricos (amenities + features futuras desconhecidas)
+    var baseKeys = { cidade: 1, rua: 1, numero: 1, descricao: 1, idade: 1,
+        lat: 1, lng: 1, metragem: 1, quartos: 1, banheiros: 1, vagas: 1,
+        tipo_imovel: 1, bairro: 1, novo_lancamento: 1, tem_elevador: 1,
+        predicao_idade: 1 };
+    inputs.extras = {};
+    Object.keys(inputs).forEach(function(k) {
+        if (!baseKeys[k]) inputs.extras[k] = inputs[k];
+    });
+    var metragem = inputs.metragem || 70;
+    var bairro = inputs.bairro || '';
 
     var resultDiv = document.getElementById('pred-resultado');
     var btn = document.getElementById('pred-btn');
@@ -453,25 +601,8 @@ function executarPredicao() {
     geocodificar(rua, numero, bairro, cidade).then(function(coords) {
         resultDiv.innerHTML = '<p style="color:#666;text-align:center;padding:1rem;">Calculando predicao...</p>';
 
-        var features = montarFeatures({
-            metragem: metragem, quartos: quartos, banheiros: banheiros,
-            vagas: vagas, tipo_imovel: tipoImovel, bairro: bairro,
-            novo_lancamento: novoLancamento, tem_elevador: temElevador,
-            lat: coords.lat, lng: coords.lng, descricao: descricao,
-            cidade: cidade, idade: idade,
-            suites: suites,
-            priv_churrasqueira: priv_churrasqueira,
-            priv_varanda: priv_varanda,
-            priv_piscina: priv_piscina,
-            priv_closet: priv_closet,
-            comum_piscina: comum_piscina,
-            comum_elevador: comum_elevador,
-            comum_salao: comum_salao,
-            comum_churrasqueira: comum_churrasqueira,
-            comum_playground: comum_playground,
-            comum_academia: comum_academia,
-            comum_spa: comum_spa,
-        });
+        inputs.lat = coords.lat; inputs.lng = coords.lng;
+        var features = montarFeatures(inputs);
 
         try {
             var valorPredito = preverValor(features);
