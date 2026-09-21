@@ -130,7 +130,7 @@ def montar_features_predicao(metragem, quartos, banheiros, vagas,
                               tipo_imovel, bairro, novo_lancamento, tem_elevador,
                               lat, lng, bairro_stats, indices,
                               km_cluster=None, scaler_cluster=None,
-                              predicao_idade=0):
+                              predicao_idade=0, extras=None, rua=""):
     dados = {
         'metragem': metragem,
         'quartos': quartos,
@@ -183,6 +183,20 @@ def montar_features_predicao(metragem, quartos, banheiros, vagas,
     else:
         df["bairro_cluster"] = 0
 
+    # Extras genéricos (amenities, suites, features futuras): valores do usuário
+    # têm prioridade sobre as médias do bairro no fallback abaixo
+    if extras:
+        for k, v in extras.items():
+            if k == 'suites':
+                try:
+                    df[k] = int(v) if str(v).isdigit() else 0
+                except (ValueError, TypeError):
+                    df[k] = 0
+            elif isinstance(v, bool):
+                df[k] = int(v)
+            else:
+                df[k] = v
+
     for col in ALL_FEATURES:
         if col not in df.columns:
             if bairro in bairro_stats.index and col in bairro_stats.columns:
@@ -191,7 +205,7 @@ def montar_features_predicao(metragem, quartos, banheiros, vagas,
                 df[col] = bairro_stats[col].mean()
 
     if "sem_rua" not in df.columns:
-        df["sem_rua"] = 0
+        df["sem_rua"] = 0 if (rua or "") else 1
 
     return df[ALL_FEATURES]
 
@@ -232,6 +246,47 @@ def _aplicar_topicos_descricao(descricao, topicos_data, df_pred):
         df_pred[f"componente_{i}"] = 0.0
 
 
+# ── Formulário dinâmico: só mostra inputs das features do modelo carregado ──
+DERIVADAS_PRED = {'lat', 'lng', 'dist_centro', 'dist_centro_faixa',
+    'score_escola_privada', 'score_escola_publica', 'score_hospitais',
+    'score_mercado', 'score_farmacia', 'score_parque', 'score_seguranca', 'score_educacao',
+    'metro_quadrado_bairro_mean', 'metro_quadrado_bairro_median', 'valor_bairro_mean',
+    'bairro_rank', 'bairro_cluster', 'quartos_por_metro', 'vagas_por_metro',
+    'banheiros_por_quarto', 'sem_rua', 'componente_0', 'componente_1',
+    'componente_2', 'componente_3'}
+
+# feature -> (tipo_widget, rotulo, args). Feature futura desconhecida: number genérico.
+WIDGETS_PRED = {
+    'metragem':       ('number', 'Metragem (m²)', dict(min_value=10, max_value=10000, value=70)),
+    'quartos':        ('number', 'Quartos', dict(min_value=0, max_value=20, value=3)),
+    'banheiros':      ('number', 'Banheiros', dict(min_value=0, max_value=20, value=2)),
+    'vagas':          ('number', 'Vagas', dict(min_value=0, max_value=20, value=1)),
+    'suites':         ('select', 'Suítes', ['Não informado', '0', '1', '2', '3', '4', '5+']),
+    'tipo_imovel':    ('select', 'Tipo de imovel', ['apartamento', 'casa']),
+    'bairro':         ('select_bairro', 'Bairro', None),
+    'novo_lancamento':('check', 'Novo lancamento', None),
+    'tem_elevador':   ('check', 'Tem elevador', None),
+    'predicao_idade': ('number', 'Idade do imovel (anos)', dict(min_value=0, max_value=200, value=0)),
+    'priv_churrasqueira': ('check', 'Churrasqueira (priv.)', None),
+    'priv_varanda':   ('check', 'Varanda', None),
+    'priv_piscina':   ('check', 'Piscina (priv.)', None),
+    'priv_closet':    ('check', 'Closet', None),
+    'comum_piscina':  ('check', 'Piscina (cond.)', None),
+    'comum_elevador': ('check', 'Elevador (cond.)', None),
+    'comum_salao':    ('check', 'Salão de festas', None),
+    'comum_churrasqueira': ('check', 'Churrasqueira (cond.)', None),
+    'comum_playground': ('check', 'Playground', None),
+    'comum_academia': ('check', 'Academia/Fitness', None),
+    'comum_spa':      ('check', 'Spa/Sauna', None),
+}
+
+GRUPO_WIDGET = {
+    'metragem': 'base', 'quartos': 'base', 'banheiros': 'base', 'vagas': 'base',
+    'suites': 'base', 'tipo_imovel': 'base', 'predicao_idade': 'base',
+    'bairro': 'base', 'novo_lancamento': 'base', 'tem_elevador': 'base',
+}
+
+
 def gerar_pagina_predicao(cidade_path, prefixo_name, cidade_nome_poi):
     pasta = Path(__file__).resolve().parent.parent / 'dados' / cidade_path
     pasta.mkdir(parents=True, exist_ok=True)
@@ -251,23 +306,81 @@ def gerar_pagina_predicao(cidade_path, prefixo_name, cidade_nome_poi):
 
     with st.form("form_predicao"):
         col1, col2 = st.columns(2)
+        valores = {}
+
+        def render_widget(col, feature, cfg):
+            tipo, rotulo, args = cfg
+            key = f"pred_{feature}"
+            if tipo == 'number':
+                return col.number_input(rotulo, key=key, **(args or {}))
+            if tipo == 'select':
+                return col.selectbox(rotulo, options=args, key=key)
+            if tipo == 'select_bairro':
+                return col.selectbox(rotulo, options=sorted(bairro_stats.index.tolist()), key=key)
+            if tipo == 'check':
+                return col.checkbox(rotulo, key=key)
+            return col.number_input(rotulo or feature, key=key, value=0)
 
         with col1:
             rua = st.text_input("Rua (opcional)", help="Se preenchido, usado para geolocalizacao exata")
             numero = st.number_input("Numero (opcional)", 0, 99999, 0,
                                      help="Se preenchido junto com a rua, melhora a precisao da geolocalizacao")
-            metragem = st.number_input("Metragem (m²)", 10, 10000, 70)
-            quartos = st.number_input("Quartos", 1, 20, 3)
-            banheiros = st.number_input("Banheiros", 1, 20, 2)
+            for feature in feature_names:
+                if feature in DERIVADAS_PRED:
+                    continue
+                cfg = WIDGETS_PRED.get(feature)
+                if cfg is None:
+                    cfg = ('number', feature, dict(value=0))
+                if GRUPO_WIDGET.get(feature, 'amen') != 'base':
+                    continue
+                if feature == 'bairro':
+                    continue
+                valores[feature] = render_widget(col1, feature, cfg)
 
         with col2:
-            vagas = st.number_input("Vagas", 0, 20, 1)
-            tipo_imovel = st.selectbox("Tipo de imovel", ["apartamento", "casa"])
-            bairro = st.selectbox("Bairro", sorted(bairro_stats.index.tolist()))
-            novo_lancamento = st.checkbox("Novo lancamento")
-            tem_elevador = st.checkbox("Tem elevador")
-            predicao_idade = st.number_input("Idade do imovel (anos)", 0, 200, 0,
-                                              help="0 = novo/construcao")
+            valores['bairro'] = render_widget(
+                col2, 'bairro', WIDGETS_PRED['bairro']) if 'bairro' in feature_names else sorted(bairro_stats.index.tolist())[0]
+            for feature in feature_names:
+                if feature in DERIVADAS_PRED or feature == 'bairro':
+                    continue
+                cfg = WIDGETS_PRED.get(feature)
+                if cfg is None:
+                    cfg = ('number', feature, dict(value=0))
+                if GRUPO_WIDGET.get(feature, 'amen') != 'base':
+                    continue
+                valores[feature] = render_widget(col2, feature, cfg)
+
+        with st.expander("Amenidades privativas / comuns (se o modelo usar)"):
+            for feature in feature_names:
+                if feature in DERIVADAS_PRED:
+                    continue
+                if GRUPO_WIDGET.get(feature, 'amen') == 'base':
+                    continue
+                cfg = WIDGETS_PRED.get(feature)
+                if cfg is None:
+                    cfg = ('number', feature, dict(value=0))
+                valores[feature] = render_widget(st, feature, cfg)
+
+        metragem = valores.get('metragem', 70)
+        quartos = valores.get('quartos', 3)
+        banheiros = valores.get('banheiros', 2)
+        vagas = valores.get('vagas', 1)
+        tipo_imovel = valores.get('tipo_imovel', 'apartamento')
+        bairro = valores.get('bairro', sorted(bairro_stats.index.tolist())[0])
+        novo_lancamento = bool(valores.get('novo_lancamento', False))
+        tem_elevador = bool(valores.get('tem_elevador', False))
+        predicao_idade = valores.get('predicao_idade', 0)
+        suites_raw = valores.get('suites', 'Não informado')
+        try:
+            suites_val = int(suites_raw) if str(suites_raw).isdigit() else 0
+        except (ValueError, TypeError):
+            suites_val = 0
+        extras = {k: v for k, v in valores.items()
+                  if k not in ('metragem', 'quartos', 'banheiros', 'vagas',
+                               'tipo_imovel', 'bairro', 'novo_lancamento',
+                               'tem_elevador', 'predicao_idade')}
+        if 'suites' in extras:
+            extras['suites'] = suites_val
 
         modelo_precisa_topicos = any(c.startswith("componente_") for c in feature_names)
         if modelo_precisa_topicos:
@@ -300,7 +413,7 @@ def gerar_pagina_predicao(cidade_path, prefixo_name, cidade_nome_poi):
                 lat=lat, lng=lng,
                 bairro_stats=bairro_stats, indices=indices,
                 km_cluster=km_cluster, scaler_cluster=scaler_cluster,
-                predicao_idade=predicao_idade,
+                predicao_idade=predicao_idade, extras=extras, rua=rua,
             )
 
         if modelo_precisa_topicos and topicos_data is not None:
