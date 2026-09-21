@@ -143,7 +143,8 @@ def montar_features_predicao(metragem, quartos, banheiros, vagas,
                               tipo_imovel, bairro, novo_lancamento, tem_elevador,
                               lat, lng, bairro_stats, indices,
                               km_cluster=None, scaler_cluster=None,
-                              predicao_idade=0, extras=None, rua=""):
+                              predicao_idade=0, extras=None, rua="",
+                              feature_names_modelo=None):
     dados = {
         'metragem': metragem,
         'quartos': quartos,
@@ -210,17 +211,22 @@ def montar_features_predicao(metragem, quartos, banheiros, vagas,
             else:
                 df[k] = v
 
-    for col in ALL_FEATURES:
+    # Contrato: colunas do JSON oficial do modelo (ex.: joinville_features_modelo_2026-09.json).
+    # Fallback = ALL_FEATURES (config) quando o JSON não existir (mês antigo).
+    cols_alvo = list(feature_names_modelo) if feature_names_modelo else list(ALL_FEATURES)
+    for col in cols_alvo:
         if col not in df.columns:
             if bairro in bairro_stats.index and col in bairro_stats.columns:
                 df[col] = bairro_stats.loc[bairro, col]
             elif col in bairro_stats.columns:
                 df[col] = bairro_stats[col].mean()
+            else:
+                df[col] = 0
 
     if "sem_rua" not in df.columns:
         df["sem_rua"] = 0 if (rua or "") else 1
 
-    return df[ALL_FEATURES]
+    return df[[c for c in cols_alvo if c in df.columns]]
 
 
 def _aplicar_topicos_descricao(descricao, topicos_data, df_pred):
@@ -426,6 +432,7 @@ def gerar_pagina_predicao(cidade_path, prefixo_name, cidade_nome_poi):
                 bairro_stats=bairro_stats, indices=indices,
                 km_cluster=km_cluster, scaler_cluster=scaler_cluster,
                 predicao_idade=predicao_idade, extras=extras, rua=rua,
+                feature_names_modelo=feature_names,
             )
 
         if modelo_precisa_topicos and topicos_data is not None:
