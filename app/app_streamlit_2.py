@@ -325,29 +325,28 @@ def gerar_pagina_predicao(cidade_path, prefixo_name, cidade_nome_poi):
             rua = st.text_input("Rua (opcional)", help="Se preenchido, usado para geolocalizacao exata")
             numero = st.number_input("Numero (opcional)", 0, 99999, 0,
                                      help="Se preenchido junto com a rua, melhora a precisao da geolocalizacao")
-            for feature in feature_names:
-                if feature in DERIVADAS_PRED:
-                    continue
+            # Particiona as features base entre col1/col2 (cada key renderizada 1x)
+            base_feats = [f for f in feature_names
+                          if f not in DERIVADAS_PRED
+                          and GRUPO_WIDGET.get(f, 'amen') == 'base'
+                          and f != 'bairro']
+            metade = (len(base_feats) + 1) // 2
+            col1_feats, col2_feats = base_feats[:metade], base_feats[metade:]
+            for feature in col1_feats:
                 cfg = WIDGETS_PRED.get(feature)
                 if cfg is None:
                     cfg = ('number', feature, dict(value=0))
-                if GRUPO_WIDGET.get(feature, 'amen') != 'base':
-                    continue
-                if feature == 'bairro':
-                    continue
                 valores[feature] = render_widget(col1, feature, cfg)
 
         with col2:
-            valores['bairro'] = render_widget(
-                col2, 'bairro', WIDGETS_PRED['bairro']) if 'bairro' in feature_names else sorted(bairro_stats.index.tolist())[0]
-            for feature in feature_names:
-                if feature in DERIVADAS_PRED or feature == 'bairro':
-                    continue
+            if 'bairro' in feature_names:
+                valores['bairro'] = render_widget(col2, 'bairro', WIDGETS_PRED['bairro'])
+            else:
+                valores['bairro'] = sorted(bairro_stats.index.tolist())[0]
+            for feature in col2_feats:
                 cfg = WIDGETS_PRED.get(feature)
                 if cfg is None:
                     cfg = ('number', feature, dict(value=0))
-                if GRUPO_WIDGET.get(feature, 'amen') != 'base':
-                    continue
                 valores[feature] = render_widget(col2, feature, cfg)
 
         with st.expander("Amenidades privativas / comuns (se o modelo usar)"):
