@@ -224,6 +224,30 @@ def treinar_melhor_modelo_geral(
         json.dump({"target_transformer": target_transform}, f)
     logger.info("Metadado salvo: %s", meta_path.name)
 
+    # ── 9a2. Salvar features do modelo final ────────────────────────────
+    features_info = {
+        "features": best_features,
+        "features_numericas": best_num_feats,
+        "features_categoricas": best_cat_feats,
+        "n_features": len(best_features),
+        "modelo": best["modelo"],
+        "tratamento": best["tratamento"],
+        "transform": best["transform"],
+        "scaler": best["scaler"],
+        "imputer_num": best["imputer_num"],
+        "encoder": best["encoder"],
+        "target_transform": target_transform,
+        "best_params": best_params,
+        "rmse_otimizado": float(best["rmse_otimizado"]),
+        "r2_otimizado": float(best["r2_otimizado"]),
+        "mes_ref": mes_ref,
+        "data_treino": datetime.now().isoformat(),
+    }
+    features_path = pasta_dados / f"{cidade}_features_modelo_{mes_ref}.json"
+    with open(features_path, "w", encoding="utf-8") as f:
+        json.dump(features_info, f, indent=2, ensure_ascii=False, default=str)
+    logger.info("Features do modelo salvas: %s (%d features)", features_path.name, len(best_features))
+
     # ── 10. Predicao com intervalo no imoveis_limpo ─────────────────────
     logger.info("Gerando predicoes com intervalo no dataset completo...")
 
@@ -313,6 +337,10 @@ def treinar_melhor_modelo_geral(
         if f.name != meta_path.name:
             f.unlink()
             logger.info("Target transform anterior removido: %s", f.name)
+    for f in pasta_dados.glob(f"{cidade}_features_modelo_*.json"):
+        if f.name != features_path.name:
+            f.unlink()
+            logger.info("Features anteriores removidas: %s", f.name)
     for f in pasta_dados.glob(f"{cidade}_cluster_models_*.pkl"):
         if f.name != cluster_path.name:
             f.unlink()
