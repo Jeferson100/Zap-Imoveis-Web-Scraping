@@ -165,6 +165,19 @@ def exportar_cidade(cidade, base_dir):
     else:
         target_transform = 'none'
 
+    # ── Features oficiais do treino (mesmo método do app) ──
+    features_info = None
+    feat_path = pasta_dados / f'{cidade}_features_modelo_{mes_ref}.json'
+    if feat_path.exists():
+        try:
+            with open(feat_path, encoding='utf-8') as f:
+                features_info = json.load(f)
+            print(f"  Features oficiais: {features_info.get('n_features')} ({features_info.get('fonte', '?')})")
+        except Exception as exc:
+            print(f'  Aviso: falha ao ler {feat_path.name} ({exc})')
+    if features_info is None:
+        features_info = {'features': list(feature_names), 'fonte': 'pipeline'}
+
     precisa_topicos = any(c.startswith('componente_') for c in feature_names)
     topic_data = None
     if precisa_topicos:
@@ -186,6 +199,7 @@ def exportar_cidade(cidade, base_dir):
     model_export = {
         'model_type': model_type,
         'feature_names': feature_names,
+        'features_info': features_info,
         'target_transform': target_transform,
         'ensemble': trees_data,
         'preprocessor': preprocessor_data,

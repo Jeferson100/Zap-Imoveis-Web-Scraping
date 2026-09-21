@@ -5,6 +5,16 @@ var clusterData = null;
 var targetTransform = 'none';
 var topicModel = null;
 
+// Método das features igual ao app: JSON oficial do treino primeiro,
+// introspecção do pipeline (feature_names) como fallback
+function getModelFeatures() {
+    if (modeloJson && modeloJson.features_info && modeloJson.features_info.features
+        && modeloJson.features_info.features.length) {
+        return modeloJson.features_info.features;
+    }
+    return (modeloJson && modeloJson.feature_names) || [];
+}
+
 var CIDADES_ESTADO = {
     'joinville': 'SC', 'balneario_camboriu': 'SC', 'florianopolis': 'SC',
     'blumenau': 'SC', 'itajai': 'SC', 'itapema': 'SC',
@@ -49,9 +59,9 @@ function carregarPredicao(cidade) {
 
         targetTransform = modeloJson.target_transform || 'none';
         configPredicao = {
-            todas_features: modeloJson.feature_names,
+            todas_features: getModelFeatures(),
             features_categoricas: ['tipo_imovel', 'bairro', 'tem_elevador', 'novo_lancamento', 'dist_centro_faixa', 'bairro_cluster'],
-            features_tematicas: modeloJson.feature_names.filter(function(f) { return f.indexOf('componente_') === 0; }),
+            features_tematicas: getModelFeatures().filter(function(f) { return f.indexOf('componente_') === 0; }),
         };
 
         topicModel = modeloJson.topics || null;
@@ -131,7 +141,7 @@ function renderizarFormularioPredicao() {
     var box = document.getElementById('pred-form-dinamico');
     if (!box || !modeloJson) return;
     box.innerHTML = '';
-    var feats = modeloJson.feature_names || [];
+    var feats = getModelFeatures();
     var temTopicos = feats.some(function(f) { return f.indexOf('componente_') === 0; });
 
     function criarCampo(feature, cfg) {
@@ -587,7 +597,7 @@ function executarPredicao() {
         predicao_idade: 1 };
     inputs.extras = {};
     Object.keys(inputs).forEach(function(k) {
-        if (!baseKeys[k]) inputs.extras[k] = inputs[k];
+        if (k !== 'extras' && !baseKeys[k]) inputs.extras[k] = inputs[k];
     });
     var metragem = inputs.metragem || 70;
     var bairro = inputs.bairro || '';
