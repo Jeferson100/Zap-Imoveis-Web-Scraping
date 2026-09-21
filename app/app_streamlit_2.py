@@ -86,14 +86,27 @@ def carregar_modelo_e_stats(pasta, prefixo_name):
     modelo = joblib.load(modelo_path)
     bairro_stats = pd.read_parquet(stats_path)
 
-    try:
-        ct = modelo.named_steps["preprocessador"]
-        feature_names_modelo = []
-        for _, _, cols in ct.transformers_:
-            feature_names_modelo.extend(cols)
-    except Exception:
-        feature_names_modelo = ALL_FEATURES
-        st.warning("Nao foi possivel extrair features do modelo — usando ALL_FEATURES")
+    # ── Features do modelo final (fonte oficial) ──
+    feature_names_modelo = []
+    features_path = pasta / f"{prefixo_name}_features_modelo_{mes_ref}.json"
+    if features_path.exists():
+        try:
+            with open(features_path, encoding="utf-8") as f:
+                feat_info = json.load(f)
+            feature_names_modelo = list(feat_info.get("features", []) or [])
+        except Exception:
+            feature_names_modelo = []
+
+    # Fallback: introspecção do pipeline (meses antigos sem o JSON)
+    if not feature_names_modelo:
+        try:
+            ct = modelo.named_steps["preprocessador"]
+            feature_names_modelo = []
+            for _, _, cols in ct.transformers_:
+                feature_names_modelo.extend(cols)
+        except Exception:
+            feature_names_modelo = ALL_FEATURES
+            st.warning("Nao foi possivel extrair features do modelo — usando ALL_FEATURES")
 
     from intervalo_predicao import PreditorComIntervalo
     preditor_path = pasta / f"{prefixo_name}_preditor_intervalo_{mes_ref}.joblib"
