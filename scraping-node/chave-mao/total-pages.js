@@ -1,9 +1,8 @@
 // Espelha total_page_chaves.py: detecta o total de páginas da listagem.
-const { chromium } = require('playwright');
-const { newContext } = require('./browser');
+const { newContext, launchChromium } = require('./browser');
 
 async function getTotalPages(urlPrimeiraPag, headless = true) {
-  const browser = await chromium.launch({ headless });
+  const browser = await launchChromium(headless);
   try {
     const context = await newContext(browser);
     const page = await context.newPage();

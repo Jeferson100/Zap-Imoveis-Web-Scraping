@@ -5,6 +5,8 @@
   "type": "commonjs",
   "dependencies": {
     "playwright": "^1.58.0",
+    "playwright-extra": "^4.3.6",
+    "puppeteer-extra-plugin-stealth": "^2.11.2",
     "p-limit": "^3.1.0"
   },
   "scripts": {

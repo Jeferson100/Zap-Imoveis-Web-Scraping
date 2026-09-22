@@ -2,9 +2,8 @@
 // Uso: node coleta.js --url-template "https://.../?pg={pagina}" [--pages N] [--out out.json] [--concurrency 5] [--headless true]
 const fs = require('fs');
 const { parseArgs } = require('node:util');
-const { chromium } = require('playwright');
 const pLimit = require('p-limit');
-const { newContext, sleep, rand } = require('./browser');
+const { newContext, sleep, rand, launchChromium } = require('./browser');
 const { getLinks } = require('./links');
 const { extrairChaveMao } = require('./extrair');
 const { getTotalPages } = require('./total-pages');
@@ -19,7 +18,7 @@ async function runColeta({ urlTemplate, totalPages, out, maxConc = 5, headless =
   console.log(`Total de páginas: ${total}`);
 
   // Browser ÚNICO reusado (diferença vs. Python: sem launch por item)
-  const browser = await chromium.launch({ headless });
+  const browser = await launchChromium(headless);
   try {
     // ETAPA 2: links em lotes
     const contextLinks = await newContext(browser);

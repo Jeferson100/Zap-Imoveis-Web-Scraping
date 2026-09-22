@@ -1,5 +1,22 @@
 // Helpers compartilhados: 1 browser reusado + bloqueio de mídia.
-// (Melhorias vs. Python: sem launch por item, sem imagens/fontes/mídia.)
+// Stealth parity com o Python (playwright-stealth).
+const { chromium: chromiumVanilla } = require('playwright');
+
+let chromiumStealth = null;
+try {
+  const { chromium } = require('playwright-extra');
+  chromium.use(require('puppeteer-extra-plugin-stealth')());
+  chromiumStealth = chromium;
+} catch {
+  // Sem stealth instalado: segue com Chromium puro (e avisa)
+  console.warn('Stealth indisponível, usando Chromium puro.');
+}
+
+async function launchChromium(headless) {
+  const engine = chromiumStealth || chromiumVanilla;
+  return engine.launch({ headless });
+}
+
 const UA =
   'Mozilla/5.0 (Windows NT 10.0; Win64; x64) ' +
   'AppleWebKit/537.36 (KHTML, like Gecko) ' +
@@ -15,4 +32,4 @@ async function newContext(browser) {
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 const rand = (a, b) => a + Math.random() * (b - a);
 
-module.exports = { UA, newContext, sleep, rand };
+module.exports = { UA, newContext, sleep, rand, launchChromium };
