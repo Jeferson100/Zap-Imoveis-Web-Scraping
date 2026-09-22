@@ -213,4 +213,8 @@ codigos_rodando/cache/
 # MLflow experiment tracking
 mlruns/
 
+# Node.js
+scraping-node/node_modules/
+npm-debug.log*
+
 
