@@ -81,12 +81,13 @@ async function extrairMetragens(page) {
 
 async function extrairCaracteristicas(page) {
   let priv = [], comum = [];
+  const decodifica = (s) => s.replace(/\\u([0-9a-fA-F]{4})/g, (_, h) => String.fromCharCode(parseInt(h, 16)));
   try {
     const html = await page.content();
-    const mp = html.match(/"privativeItems"\s*:\s*\[(.*?)\]/s);
-    if (mp) priv = [...mp[1].matchAll(/"name"\s*:\s*"([^"]+)"/g)].map((m) => m[1]);
-    const mc = html.match(/"commonItems"\s*:\s*\[(.*?)\]/s);
-    if (mc) comum = [...mc[1].matchAll(/"name"\s*:\s*"([^"]+)"/g)].map((m) => m[1]);
+    const mp = html.match(/\\?"privativeItems\\?"\s*:\s*\[(.*?)\]/s);
+    if (mp) priv = [...mp[1].matchAll(/\\?"name\\?"\s*:\s*\\?"([^"\\]+)/g)].map((m) => decodifica(m[1]));
+    const mc = html.match(/\\?"commonItems\\?"\s*:\s*\[(.*?)\]/s);
+    if (mc) comum = [...mc[1].matchAll(/\\?"name\\?"\s*:\s*\\?"([^"\\]+)/g)].map((m) => decodifica(m[1]));
   } catch { /* segue para fallback */ }
   if (!priv.length && !comum.length) {
     try {
