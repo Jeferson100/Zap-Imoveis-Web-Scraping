@@ -100,8 +100,15 @@ async function extrairCaracteristicas(page) {
       if (await page.locator('div.style_optionalItemsContainer__7e5rw').count() > 0) {
         const spans = await page.locator('div.style_optionalItemsContainer__7e5rw span').all();
         for (const sp of spans) {
-          const titulo = (await sp.locator('b').count()) > 0
-            ? (await sp.locator('b').first().innerText()).trim().toLowerCase() : '';
+          // textContent (não innerText): títulos podem existir no DOM sem renderização
+          const titulo = await sp.evaluate((el) => {
+            const bTexts = [...el.querySelectorAll('b')]
+              .map((b) => (b.textContent || '').trim().toLowerCase())
+              .filter(Boolean);
+            if (bTexts.length) return bTexts[0];
+            const p = el.querySelector('p');
+            return p ? (p.textContent || '').trim().toLowerCase().slice(0, 60) : '';
+          }).catch(() => '');
           let itens = await sp.locator('ul li p.styles_text-body-sm-medium__FWa10').allInnerTexts();
           itens = itens.map((i) => i.trim()).filter(Boolean);
           if (titulo.includes('privativa')) priv = itens;
