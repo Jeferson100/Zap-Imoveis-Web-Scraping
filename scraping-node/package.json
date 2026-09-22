@@ -1,0 +1,13 @@
+{
+  "name": "scraping-node",
+  "version": "0.1.0",
+  "private": true,
+  "type": "commonjs",
+  "dependencies": {
+    "playwright": "^1.49.0",
+    "p-limit": "^5.0.0"
+  },
+  "scripts": {
+    "chave-mao": "node chave-mao/coleta.js"
+  }
+}
