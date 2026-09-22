@@ -88,6 +88,21 @@ async function extrairCaracteristicas(page) {
     const mc = html.match(/"commonItems"\s*:\s*\[(.*?)\]/s);
     if (mc) comum = [...mc[1].matchAll(/"name"\s*:\s*"([^"]+)"/g)].map((m) => m[1]);
   } catch { /* segue para fallback */ }
+  if (!priv.length && !comum.length) {
+    try {
+      if (await page.locator('div.style_optionalItemsContainer__7e5rw').count() > 0) {
+        const spans = await page.locator('div.style_optionalItemsContainer__7e5rw span').all();
+        for (const sp of spans) {
+          const titulo = (await sp.locator('b').count()) > 0
+            ? (await sp.locator('b').first().innerText()).trim().toLowerCase() : '';
+          let itens = await sp.locator('ul li p.styles_text-body-sm-medium__FWa10').allInnerTexts();
+          itens = itens.map((i) => i.trim()).filter(Boolean);
+          if (titulo.includes('privativa')) priv = itens;
+          else if (titulo.includes('comum')) comum = itens;
+        }
+      }
+    } catch { /* mantém o que já tem */ }
+  }
   return [priv.map((s) => s.trim()).filter(Boolean), comum.map((s) => s.trim()).filter(Boolean)];
 }
 
