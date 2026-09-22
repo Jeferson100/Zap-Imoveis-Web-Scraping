@@ -114,7 +114,14 @@ async function extrairChaveMao(page, url) {
   for (let t = 1; t <= MAX_RETRIES; t++) {
     try {
       await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 60000 });
-      await page.waitForTimeout(2000);
+      // Espera determinística pela hidratação (título com texto) em vez de
+      // sleep fixo: sem isso a extração pode rodar antes do React hidratar.
+      // Seletor genérico (sem hash CSS) = imune a rotação de hashes do site.
+      await page.waitForFunction(
+        () => document.querySelector('h1')?.innerText?.trim().length > 0,
+        { timeout: 25000 }
+      ).catch(() => {});
+      await page.waitForTimeout(1500); // settle final
       const [metragemTotal, metragemUtil] = await extrairMetragens(page);
       const [priv, comum] = await extrairCaracteristicas(page);
       return {
