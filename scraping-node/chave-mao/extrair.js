@@ -84,13 +84,19 @@ async function extrairCaracteristicas(page) {
   const decodifica = (s) => s.replace(/\\u([0-9a-fA-F]{4})/g, (_, h) => String.fromCharCode(parseInt(h, 16)));
   try {
     const html = await page.content();
-    const mp = html.match(/\\?"privativeItems\\?"\s*:\s*\[(.*?)\]/s);
-    if (mp) priv = [...mp[1].matchAll(/\\?"name\\?"\s*:\s*\\?"([^"\\]+)/g)].map((m) => decodifica(m[1]));
-    const mc = html.match(/\\?"commonItems\\?"\s*:\s*\[(.*?)\]/s);
-    if (mc) comum = [...mc[1].matchAll(/\\?"name\\?"\s*:\s*\\?"([^"\\]+)/g)].map((m) => decodifica(m[1]));
+    // Estrito (aspas literais, igual Python): payloads Flight escapados de
+    // imóveis vizinhos NÃO casam — evita atribuir amenities alheias ao anúncio.
+    const mp = html.match(/"privativeItems"\s*:\s*\[(.*?)\]/s);
+    if (mp) priv = [...mp[1].matchAll(/"name"\s*:\s*"([^"]+)"/g)].map((m) => decodifica(m[1]));
+    const mc = html.match(/"commonItems"\s*:\s*\[(.*?)\]/s);
+    if (mc) comum = [...mc[1].matchAll(/"name"\s*:\s*"([^"]+)"/g)].map((m) => decodifica(m[1]));
   } catch { /* segue para fallback */ }
   if (!priv.length && !comum.length) {
     try {
+      // Scroll: seção pode hidratar sob lazy-load. DOM renderizado é sempre
+      // do próprio anúncio (sem risco de atribuição errada).
+      await page.evaluate('window.scrollTo(0, document.body.scrollHeight)');
+      await page.waitForTimeout(2000);
       if (await page.locator('div.style_optionalItemsContainer__7e5rw').count() > 0) {
         const spans = await page.locator('div.style_optionalItemsContainer__7e5rw span').all();
         for (const sp of spans) {
