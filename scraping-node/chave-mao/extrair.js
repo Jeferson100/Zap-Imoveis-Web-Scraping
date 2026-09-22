@@ -23,7 +23,7 @@ function normalizarMonetario(v) {
 
 async function texto(page, seletor, timeout = 5000) {
   try {
-    const t = await page.locator(seletor).first.innerText({ timeout });
+    const t = await page.locator(seletor).first().innerText({ timeout });
     return t.trim();
   } catch { return null; }
 }
@@ -105,7 +105,7 @@ async function extrairMapa(page) {
   try {
     await page.locator('#tablink-map').click();
     await page.waitForSelector('iframe[src*="maps"]', { timeout: 5000 });
-    return await page.locator('iframe[src*="maps"]').first.getAttribute('src', { timeout: 5000 });
+    return await page.locator('iframe[src*="maps"]').first().getAttribute('src', { timeout: 5000 });
   } catch { return null; }
 }
 
