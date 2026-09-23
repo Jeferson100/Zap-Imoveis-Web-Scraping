@@ -79,7 +79,7 @@ async function extrairMetragens(page) {
   return [total ? `${total} m²` : null, util ? `${util} m²` : null];
 }
 
-async function extrairCaracteristicas(page) {
+async function extrairCaracteristicas(page, descricao = '', url = '') {
   let priv = [], comum = [];
   const decodifica = (s) => s.replace(/\\u([0-9a-fA-F]{4})/g, (_, h) => String.fromCharCode(parseInt(h, 16)));
   try {
@@ -121,8 +121,57 @@ async function extrairCaracteristicas(page) {
       }
     } catch { /* mantém o que já tem */ }
   }
+  if (!priv.length && !comum.length) {
+    const [p2, c2] = extrairCaracteristicasDescricao(descricao, url);
+    if (p2.length || c2.length) console.log(`caracteristicas: fonte=prosa priv=${p2.length} comum=${c2.length}`);
+    priv.push(...p2); comum.push(...c2);
+  }
   if (!priv.length && !comum.length) console.log('caracteristicas: fonte=vazio priv=0 comum=0');
   return [priv.map((s) => s.trim()).filter(Boolean), comum.map((s) => s.trim()).filter(Boolean)];
+}
+
+// Termos espelham pipeline extrair_amenidades (substring match, igual check_arr).
+// Mineração restrita à seção de características: fora dela há falsos positivos
+// ("próximo a academia" em Localização não é amenity do imóvel).
+const PROSE_PRIV = ['churrasqueira', 'varanda', 'closet', 'piscina'];
+const PROSE_COMUM = ['elevador', 'salao', 'salão', 'playground', 'academia',
+  'fitness', 'spa', 'sauna', 'piscina', 'churrasqueira'];
+const PROSE_AMBIG = ['piscina', 'churrasqueira', 'sauna'];
+const PROSE_HEADERS = /caracter[ií]sticas|diferenciais|detalhes(\s+do\s+im[óo]vel)?|sobre o im[óo]vel/i;
+const PROSE_STOP = /^([aá]rea externa|localiza|condi[çc]|valores|observa|agende|entre em contato|ref\.|atualizado)/im;
+
+function extrairCaracteristicasDescricao(descricao, url) {
+  const priv = [], comum = [];
+  if (!descricao) return [priv, comum];
+  const texto = String(descricao);
+  const h = texto.search(PROSE_HEADERS);
+  if (h < 0) return [priv, comum]; // sem seção → não inventa
+  let secao = texto.slice(h);
+  const stop = secao.slice(50).search(PROSE_STOP);
+  if (stop > 0) secao = secao.slice(0, 50 + stop);
+  const low = secao.toLowerCase();
+  const ehCasa = /casa-a-venda/.test(url || '');
+  const ehApto = /apartamento-a-venda/.test(url || '');
+  // Word-boundary (+ plural opcional): evita 'spa' casar dentro de 'espaços'
+  const esc = (t) => t.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  const tem = (t) => new RegExp(`\\b${esc(t)}s?\\b`).test(low);
+  // suites: "sendo 4 suítes" → formato que o pipeline já parseia
+  const ms = low.match(/(\d+)\s*su[ií]tes?\b/);
+  if (ms) priv.push(`${parseInt(ms[1], 10)} suíte${parseInt(ms[1], 10) > 1 ? 's' : ''}`);
+  for (const t of PROSE_PRIV) {
+    if (PROSE_AMBIG.includes(t)) continue;
+    if (tem(t) && !priv.includes(t)) priv.push(t);
+  }
+  for (const t of PROSE_COMUM) {
+    if (PROSE_AMBIG.includes(t)) continue;
+    if (tem(t) && !comum.includes(t)) comum.push(t);
+  }
+  for (const t of PROSE_AMBIG) {
+    if (!tem(t)) continue;
+    const lado = ehCasa ? priv : ehApto ? comum : priv;
+    if (!lado.includes(t)) lado.push(t);
+  }
+  return [priv, comum];
 }
 
 async function extrairFotos(page) {
@@ -157,7 +206,8 @@ async function extrairChaveMao(page, url) {
       ).catch(() => {});
       await page.waitForTimeout(1500); // settle final
       const [metragemTotal, metragemUtil] = await extrairMetragens(page);
-      const [priv, comum] = await extrairCaracteristicas(page);
+      const descricao = await texto(page, 'p[aria-label="descrição"]');
+      const [priv, comum] = await extrairCaracteristicas(page, descricao, url);
       return {
         url,
         titulo: await texto(page, 'h1.styles_typography__xG9rg'),
@@ -169,7 +219,7 @@ async function extrairChaveMao(page, url) {
         banheiros: limparValor(await texto(page, 'p[aria-label="Banheiros"] b')),
         vagas: await texto(page, "p[aria-label='Garagens'] b"),
         endereco: await texto(page, 'h2[class*="styles_text-title-lg"].column, h2[class*="styles_text-title-lg"] b'),
-        descricao: await texto(page, 'p[aria-label="descrição"]'),
+        descricao,
         condominio: limparValor(await texto(page, 'p:has-text("Condomínio") + p')),
         iptu: limparValor(await texto(page, 'p:has-text("IPTU") + p')),
         caracteristicas: [],
