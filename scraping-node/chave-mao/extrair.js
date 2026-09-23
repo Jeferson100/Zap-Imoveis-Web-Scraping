@@ -240,13 +240,30 @@ async function extrairEnderecoGenerico(page) {
 // Escopo preferencial na lista de specs; global como fallback.
 // Vizinhos usam outra estrutura (p[aria-label], sem small+b) → sem poluição.
 async function specGaragens(page) {
+  // Garante a seção renderizada: sem scroll+espera os <b> podem ainda ser
+  // skeleton (a espera por h1 no início não cobre esta seção).
+  try {
+    const alvo = page.locator('ul[class*="style_listContent"]').first();
+    if (await alvo.count() > 0) {
+      await alvo.scrollIntoViewIfNeeded().catch(() => {});
+      await page.waitForFunction(
+        () => [...document.querySelectorAll('ul[class*="style_listContent"] b')]
+          .some((b) => (b.textContent || '').trim().length > 0),
+        { timeout: 10000 }
+      ).catch(() => {});
+    } else {
+      await page.evaluate('window.scrollTo(0, document.body.scrollHeight)');
+      await page.waitForTimeout(2000);
+    }
+  } catch { /* segue para leitura */ }
+  // textContent (não innerText): valores no DOM sem render não aparecem no innerText
   const buscar = async (lis) => {
     for (const li of lis) {
       try {
-        const lab = ((await li.locator('small').first().innerText().catch(() => '')) || '')
+        const lab = ((await li.locator('small').first().textContent().catch(() => '')) || '')
           .replace(':', '').trim().toLowerCase();
         if (lab.startsWith('garagen')) {
-          const v = ((await li.locator('b').first().innerText().catch(() => '')) || '').trim();
+          const v = ((await li.locator('b').first().textContent().catch(() => '')) || '').trim();
           if (v) return v;
         }
       } catch { /* próxima */ }
