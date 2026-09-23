@@ -254,12 +254,16 @@ async function extrairChaveMao(page, url) {
       const [priv, comum] = await extrairCaracteristicas(page, descricao, url);
       const titulo = await extrairTitulo(page);
       let quartos = await texto(page, "b:has(svg path[d^='M112.867 767.316'])");
+      if (!quartos) quartos = await texto(page, "p[aria-label='Quartos' i]");
       if (!quartos) quartos = await extrairNumeroLdJson(page, 'numberOfBedrooms');
       let banheirosRaw = await texto(page, 'p[aria-label="Banheiros"] b');
       if (!banheirosRaw) banheirosRaw = await extrairNumeroLdJson(page, 'numberOfBathroomsTotal');
       const banheiros = limparValor(banheirosRaw);
       let endereco = await texto(page, 'h2[class*="styles_text-title-lg"].column, h2[class*="styles_text-title-lg"] b');
       if (!endereco) endereco = await extrairEnderecoGenerico(page);
+      let vagas = await texto(page, "p[aria-label='Garagens'] b");
+      if (!vagas) vagas = await texto(page, "p[aria-label='Garagens' i] b");
+      if (!vagas) vagas = await texto(page, "p[aria-label='Garagens' i]");
       // Saneamento: 0/1 m² não existem (default do site p/ ausente); vira null → limpeza trata
       const sanear = (v) => {
         if (!v) return null;
@@ -277,7 +281,7 @@ async function extrairChaveMao(page, url) {
         valor_imovel: await extrairValor(page),
         quartos,
         banheiros,
-        vagas: await texto(page, "p[aria-label='Garagens'] b"),
+        vagas,
         endereco,
         descricao,
         condominio: limparValor(await texto(page, 'p:has-text("Condomínio") + p')),
