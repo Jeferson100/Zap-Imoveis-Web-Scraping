@@ -90,6 +90,7 @@ async function extrairCaracteristicas(page) {
     if (mp) priv = [...mp[1].matchAll(/"name"\s*:\s*"([^"]+)"/g)].map((m) => decodifica(m[1]));
     const mc = html.match(/"commonItems"\s*:\s*\[(.*?)\]/s);
     if (mc) comum = [...mc[1].matchAll(/"name"\s*:\s*"([^"]+)"/g)].map((m) => decodifica(m[1]));
+    if (priv.length || comum.length) console.log(`caracteristicas: fonte=regex priv=${priv.length} comum=${comum.length}`);
   } catch { /* segue para fallback */ }
   if (!priv.length && !comum.length) {
     try {
@@ -100,23 +101,27 @@ async function extrairCaracteristicas(page) {
       if (await page.locator('div.style_optionalItemsContainer__7e5rw').count() > 0) {
         const spans = await page.locator('div.style_optionalItemsContainer__7e5rw span').all();
         for (const sp of spans) {
-          // textContent (não innerText): títulos podem existir no DOM sem renderização
-          const titulo = await sp.evaluate((el) => {
+          // 1 evaluate por span: título (textContent, imune a falta de render)
+          // + itens (textContent, imune a lazy) de uma vez — atômico e rápido
+          const [titulo, itens] = await sp.evaluate((el) => {
             const bTexts = [...el.querySelectorAll('b')]
               .map((b) => (b.textContent || '').trim().toLowerCase())
               .filter(Boolean);
-            if (bTexts.length) return bTexts[0];
-            const p = el.querySelector('p');
-            return p ? (p.textContent || '').trim().toLowerCase().slice(0, 60) : '';
-          }).catch(() => '');
-          let itens = await sp.locator('ul li p.styles_text-body-sm-medium__FWa10').allInnerTexts();
-          itens = itens.map((i) => i.trim()).filter(Boolean);
+            const t = bTexts.length ? bTexts[0]
+              : ((el.querySelector('p') || {}).textContent || '').trim().toLowerCase().slice(0, 60);
+            const ps = [...el.querySelectorAll('ul li p.styles_text-body-sm-medium__FWa10')]
+              .map((x) => (x.textContent || '').trim())
+              .filter(Boolean);
+            return [t, ps];
+          }).catch(() => ['', []]);
           if (titulo.includes('privativa')) priv = itens;
           else if (titulo.includes('comum')) comum = itens;
         }
+        if (priv.length || comum.length) console.log(`caracteristicas: fonte=dom priv=${priv.length} comum=${comum.length}`);
       }
     } catch { /* mantém o que já tem */ }
   }
+  if (!priv.length && !comum.length) console.log('caracteristicas: fonte=vazio priv=0 comum=0');
   return [priv.map((s) => s.trim()).filter(Boolean), comum.map((s) => s.trim()).filter(Boolean)];
 }
 
