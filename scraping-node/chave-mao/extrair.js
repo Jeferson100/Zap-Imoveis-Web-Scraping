@@ -192,6 +192,50 @@ async function extrairMapa(page) {
   } catch { return null; }
 }
 
+// Fallbacks aditivos (só rodam se o primário falhar; nada do que funciona é tocado)
+
+// Fallback titulo: h1 genérico (só existe 1 por página) → <title> sem sufixo
+async function extrairTitulo(page) {
+  const t1 = await texto(page, 'h1.styles_typography__xG9rg');
+  if (t1) return t1;
+  try {
+    const h1s = await page.locator('h1').allInnerTexts();
+    const bom = h1s.map((s) => (s || '').trim()).find((s) => s.length > 10);
+    if (bom) return bom;
+  } catch { /* segue */ }
+  try {
+    const t = await page.title();
+    const limpo = (t || '').split('|')[0].trim();
+    if (limpo.length > 10) return limpo;
+  } catch { /* segue */ }
+  return null;
+}
+
+// Fallback autoritativo por anúncio: ld+json do próprio documento (sem risco de vizinho)
+async function extrairNumeroLdJson(page, campo) {
+  try {
+    const scripts = await page.locator('script[type="application/ld+json"]').allInnerTexts();
+    for (const s of scripts) {
+      const m = s.match(new RegExp('"' + campo + '"\\s*:\\s*(\\d+)'));
+      if (m) return m[1];
+    }
+  } catch { /* segue */ }
+  return null;
+}
+
+// Fallback endereco: primeiro h2 com pinta de endereço (vírgula/barra, tamanho limitado).
+// Rejeita agência ("A6 imóveis", sem pontuação) e cards vizinhos ("Preços de...", longo).
+async function extrairEnderecoGenerico(page) {
+  try {
+    const textos = await page.locator('h2').allInnerTexts();
+    for (const raw of textos) {
+      const s = (raw || '').replace(/\s+/g, ' ').trim();
+      if (s.length > 10 && s.length < 150 && (s.includes(',') || s.includes('/'))) return s;
+    }
+  } catch { /* segue */ }
+  return null;
+}
+
 // Recebe page JÁ ABERTA (browser reusado pelo orquestrador)
 async function extrairChaveMao(page, url) {
   for (let t = 1; t <= MAX_RETRIES; t++) {
@@ -205,20 +249,36 @@ async function extrairChaveMao(page, url) {
         { timeout: 25000 }
       ).catch(() => {});
       await page.waitForTimeout(1500); // settle final
-      const [metragemTotal, metragemUtil] = await extrairMetragens(page);
+      const [metragemTotalRaw, metragemUtilRaw] = await extrairMetragens(page);
       const descricao = await texto(page, 'p[aria-label="descrição"]');
       const [priv, comum] = await extrairCaracteristicas(page, descricao, url);
+      const titulo = await extrairTitulo(page);
+      let quartos = await texto(page, "b:has(svg path[d^='M112.867 767.316'])");
+      if (!quartos) quartos = await extrairNumeroLdJson(page, 'numberOfBedrooms');
+      let banheirosRaw = await texto(page, 'p[aria-label="Banheiros"] b');
+      if (!banheirosRaw) banheirosRaw = await extrairNumeroLdJson(page, 'numberOfBathroomsTotal');
+      const banheiros = limparValor(banheirosRaw);
+      let endereco = await texto(page, 'h2[class*="styles_text-title-lg"].column, h2[class*="styles_text-title-lg"] b');
+      if (!endereco) endereco = await extrairEnderecoGenerico(page);
+      // Saneamento: 0/1 m² não existem (default do site p/ ausente); vira null → limpeza trata
+      const sanear = (v) => {
+        if (!v) return null;
+        const n = parseFloat(String(v).replace(/[^\d.,]/g, '').replace(',', '.'));
+        return (Number.isFinite(n) && n > 1) ? v : null;
+      };
+      const metragemTotal = sanear(metragemTotalRaw);
+      const metragemUtil = sanear(metragemUtilRaw);
       return {
         url,
-        titulo: await texto(page, 'h1.styles_typography__xG9rg'),
+        titulo,
         metragem: metragemUtil || metragemTotal,
         metragem_total: metragemTotal,
         metragem_util: metragemUtil,
         valor_imovel: await extrairValor(page),
-        quartos: await texto(page, "b:has(svg path[d^='M112.867 767.316'])"),
-        banheiros: limparValor(await texto(page, 'p[aria-label="Banheiros"] b')),
+        quartos,
+        banheiros,
         vagas: await texto(page, "p[aria-label='Garagens'] b"),
-        endereco: await texto(page, 'h2[class*="styles_text-title-lg"].column, h2[class*="styles_text-title-lg"] b'),
+        endereco,
         descricao,
         condominio: limparValor(await texto(page, 'p:has-text("Condomínio") + p')),
         iptu: limparValor(await texto(page, 'p:has-text("IPTU") + p')),
