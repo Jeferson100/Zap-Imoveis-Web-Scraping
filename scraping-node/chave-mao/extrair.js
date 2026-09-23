@@ -236,6 +236,33 @@ async function extrairEnderecoGenerico(page) {
   return null;
 }
 
+// Fallback vagas: specs do anúncio (li > small["Garagens:"] + b[valor]).
+// Escopo preferencial na lista de specs; global como fallback.
+// Vizinhos usam outra estrutura (p[aria-label], sem small+b) → sem poluição.
+async function specGaragens(page) {
+  const buscar = async (lis) => {
+    for (const li of lis) {
+      try {
+        const lab = ((await li.locator('small').first().innerText().catch(() => '')) || '')
+          .replace(':', '').trim().toLowerCase();
+        if (lab.startsWith('garagen')) {
+          const v = ((await li.locator('b').first().innerText().catch(() => '')) || '').trim();
+          if (v) return v;
+        }
+      } catch { /* próxima */ }
+    }
+    return null;
+  };
+  try {
+    const escopo = await page.locator('ul[class*="style_listContent"] li').all();
+    if (escopo.length) return await buscar(escopo);
+  } catch { /* cai para global */ }
+  try {
+    return await buscar(await page.locator('ul li').all());
+  } catch { /* segue */ }
+  return null;
+}
+
 // Recebe page JÁ ABERTA (browser reusado pelo orquestrador)
 async function extrairChaveMao(page, url) {
   for (let t = 1; t <= MAX_RETRIES; t++) {
@@ -264,6 +291,7 @@ async function extrairChaveMao(page, url) {
       let vagas = await texto(page, "p[aria-label='Garagens'] b");
       if (!vagas) vagas = await texto(page, "p[aria-label='Garagens' i] b");
       if (!vagas) vagas = await texto(page, "p[aria-label='Garagens' i]");
+      if (!vagas) vagas = await specGaragens(page);
       // Saneamento: 0/1 m² não existem (default do site p/ ausente); vira null → limpeza trata
       const sanear = (v) => {
         if (!v) return null;
