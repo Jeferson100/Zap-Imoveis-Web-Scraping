@@ -280,6 +280,30 @@ async function specGaragens(page) {
   return null;
 }
 
+// Fallback endereco: address do ld+json do próprio documento (sem risco de vizinho).
+// Só aceita blocos com geo/numberOfBedrooms (só o anúncio principal tem;
+// bloco da imobiliária em offeredBy é ignorado).
+async function extrairEnderecoLdJson(page) {
+  try {
+    const scripts = await page.locator('script[type="application/ld+json"]').allInnerTexts();
+    for (const s of scripts) {
+      let data;
+      try { data = JSON.parse(s); } catch { continue; }
+      const lista = Array.isArray(data) ? data : [data];
+      for (const b of lista) {
+        if (!b || typeof b !== 'object') continue;
+        if (!b.geo && !b.numberOfBedrooms) continue;
+        const addr = b.address;
+        if (!addr || typeof addr !== 'object') continue;
+        const partes = [addr.streetAddress, addr.addressLocality, addr.addressRegion]
+          .filter((x) => x && String(x).trim().length > 2);
+        if (partes.length >= 2) return partes.join(', ');
+      }
+    }
+  } catch { /* segue */ }
+  return null;
+}
+
 // Recebe page JÁ ABERTA (browser reusado pelo orquestrador)
 async function extrairChaveMao(page, url) {
   for (let t = 1; t <= MAX_RETRIES; t++) {
@@ -293,6 +317,10 @@ async function extrairChaveMao(page, url) {
         { timeout: 25000 }
       ).catch(() => {});
       await page.waitForTimeout(1500); // settle final
+      // Scroll único antecipado: hidrata seções lazy (endereco, specs)
+      // antes de qualquer leitura dependente de renderização
+      await page.evaluate('window.scrollTo(0, document.body.scrollHeight)');
+      await page.waitForTimeout(2000);
       const [metragemTotalRaw, metragemUtilRaw] = await extrairMetragens(page);
       const descricao = await texto(page, 'p[aria-label="descrição"]');
       const [priv, comum] = await extrairCaracteristicas(page, descricao, url);
@@ -305,6 +333,7 @@ async function extrairChaveMao(page, url) {
       const banheiros = limparValor(banheirosRaw);
       let endereco = await texto(page, 'h2[class*="styles_text-title-lg"].column, h2[class*="styles_text-title-lg"] b');
       if (!endereco) endereco = await extrairEnderecoGenerico(page);
+      if (!endereco) endereco = await extrairEnderecoLdJson(page);
       let vagas = await texto(page, "p[aria-label='Garagens'] b");
       if (!vagas) vagas = await texto(page, "p[aria-label='Garagens' i] b");
       if (!vagas) vagas = await texto(page, "p[aria-label='Garagens' i]");
