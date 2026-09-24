@@ -56,26 +56,27 @@ async function extrairValor(page) {
 }
 
 async function extrairMetragens(page) {
-  let total = null, util = null;
+  let total = null, util = null, fonte = 'vazio';
   try {
     const html = await page.content();
     const m = html.match(/"area"\s*:\s*\{\s*"total"\s*:\s*"([^"]+)"[^}]*"useful"\s*:\s*"([^"]+)"/);
     if (m) {
       total = ['$undefined', ''].includes(m[1]) ? null : m[1];
       util = ['$undefined', ''].includes(m[2]) ? null : m[2];
+      if (total || util) fonte = 'json';
     }
   } catch { /* segue para fallbacks */ }
   if (!total) {
     const t = await texto(page, 'p[aria-label="area-total"] b');
-    if (t) total = t.replace(/[^\d.,]/g, '') || null;
+    if (t) { total = t.replace(/[^\d.,]/g, '') || null; if (total) fonte = 'aria-total'; }
   }
   if (!util) {
     const u = await texto(page, 'p[aria-label="area-util"] b');
-    if (u) util = u.replace(/[^\d.,]/g, '') || null;
+    if (u) { util = u.replace(/[^\d.,]/g, '') || null; if (util) fonte = 'aria-util'; }
   }
   if (!total && !util) {
     const g = await texto(page, 'b.row.spacing:has-text("m²")');
-    if (g) total = g.replace(/[^\d.,]/g, '') || null;
+    if (g) { total = g.replace(/[^\d.,]/g, '') || null; if (total) fonte = 'generica'; }
   }
   if (!total && !util) {
     // Fallback autoritativo: floorSize do ld+json (estático, por anúncio).
@@ -84,10 +85,11 @@ async function extrairMetragens(page) {
       const scripts = await page.locator('script[type="application/ld+json"]').allTextContents();
       for (const s of scripts) {
         const m = s.match(/"floorSize"\s*:\s*\{[^}]*"value"\s*:?\s*"?(\d+)/);
-        if (m && parseInt(m[1], 10) > 1) { util = m[1]; break; }
+        if (m && parseInt(m[1], 10) > 1) { util = m[1]; fonte = 'floorsize'; break; }
       }
     } catch { /* segue */ }
   }
+  console.log(`metragem: fonte=${fonte} total=${total} util=${util}`);
   return [total ? `${total} m²` : null, util ? `${util} m²` : null];
 }
 
@@ -318,6 +320,36 @@ async function extrairEnderecoLdJson(page) {
   return null;
 }
 
+// Fallback descricao: campo "description" do JSON embutido (SEO, por anúncio).
+// Pega o MAIS LONGO (>100 chars): blocos vizinhos são snippets curtos.
+async function extrairDescricaoJson(page) {
+  try {
+    const html = await page.content();
+    const re = /"description"\s*:\s*"((?:[^"\\]|\\.)+)"/g;
+    let m, melhor = '';
+    while ((m = re.exec(html)) !== null) {
+      const v = m[1].replace(/\\u([0-9a-fA-F]{4})/g, (_, h) => String.fromCharCode(parseInt(h, 16)));
+      if (v.length > melhor.length) melhor = v;
+    }
+    if (melhor.length > 100) return melhor;
+  } catch { /* segue */ }
+  return null;
+}
+
+// Último recurso: bairro do slug (sc-joinville-costa-e-silva → "Costa E Silva, Joinville/SC").
+// Parcial (sem rua), mas salva a geolocalização por bairro que a limpeza precisa.
+function enderecoDoSlug(url) {
+  try {
+    const m = (url || '').match(/\/sc-([a-z-]+?)-(?:RS\d+|RS|id-)/i) || (url || '').match(/\/sc-([a-z-]+?)\//i);
+    if (!m) return null;
+    let slug = m[1].replace(/^(casa|apartamento|sala-comercial|terreno|sobrado|cobertura)-a-venda-?/, '');
+    slug = slug.replace(/-\d+m2$/, '').replace(/-\d+-quartos.*$/, '');
+    const bairro = slug.split('-').map((w) => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
+    if (bairro.length > 2) return `${bairro}, Joinville/SC`;
+  } catch { /* segue */ }
+  return null;
+}
+
 // Recebe page JÁ ABERTA (browser reusado pelo orquestrador)
 async function extrairChaveMao(page, url) {
   for (let t = 1; t <= MAX_RETRIES; t++) {
@@ -336,7 +368,8 @@ async function extrairChaveMao(page, url) {
       await page.evaluate('window.scrollTo(0, document.body.scrollHeight)');
       await page.waitForTimeout(2000);
       const [metragemTotalRaw, metragemUtilRaw] = await extrairMetragens(page);
-      const descricao = await texto(page, 'p[aria-label="descrição"]');
+      let descricao = await texto(page, 'p[aria-label="descrição"]');
+      if (!descricao) descricao = await extrairDescricaoJson(page);
       const [priv, comum] = await extrairCaracteristicas(page, descricao, url);
       const titulo = await extrairTitulo(page);
       let quartos = await texto(page, "b:has(svg path[d^='M112.867 767.316'])");
@@ -349,6 +382,18 @@ async function extrairChaveMao(page, url) {
       if (!endereco) endereco = await texto(page, 'b:has-text("Joinville"), b:has-text("SC")');
       if (!endereco) endereco = await extrairEnderecoGenerico(page);
       if (!endereco) endereco = await extrairEnderecoLdJson(page);
+      if (!endereco) {
+        // Fallback <title>: "Casa ... na Rua X, Bairro, Joinville - SC - ID: N | ..."
+        try {
+          const t = await page.title();
+          const m = (t || '').match(/ na (.+?)(?:\s+-\s+ID:|\s*\|)/i);
+          if (m) {
+            const s = m[1].trim();
+            if (s.length > 10 && s.length < 150 && s.includes(',') && (s.includes('/') || s.includes(' - '))) endereco = s;
+          }
+        } catch { /* segue */ }
+      }
+      if (!endereco) endereco = enderecoDoSlug(url);
       let vagas = await texto(page, "p[aria-label='Garagens'] b");
       if (!vagas) vagas = await texto(page, "p[aria-label='Garagens' i] b");
       if (!vagas) vagas = await texto(page, "p[aria-label='Garagens' i]");
