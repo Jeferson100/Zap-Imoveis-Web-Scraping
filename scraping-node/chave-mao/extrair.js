@@ -340,12 +340,16 @@ async function extrairDescricaoJson(page) {
 // Parcial (sem rua), mas salva a geolocalização por bairro que a limpeza precisa.
 function enderecoDoSlug(url) {
   try {
-    const m = (url || '').match(/\/sc-([a-z-]+?)-(?:RS\d+|RS|id-)/i) || (url || '').match(/\/sc-([a-z-]+?)\//i);
+    const m = (url || '').match(/\/imovel\/(.+?)\/id-\d+/i);
     if (!m) return null;
-    let slug = m[1].replace(/^(casa|apartamento|sala-comercial|terreno|sobrado|cobertura)-a-venda-?/, '');
-    slug = slug.replace(/-\d+m2$/, '').replace(/-\d+-quartos.*$/, '');
-    const bairro = slug.split('-').map((w) => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
-    if (bairro.length > 2) return `${bairro}, Joinville/SC`;
+    let slug = m[1].replace(/-RS\d+$/i, '');
+    const scm = slug.match(/-sc-[a-z]+-(.+)$/i);
+    if (!scm) return null;
+    let resto = scm[1];
+    resto = resto.replace(/^(casa|apartamento|sala-comercial|sala|terreno|sobrado|cobertura|loft|flat|studio|kitnet)-a-venda-?/, '');
+    resto = resto.replace(/-\d+m2$/i, '').replace(/-\d+-quartos.*$/i, '').replace(/-com-garagem$/i, '');
+    const bairro = resto.split('-').filter(Boolean).map((w) => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
+    if (bairro.replace(/[^A-Za-zÀ-ÿ ]/g, '').trim().length > 2) return `${bairro}, Joinville/SC`;
   } catch { /* segue */ }
   return null;
 }
@@ -361,7 +365,9 @@ async function extrairEnderecoIndisponivel(page) {
       const re = /Endereço\s+Indisponível/i;
       let node;
       while ((node = walker.nextNode())) {
-        if (!re.test(node.nodeValue || '')) continue;
+        // NFC: mesma palavra pode vir decomposta (i + ´) e furar o regex
+        const txt = (node.nodeValue || '').normalize('NFC');
+        if (!re.test(txt)) continue;
         let el = node.parentElement;
         for (let i = 0; i < 4 && el && el !== document.body; i++) {
           const t = (el.innerText || '').replace(/\s+/g, ' ').trim();
