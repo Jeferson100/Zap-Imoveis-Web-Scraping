@@ -30,7 +30,8 @@ async function texto(page, seletor, timeout = 5000) {
 
 async function extrairValor(page) {
   try {
-    const scripts = await page.locator('script[type="application/ld+json"]').allInnerTexts();
+    // textContent (não innerText): <script> nunca é renderizado, innerText volta "" sempre
+    const scripts = await page.locator('script[type="application/ld+json"]').allTextContents();
     for (const s of scripts) {
       if (!s) continue;
       let m = s.match(/"rawPrice"\s*:?"?([\d.,]+)"?/i) || s.match(/"price"\s*:?"?([\d.,]+)"?/i);
@@ -214,7 +215,8 @@ async function extrairTitulo(page) {
 // Fallback autoritativo por anúncio: ld+json do próprio documento (sem risco de vizinho)
 async function extrairNumeroLdJson(page, campo) {
   try {
-    const scripts = await page.locator('script[type="application/ld+json"]').allInnerTexts();
+    // textContent (não innerText): <script> nunca é renderizado
+    const scripts = await page.locator('script[type="application/ld+json"]').allTextContents();
     for (const s of scripts) {
       const m = s.match(new RegExp('"' + campo + '"\\s*:\\s*(\\d+)'));
       if (m) return m[1];
@@ -285,7 +287,8 @@ async function specGaragens(page) {
 // bloco da imobiliária em offeredBy é ignorado).
 async function extrairEnderecoLdJson(page) {
   try {
-    const scripts = await page.locator('script[type="application/ld+json"]').allInnerTexts();
+    // textContent (não innerText): <script> nunca é renderizado
+    const scripts = await page.locator('script[type="application/ld+json"]').allTextContents();
     for (const s of scripts) {
       let data;
       try { data = JSON.parse(s); } catch { continue; }
