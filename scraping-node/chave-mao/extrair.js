@@ -77,6 +77,17 @@ async function extrairMetragens(page) {
     const g = await texto(page, 'b.row.spacing:has-text("m²")');
     if (g) total = g.replace(/[^\d.,]/g, '') || null;
   }
+  if (!total && !util) {
+    // Fallback autoritativo: floorSize do ld+json (estático, por anúncio).
+    // Só vale > 1 m² ("0" é default do site p/ ausente, igual sanear).
+    try {
+      const scripts = await page.locator('script[type="application/ld+json"]').allTextContents();
+      for (const s of scripts) {
+        const m = s.match(/"floorSize"\s*:\s*\{[^}]*"value"\s*:?\s*"?(\d+)/);
+        if (m && parseInt(m[1], 10) > 1) { util = m[1]; break; }
+      }
+    } catch { /* segue */ }
+  }
   return [total ? `${total} m²` : null, util ? `${util} m²` : null];
 }
 
@@ -349,7 +360,7 @@ async function extrairChaveMao(page, url) {
       };
       const metragemTotal = sanear(metragemTotalRaw);
       const metragemUtil = sanear(metragemUtilRaw);
-      return {
+      const dados = {
         url,
         titulo,
         metragem: metragemUtil || metragemTotal,
@@ -369,6 +380,13 @@ async function extrairChaveMao(page, url) {
         fotos: await extrairFotos(page),
         link_maps: await extrairMapa(page),
       };
+      // Gate de completude: sinais que SÓ existem com hidratação (titulo/valor/
+      // fotos vêm do estático e não contam). Shell → exceção → retry; persistindo
+      // cai no {url} abaixo, que o filtro notna da limpeza descarta sozinho.
+      const hidratado = dados.descricao || dados.metragem_total
+        || dados.metragem_util || dados.endereco;
+      if (!hidratado) throw new Error('página sem conteúdo hidratado (shell)');
+      return dados;
     } catch (e) {
       console.warn(`Tentativa ${t} falhou: ${e.message}`);
       if (t < MAX_RETRIES) await page.waitForTimeout(RETRY_DELAY * t);
