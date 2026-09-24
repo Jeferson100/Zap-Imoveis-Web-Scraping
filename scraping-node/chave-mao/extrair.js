@@ -59,12 +59,12 @@ async function extrairMetragens(page) {
   let total = null, util = null, fonte = 'vazio';
   try {
     const html = await page.content();
-    const m = html.match(/"area"\s*:\s*\{\s*"total"\s*:\s*"([^"]+)"[^}]*"useful"\s*:\s*"([^"]+)"/);
-    if (m) {
-      total = ['$undefined', ''].includes(m[1]) ? null : m[1];
-      util = ['$undefined', ''].includes(m[2]) ? null : m[2];
-      if (total || util) fonte = 'json';
-    }
+    // Matches independentes (antes, uma chave diferente matava as duas):
+    // cada campo vive ou morre por si. Tolera número sem aspas.
+    const mt = html.match(/"total"\s*:\s*"([^"]+)"/) || html.match(/"total"\s*:\s*(\d+(?:[.,]\d+)?)/);
+    if (mt && !['$undefined', ''].includes(mt[1])) total = mt[1];
+    const mu = html.match(/"useful"\s*:\s*"([^"]+)"/) || html.match(/"useful"\s*:\s*(\d+(?:[.,]\d+)?)/);
+    if (mu && !['$undefined', ''].includes(mu[1])) util = mu[1];
   } catch { /* segue para fallbacks */ }
   if (!total) {
     const t = await texto(page, 'p[aria-label="area-total"] b');
