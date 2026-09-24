@@ -389,6 +389,39 @@ async function extrairEnderecoIndisponivel(page) {
   return null;
 }
 
+// Tipo do anúncio ("Casa / Sobrado"). Cascata por atribuição decrescente:
+// 1) realtyType ancorado no id da URL > 2) primeiro objeto >
+// 3) string resolvida > 4) ld+json coarse (Casa/Apartamento).
+async function extrairTipoImovel(page, url) {
+  const idm = (url || '').match(/\/id-(\d+)/i);
+  const pageId = idm ? idm[1] : null;
+  let html = '';
+  try { html = await page.content(); } catch { return null; }
+  const valido = (s) => s && s.length > 2 && s.length < 60 && !/^\$/.test(s);
+  if (pageId) {
+    const reId = new RegExp('"id"\\s*:\\s*' + pageId + '([\\s\\S]{0,3000}?)("realtyType"\\s*:\\s*"([^"]+)"|"realtyType"\\s*:\\s*\\{[^}]*"name"\\s*:\\s*"([^"]+)")');
+    const m = html.match(reId);
+    const nome = m ? (m[3] || m[4]) : null;
+    if (valido(nome)) return nome;
+  }
+  let m2 = html.match(/"realtyType"\s*:\s*\{\s*"name"\s*:\s*"([^"]+)"/);
+  if (m2 && valido(m2[1])) return m2[1];
+  m2 = html.match(/"realtyType"\s*:\s*"([^"]+)"/);
+  if (m2 && valido(m2[1])) return m2[1];
+  try {
+    const scripts = await page.locator('script[type="application/ld+json"]').allTextContents();
+    for (const s of scripts) {
+      const t = s.match(/"itemOffered"\s*:\s*\{[^}]*"@type"\s*:\s*"([^"]+)"/);
+      if (t) {
+        if (/SingleFamilyResidence/i.test(t[1])) return 'Casa';
+        if (/Apartment/i.test(t[1])) return 'Apartamento';
+        return t[1];
+      }
+    }
+  } catch { /* segue */ }
+  return null;
+}
+
 // Recebe page JÁ ABERTA (browser reusado pelo orquestrador)
 async function extrairChaveMao(page, url) {
   for (let t = 1; t <= MAX_RETRIES; t++) {
@@ -465,6 +498,7 @@ async function extrairChaveMao(page, url) {
         caracteristicas_comum: comum,
         fotos: await extrairFotos(page),
         link_maps: await extrairMapa(page),
+        tipo_imovel: await extrairTipoImovel(page, url),
       };
       // Gate de completude: sinais que SÓ existem com hidratação (titulo/valor/
       // fotos vêm do estático e não contam). Shell → exceção → retry; persistindo
