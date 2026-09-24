@@ -80,11 +80,14 @@ async function extrairMetragens(page) {
   }
   if (!total && !util) {
     // Fallback autoritativo: floorSize do ld+json (estático, por anúncio).
+    // Grupo restrito ([^{}]*): evita casar "value" de objeto aninhado
+    // (mesma classe de bug do @type guloso, já corrigida acima).
     // Só vale > 1 m² ("0" é default do site p/ ausente, igual sanear).
     try {
       const scripts = await page.locator('script[type="application/ld+json"]').allTextContents();
       for (const s of scripts) {
-        const m = s.match(/"floorSize"\s*:\s*\{[^}]*"value"\s*:?\s*"?(\d+)/);
+        const blk = s.match(/"floorSize"\s*:\s*\{([^{}]*)/);
+        const m = blk ? blk[1].match(/"value"\s*:?\s*"?(\d+)/) : null;
         if (m && parseInt(m[1], 10) > 1) { util = m[1]; fonte = 'floorsize'; break; }
       }
     } catch { /* segue */ }
@@ -408,16 +411,36 @@ async function extrairTipoImovel(page, url) {
   if (m2 && valido(m2[1])) return m2[1];
   m2 = html.match(/"realtyType"\s*:\s*"([^"]+)"/);
   if (m2 && valido(m2[1])) return m2[1];
+  const slug = tipoDoSlug(url);
+  if (slug) return slug;
   try {
     const scripts = await page.locator('script[type="application/ld+json"]').allTextContents();
     for (const s of scripts) {
-      const t = s.match(/"itemOffered"\s*:\s*\{[^}]*"@type"\s*:\s*"([^"]+)"/);
+      // Grupo restrito ([^{}]*): captura o @type do PRÓPRIO itemOffered.
+      // O padrão antigo (\{[^}]* + backtracking) casava o @type aninhado
+      // mais interno (ex.: floorSize → "QuantitativeValue"). Verificado por trace.
+      const mObj = s.match(/"itemOffered"\s*:\s*\{([^{}]*)/);
+      const t = mObj ? mObj[1].match(/"@type"\s*:\s*"([^"]+)"/) : null;
       if (t) {
         if (/SingleFamilyResidence/i.test(t[1])) return 'Casa';
         if (/Apartment/i.test(t[1])) return 'Apartamento';
+        if (/Land/i.test(t[1])) return 'Terreno';
+        if (/^House$/i.test(t[1])) return 'Casa';
         return t[1];
       }
     }
+  } catch { /* segue */ }
+  return null;
+}
+
+// Tipo pelo slug da URL (".../terreno-a-venda-...-sc-..." → "Terreno").
+// Vocabulário do próprio site, custo zero. Entra antes do ld+json coarse.
+function tipoDoSlug(url) {
+  try {
+    const m = (url || '').match(/\/imovel\/([a-z-]+?)-a-venda-/i);
+    if (!m) return null;
+    const s = m[1].split('-').map((w) => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
+    if (s.length > 2 && s.length < 40) return s;
   } catch { /* segue */ }
   return null;
 }
