@@ -346,6 +346,7 @@ async function extrairChaveMao(page, url) {
       if (!banheirosRaw) banheirosRaw = await extrairNumeroLdJson(page, 'numberOfBathroomsTotal');
       const banheiros = limparValor(banheirosRaw);
       let endereco = await texto(page, 'h2[class*="styles_text-title-lg"].column, h2[class*="styles_text-title-lg"] b');
+      if (!endereco) endereco = await texto(page, 'b:has-text("Joinville"), b:has-text("SC")');
       if (!endereco) endereco = await extrairEnderecoGenerico(page);
       if (!endereco) endereco = await extrairEnderecoLdJson(page);
       let vagas = await texto(page, "p[aria-label='Garagens'] b");
