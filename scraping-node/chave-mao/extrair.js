@@ -350,6 +350,39 @@ function enderecoDoSlug(url) {
   return null;
 }
 
+// Padrão "Endereço Indisponível" + bairro/cidade (rua oculta).
+// Ancora no TEXTO (estável), não na tag (varia: b/span/div).
+// Percorre candidatos em ordem de documento (conteúdo principal antes de vizinhos).
+async function extrairEnderecoIndisponivel(page) {
+  try {
+    const achados = await page.evaluate(() => {
+      const out = [];
+      const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
+      const re = /Endereço\s+Indisponível/i;
+      let node;
+      while ((node = walker.nextNode())) {
+        if (!re.test(node.nodeValue || '')) continue;
+        let el = node.parentElement;
+        for (let i = 0; i < 4 && el && el !== document.body; i++) {
+          const t = (el.innerText || '').replace(/\s+/g, ' ').trim();
+          if (t.length > 25) { out.push(t); break; }
+          el = el.parentElement;
+        }
+        if (out.length >= 3) break;
+      }
+      return out;
+    }).catch(() => []);
+    for (const raw of achados) {
+      const s = raw.replace(/Endereço\s+Indisponível/gi, '')
+        .replace(/[›»>]/g, '').replace(/\s+/g, ' ').trim();
+      // Exige cara de "Bairro, Cidade": vírgula + tamanho + rejeita seções
+      if (/,/.test(s) && s.length > 8 && s.length < 120
+          && !/preços de|anúncios|outros tipos/i.test(s)) return s;
+    }
+  } catch { /* segue */ }
+  return null;
+}
+
 // Recebe page JÁ ABERTA (browser reusado pelo orquestrador)
 async function extrairChaveMao(page, url) {
   for (let t = 1; t <= MAX_RETRIES; t++) {
@@ -382,6 +415,7 @@ async function extrairChaveMao(page, url) {
       if (!endereco) endereco = await texto(page, 'b:has-text("Joinville"), b:has-text("SC")');
       if (!endereco) endereco = await extrairEnderecoGenerico(page);
       if (!endereco) endereco = await extrairEnderecoLdJson(page);
+      if (!endereco) endereco = await extrairEnderecoIndisponivel(page);
       if (!endereco) {
         // Fallback <title>: "Casa ... na Rua X, Bairro, Joinville - SC - ID: N | ..."
         try {
