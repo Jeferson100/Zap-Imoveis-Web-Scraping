@@ -17,7 +17,7 @@ const AREA_RANGES = [
 
 const { values } = parseArgs({
   options: {
-    pages: { type: 'string', default: '100' },
+    pages: { type: 'string', default: '0' },  // 0 = automático (detecta por faixa)
     concurrency: { type: 'string', default: process.env.MAX_CONCURRENCY || '3' },
     headless: { type: 'string', default: 'true' },
   },
@@ -28,7 +28,8 @@ async function main() {
   const outDir = path.join(__dirname, '..', '..', 'dados', 'joinville');
   const maxConc = parseInt(values.concurrency, 10);
   const headless = values.headless !== 'false';
-  const totalPages = parseInt(values.pages, 10);
+  const pagesArg = parseInt(values.pages, 10);
+  const totalPages = pagesArg > 0 ? pagesArg : null;  // null → runColeta auto-detecta por faixa
 
   for (const [min, max] of AREA_RANGES) {
     console.log(`Coletando dados de ${min} a ${max}`);
