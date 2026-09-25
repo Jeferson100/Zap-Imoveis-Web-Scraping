@@ -150,11 +150,11 @@ sys.path.append(str(Path(__file__).parent.parent))
 
 from scraping_zap_imoveis import ChavesMaoColeta
 
-output_file = "chaves_mao_alugueis.parquet"
+output_file = "chaves_mao_imoveis.parquet"
     
-URL_TEMPLATE_NEW = "https://www.chavesnamao.com.br/imoveis-para-alugar/sc-joinville/?pg=1"
+#URL_TEMPLATE_NEW = "https://www.chavesnamao.com.br/imoveis-para-alugar/sc-joinville/?pg=1"
 
-#URL_TEMPLATE_NEW = "https://www.chavesnamao.com.br/imoveis-a-venda/sc-joinville/?pg=1"
+URL_TEMPLATE_NEW = "https://www.chavesnamao.com.br/imoveis-a-venda/sc-joinville/?pg=1"
     
 orchestrator = ChavesMaoColeta(URL_TEMPLATE_NEW, 
                                 headless=True,
@@ -165,3 +165,4 @@ resultado = asyncio.run(orchestrator.run(
         total_pages=1
     ))
     
+print(f"Resultado final: {resultado[0]} imóveis em Joinville.")
