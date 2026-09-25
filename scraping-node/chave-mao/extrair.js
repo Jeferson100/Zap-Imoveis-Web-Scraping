@@ -1,4 +1,5 @@
 // Espelha extrair_dados_chave_mao_playwright_async.py (mesmos seletores/fallbacks)
+const { info, warning } = require('./log');
 const MAX_RETRIES = 3;
 const RETRY_DELAY = 2000;
 
@@ -92,7 +93,7 @@ async function extrairMetragens(page) {
       }
     } catch { /* segue */ }
   }
-  console.log(`metragem: fonte=${fonte} total=${total} util=${util}`);
+    info(`metragem: fonte=${fonte} total=${total} util=${util}`);
   return [total ? `${total} m²` : null, util ? `${util} m²` : null];
 }
 
@@ -107,7 +108,7 @@ async function extrairCaracteristicas(page, descricao = '', url = '') {
     if (mp) priv = [...mp[1].matchAll(/"name"\s*:\s*"([^"]+)"/g)].map((m) => decodifica(m[1]));
     const mc = html.match(/"commonItems"\s*:\s*\[(.*?)\]/s);
     if (mc) comum = [...mc[1].matchAll(/"name"\s*:\s*"([^"]+)"/g)].map((m) => decodifica(m[1]));
-    if (priv.length || comum.length) console.log(`caracteristicas: fonte=regex priv=${priv.length} comum=${comum.length}`);
+    if (priv.length || comum.length) info(`caracteristicas: fonte=regex priv=${priv.length} comum=${comum.length}`);
   } catch { /* segue para fallback */ }
   if (!priv.length && !comum.length) {
     try {
@@ -134,16 +135,16 @@ async function extrairCaracteristicas(page, descricao = '', url = '') {
           if (titulo.includes('privativa')) priv = itens;
           else if (titulo.includes('comum')) comum = itens;
         }
-        if (priv.length || comum.length) console.log(`caracteristicas: fonte=dom priv=${priv.length} comum=${comum.length}`);
+        if (priv.length || comum.length) info(`caracteristicas: fonte=dom priv=${priv.length} comum=${comum.length}`);
       }
     } catch { /* mantém o que já tem */ }
   }
   if (!priv.length && !comum.length) {
     const [p2, c2] = extrairCaracteristicasDescricao(descricao, url);
-    if (p2.length || c2.length) console.log(`caracteristicas: fonte=prosa priv=${p2.length} comum=${c2.length}`);
+    if (p2.length || c2.length) info(`caracteristicas: fonte=prosa priv=${p2.length} comum=${c2.length}`);
     priv.push(...p2); comum.push(...c2);
   }
-  if (!priv.length && !comum.length) console.log('caracteristicas: fonte=vazio priv=0 comum=0');
+  if (!priv.length && !comum.length) info('caracteristicas: fonte=vazio priv=0 comum=0');
   return [priv.map((s) => s.trim()).filter(Boolean), comum.map((s) => s.trim()).filter(Boolean)];
 }
 
@@ -449,6 +450,7 @@ function tipoDoSlug(url) {
 async function extrairChaveMao(page, url) {
   for (let t = 1; t <= MAX_RETRIES; t++) {
     try {
+      info(`Tentativa ${t}/${MAX_RETRIES} — ${url}`);
       await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 60000 });
       // Espera determinística pela hidratação (título com texto) em vez de
       // sleep fixo: sem isso a extração pode rodar antes do React hidratar.
@@ -466,7 +468,7 @@ async function extrairChaveMao(page, url) {
       // senão gravamos dados de um id com url de outro (tudo abaixo usa url).
       const urlFinal = page.url();
       if (urlFinal && urlFinal !== url) {
-        console.log(`redirect: ${url} -> ${urlFinal}`);
+        info(`redirect: ${url} -> ${urlFinal}`);
         url = urlFinal;
       }
       const [metragemTotalRaw, metragemUtilRaw] = await extrairMetragens(page);
@@ -536,12 +538,14 @@ async function extrairChaveMao(page, url) {
       const hidratado = dados.descricao || dados.metragem_total
         || dados.metragem_util || dados.endereco;
       if (!hidratado) throw new Error('página sem conteúdo hidratado (shell)');
+      info('Dados extraídos com sucesso');
       return dados;
     } catch (e) {
-      console.warn(`Tentativa ${t} falhou: ${e.message}`);
+      warning(`Tentativa ${t} falhou: ${e.message}`);
       if (t < MAX_RETRIES) await page.waitForTimeout(RETRY_DELAY * t);
     }
   }
+  error(`Falha total: ${url}`);
   return { url };
 }
 

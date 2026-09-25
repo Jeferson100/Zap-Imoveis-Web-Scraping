@@ -5,6 +5,7 @@ const path = require('path');
 const { execFileSync } = require('node:child_process');
 const { parseArgs } = require('node:util');
 const { runColeta, resolvePython } = require('../../scraping-node/chave-mao/coleta');
+const { info, warning, error } = require('../../scraping-node/chave-mao/log');
 
 const URL_TEMPLATE =
   'https://www.chavesnamao.com.br/imoveis-a-venda/sc-joinville/' +
@@ -34,12 +35,13 @@ async function main() {
   const totalPages = pagesArg > 0 ? pagesArg : null;  // null → runColeta auto-detecta por faixa
 
   for (const [min, max] of AREA_RANGES) {
-    console.log(`Coletando dados de ${min} a ${max}`);
+    info(`Coletando dados de ${min} a ${max}`);
     const out = path.join(outDir, `joinville_chave_mao_${now}_${min}_${max}.parquet`);
     const url = URL_TEMPLATE.replace('{min}', min).replace('{max}', max);
-    console.log(`Arquivo de dados: ${out}`);
+    info(`Arquivo de dados gerado em: ${out}`);
     await runColeta({ urlTemplate: url, totalPages, out, maxConc, headless });
   }
+  info(`Arquivo de dados gerado em: ${outDir}`);
 
   // --- JUNÇÃO FINAL (reusa consolidar_parquet do Python: mesmos globs,
   // validações e limpeza das fatias; paridade total, sem reimplementar) ---
@@ -51,11 +53,11 @@ async function main() {
       + `consolidar_parquet('chave_mao', 'joinville', Path(r'${outDir}'))`,
     ], { stdio: 'inherit', cwd: path.join(__dirname, '..', '..') });
   } catch (e) {
-    console.warn(`Consolidação final falhou (${e.message}). Fatias preservadas em ${outDir}.`);
+    warning(`Consolidação final falhou (${e.message}). Fatias preservadas em ${outDir}.`);
   }
-  console.log('Coleta Joinville finalizada. Arquivo único + fatias removidas (se ok).');
+  info('Coleta Joinville finalizada. Arquivo único + fatias removidas (se ok).');
 }
 
 if (require.main === module) {
-  main().catch((e) => { console.error(e); process.exit(1); });
+  main().catch((e) => { error(e.message || e); process.exit(1); });
 }

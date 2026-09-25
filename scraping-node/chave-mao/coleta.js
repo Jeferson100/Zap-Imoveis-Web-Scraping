@@ -8,6 +8,7 @@ const { execFileSync } = require('node:child_process');
 const { parseArgs } = require('node:util');
 const pLimit = require('p-limit');
 const { newContext, sleep, rand, launchChromium } = require('./browser');
+const { info, warning, error } = require('./log');
 const { getLinks } = require('./links');
 const { extrairChaveMao } = require('./extrair');
 const { getTotalPages } = require('./total-pages');
@@ -34,18 +35,27 @@ function salvar(out, dados) {
     execFileSync(resolvePython(), [path.join(__dirname, 'to-parquet.py'), tmp, out], { stdio: 'inherit' });
     fs.rmSync(tmp, { force: true });
   } catch (e) {
-    console.warn(`Falha ao gerar parquet (${e.message}). Mantido JSON: ${tmp}`);
+    warning(`Falha ao gerar parquet (${e.message}). Mantido JSON: ${tmp}`);
   }
 }
 
 async function runColeta({ urlTemplate, totalPages, out, maxConc = 5, headless = true }) {
+  info(`Parametros recebidos: totalPages=${totalPages}, max_concurrency=${maxConc}, headless=${headless}`);
+  if (!totalPages) info('Total de páginas não definido. Iniciando detecção automática...');
   const total = totalPages || await getTotalPages(urlTemplate.replace('{pagina}', '1'), headless);
-  if (!total) { console.error('Sem páginas.'); return []; }
-  console.log(`Total de páginas: ${total}`);
+  if (!total) { error('Não foi possível determinar o total de páginas.'); return []; }
+  info(`Total de páginas: ${total}`);
 
   // Browser ÚNICO reusado (diferença vs. Python: sem launch por item)
-  const browser = await launchChromium(headless);
+  let browser;
   try {
+    browser = await launchChromium(headless);
+  } catch (e) {
+    error(`Erro ao inicializar navegador: ${e.message}`);
+    throw e;
+  }
+  try {
+    info(`Iniciando coleta de links em ${total} páginas`);
     // ETAPA 2: links em lotes
     const contextLinks = await newContext(browser);
     const todosLinks = [];
@@ -53,17 +63,22 @@ async function runColeta({ urlTemplate, totalPages, out, maxConc = 5, headless =
       const lote = Array.from({ length: Math.min(maxConc, total - p + 1) }, (_, i) => p + i);
       const res = await Promise.all(lote.map((pg) =>
         getLinks(contextLinks, urlTemplate.replace('{pagina}', pg))));
+      res.forEach((links, idx) => {
+        if (links.length) info(`Página ${lote[idx]}: ${links.length} links encontrados.`);
+        else warning(`Página ${lote[idx]} não retornou links.`);
+      });
       res.flat().forEach((l) => todosLinks.push(l));
       await sleep(rand(200, 1000));
     }
     const unicos = [...new Set(todosLinks)];
-    console.log(`Links únicos: ${unicos.length}`);
-    if (!unicos.length) return [];
+    info(`Total de links únicos coletados: ${unicos.length}`);
+    if (!unicos.length) { error('Nenhum link foi encontrado. Encerrando.'); return []; }
 
-    console.log('Aguardando 30s antes da extração detalhada...');
+    info('Aguardando 30s antes da extração detalhada...');
     await sleep(30000);
 
     // ETAPA 4: detalhe com pool de páginas reusadas
+    info(`Iniciando extração de dados de ${unicos.length} imóveis...`);
     const context = await newContext(browser);
     const limit = pLimit(maxConc);
     const pool = [];
@@ -71,6 +86,7 @@ async function runColeta({ urlTemplate, totalPages, out, maxConc = 5, headless =
     let cursor = 0;
     const resultados = [];
     const loteSize = Math.max(maxConc * 10, maxConc);
+    info(`Processando em lotes de ${loteSize} para otimizar a extração com concorrência de ${maxConc}.`);
     for (let i = 0; i < unicos.length; i += loteSize) {
       const lote = unicos.slice(i, i + loteSize);
       const out2 = await Promise.all(lote.map((url) => limit(async () => {
@@ -78,7 +94,7 @@ async function runColeta({ urlTemplate, totalPages, out, maxConc = 5, headless =
         try {
           return await extrairChaveMao(page, url);
         } catch (e) {
-          console.error(`Erro em ${url}: ${e.message}`);
+          error(`Erro ao extrair ${url}: ${e.message}`);
           return { url };
         }
       })));
@@ -86,7 +102,10 @@ async function runColeta({ urlTemplate, totalPages, out, maxConc = 5, headless =
       if (resultados.length % 100 === 0) salvar(out, resultados); // save parcial
     }
     salvar(out, resultados);
-    console.log(`Finalizado: ${resultados.length} imóveis.`);
+    const nSalvos = resultados.length;
+    if (!nSalvos) warning('Nenhum dado coletado para salvar.');
+    else info(`Dados salvos em ${out}. Total: ${nSalvos} imóveis.`);
+    info(`Execução finalizada. Total de imóveis coletados: ${resultados.length}`);
     await context.close();
     await contextLinks.close();
     return resultados;
@@ -106,7 +125,7 @@ async function main() {
     },
   });
   const urlTemplate = values['url-template'];
-  if (!urlTemplate) { console.error('Faltou --url-template'); process.exit(1); }
+  if (!urlTemplate) { error('Faltou --url-template'); process.exit(1); }
   await runColeta({
     urlTemplate,
     totalPages: values.pages ? parseInt(values.pages, 10) : null,
@@ -117,7 +136,7 @@ async function main() {
 }
 
 if (require.main === module) {
-  main().catch((e) => { console.error(e); process.exit(1); });
+  main().catch((e) => { error(e.message || e); process.exit(1); });
 }
 
 module.exports = { runColeta, resolvePython };

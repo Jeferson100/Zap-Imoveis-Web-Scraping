@@ -9,7 +9,12 @@ try {
   chromiumStealth = chromium;
 } catch {
   // Sem stealth instalado: segue com Chromium puro (e avisa)
-  console.warn('Stealth indisponível, usando Chromium puro.');
+  try {
+    const { warning } = require('./log');
+    warning('Stealth indisponível, usando Chromium puro.');
+  } catch {
+    console.warn('Stealth indisponível, usando Chromium puro.');
+  }
 }
 
 async function launchChromium(headless) {

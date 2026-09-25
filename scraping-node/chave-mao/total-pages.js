@@ -1,5 +1,6 @@
 // Espelha total_page_chaves.py: detecta o total de páginas da listagem.
 const { newContext, launchChromium } = require('./browser');
+const { info, warning } = require('./log');
 
 async function getTotalPages(urlPrimeiraPag, headless = true, porPagina = 15) {
   const browser = await launchChromium(headless);
@@ -21,9 +22,10 @@ async function getTotalPages(urlPrimeiraPag, headless = true, porPagina = 15) {
     const m = (textoTotal || '').replace(/[.,]/g, '').match(/\d+/);
     if (!m) return 100;
     const total = Math.ceil(parseInt(m[0], 10) / porPagina);
-    console.log(`Detectado: ${m[0]} imóveis -> ${total} páginas.`);
+    info(`Detectado: ${m[0]} imóveis -> ${total} páginas.`);
     return Math.min(total, 100);
-  } catch {
+  } catch (e) {
+    warning(`Erro no Chaves na Mão: ${e.message}. Retornando total de páginas padrão: 100.`);
     return 100;
   } finally {
     await browser.close();
