@@ -1,6 +1,10 @@
 // Espelha chave_mao_coleta.py: CLI + 3 fases + save parcial.
 // Uso: node coleta.js --url-template "https://.../?pg={pagina}" [--pages N] [--out out.json] [--concurrency 5] [--headless true]
+// Saída .parquet via bridge Python (mesmo escritor do pipeline); .json sai direto.
 const fs = require('fs');
+const os = require('node:os');
+const path = require('node:path');
+const { execFileSync } = require('node:child_process');
 const { parseArgs } = require('node:util');
 const pLimit = require('p-limit');
 const { newContext, sleep, rand, launchChromium } = require('./browser');
@@ -8,8 +12,30 @@ const { getLinks } = require('./links');
 const { extrairChaveMao } = require('./extrair');
 const { getTotalPages } = require('./total-pages');
 
+function resolvePython() {
+  const candidatos = [];
+  if (process.env.PYTHON_BIN) candidatos.push(process.env.PYTHON_BIN);
+  candidatos.push(path.join(__dirname, '..', '..', '.venv',
+    process.platform === 'win32' ? 'Scripts/python.exe' : 'bin/python'));
+  for (const c of candidatos) {
+    try { fs.accessSync(c, fs.constants.X_OK); return c; } catch { /* próximo */ }
+  }
+  return 'python'; // último recurso (PATH); se falhar, cai no fallback JSON
+}
+
 function salvar(out, dados) {
-  fs.writeFileSync(out, JSON.stringify(dados, null, 4));
+  if (!out.endsWith('.parquet')) {
+    fs.writeFileSync(out, JSON.stringify(dados, null, 4));
+    return;
+  }
+  const tmp = path.join(os.tmpdir(), `coleta-${Date.now()}-${Math.floor(Math.random() * 1e6)}.json`);
+  try {
+    fs.writeFileSync(tmp, JSON.stringify(dados));
+    execFileSync(resolvePython(), [path.join(__dirname, 'to-parquet.py'), tmp, out], { stdio: 'inherit' });
+    fs.rmSync(tmp, { force: true });
+  } catch (e) {
+    console.warn(`Falha ao gerar parquet (${e.message}). Mantido JSON: ${tmp}`);
+  }
 }
 
 async function runColeta({ urlTemplate, totalPages, out, maxConc = 5, headless = true }) {
@@ -94,4 +120,4 @@ if (require.main === module) {
   main().catch((e) => { console.error(e); process.exit(1); });
 }
 
-module.exports = { runColeta };
+module.exports = { runColeta, resolvePython };

@@ -1,8 +1,10 @@
 // Espelha joinville_coleta_dados_chave_mao.py — versão Node.
-// Uso (da raiz do repo): node codigos_rodando/joinville/joinville_chaves.js [--pages 100]
+// Uso (da raiz do repo): node codigos_rodando/joinville/joinville_chaves.js [--pages 0]
+// Saída .parquet por faixa (via bridge) + junção final (consolidar_parquet do Python).
 const path = require('path');
+const { execFileSync } = require('node:child_process');
 const { parseArgs } = require('node:util');
-const { runColeta } = require('../../scraping-node/chave-mao/coleta');
+const { runColeta, resolvePython } = require('../../scraping-node/chave-mao/coleta');
 
 const URL_TEMPLATE =
   'https://www.chavesnamao.com.br/imoveis-a-venda/sc-joinville/' +
@@ -33,12 +35,25 @@ async function main() {
 
   for (const [min, max] of AREA_RANGES) {
     console.log(`Coletando dados de ${min} a ${max}`);
-    const out = path.join(outDir, `joinville_chave_mao_${now}_${min}_${max}.json`);
+    const out = path.join(outDir, `joinville_chave_mao_${now}_${min}_${max}.parquet`);
     const url = URL_TEMPLATE.replace('{min}', min).replace('{max}', max);
     console.log(`Arquivo de dados: ${out}`);
     await runColeta({ urlTemplate: url, totalPages, out, maxConc, headless });
   }
-  console.log('Coleta Joinville finalizada. Rode consolidar_parquet no Python para gerar os .parquet.');
+
+  // --- JUNÇÃO FINAL (reusa consolidar_parquet do Python: mesmos globs,
+  // validações e limpeza das fatias; paridade total, sem reimplementar) ---
+  try {
+    execFileSync(resolvePython(), ['-c',
+      "import sys; sys.path.insert(0, 'codigos_rodando');"
+      + "from pathlib import Path;"
+      + "from unificando_dados import consolidar_parquet;"
+      + `consolidar_parquet('chave_mao', 'joinville', Path(r'${outDir}'))`,
+    ], { stdio: 'inherit', cwd: path.join(__dirname, '..', '..') });
+  } catch (e) {
+    console.warn(`Consolidação final falhou (${e.message}). Fatias preservadas em ${outDir}.`);
+  }
+  console.log('Coleta Joinville finalizada. Arquivo único + fatias removidas (se ok).');
 }
 
 if (require.main === module) {

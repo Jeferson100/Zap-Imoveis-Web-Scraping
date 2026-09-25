@@ -19,8 +19,10 @@ node chave-mao/coleta.js \
   --headless true
 ```
 
-Sem `--pages`, detecta o total automaticamente. Saída em JSON com o mesmo
-schema do coletor Python (`url, titulo, metragem, ..., fotos, link_maps`).
+Sem `--pages`, detecta o total automaticamente. Saída `.parquet` por faixa
+(via `to-parquet.py`, mesmo escritor do pipeline) + junção final com
+`consolidar_parquet` do Python. Defina `PYTHON_BIN` se o Python não
+estiver no PATH (default: `.venv` do repo, senão `python`).
 
 ## Diferenças vs. Python
 
