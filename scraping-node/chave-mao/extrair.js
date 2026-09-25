@@ -462,6 +462,13 @@ async function extrairChaveMao(page, url) {
       // antes de qualquer leitura dependente de renderização
       await page.evaluate('window.scrollTo(0, document.body.scrollHeight)');
       await page.waitForTimeout(2000);
+      // Redirect silencioso (anúncio removido → similar): usa a URL FINAL,
+      // senão gravamos dados de um id com url de outro (tudo abaixo usa url).
+      const urlFinal = page.url();
+      if (urlFinal && urlFinal !== url) {
+        console.log(`redirect: ${url} -> ${urlFinal}`);
+        url = urlFinal;
+      }
       const [metragemTotalRaw, metragemUtilRaw] = await extrairMetragens(page);
       let descricao = await texto(page, 'p[aria-label="descrição"]');
       if (!descricao) descricao = await extrairDescricaoJson(page);
