@@ -57,7 +57,7 @@ async function extrairValor(page) {
 }
 
 async function extrairMetragens(page) {
-  let total = null, util = null, fonte = 'vazio';
+  let total = null, util = null;
   try {
     const html = await page.content();
     // Matches independentes (antes, uma chave diferente matava as duas):
@@ -69,15 +69,15 @@ async function extrairMetragens(page) {
   } catch { /* segue para fallbacks */ }
   if (!total) {
     const t = await texto(page, 'p[aria-label="area-total"] b');
-    if (t) { total = t.replace(/[^\d.,]/g, '') || null; if (total) fonte = 'aria-total'; }
+    if (t) total = t.replace(/[^\d.,]/g, '') || null;
   }
   if (!util) {
     const u = await texto(page, 'p[aria-label="area-util"] b');
-    if (u) { util = u.replace(/[^\d.,]/g, '') || null; if (util) fonte = 'aria-util'; }
+    if (u) util = u.replace(/[^\d.,]/g, '') || null;
   }
   if (!total && !util) {
     const g = await texto(page, 'b.row.spacing:has-text("m²")');
-    if (g) { total = g.replace(/[^\d.,]/g, '') || null; if (total) fonte = 'generica'; }
+    if (g) total = g.replace(/[^\d.,]/g, '') || null;
   }
   if (!total && !util) {
     // Fallback autoritativo: floorSize do ld+json (estático, por anúncio).
@@ -89,12 +89,11 @@ async function extrairMetragens(page) {
       for (const s of scripts) {
         const blk = s.match(/"floorSize"\s*:\s*\{([^{}]*)/);
         const m = blk ? blk[1].match(/"value"\s*:?\s*"?(\d+)/) : null;
-        if (m && parseInt(m[1], 10) > 1) { util = m[1]; fonte = 'floorsize'; break; }
+        if (m && parseInt(m[1], 10) > 1) { util = m[1]; break; }
       }
     } catch { /* segue */ }
   }
-    info(`metragem: fonte=${fonte} total=${total} util=${util}`);
-  return [total ? `${total} m²` : null, util ? `${util} m²` : null];
+    return [total ? `${total} m²` : null, util ? `${util} m²` : null];
 }
 
 async function extrairCaracteristicas(page, descricao = '', url = '') {
@@ -108,7 +107,6 @@ async function extrairCaracteristicas(page, descricao = '', url = '') {
     if (mp) priv = [...mp[1].matchAll(/"name"\s*:\s*"([^"]+)"/g)].map((m) => decodifica(m[1]));
     const mc = html.match(/"commonItems"\s*:\s*\[(.*?)\]/s);
     if (mc) comum = [...mc[1].matchAll(/"name"\s*:\s*"([^"]+)"/g)].map((m) => decodifica(m[1]));
-    if (priv.length || comum.length) info(`caracteristicas: fonte=regex priv=${priv.length} comum=${comum.length}`);
   } catch { /* segue para fallback */ }
   if (!priv.length && !comum.length) {
     try {
@@ -135,16 +133,13 @@ async function extrairCaracteristicas(page, descricao = '', url = '') {
           if (titulo.includes('privativa')) priv = itens;
           else if (titulo.includes('comum')) comum = itens;
         }
-        if (priv.length || comum.length) info(`caracteristicas: fonte=dom priv=${priv.length} comum=${comum.length}`);
       }
     } catch { /* mantém o que já tem */ }
   }
   if (!priv.length && !comum.length) {
     const [p2, c2] = extrairCaracteristicasDescricao(descricao, url);
-    if (p2.length || c2.length) info(`caracteristicas: fonte=prosa priv=${p2.length} comum=${c2.length}`);
     priv.push(...p2); comum.push(...c2);
   }
-  if (!priv.length && !comum.length) info('caracteristicas: fonte=vazio priv=0 comum=0');
   return [priv.map((s) => s.trim()).filter(Boolean), comum.map((s) => s.trim()).filter(Boolean)];
 }
 

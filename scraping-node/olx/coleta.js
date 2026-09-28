@@ -1,16 +1,15 @@
-// Espelha chave_mao_coleta.py: CLI + 3 fases + save parcial.
-// Uso: node coleta.js --url-template "https://.../?pg={pagina}" [--pages N] [--out out.json] [--concurrency 5] [--headless true]
-// Saída .parquet via bridge Python (mesmo escritor do pipeline); .json sai direto.
+// Espelha olx_coleta.py: CLI + 3 fases + save parcial + progress/ETA + rotulo.
+// Uso: node coleta.js --url-template "https://...&o={pagina}" [--pages N] [--out out.parquet] [--concurrency 5] [--headless true]
 const fs = require('fs');
 const os = require('node:os');
 const path = require('node:path');
 const { execFileSync } = require('node:child_process');
 const { parseArgs } = require('node:util');
 const pLimit = require('p-limit');
-const { newContext, sleep, rand, launchChromium } = require('./browser');
-const { info, warning, error, progress, fmtDur } = require('./log');
+const { newContext, sleep, rand, launchChromium } = require('../chave-mao/browser');
+const { info, warning, error, progress, fmtDur } = require('../chave-mao/log');
 const { getLinks } = require('./links');
-const { extrairChaveMao } = require('./extrair');
+const { extrairOlx } = require('./extrair');
 const { getTotalPages } = require('./total-pages');
 
 function resolvePython() {
@@ -21,7 +20,7 @@ function resolvePython() {
   for (const c of candidatos) {
     try { fs.accessSync(c, fs.constants.X_OK); return c; } catch { /* próximo */ }
   }
-  return 'python'; // último recurso (PATH); se falhar, cai no fallback JSON
+  return 'python';
 }
 
 function salvar(out, dados) {
@@ -29,17 +28,17 @@ function salvar(out, dados) {
     fs.writeFileSync(out, JSON.stringify(dados, null, 4));
     return;
   }
-  const tmp = path.join(os.tmpdir(), `coleta-${Date.now()}-${Math.floor(Math.random() * 1e6)}.json`);
+  const tmp = path.join(os.tmpdir(), `coleta-olx-${Date.now()}-${Math.floor(Math.random() * 1e6)}.json`);
   try {
     fs.writeFileSync(tmp, JSON.stringify(dados));
-    execFileSync(resolvePython(), [path.join(__dirname, 'to-parquet.py'), tmp, out], { stdio: 'inherit' });
+    execFileSync(resolvePython(), [path.join(__dirname, '..', 'chave-mao', 'to-parquet.py'), tmp, out], { stdio: 'inherit' });
     fs.rmSync(tmp, { force: true });
   } catch (e) {
     warning(`Falha ao gerar parquet (${e.message}). Mantido JSON: ${tmp}`);
   }
 }
 
-async function runColeta({ urlTemplate, totalPages, out, maxConc = 5, headless = true, rotulo = '' }) {
+async function runColeta({ urlTemplate, totalPages, out, maxConc = 5, headless = true, rotulo = '', limite_falhas = 3, cooldown = 0 }) {
   const tag = rotulo ? `${rotulo} ` : '';
   info(`${tag}Parametros recebidos: totalPages=${totalPages}, max_concurrency=${maxConc}, headless=${headless}`);
   if (!totalPages) info(`${tag}Total de páginas não definido. Iniciando detecção automática...`);
@@ -47,43 +46,54 @@ async function runColeta({ urlTemplate, totalPages, out, maxConc = 5, headless =
   if (!total) { error(`${tag}Não foi possível determinar o total de páginas.`); return []; }
   info(`${tag}Total de páginas: ${total}`);
 
-  // Browser ÚNICO reusado (diferença vs. Python: sem launch por item)
   let browser;
   try {
     browser = await launchChromium(headless);
   } catch (e) {
-    error(`Erro ao inicializar navegador: ${e.message}`);
+    error(`${tag}Erro ao inicializar navegador: ${e.message}`);
     throw e;
   }
   try {
     info(`${tag}Iniciando coleta de links em ${total} páginas`);
-    // ETAPA 2: links em lotes
     const contextLinks = await newContext(browser);
     const todosLinks = [];
+    let falhas = 0;
+    let pagina = 1;
     const t0Links = Date.now();
-    for (let p = 1; p <= total; p += maxConc) {
-      const lote = Array.from({ length: Math.min(maxConc, total - p + 1) }, (_, i) => p + i);
+    while (pagina <= total) {
+      const lote = Array.from({ length: Math.min(maxConc, total - pagina + 1) }, (_, i) => pagina + i);
       const res = await Promise.all(lote.map((pg) =>
         getLinks(contextLinks, urlTemplate.replace('{pagina}', pg))));
       res.forEach((links, idx) => {
-        if (links.length) info(`${tag}Página ${lote[idx]}: ${links.length} links encontrados.`);
-        else warning(`${tag}Página ${lote[idx]} não retornou links.`);
+        if (links.length) {
+          info(`${tag}Página ${lote[idx]}: ${links.length} links encontrados.`);
+          falhas = 0;
+          todosLinks.push(...links);
+        } else {
+          falhas++;
+          warning(`${tag}Página ${lote[idx]} não retornou links. Falhas consecutivas: ${falhas}/${limite_falhas}.`);
+        }
       });
-      res.flat().forEach((l) => todosLinks.push(l));
-      progress(Math.min(p + maxConc - 1, total), total, `${tag}Links`, t0Links);
+      if (falhas >= limite_falhas) {
+        error(`${tag}Interrompendo: ${limite_falhas} páginas seguidas sem links.`);
+        break;
+      }
+      pagina += maxConc;
+      progress(Math.min(pagina - 1, total), total, `${tag}Links`, t0Links);
       await sleep(rand(200, 1000));
     }
     const unicos = [...new Set(todosLinks)];
     info(`${tag}Total de links únicos coletados: ${unicos.length}`);
     if (!unicos.length) { error(`${tag}Nenhum link foi encontrado. Encerrando.`); return []; }
 
-    info(`${tag}Aguardando 30s antes da extração detalhada...`);
-    for (let s = 30; s > 0; s -= 5) {
-      progress(30 - s, 30, `${tag}Aguardando extração (s)`);
-      await sleep(5000);
+    if (cooldown > 0) {
+      info(`${tag}Aguardando ${cooldown}s antes da extração detalhada...`);
+      for (let s = cooldown; s > 0; s -= 5) {
+        progress(cooldown - s, cooldown, `${tag}Aguardando extração (s)`);
+        await sleep(5000);
+      }
     }
 
-    // ETAPA 4: detalhe com pool de páginas reusadas
     info(`${tag}Iniciando extração de dados de ${unicos.length} imóveis...`);
     const context = await newContext(browser);
     const limit = pLimit(maxConc);
@@ -100,9 +110,9 @@ async function runColeta({ urlTemplate, totalPages, out, maxConc = 5, headless =
       const out2 = await Promise.all(lote.map((url) => limit(async () => {
         const page = pool[cursor++ % pool.length];
         try {
-          return await extrairChaveMao(page, url);
+          return await extrairOlx(page, url);
         } catch (e) {
-          error(`Erro ao extrair ${url}: ${e.message}`);
+          error(`${tag}Erro ao extrair ${url}: ${e.message}`);
           return { url };
         }
       })));

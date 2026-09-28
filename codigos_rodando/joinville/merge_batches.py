@@ -10,7 +10,7 @@ PASTA_DADOS = BASE_DIR / "dados" / "joinville"
 
 MES_REF = os.getenv("MES_REF") or datetime.now().strftime("%Y-%m")
 
-BAIRRO = os.getenv("BAIRRO_SELECAO") or "bom retiro"
+BAIRRO = os.getenv("BAIRRO_SELECAO") or "santo antonio"
 bairro_slug = BAIRRO.replace(" ", "_")
 
 logging.basicConfig(
