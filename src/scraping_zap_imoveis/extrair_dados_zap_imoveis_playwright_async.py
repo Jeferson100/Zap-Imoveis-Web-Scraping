@@ -1,4 +1,5 @@
 import asyncio
+import json
 import logging
 import random
 import re
@@ -50,6 +51,7 @@ class DadosImovel:
     caracteristicas_comum: List[str] = field(default_factory=list)
     fotos: List[str] = field(default_factory=list)
     link_maps: Optional[str] = None
+    tipo_imovel: Optional[str] = None
 
     def to_dict(self) -> dict:
         return self.__dict__
@@ -143,6 +145,128 @@ class ZapScraperDadosImovelAsync:
             return valor.strip() if valor else None
         except Exception:
             return await self._safe_get_text(page, "iptu", is_testid=True)
+
+    async def _extrair_preco_via_jsonld(self, page: Page) -> Optional[str]:
+        """Extrai o preço via JSON-LD (fallback robusto quando o CSS selector falha).
+
+        Espelho do VivaReal: bloco @type == "Product" → offers.price.
+        """
+        try:
+            scripts = page.locator('script[type="application/ld+json"]')
+            count = await scripts.count()
+            for i in range(count):
+                content = await scripts.nth(i).inner_text(timeout=2000)
+                data = json.loads(content)
+                if data.get("@type") == "Product":
+                    price = data.get("offers", {}).get("price")
+                    if price is not None:
+                        valor = f"R$ {price:,.0f}".replace(",", "X").replace(".", ",").replace("X", ".")
+                        logger.debug("Preço extraído via JSON-LD: %s", valor)
+                        return valor
+        except Exception as e:
+            logger.debug("Falha ao extrair preço via JSON-LD: %s", e)
+        return None
+
+    async def _extrair_preco_css_ou_jsonld(self, page: Page, url: str) -> Optional[str]:
+        """Preço em cascata: CSS atual → JSON-LD → primeiro R$ do texto.
+
+        A trava do fallback de texto depende da operação (venda ≥ 20000,
+        aluguel ≥ 500) para não gravar condomínio/IPTU como preço.
+        """
+        valor = await self._safe_get_text(page, ".value-item__value-highlight .value-item__value")
+        if valor:
+            return valor
+        valor = await self._extrair_preco_via_jsonld(page)
+        if valor:
+            return valor
+        try:
+            u = (url or "").lower()
+            minimo = 500 if ("aluguel" in u or "alugar" in u) else 20000
+            body = await page.locator("body").inner_text()
+            m = re.search(r"R\$\s*([\d.,]+)", body)
+            if m:
+                n = int(re.sub(r"[^\d]", "", m.group(1)))
+                if n >= minimo:
+                    return m.group(0).strip()
+        except Exception:
+            logger.debug("Falha ao extrair preço via texto do body")
+        return None
+
+    @staticmethod
+    def _tipo_do_slug(url: str) -> Optional[str]:
+        """Tipo pelo slug: /imovel/venda-sobrados-3-quartos-... → 'Sobrados'.
+
+        No Zap a operação vem primeiro (venda/aluguel) e o tipo é o SEGUNDO
+        token, frequentemente no plural (sobrados, apartamentos).
+        Mantém o cru (com plural); normalizar_tipo_imovel resolve no downstream
+        ('sobrado' in 'sobrados' → casa, por substring).
+        """
+        try:
+            m = re.search(
+                r"/imovel/(?:venda|aluguel|alugar|locacao|locação|temporada)-([a-z]+)-",
+                url or "", re.I,
+            )
+            if not m:
+                return None
+            s = m.group(1).capitalize()
+            return s if 3 <= len(s) <= 20 else None
+        except Exception:
+            return None
+
+    async def _extrair_tipo_imovel(self, page: Page, url: str) -> Optional[str]:
+        """Tipo do anúncio em cascata (mesmo padrão Chaves/VivaReal).
+
+        1) realtyType ancorado no id da URL > 2) primeiro objeto >
+        3) string resolvida > 4) slug > 5) ld+json (@type → Casa/Apartamento/Terreno).
+        Retorna o valor cru; normalizar_tipo_imovel normaliza no downstream.
+        """
+        def valido(s):
+            return s is not None and 2 < len(s) < 60 and not s.startswith("$")
+
+        m_id = re.search(r"/id-(\d+)", url or "", re.I)
+        page_id = m_id.group(1) if m_id else None
+        try:
+            html = await page.content()
+        except Exception:
+            return self._tipo_do_slug(url)
+
+        if page_id:
+            m = re.search(
+                r'"id"\s*:\s*' + page_id + r'([\s\S]{0,3000}?)'
+                r'("realtyType"\s*:\s*"([^"]+)"|"realtyType"\s*:\s*\{[^}]*"name"\s*:\s*"([^"]+)")',
+                html,
+            )
+            nome = (m.group(3) or m.group(4)) if m else None
+            if valido(nome):
+                return nome
+        m2 = re.search(r'"realtyType"\s*:\s*\{\s*"name"\s*:\s*"([^"]+)"', html)
+        if m2 and valido(m2.group(1)):
+            return m2.group(1)
+        m2 = re.search(r'"realtyType"\s*:\s*"([^"]+)"', html)
+        if m2 and valido(m2.group(1)):
+            return m2.group(1)
+        slug = self._tipo_do_slug(url)
+        if slug:
+            return slug
+        try:
+            scripts = page.locator('script[type="application/ld+json"]')
+            count = await scripts.count()
+            for i in range(count):
+                content = await scripts.nth(i).inner_text(timeout=2000)
+                mobj = re.search(r'"itemOffered"\s*:\s*\{([^{}]*)', content)
+                t = mobj and re.search(r'"@type"\s*:\s*"([^"]+)"', mobj.group(1))
+                if t:
+                    v = t.group(1)
+                    if re.search(r"SingleFamilyResidence|^House$", v, re.I):
+                        return "Casa"
+                    if re.search(r"Apartment", v, re.I):
+                        return "Apartamento"
+                    if re.search(r"Land", v, re.I):
+                        return "Terreno"
+                    return v
+        except Exception:
+            logger.debug("Falha ao extrair tipo via JSON-LD")
+        return None
 
     async def _extrair_links_imagens(self, page: Page) -> List[str]:
         links = []
@@ -262,14 +386,15 @@ class ZapScraperDadosImovelAsync:
         (
             titulo, metragem, banheiros, vagas, quartos,
             valor_venda, condominio, endereco, iptu,
-            descricao, data_criacao, caracteristicas, fotos, link_maps
+            descricao, data_criacao, caracteristicas, fotos, link_maps,
+            tipo_imovel,
         ) = await asyncio.gather(
             self._safe_get_text(page, "h1.text-neutral-130, h2.text-neutral-130"),
             self._safe_get_text(page, "p.font-secondary:has-text('m²')"),
             self._safe_get_text(page, "xpath=//p[text()='Banheiros']/following-sibling::div/p"),
             self._safe_get_text(page, "xpath=//p[text()='Vagas']/following-sibling::div/p"),
             self._safe_get_text(page, "xpath=//p[text()='Quartos']/following-sibling::div/p"),
-            self._safe_get_text(page, ".value-item__value-highlight .value-item__value"),
+            self._extrair_preco_css_ou_jsonld(page, self.url),
             self._safe_get_text(page, "condoFee", is_testid=True),
             self._safe_get_text(page, "location-address", is_testid=True),
             self._extrair_iptu(page),
@@ -282,6 +407,7 @@ class ZapScraperDadosImovelAsync:
             ),
             self._extrair_links_imagens(page),
             self._extrair_link_maps(page),
+            self._extrair_tipo_imovel(page, self.url),
         )
         priv, comum = await self._extrair_caracteristicas(page)
 
@@ -303,6 +429,7 @@ class ZapScraperDadosImovelAsync:
             caracteristicas_comum=comum,
             link_maps=link_maps,
             fotos=fotos,
+            tipo_imovel=tipo_imovel,
         )
 
     async def extrair(self) -> DadosImovel:

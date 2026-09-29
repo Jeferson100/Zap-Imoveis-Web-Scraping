@@ -88,6 +88,7 @@ class DadosImovelImovelWeb:
     lat: Optional[str] = None
     lng: Optional[str] = None
     fonte: str = field(default="imovelweb")
+    tipo_imovel: Optional[str] = None
 
     def to_dict(self) -> dict:
         return self.__dict__
@@ -111,6 +112,22 @@ def _limpar_descricao(texto):
     if not texto:
         return None
     return re.sub(r"<[^>]+>", "", texto).strip()
+
+
+def _tipo_do_slug_imovelweb(url: str) -> Optional[str]:
+    """Tipo pelo slug: /propriedades/apartamento-com-3-quartos-... → 'Apartamento'.
+
+    Primeiro token após /propriedades/. Valor cru; normalizar_tipo_imovel
+    resolve no downstream.
+    """
+    try:
+        m = re.search(r"/propriedades/([a-z]+)-", url or "", re.I)
+        if not m:
+            return None
+        s = m.group(1).capitalize()
+        return s if 3 <= len(s) <= 20 else None
+    except Exception:
+        return None
 
 
 class ImovelWebDadosImovelAsync:
@@ -214,6 +231,19 @@ class ImovelWebDadosImovelAsync:
             if foto.get("url1200x1200")
         ]
 
+        # realEstateType vem como OBJETO {'name': 'Apartamento', 'realEstateTypeId': '2'};
+        # extrai o name antes da cascata de strings (o dict nunca é None e
+        # travaria a cascata se avaliado direto).
+        _rt = aviso.get("realEstateType")
+        _rt_nome = _rt.get("name") if isinstance(_rt, dict) else _rt
+        tipo_imovel = (
+            _rt_nome
+            or aviso.get("propertyType") or aviso.get("propertytype")
+            or aviso.get("tipo") or aviso.get("tipoImovel")
+            or aviso.get("postingType")
+            or _tipo_do_slug_imovelweb(self.url)
+        )
+
         return DadosImovelImovelWeb(
             url=self.url,
             titulo=aviso.get("postingTitle") or aviso.get("generatedTitle"),
@@ -239,6 +269,7 @@ class ImovelWebDadosImovelAsync:
             fotos=fotos,
             lat=_decodificar_coordenada(aviso.get("mapLat")),
             lng=_decodificar_coordenada(aviso.get("mapLng")),
+            tipo_imovel=tipo_imovel,
         )
 
     async def _extrair_fallback(self, page: Page) -> DadosImovelImovelWeb:
@@ -257,6 +288,7 @@ class ImovelWebDadosImovelAsync:
             metragem=metragem,
             metragem_total=metragem_total,
             metragem_util=metragem_util,
+            tipo_imovel=_tipo_do_slug_imovelweb(self.url),
         )
 
     async def _extrair_dados_da_pagina(self, page: Page) -> DadosImovelImovelWeb:

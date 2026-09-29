@@ -11,6 +11,7 @@ from funcoes_limpando_dados_imoveis import (limpar_valor_iptu,
                                             converter_para_data, 
                                             classificar_tipo_imovel, 
                                             reclassificar_outros, 
+                                            normalizar_tipo_imovel,
                                             preencher_todas_coordenadas,
                                             main_example, 
                                             limpar_valor_venda, 
@@ -186,7 +187,20 @@ async def limpando_dados_cidades(pd_data, batch, pasta_dados: Path, cidade_limpe
 
     pd_data_tipo_imovel = pd_data_garagem.copy()
 
-    pd_data_tipo_imovel['tipo_imovel'] = pd_data_tipo_imovel['titulo'].apply(classificar_tipo_imovel)
+    # Raspado primeiro (quando a fonte tem a coluna — OLX não tem);
+    # heurística de título/descrição só onde veio vazio. Regras atuais intactas.
+    if 'tipo_imovel' in pd_data_tipo_imovel.columns:
+        pd_data_tipo_imovel['tipo_imovel'] = (
+            pd_data_tipo_imovel['tipo_imovel'].map(normalizar_tipo_imovel)
+        )
+        mask_null = pd_data_tipo_imovel['tipo_imovel'].isna()
+        pd_data_tipo_imovel.loc[mask_null, 'tipo_imovel'] = (
+            pd_data_tipo_imovel.loc[mask_null, 'titulo'].apply(classificar_tipo_imovel)
+        )
+    else:
+        pd_data_tipo_imovel['tipo_imovel'] = (
+            pd_data_tipo_imovel['titulo'].apply(classificar_tipo_imovel)
+        )
 
     mask = pd_data_tipo_imovel['tipo_imovel'] == 'outros'
 

@@ -74,6 +74,7 @@ try:
                                                 converter_para_data, 
                                                 classificar_tipo_imovel, 
                                                 reclassificar_outros, 
+                                                normalizar_tipo_imovel, 
                                                 preencher_todas_coordenadas, 
                                                 main_example, 
                                                 limpar_quartos, 
@@ -94,6 +95,7 @@ except ImportError:
     converter_para_data = None
     classificar_tipo_imovel = None
     reclassificar_outros = None
+    normalizar_tipo_imovel = None
     preencher_todas_coordenadas = None
     main_example = None
     limpar_quartos = None
@@ -166,6 +168,7 @@ __all__ = [#"ZapScraperTotalPagina",
             "converter_para_data",
             "classificar_tipo_imovel",
             "reclassificar_outros",
+            "normalizar_tipo_imovel",
             "preencher_todas_coordenadas",
             "main_example",
             "pirabeiraba_dona_francisca",

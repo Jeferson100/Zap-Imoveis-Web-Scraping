@@ -1063,6 +1063,43 @@ def reclassificar_outros(descricao) -> str:
     except Exception:
         return 'outros'
 
+
+def normalizar_tipo_imovel(valor) -> str | None:
+    """Normaliza o tipo cru do scraper p/ o vocabulário do modelo.
+
+    Retorna None quando irreconhecível/ausente, sinalizando p/ cair no
+    classificar_tipo_imovel (heurística por título/descrição).
+    """
+    try:
+        if not isinstance(valor, str) or not valor.strip():
+            return None
+        v = valor.lower().strip()
+        MAPA = {
+            'casa': ['casa / sobrado', 'casa/sobrado', 'sobrado', 'casa',
+                     'casa de condomínio', 'casa comercial', 'casa de vila',
+                     'geminado', 'germinado', 'duplex', 'triplex', 'villa',
+                     'mansão', 'mansao', 'residência', 'residencia'],
+            'apartamento': ['apartamento', 'apto', 'cobertura', 'flat', 'loft',
+                            'kitnet', 'kitinete', 'studio', 'penthouse',
+                            'desarrollo vertical', 'desarrollo'],
+            'terreno': ['terreno', 'lote'],
+            'comercial': ['sala comercial', 'sala', 'loja', 'conjunto comercial',
+                          'escritório', 'consultório', 'prédio comercial',
+                          'imóvel comercial', 'imovel comercial', 'comercial'],
+            'galpao': ['galpão', 'galpao', 'depósito', 'deposito', 'armazém',
+                       'barracão', 'pavilhão'],
+            'rural': ['fazenda', 'sítio', 'sitio', 'chácara', 'chacara', 'haras',
+                      'rural', 'área rural', 'area rural'],
+            'predio_inteiro': ['hotel', 'motel', 'pousada', 'prédio inteiro',
+                               'predio inteiro', 'prédio à venda'],
+        }
+        for tipo, variantes in MAPA.items():
+            if any(x in v for x in variantes):
+                return tipo
+        return 'outros'
+    except Exception:
+        return None
+
 async def extrair_coords_url(link_maps: str) -> tuple:
     """Tenta extrair lat/lng direto da URL do Maps."""
     if not link_maps or not isinstance(link_maps, str):

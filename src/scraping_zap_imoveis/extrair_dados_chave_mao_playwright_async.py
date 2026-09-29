@@ -31,6 +31,7 @@ class DadosImovel:
     caracteristicas_comum: List[str] = field(default_factory=list)
     fotos: List[str] = field(default_factory=list)
     link_maps: Optional[str] = None
+    tipo_imovel: Optional[str] = None
 
     def to_dict(self) -> dict:
         return self.__dict__
@@ -200,6 +201,79 @@ class ChavesNaMaoScraperAsync:
                 pass
         return [p.strip() for p in priv if p.strip()], [c.strip() for c in comum if c.strip()]
 
+    @staticmethod
+    def _tipo_do_slug(url: str) -> Optional[str]:
+        """Tipo pelo slug da URL (.../terreno-a-venda-...-sc-... → 'Terreno').
+
+        Vocabulário do próprio site, custo zero. Espelho de tipoDoSlug do Node.
+        """
+        try:
+            m = re.search(r"/imovel/([a-z-]+?)-a-venda-", url or "", re.I)
+            if not m:
+                return None
+            s = " ".join(w.capitalize() for w in m.group(1).split("-"))
+            return s if 2 < len(s) < 40 else None
+        except Exception:
+            return None
+
+    async def _extrair_tipo_imovel(self, url: str) -> Optional[str]:
+        """Tipo do anúncio em cascata (espelho de extrairTipoImovel do Node).
+
+        1) realtyType ancorado no id da URL > 2) primeiro objeto >
+        3) string resolvida > 4) slug > 5) ld+json (@type → Casa/Apartamento/Terreno).
+        Retorna o valor cru (ex: 'Casa', 'Apartamento', 'Casa / Sobrado');
+        a limpeza (normalizar_tipo_imovel) normaliza p/ o vocabulário do modelo.
+        """
+        def valido(s):
+            return s is not None and 2 < len(s) < 60 and not s.startswith("$")
+
+        m_id = re.search(r"/id-(\d+)", url or "", re.I)
+        page_id = m_id.group(1) if m_id else None
+        try:
+            html = await self._page.content()
+        except Exception:
+            return self._tipo_do_slug(url)
+
+        # 1) realtyType ancorado no id (evita pegar realtyType de imóvel vizinho)
+        if page_id:
+            m = re.search(
+                r'"id"\s*:\s*' + page_id + r'([\s\S]{0,3000}?)'
+                r'("realtyType"\s*:\s*"([^"]+)"|"realtyType"\s*:\s*\{[^}]*"name"\s*:\s*"([^"]+)")',
+                html,
+            )
+            nome = (m.group(3) or m.group(4)) if m else None
+            if valido(nome):
+                return nome
+        # 2) primeiro objeto / 3) string resolvida
+        m2 = re.search(r'"realtyType"\s*:\s*\{\s*"name"\s*:\s*"([^"]+)"', html)
+        if m2 and valido(m2.group(1)):
+            return m2.group(1)
+        m2 = re.search(r'"realtyType"\s*:\s*"([^"]+)"', html)
+        if m2 and valido(m2.group(1)):
+            return m2.group(1)
+        # 4) slug (custo zero, vocabulário do próprio site)
+        slug = self._tipo_do_slug(url)
+        if slug:
+            return slug
+        # 5) ld+json: @type do itemOffered (grupo restrito, sem casar @type aninhado)
+        try:
+            scripts = await self._page.locator('script[type="application/ld+json"]').all_inner_texts()
+            for s in scripts:
+                mobj = re.search(r'"itemOffered"\s*:\s*\{([^{}]*)', s)
+                t = mobj and re.search(r'"@type"\s*:\s*"([^"]+)"', mobj.group(1))
+                if t:
+                    v = t.group(1)
+                    if re.search(r"SingleFamilyResidence|^House$", v, re.I):
+                        return "Casa"
+                    if re.search(r"Apartment", v, re.I):
+                        return "Apartamento"
+                    if re.search(r"Land", v, re.I):
+                        return "Terreno"
+                    return v
+        except Exception:
+            pass
+        return None
+
     async def _extrair_dados_da_pagina(self, url: str) -> DadosImovel:
         condo_raw = await self._get_text('p:has-text("Condomínio") + p')
         iptu_raw = await self._get_text('p:has-text("IPTU") + p')
@@ -228,6 +302,7 @@ class ChavesNaMaoScraperAsync:
             caracteristicas_comum=comum,
             fotos=await self._get_fotos(),
             link_maps=await self._get_mapa(),
+            tipo_imovel=await self._extrair_tipo_imovel(url),
         )
 
     async def _get_fotos(self) -> list[str]:
