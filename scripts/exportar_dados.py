@@ -17,6 +17,7 @@ CIDADES = {
     'jaragua': 'Jaraguá do Sul',
     'curitiba': 'Curitiba',
     'sao_paulo': 'São Paulo',
+    'rio_janeiro': 'Rio de Janeiro',
 }
 
 dados_todas_cidades = {}
@@ -25,19 +26,19 @@ dados_aluguel_cidades = {}
 cidades_com_aluguel = []
 
 
-def _carregar_sao_paulo(base_dir):
-    """Carrega todos os bairros de São Paulo de subdiretórios."""
-    pasta = base_dir / 'dados' / 'sao_paulo'
+def _carregar_por_bairros(base_dir, cidade, rotulo):
+    """Carrega todos os bairros de subdiretórios (São Paulo, Rio de Janeiro)."""
+    pasta = base_dir / 'dados' / cidade
     subpastas = [d for d in pasta.iterdir() if d.is_dir()]
     if not subpastas:
-        print('  Nenhum bairro encontrado em sao_paulo/.')
+        print(f'  Nenhum bairro encontrado em {cidade}/.')
         return None, None
 
     dfs = []
     data_ref = ''
     for subpasta in sorted(subpastas):
         bairro = subpasta.name
-        arquivos = list(subpasta.glob(f'sao_paulo_{bairro}_imoveis_limpo_*.parquet'))
+        arquivos = list(subpasta.glob(f'{cidade}_{bairro}_imoveis_limpo_*.parquet'))
         if not arquivos:
             continue
         arq = max(arquivos, key=lambda f: f.stem.split('_')[-1])
@@ -49,7 +50,7 @@ def _carregar_sao_paulo(base_dir):
         dfs.append(df)
 
     if not dfs:
-        print('  Nenhum dado encontrado para São Paulo.')
+        print(f'  Nenhum dado encontrado para {rotulo}.')
         return None, None
 
     df = pd.concat(dfs, ignore_index=True)
@@ -58,8 +59,11 @@ def _carregar_sao_paulo(base_dir):
 
 
 def exportar_cidade(cidade, base_dir):
-    if cidade == 'sao_paulo':
-        df, data_ref = _carregar_sao_paulo(base_dir)
+    if cidade in ('sao_paulo', 'rio_janeiro'):
+        df, data_ref = _carregar_por_bairros(
+            base_dir, cidade,
+            rotulo='São Paulo' if cidade == 'sao_paulo' else 'Rio de Janeiro',
+        )
         if df is None:
             return None, None
     else:

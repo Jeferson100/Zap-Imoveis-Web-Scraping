@@ -17,6 +17,7 @@ const CIDADES_NOMES = {
     'jaragua': 'Jaraguá do Sul',
     'curitiba': 'Curitiba',
     'sao_paulo': 'São Paulo',
+    'rio_janeiro': 'Rio de Janeiro',
 };
 
 // ── Utilitários ──

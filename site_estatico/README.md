@@ -3,7 +3,7 @@
 # Analise de Imoveis
 
 Painel web para visualizacao e analise de imoveis a venda e aluguel
-em **11 cidades** brasileiras com **280+ mil imoveis**.
+em **12 cidades** brasileiras com **340+ mil imoveis**.
 
 <br>
 
@@ -30,6 +30,7 @@ em **11 cidades** brasileiras com **280+ mil imoveis**.
 | Jaragua do Sul | SC | ~4k | — | — |
 | Curitiba | PR | ~39k | — | — |
 | Sao Paulo | SP | ~106k | — | — |
+| Rio de Janeiro | RJ | ~66k | — | — |
 
 ## Funcionalidades
 
