@@ -21,6 +21,8 @@ load_dotenv()
 BASE_DIR    = Path(__file__).parent.parent.parent  
 
 cidade = os.getenv("CIDADE_PASTA")
+if not cidade:
+    raise SystemExit("CIDADE_PASTA não definida (ex: CIDADE_PASTA=joinville)")
 
 PASTA_DADOS = BASE_DIR / 'dados' / cidade
 
