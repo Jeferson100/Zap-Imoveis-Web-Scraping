@@ -1,0 +1,31 @@
+name: Rodando Juncao e Limpeza Joinville
+on:
+  workflow_run:
+        workflows: ["Rodando Coleta Imovelweb Joinville"]
+        types:
+            - completed # 09:00 no dia 2 de cada mês
+  workflow_dispatch:
+
+jobs:
+  juncao:
+    uses: ./.github/workflows/pipeline_cidade_rodando.yml
+    with:
+      cidade_pasta: joinville
+      arquivo_rodando_imovel: joinville_juncao_dados.py
+      cidade_limpeza: joinville
+      cidade_localizacao: Joinville
+      estado_limpeza: sc
+      estado_localizacao: SC
+    secrets: inherit
+
+  limpeza:
+    needs: [juncao]
+    uses: ./.github/workflows/pipeline_cidade_rodando.yml
+    with:
+      cidade_pasta: joinville
+      arquivo_rodando_imovel: joinville_limpando_dados_imoveis.py
+      cidade_limpeza: joinville
+      cidade_localizacao: Joinville
+      estado_limpeza: sc
+      estado_localizacao: SC
+    secrets: inherit

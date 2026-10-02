@@ -61,12 +61,12 @@ def consolidar_jsons(fonte, cidade, PASTA_DADOS, bairro = None):
         tamanho_final = os.path.getsize(caminho_final)
         
         if tamanho_final > 0 and len(dados_consolidados) > 0:
-            print(f"✅ Consolidação concluída: {len(dados_consolidados)} registros.")
-            print(f"📦 Arquivo gerado: {nome_final} ({tamanho_final / 1024 / 1024:.2f} MB)")
+            print(f"[OK] Consolidação concluída: {len(dados_consolidados)} registros.")
+            print(f"Arquivo gerado: {nome_final} ({tamanho_final / 1024 / 1024:.2f} MB)")
             
             # 4. Deleta os arquivos anteriores apenas se o final estiver OK
            
-            print("🗑️ Removendo arquivos temporários (fatias)...")
+            print("Removendo arquivos temporários (fatias)...")
             for arquivo_velho in arquivos_json:
                 try:
                     os.remove(arquivo_velho)
@@ -77,12 +77,12 @@ def consolidar_jsons(fonte, cidade, PASTA_DADOS, bairro = None):
             with open(caminho_final, 'w', encoding='utf-8') as f_out:
                 json.dump(dados_consolidados, f_out, indent=4, ensure_ascii=False)
             
-            print("✨ Limpeza concluída com sucesso!")
+            print("Limpeza concluída com sucesso!")
         else:
-            print("⚠️ Erro crítico: O arquivo final parece estar vazio. Abortando exclusão.")
+            print("[ERRO] Erro crítico: O arquivo final parece estar vazio. Abortando exclusão.")
 
     except Exception as e:
-        print(f"❌ Erro ao salvar arquivo consolidado: {e}")
+        print(f"[ERRO] Erro ao salvar arquivo consolidado: {e}")
         
 
 
@@ -97,7 +97,7 @@ def consolidar_parquet(fonte, cidade, PASTA_DADOS, bairro = None):
     arquivos_parquet = glob.glob(padrao_busca)
     
     if not arquivos_parquet:
-        print(f"⚠️ Nenhum arquivo encontrado para {fonte} em {cidade}.")
+        print(f"[AVISO] Nenhum arquivo encontrado para {fonte} em {cidade}.")
         return
 
     lista_dfs = []
@@ -116,10 +116,10 @@ def consolidar_parquet(fonte, cidade, PASTA_DADOS, bairro = None):
             print(f"[{i}/{total_arquivos}] Adicionado: {nome_base} ({len(df_temp)} itens)")
             
         except Exception as e:
-            print(f"❌ Erro ao ler {nome_base}: {e}")
+            print(f"[ERRO] Erro ao ler {nome_base}: {e}")
 
     if not lista_dfs:
-        print("⚠️ Nenhum dado válido encontrado nos arquivos.")
+        print("[AVISO] Nenhum dado válido encontrado nos arquivos.")
         return
 
     try:
@@ -140,11 +140,11 @@ def consolidar_parquet(fonte, cidade, PASTA_DADOS, bairro = None):
         tamanho_final = os.path.getsize(caminho_final)
         
         if tamanho_final > 0:
-            print(f"✅ Consolidação concluída: {len(df_consolidado)} registros.")
-            print(f"📦 Arquivo gerado: {nome_final} ({tamanho_final / 1024 / 1024:.2f} MB)")
+            print(f"[OK] Consolidação concluída: {len(df_consolidado)} registros.")
+            print(f"Arquivo gerado: {nome_final} ({tamanho_final / 1024 / 1024:.2f} MB)")
             
             # 4. Deleta os arquivos temporários (fatias)
-            print("🗑️ Removendo arquivos temporários (fatias)...")
+            print("Removendo arquivos temporários (fatias)...")
             for arquivo_velho in arquivos_parquet:
                 # Evita deletar o próprio arquivo final caso ele tenha entrado no glob
                 if os.path.abspath(arquivo_velho) != os.path.abspath(caminho_final):
@@ -154,13 +154,13 @@ def consolidar_parquet(fonte, cidade, PASTA_DADOS, bairro = None):
                     except Exception as e:
                         print(f"   Erro ao excluir {arquivo_velho}: {e}")
             
-            print("✨ Limpeza concluída com sucesso!")
+            print("Limpeza concluída com sucesso!")
             
             df_consolidado.to_parquet(caminho_final, index=False, compression='snappy')
         
         else:
-            print("⚠️ Erro crítico: O arquivo final parece estar vazio. Abortando exclusão.")
+            print("[ERRO] Erro crítico: O arquivo final parece estar vazio. Abortando exclusão.")
         
 
     except Exception as e:
-        print(f"❌ Erro na união ou salvamento: {e}")
+        print(f"[ERRO] Erro na união ou salvamento: {e}")

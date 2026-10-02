@@ -1,5 +1,7 @@
 name: Rodando Coleta Imovelweb Joinville
 on: 
+  schedule:
+    - cron: '0 9 2 1,2,3,4,5,6,7,8,9,10,11,12 *'  # mesma data da junção: dia 2, 09:00
   workflow_run:
         workflows: ["Rodando Coleta Viva Real Joinville"]
         types:

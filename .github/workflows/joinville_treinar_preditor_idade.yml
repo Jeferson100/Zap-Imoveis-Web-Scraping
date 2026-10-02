@@ -1,7 +1,7 @@
 name: Rodando Treinamento Preditor Idade Joinville
 on: 
   workflow_run:
-    workflows: ["Rodando Juncao Dados Joinville"]
+    workflows: ["Rodando Juncao e Limpeza Joinville"]
     types:
       - completed
   workflow_dispatch:

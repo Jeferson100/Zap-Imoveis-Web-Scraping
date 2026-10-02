@@ -1,7 +1,7 @@
 name: Rodando Treinamento de Imoveis de Joinville 
 on: 
     workflow_run:
-        workflows: ["Rodando Limpeza Imoveis Joinville"]
+        workflows: ["Rodando Juncao e Limpeza Joinville"]
         types:
             - completed
     workflow_dispatch:
