@@ -1,11 +1,11 @@
 {
   "modelo": "catboost",
   "params": {
-    "iterations": 300,
-    "depth": 8,
-    "learning_rate": 0.19435157872355036,
-    "l2_leaf_reg": 3.247481579478816,
-    "subsample": 0.7725570393132254
+    "iterations": 250,
+    "depth": 7,
+    "learning_rate": 0.1919660716661862,
+    "l2_leaf_reg": 1.2741952046500544,
+    "subsample": 0.9007647133987958
   },
   "features_numericas": [
     "metragem",
@@ -34,19 +34,19 @@
     "tipo_imovel"
   ],
   "metricas_cv": {
-    "rmse": 3.0492725882334484,
+    "rmse": 3.0453920200722187,
     "n_folds": 5,
     "n_trials": 80
   },
   "metricas_teste": {
-    "rmse": 0.6959819053245577,
-    "mae": 0.29200667240298767,
+    "rmse": 0.7875054725212528,
+    "mae": 0.37740803058718303,
     "mape": Infinity,
-    "mdape": 2.0036820980994463,
-    "r2": 0.9957958713577223,
-    "rmsle": 0.13874426565017603
+    "mdape": 3.745232472544506,
+    "r2": 0.9942713283219217,
+    "rmsle": 0.14608326733927768
   },
   "n_amostras": 5047,
-  "data_treino": "2026-10-03T05:03:47.626179",
+  "data_treino": "2026-10-03T19:02:35.871346",
   "arquivo_dados": "/home/runner/work/Zap-Imoveis-Web-Scraping/Zap-Imoveis-Web-Scraping/dados/joinville/joinville_imovelweb_2026-10.parquet"
 }
