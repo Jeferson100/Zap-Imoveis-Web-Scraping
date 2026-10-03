@@ -455,6 +455,15 @@ with open(ARQUIVO_METADADOS, "w", encoding="utf-8") as f:
     json.dump(metadados, f, indent=2, ensure_ascii=False)
 logger.info("✓ Metadados salvos")
 
+# ── Limpeza do bruto (só chega aqui se as 11 etapas concluíram) ──
+try:
+    ARQUIVO_DADOS.unlink()
+    logger.info("✓ Arquivo bruto removido: %s", ARQUIVO_DADOS.name)
+except FileNotFoundError:
+    logger.info("Arquivo bruto já removido anteriormente: %s", ARQUIVO_DADOS.name)
+except Exception as e:
+    logger.warning("Não foi possível remover o bruto %s: %s", ARQUIVO_DADOS.name, e)
+
 # ── Resumo final ─────────────────────────────────────────────────────
 logger.info("=" * 60)
 logger.info("TREINAMENTO CONCLUÍDO COM SUCESSO")

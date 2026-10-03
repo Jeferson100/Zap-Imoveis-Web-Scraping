@@ -29,3 +29,15 @@ jobs:
       estado_limpeza: sc
       estado_localizacao: SC
     secrets: inherit
+
+  preditor_idade:
+    needs: [limpeza]
+    uses: ./.github/workflows/pipeline_cidade_rodando.yml
+    with:
+      cidade_pasta: joinville
+      arquivo_rodando_imovel: joinville_treinar_preditor_idade.py
+      cidade_limpeza: joinville
+      cidade_localizacao: Joinville
+      estado_limpeza: sc
+      estado_localizacao: SC
+    secrets: inherit

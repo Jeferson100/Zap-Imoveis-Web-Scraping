@@ -716,9 +716,10 @@ def limpando_dados(
                     deletar_arquivo(arquivo_olx)
                     logger.info("✅ Arquivo OLX deletado.")
 
+                # ImovelWeb PRESERVADO: é o bruto do treinar_preditor_idade,
+                # que o deleta ao final quando o treino conclui com sucesso.
                 if name_arquivo_imovelweb is not None:
-                    deletar_arquivo(arquivo_imovelweb)
-                    logger.info("✅ Arquivo ImovelWeb deletado.")
+                    logger.info("Arquivo ImovelWeb preservado para o preditor de idade.")
 
                 logger.info("✅ Arquivos originais deletados.")
         else:
