@@ -1,0 +1,52 @@
+{
+  "modelo": "catboost",
+  "params": {
+    "iterations": 300,
+    "depth": 8,
+    "learning_rate": 0.19435157872355036,
+    "l2_leaf_reg": 3.247481579478816,
+    "subsample": 0.7725570393132254
+  },
+  "features_numericas": [
+    "metragem",
+    "quartos",
+    "vagas",
+    "valor_imovel",
+    "condominio",
+    "preco_por_m2",
+    "dias_publicacao",
+    "quartos_por_metro",
+    "vagas_por_metro",
+    "n_carac_comum",
+    "n_carac_privada",
+    "comum_elevador",
+    "comum_piscina",
+    "comum_churrasqueira_parrilla",
+    "comum_playground",
+    "comum_fitness_sala_de_ginastica",
+    "priv_varanda",
+    "priv_lavanderia",
+    "priv_piscina",
+    "priv_ar_condicionado"
+  ],
+  "features_categoricas": [
+    "bairro",
+    "tipo_imovel"
+  ],
+  "metricas_cv": {
+    "rmse": 3.0492725882334484,
+    "n_folds": 5,
+    "n_trials": 80
+  },
+  "metricas_teste": {
+    "rmse": 0.6959819053245577,
+    "mae": 0.29200667240298767,
+    "mape": Infinity,
+    "mdape": 2.0036820980994463,
+    "r2": 0.9957958713577223,
+    "rmsle": 0.13874426565017603
+  },
+  "n_amostras": 5047,
+  "data_treino": "2026-10-03T05:03:47.626179",
+  "arquivo_dados": "/home/runner/work/Zap-Imoveis-Web-Scraping/Zap-Imoveis-Web-Scraping/dados/joinville/joinville_imovelweb_2026-10.parquet"
+}
