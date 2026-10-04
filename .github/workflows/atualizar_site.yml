@@ -9,7 +9,11 @@ on:
   workflow_dispatch:
 
 jobs:
-  exportar:
+  # Job único de propósito: export e sync precisam compartilhar o MESMO
+  # workspace, pois os arquivos gerados pelo export só existem no runner.
+  # (Jobs separados descartavam o export e o sync comparava checkout-vs-checkout,
+  # resultando em "Nenhuma mudanca" para sempre.)
+  exportar_e_sincronizar:
     runs-on: ubuntu-latest
     steps:
       - name: Copiar arquivos do repo
@@ -37,9 +41,48 @@ jobs:
       - name: Exportar modelos JS
         run: |
           source .venv/bin/activate
-          python scripts/exportar_modelo_js.py
+          python scripts/exportar_modelo_js.py todas
 
-  sincronizar:
-    needs: exportar
-    uses: ./.github/workflows/sync_site.yml
-    secrets: inherit
+      - name: Sincronizar site_estatico para Analise-imoveis
+        run: |
+          set -e
+          echo "=== Sincronizando site_estatico/ para Analise-imoveis ==="
+
+          # Limpar clone anterior
+          rm -rf /tmp/site
+
+          # Clonar o repo do site
+          if ! git clone https://${{ secrets.SITE_SYNC_TOKEN }}@github.com/Jeferson100/Analise-imoveis.git /tmp/site; then
+            echo "ERRO: Falha ao clonar repo Analise-imoveis"
+            exit 1
+          fi
+
+          # Verificar se clone e valido
+          if [ ! -d "/tmp/site/.git" ]; then
+            echo "ERRO: Clone nao criou diretorio valido"
+            exit 1
+          fi
+
+          # Limpar conteudo antigo (manter .git)
+          cd /tmp/site
+          find . -maxdepth 1 ! -name '.git' ! -name '.' -exec rm -rf {} +
+
+          # Copiar tudo de site_estatico (GERADO NESTE MESMO RUNNER acima)
+          cp -r "$GITHUB_WORKSPACE/site_estatico/index.html" .
+          cp -r "$GITHUB_WORKSPACE/site_estatico/css" .
+          cp -r "$GITHUB_WORKSPACE/site_estatico/js" .
+          cp -r "$GITHUB_WORKSPACE/site_estatico/data" .
+
+          # Configurar git
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+          # Verificar se ha mudancas
+          if git diff --quiet && git diff --staged --quiet; then
+            echo "Nenhuma mudanca detectada."
+          else
+            git add -A
+            git commit -m "Atualizacao: $(date +'%Y-%m-%d %H:%M')"
+            git push origin main
+            echo "Push realizado com sucesso!"
+          fi
