@@ -172,9 +172,9 @@ class FactoryModelos:
         from sklearn.tree import DecisionTreeRegressor
 
         return DecisionTreeRegressor(
-            max_depth=trial.suggest_int("max_depth", 3, 30),
+            max_depth=trial.suggest_int("max_depth", 3, 12),
             min_samples_split=trial.suggest_int("min_samples_split", 2, 20),
-            min_samples_leaf=trial.suggest_int("min_samples_leaf", 1, 10),
+            min_samples_leaf=trial.suggest_int("min_samples_leaf", 10, 50),
             max_features=trial.suggest_categorical("max_features", [None, "sqrt", "log2"]),
             random_state=self.random_state,
         )
