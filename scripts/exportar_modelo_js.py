@@ -259,7 +259,10 @@ def main():
         return
 
     for cidade in cidades:
-        exportar_cidade(cidade, base_dir)
+        try:
+            exportar_cidade(cidade, base_dir)
+        except Exception as exc:
+            print(f"[AVISO] Pulei modelo de {cidade}: {exc} (dados seguem normalmente)")
 
     print('\nConcluido!')
 

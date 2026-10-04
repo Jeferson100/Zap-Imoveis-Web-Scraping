@@ -45,7 +45,7 @@ dependencies = [
     "pyarrow>=23.0.1",
     "pydantic>=2.12.5",
     "pydantic-ai>=2.8.0",
-    "scikit-learn>=1.8.0",
+    "scikit-learn==1.9.1",
     "seaborn>=0.13.2",
     "selenium>=4.40.0",
     "setuptools>=80.10.2",
