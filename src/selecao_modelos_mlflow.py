@@ -239,6 +239,20 @@ def carregar_dados(pasta_dados, mes_ref, cidade, cidade_nome=None):
     ].copy()
     df_modelo = df_modelo.dropna(subset=["valor_imovel"])
 
+    # Teto de R$/m²: typos com dígitos colados (R$1,05B num sobrado = 7,5M/m²)
+    # explodem qualquer métrica quadrática sozinhos (~R$13M no RMSE).
+    # Sem teto de metragem (terrenos grandes legítimos passam) e sem teto
+    # de valor absoluto: o filtro é pela implausibilidade do metro quadrado.
+    TETO_PRECO_POR_M2 = 100_000
+    mask_pm2 = df_modelo["preco_por_m2"] <= TETO_PRECO_POR_M2
+    fora = df_modelo.loc[~mask_pm2, ["url", "titulo", "bairro", "valor_imovel", "preco_por_m2"]]
+    if not fora.empty:
+        logger.warning(
+            "Outliers de R$/m² barrados no treino (%d): %s",
+            len(fora), fora.to_dict(orient="records"),
+        )
+    df_modelo = df_modelo.loc[mask_pm2].copy()
+
     train, test = train_test_split(df_modelo, test_size=0.25, random_state=42)
     train, test = engenharia_features_completa(train, test)
 
