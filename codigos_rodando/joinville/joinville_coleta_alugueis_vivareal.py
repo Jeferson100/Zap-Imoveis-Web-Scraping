@@ -36,7 +36,7 @@ sys.path.append('..')
     
 now = time.strftime("%Y-%m")
 
-area_ranges = {#'0': '50',  
+area_ranges = {'0': '50',  
                '51': '100','101': '3000000',}
 
 total_paginas = 50
@@ -63,7 +63,7 @@ for area_min, area_max in area_ranges.items():
 
     resultado = asyncio.run(orchestrator.run(
         output_file=str(output_file),
-        total_pages=total_paginas,
+        #total_pages=total_paginas,
     ))
 
 

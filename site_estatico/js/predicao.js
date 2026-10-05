@@ -39,10 +39,12 @@ function carregarPredicao(cidade) {
         fetch(pasta + 'modelo_' + cidade + '.json').then(function(r) { return r.ok ? r.json() : null; }).catch(function() { return null; }),
         fetch(pasta + 'bairro_stats_' + cidade + '.json').then(function(r) { return r.ok ? r.json() : null; }).catch(function() { return null; }),
         fetch(pasta + 'cluster_' + cidade + '.json').then(function(r) { return r.ok ? r.json() : null; }).catch(function() { return null; }),
+        fetch(pasta + 'pois_' + cidade + '.json').then(function(r) { return r.ok ? r.json() : null; }).catch(function() { return null; }),
     ]).then(function(results) {
         modeloJson = results[0];
         bairroStats = results[1];
         clusterData = results[2];
+        POIS = results[3]; // null se a cidade não tiver POIs exportados -> fallback bairro
 
         if (Array.isArray(bairroStats)) {
             var dict = {};
@@ -399,9 +401,19 @@ function montarFeatures(inputs) {
     var scoreFeatures = ['score_escola_privada', 'score_escola_publica', 'score_hospitais',
         'score_mercado', 'score_farmacia', 'score_parque', 'score_seguranca', 'score_educacao'];
     var scores = {};
+    // 1) ao vivo por coordenada (precisão de imóvel) -> 2) média do bairro -> 3) 0.
+    // Sem cache entre predições: lat/lng mudam a cada clique (cálculo = milissegundos).
+    var scoresVivos = null;
+    if (typeof POIS !== 'undefined' && POIS && inputs.lat && inputs.lng) {
+        scoresVivos = calcularScores(inputs.lat, inputs.lng);
+    }
     scoreFeatures.forEach(function(sf) {
-        features[sf] = (bairroStats && bairroStats[inputs.bairro] && bairroStats[inputs.bairro][sf] !== undefined)
-            ? bairroStats[inputs.bairro][sf] : 0;
+        if (scoresVivos && scoresVivos[sf] !== undefined) {
+            features[sf] = scoresVivos[sf];
+        } else {
+            features[sf] = (bairroStats && bairroStats[inputs.bairro] && bairroStats[inputs.bairro][sf] !== undefined)
+                ? bairroStats[inputs.bairro][sf] : 0;
+        }
         scores[sf] = features[sf];
     });
 
