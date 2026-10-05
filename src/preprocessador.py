@@ -51,6 +51,11 @@ SKOPS_TRUSTED_TYPES = [
     "preprocessador._replace_inf",
     "preprocessador._cleanup_transform",
     "sklearn.tree._tree.Tree",
+    # Regressores de terceiros candidatos em FactoryModelos (otimizador_optuna):
+    # sem eles, o mês em que vencerem quebra o log_model no MLflow.
+    "catboost.core.CatBoostRegressor",
+    "lightgbm.sklearn.LGBMRegressor",
+    "xgboost.sklearn.XGBRegressor",
 ]
 
 
