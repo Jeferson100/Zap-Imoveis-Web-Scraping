@@ -36,7 +36,17 @@ def main():
         logger.warning("Nenhum batch encontrado para bairro '%s' em %s", BAIRRO, PASTA_DADOS)
         return
 
-    dfs = [pd.read_parquet(f) for f in arquivos]
+    dfs = []
+    for f in arquivos:
+        try:
+            dfs.append(pd.read_parquet(f))
+        except Exception as e:
+            # Batch truncado/corrompido (ex: job morto no meio do to_parquet):
+            # pula com warning em vez de derrubar o merge inteiro.
+            logger.warning("Batch ilegível, pulando %s: %s", f.name, e)
+    if not dfs:
+        logger.warning("Nenhum batch válido para bairro '%s'.", BAIRRO)
+        return
     merged = pd.concat(dfs, ignore_index=True)
     merged = merged.drop_duplicates(subset=["url"]).reset_index(drop=True)
 

@@ -57,13 +57,11 @@ jobs:
           SNAPSHOT_DATA: "true"
           BAIRRO_SELECAO: ${{ inputs.bairro }}
 
-      - name: Commit resultados
-        run: |
-          git config user.name "github-actions"
-          git config user.email "github-actions@github.com"
-          git add dados/joinville/*avaliacao_flip*.parquet
-          git commit -m "Avaliacao Flip Joinville [${{ inputs.limite_inferior }}-${{ inputs.limite_superior }}]: $(date +'%Y-%m-%d')" || echo "Nada para commitar"
-          git pull --rebase --autostash -X ours origin main
-          git push origin main
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Publicar resultado parcial
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: flip-${{ inputs.bairro }}-${{ inputs.limite_inferior }}-${{ inputs.limite_superior }}
+          path: dados/joinville/*avaliacao_flip*.parquet
+          if-no-files-found: warn
+          retention-days: 7

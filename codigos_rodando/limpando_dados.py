@@ -202,6 +202,29 @@ async def limpando_dados_cidades(pd_data, batch, pasta_dados: Path, cidade_limpe
             pd_data_tipo_imovel['titulo'].apply(classificar_tipo_imovel)
         )
 
+    # VETO COMERCIAL (auditoria em dados reais: descricao e outros tipos geram
+    # milhares de falsos-positivos — 'terreno'/'loja' aparecem em descrições de
+    # casas; nomes de rua contêm 'Chácara'/'Fazenda'; títulos mistos existem.
+    # Por isso o veto é SÓ comercial, SÓ no título, com expressões multi-palavra
+    # (+ 'loja' isolada por \b). Galpao/terreno/rural ficam na heurística normal.
+    MARCADORES_COMERCIAIS = [
+        r"sala comercial", r"conjunto comercial", r"ponto comercial",
+        r"prédio comercial", r"imóvel comercial", r"\bloja\b",
+    ]
+    tit = pd_data_tipo_imovel["titulo"].fillna("").str.lower()
+    pat_com = "|".join(f"(?:{p})" for p in MARCADORES_COMERCIAIS)
+    mask_com = tit.str.contains(pat_com, regex=True) \
+        & (pd_data_tipo_imovel["tipo_imovel"] != "comercial")
+    if mask_com.any():
+        n = int(mask_com.sum())
+        logger.warning(
+            "Veto comercial: %d linhas %s -> comercial (ex: %s)",
+            n,
+            pd_data_tipo_imovel.loc[mask_com, "tipo_imovel"].value_counts().to_dict(),
+            pd_data_tipo_imovel.loc[mask_com, "titulo"].iloc[0][:80],
+        )
+        pd_data_tipo_imovel.loc[mask_com, "tipo_imovel"] = "comercial"
+
     mask = pd_data_tipo_imovel['tipo_imovel'] == 'outros'
 
     pd_data_tipo_imovel.loc[mask, 'tipo_imovel'] = (
