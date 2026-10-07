@@ -257,7 +257,9 @@ def carregar_dados(pasta_dados, mes_ref, cidade, cidade_nome=None):
     train, test = engenharia_features_completa(train, test)
 
     train.to_parquet(train_path, index=False)
+    
     test.to_parquet(test_path, index=False)
+    
     logger.info("Cache salvo: %s, %s", train_path.name, test_path.name)
 
     return train, test

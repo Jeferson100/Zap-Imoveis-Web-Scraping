@@ -17,6 +17,10 @@ on:
         required: false
         type: string
         default: "1"
+      mes_ref:
+        required: false
+        type: string
+        default: ""
 
 jobs:
   avaliacao_flip:
@@ -54,8 +58,21 @@ jobs:
           LIMITE_FLIP: ${{ inputs.limite_superior }}
           LIMITE_INFERIOR_FLIP: ${{ inputs.limite_inferior }}
           LIMITE_SUPERIOR_FLIP: ${{ inputs.limite_superior }}
+          MES_REF: ${{ inputs.mes_ref }}
           SNAPSHOT_DATA: "true"
           BAIRRO_SELECAO: ${{ inputs.bairro }}
+
+      - name: Commit parcial do flip
+        if: always()
+        run: |
+          git config user.name "github-actions"
+          git config user.email "github-actions@github.com"
+          git add dados/joinville/*avaliacao_flip*.parquet || echo "nada para adicionar"
+          git commit -m "flip parcial ${{ inputs.bairro }} ${{ inputs.limite_inferior }}-${{ inputs.limite_superior }}" || echo "nada para commitar"
+          git pull --rebase --autostash -X ours origin main
+          git push origin main
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Publicar resultado parcial
         if: always()

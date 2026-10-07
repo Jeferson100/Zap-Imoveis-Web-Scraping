@@ -65,3 +65,15 @@ jobs:
           env:
             GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
+  limpeza_aluguel_joinville:
+    needs: [juncao_aluguel_joinville]
+    uses: ./.github/workflows/pipeline_cidade_rodando.yml
+    with:
+      cidade_pasta: joinville
+      arquivo_rodando_imovel: joinville_limpando_dados_alugueis.py
+      cidade_limpeza: joinville
+      cidade_localizacao: Joinville
+      estado_limpeza: sc
+      estado_localizacao: SC
+    secrets: inherit
+

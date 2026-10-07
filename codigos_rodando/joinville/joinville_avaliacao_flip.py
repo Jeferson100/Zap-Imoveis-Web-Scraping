@@ -58,6 +58,30 @@ else:
 
 
 
+def urls_ja_avaliadas() -> set:
+    """URLs presentes no checkpoint parcial (se existir)."""
+    if ARQUIVO_RESULTADO.exists():
+        try:
+            return set(pd.read_parquet(ARQUIVO_RESULTADO, columns=["url"])["url"])
+        except Exception as e:
+            logger.warning("Checkpoint ilegível (%s) — recomeçando do zero.", e)
+    return set()
+
+
+def salvar_checkpoint(linha: dict) -> None:
+    """Append imediato de 1 resultado — timeout não perde o trabalho feito."""
+    df_linha = pd.DataFrame([linha])
+    if ARQUIVO_RESULTADO.exists():
+        try:
+            feito = pd.read_parquet(ARQUIVO_RESULTADO)
+            feito = pd.concat([feito, df_linha], ignore_index=True)
+        except Exception:
+            feito = df_linha
+    else:
+        feito = df_linha
+    feito.to_parquet(ARQUIVO_RESULTADO, index=False)
+
+
 def carregar_imoveis() -> pd.DataFrame:
     df = pd.read_parquet(ARQUIVO_DADOS)
     if os.getenv("SNAPSHOT_DATA"):
@@ -73,9 +97,17 @@ def carregar_imoveis() -> pd.DataFrame:
         mask = df["bairro"].str.lower().str.contains(bairro_selecao)
         df = df[mask]
     df = df.iloc[LIMITE_INFERIOR:min(LIMITE_SUPERIOR, len(df))]
+    # Resume: pula o que o checkpoint parcial já contém
+    n_lote = len(df)
+    feitas = urls_ja_avaliadas()
+    n_pulados = 0
+    if feitas:
+        df = df[~df["url"].isin(feitas)]
+        n_pulados = n_lote - len(df)
     logger.info(
-        "Carregados %d imoveis de %s (filtrados de %d, range %d:%d)",
-        len(df), CIDADE, mask.sum(), LIMITE_INFERIOR, LIMITE_INFERIOR + len(df),
+        "Carregados %d imoveis de %s (lote %d, range %d:%d, %d já feitos, mes=%s, bairro=%s)",
+        len(df), CIDADE, n_lote, LIMITE_INFERIOR, LIMITE_INFERIOR + n_lote,
+        n_pulados, MES_REF, bairro_selecao,
     )
     return df.reset_index(drop=True)
 
@@ -123,7 +155,7 @@ async def processar_um(linha: pd.Series, idx: int, total: int) -> dict:
             analise = resultado.get("analise_flip")
 
             if analise:
-                return {
+                saida = {
                     "url": url,
                     "score_potencial_flip": analise.score_potencial_flip,
                     "potencial_house_flip": analise.potencial_house_flip,
@@ -133,20 +165,21 @@ async def processar_um(linha: pd.Series, idx: int, total: int) -> dict:
                     "observacoes": analise.observacoes,
                     "erro": None,
                 }
-            return {
-                "url": url,
-                "score_potencial_flip": None,
-                "potencial_house_flip": None,
-                "justificativa": None,
-                "riscos": "[]",
-                "recomendacoes": "[]",
-                "observacoes": "Analise vazia retornada",
-                "erro": "Resultado sem analise_flip",
-            }
+            else:
+                saida = {
+                    "url": url,
+                    "score_potencial_flip": None,
+                    "potencial_house_flip": None,
+                    "justificativa": None,
+                    "riscos": "[]",
+                    "recomendacoes": "[]",
+                    "observacoes": "Analise vazia retornada",
+                    "erro": "Resultado sem analise_flip",
+                }
 
         except Exception as e:
             logger.error("Falha no imovel %s: %s", url, e)
-            return {
+            saida = {
                 "url": url,
                 "score_potencial_flip": None,
                 "potencial_house_flip": None,
@@ -156,6 +189,9 @@ async def processar_um(linha: pd.Series, idx: int, total: int) -> dict:
                 "observacoes": None,
                 "erro": str(e),
             }
+
+        salvar_checkpoint(saida)  # checkpoint imediato (sobrevive ao timeout)
+        return saida
 
 
 async def main():
@@ -168,13 +204,17 @@ async def main():
     resultados = await asyncio.gather(*tarefas, return_exceptions=True)
 
     linhas = [r for r in resultados if isinstance(r, dict)]
-    df_resultado = pd.DataFrame(linhas)
-    df_resultado.to_parquet(ARQUIVO_RESULTADO, index=False)
 
     logger.info(
         "Processados %d/%d imoveis. Resultado salvo em %s",
         len(linhas), len(df), ARQUIVO_RESULTADO,
     )
+
+    # O parquet final é o próprio checkpoint (acumulado a cada imóvel)
+    try:
+        df_resultado = pd.read_parquet(ARQUIVO_RESULTADO)
+    except Exception:
+        df_resultado = pd.DataFrame(linhas)
 
     aprovados = df_resultado[
         df_resultado.get("potencial_house_flip") == "True"
