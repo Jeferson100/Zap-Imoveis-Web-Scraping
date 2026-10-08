@@ -6,42 +6,82 @@ on:
       - completed
   workflow_dispatch:
 jobs:
-  batch_100_120:
+  batch_100_110:
     uses: ./.github/workflows/joinville_avaliacao_flip_base.yml
     with:
       limite_inferior: "100"
+      limite_superior: "110"
+      bairro: "centro"
+    secrets: inherit
+
+  batch_110_120:
+    uses: ./.github/workflows/joinville_avaliacao_flip_base.yml
+    with:
+      limite_inferior: "110"
       limite_superior: "120"
       bairro: "centro"
     secrets: inherit
 
-  batch_120_140:
+  batch_120_130:
     uses: ./.github/workflows/joinville_avaliacao_flip_base.yml
     with:
       limite_inferior: "120"
+      limite_superior: "130"
+      bairro: "centro"
+    secrets: inherit
+
+  batch_130_140:
+    uses: ./.github/workflows/joinville_avaliacao_flip_base.yml
+    with:
+      limite_inferior: "130"
       limite_superior: "140"
       bairro: "centro"
     secrets: inherit
 
-  batch_140_160:
+  batch_140_150:
     uses: ./.github/workflows/joinville_avaliacao_flip_base.yml
     with:
       limite_inferior: "140"
+      limite_superior: "150"
+      bairro: "centro"
+    secrets: inherit
+
+  batch_150_160:
+    uses: ./.github/workflows/joinville_avaliacao_flip_base.yml
+    with:
+      limite_inferior: "150"
       limite_superior: "160"
       bairro: "centro"
     secrets: inherit
 
-  batch_160_180:
+  batch_160_170:
     uses: ./.github/workflows/joinville_avaliacao_flip_base.yml
     with:
       limite_inferior: "160"
+      limite_superior: "170"
+      bairro: "centro"
+    secrets: inherit
+
+  batch_170_180:
+    uses: ./.github/workflows/joinville_avaliacao_flip_base.yml
+    with:
+      limite_inferior: "170"
       limite_superior: "180"
       bairro: "centro"
     secrets: inherit
 
-  batch_180_200:
+  batch_180_190:
     uses: ./.github/workflows/joinville_avaliacao_flip_base.yml
     with:
       limite_inferior: "180"
+      limite_superior: "190"
+      bairro: "centro"
+    secrets: inherit
+
+  batch_190_200:
+    uses: ./.github/workflows/joinville_avaliacao_flip_base.yml
+    with:
+      limite_inferior: "190"
       limite_superior: "200"
       bairro: "centro"
     secrets: inherit

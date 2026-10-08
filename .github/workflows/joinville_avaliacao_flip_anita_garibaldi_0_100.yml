@@ -4,42 +4,82 @@ on:
     - cron: '0 9 7 1,2,3,4,5,6,7,8,9,10,11,12 *'
   workflow_dispatch:
 jobs:
-  batch_0_20:
+  batch_0_10:
     uses: ./.github/workflows/joinville_avaliacao_flip_base.yml
     with:
       limite_inferior: "0"
+      limite_superior: "10"
+      bairro: "anita garibaldi"
+    secrets: inherit
+
+  batch_10_20:
+    uses: ./.github/workflows/joinville_avaliacao_flip_base.yml
+    with:
+      limite_inferior: "10"
       limite_superior: "20"
       bairro: "anita garibaldi"
     secrets: inherit
 
-  batch_20_40:
+  batch_20_30:
     uses: ./.github/workflows/joinville_avaliacao_flip_base.yml
     with:
       limite_inferior: "20"
+      limite_superior: "30"
+      bairro: "anita garibaldi"
+    secrets: inherit
+
+  batch_30_40:
+    uses: ./.github/workflows/joinville_avaliacao_flip_base.yml
+    with:
+      limite_inferior: "30"
       limite_superior: "40"
       bairro: "anita garibaldi"
     secrets: inherit
 
-  batch_40_60:
+  batch_40_50:
     uses: ./.github/workflows/joinville_avaliacao_flip_base.yml
     with:
       limite_inferior: "40"
+      limite_superior: "50"
+      bairro: "anita garibaldi"
+    secrets: inherit
+
+  batch_50_60:
+    uses: ./.github/workflows/joinville_avaliacao_flip_base.yml
+    with:
+      limite_inferior: "50"
       limite_superior: "60"
       bairro: "anita garibaldi"
     secrets: inherit
 
-  batch_60_80:
+  batch_60_70:
     uses: ./.github/workflows/joinville_avaliacao_flip_base.yml
     with:
       limite_inferior: "60"
+      limite_superior: "70"
+      bairro: "anita garibaldi"
+    secrets: inherit
+
+  batch_70_80:
+    uses: ./.github/workflows/joinville_avaliacao_flip_base.yml
+    with:
+      limite_inferior: "70"
       limite_superior: "80"
       bairro: "anita garibaldi"
     secrets: inherit
 
-  batch_80_100:
+  batch_80_90:
     uses: ./.github/workflows/joinville_avaliacao_flip_base.yml
     with:
       limite_inferior: "80"
+      limite_superior: "90"
+      bairro: "anita garibaldi"
+    secrets: inherit
+
+  batch_90_100:
+    uses: ./.github/workflows/joinville_avaliacao_flip_base.yml
+    with:
+      limite_inferior: "90"
       limite_superior: "100"
       bairro: "anita garibaldi"
     secrets: inherit

@@ -6,42 +6,82 @@ on:
       - completed
   workflow_dispatch:
 jobs:
-  batch_200_220:
+  batch_200_210:
     uses: ./.github/workflows/joinville_avaliacao_flip_base.yml
     with:
       limite_inferior: "200"
+      limite_superior: "210"
+      bairro: "america"
+    secrets: inherit
+
+  batch_210_220:
+    uses: ./.github/workflows/joinville_avaliacao_flip_base.yml
+    with:
+      limite_inferior: "210"
       limite_superior: "220"
       bairro: "america"
     secrets: inherit
 
-  batch_220_240:
+  batch_220_230:
     uses: ./.github/workflows/joinville_avaliacao_flip_base.yml
     with:
       limite_inferior: "220"
+      limite_superior: "230"
+      bairro: "america"
+    secrets: inherit
+
+  batch_230_240:
+    uses: ./.github/workflows/joinville_avaliacao_flip_base.yml
+    with:
+      limite_inferior: "230"
       limite_superior: "240"
       bairro: "america"
     secrets: inherit
 
-  batch_240_260:
+  batch_240_250:
     uses: ./.github/workflows/joinville_avaliacao_flip_base.yml
     with:
       limite_inferior: "240"
+      limite_superior: "250"
+      bairro: "america"
+    secrets: inherit
+
+  batch_250_260:
+    uses: ./.github/workflows/joinville_avaliacao_flip_base.yml
+    with:
+      limite_inferior: "250"
       limite_superior: "260"
       bairro: "america"
     secrets: inherit
 
-  batch_260_280:
+  batch_260_270:
     uses: ./.github/workflows/joinville_avaliacao_flip_base.yml
     with:
       limite_inferior: "260"
+      limite_superior: "270"
+      bairro: "america"
+    secrets: inherit
+
+  batch_270_280:
+    uses: ./.github/workflows/joinville_avaliacao_flip_base.yml
+    with:
+      limite_inferior: "270"
       limite_superior: "280"
       bairro: "america"
     secrets: inherit
 
-  batch_280_300:
+  batch_280_290:
     uses: ./.github/workflows/joinville_avaliacao_flip_base.yml
     with:
       limite_inferior: "280"
+      limite_superior: "290"
+      bairro: "america"
+    secrets: inherit
+
+  batch_290_300:
+    uses: ./.github/workflows/joinville_avaliacao_flip_base.yml
+    with:
+      limite_inferior: "290"
       limite_superior: "300"
       bairro: "america"
     secrets: inherit

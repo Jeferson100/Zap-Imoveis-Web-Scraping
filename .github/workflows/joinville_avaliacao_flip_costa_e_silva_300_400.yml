@@ -6,48 +6,89 @@ on:
       - completed
   workflow_dispatch:
 jobs:
-  batch_300_320:
+  batch_300_310:
     uses: ./.github/workflows/joinville_avaliacao_flip_base.yml
     with:
       limite_inferior: "300"
+      limite_superior: "310"
+      bairro: "costa e silva"
+    secrets: inherit
+
+  batch_310_320:
+    uses: ./.github/workflows/joinville_avaliacao_flip_base.yml
+    with:
+      limite_inferior: "310"
       limite_superior: "320"
       bairro: "costa e silva"
     secrets: inherit
 
-  batch_320_340:
+  batch_320_330:
     uses: ./.github/workflows/joinville_avaliacao_flip_base.yml
     with:
       limite_inferior: "320"
+      limite_superior: "330"
+      bairro: "costa e silva"
+    secrets: inherit
+
+  batch_330_340:
+    uses: ./.github/workflows/joinville_avaliacao_flip_base.yml
+    with:
+      limite_inferior: "330"
       limite_superior: "340"
       bairro: "costa e silva"
     secrets: inherit
 
-  batch_340_360:
+  batch_340_350:
     uses: ./.github/workflows/joinville_avaliacao_flip_base.yml
     with:
       limite_inferior: "340"
+      limite_superior: "350"
+      bairro: "costa e silva"
+    secrets: inherit
+
+  batch_350_360:
+    uses: ./.github/workflows/joinville_avaliacao_flip_base.yml
+    with:
+      limite_inferior: "350"
       limite_superior: "360"
       bairro: "costa e silva"
     secrets: inherit
 
-  batch_360_380:
+  batch_360_370:
     uses: ./.github/workflows/joinville_avaliacao_flip_base.yml
     with:
       limite_inferior: "360"
+      limite_superior: "370"
+      bairro: "costa e silva"
+    secrets: inherit
+
+  batch_370_380:
+    uses: ./.github/workflows/joinville_avaliacao_flip_base.yml
+    with:
+      limite_inferior: "370"
       limite_superior: "380"
       bairro: "costa e silva"
     secrets: inherit
 
-  batch_380_400:
+  batch_380_390:
     uses: ./.github/workflows/joinville_avaliacao_flip_base.yml
     with:
       limite_inferior: "380"
+      limite_superior: "390"
+      bairro: "costa e silva"
+    secrets: inherit
+
+  batch_390_400:
+    uses: ./.github/workflows/joinville_avaliacao_flip_base.yml
+    with:
+      limite_inferior: "390"
       limite_superior: "400"
       bairro: "costa e silva"
     secrets: inherit
 
   merge:
-    needs: [batch_300_320, batch_320_340, batch_340_360, batch_360_380, batch_380_400]
+    needs: [batch_300_310, batch_310_320, batch_320_330, batch_330_340, batch_340_350, batch_350_360, batch_360_370, batch_370_380, batch_380_390, batch_390_400]
+    if: always()
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
