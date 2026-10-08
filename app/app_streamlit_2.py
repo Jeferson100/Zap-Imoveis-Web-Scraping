@@ -358,10 +358,10 @@ def gerar_pagina_predicao(cidade_path, prefixo_name, cidade_nome_poi):
                 valores[feature] = render_widget(col1, feature, cfg)
 
         with col2:
-            if 'bairro' in feature_names:
-                valores['bairro'] = render_widget(col2, 'bairro', WIDGETS_PRED['bairro'])
-            else:
-                valores['bairro'] = sorted(bairro_stats.index.tolist())[0]
+            # Bairro sempre visível: alimenta as derivadas (valor_bairro_mean,
+            # metro_quadrado_bairro_mean, scores...) mesmo quando o modelo não
+            # o usa como feature bruta.
+            valores['bairro'] = render_widget(col2, 'bairro', WIDGETS_PRED['bairro'])
             for feature in col2_feats:
                 cfg = WIDGETS_PRED.get(feature)
                 if cfg is None:
