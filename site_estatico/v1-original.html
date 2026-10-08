@@ -4,17 +4,24 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Análise de Imóveis</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="css/v4-verde.css?v=1">
+    <link rel="stylesheet" href="css/style.css?v=8">
     <script src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <style>
+        .version-nav { display: flex; gap: 0.35rem; align-items: center; }
+        .version-nav a { font-size: 0.72rem; font-weight: 700; color: #dbeafe; text-decoration: none; padding: 0.4rem 0.7rem; border-radius: 999px; background: rgba(255,255,255,0.12); }
+        .version-nav a:hover { background: rgba(255,255,255,0.25); }
+        .version-nav a.active { background: #fff; color: #0d47a1; }
+        .map-legend { display: flex; flex-wrap: wrap; gap: 0.4rem; margin-bottom: 0.8rem; }
+        .map-legend span { font-size: 0.7rem; font-weight: 700; padding: 0.2rem 0.6rem; border-radius: 999px; }
+        .footer-nav { text-align: center; font-size: 0.78rem; color: #888; padding: 0.5rem 0 1.5rem; }
+        .footer-nav a { color: #1565c0; font-weight: 600; text-decoration: none; margin: 0 0.4rem; }
+    </style>
 </head>
 <body>
     <header>
         <div class="header-title">
-            <span class="version-tag">Padrão</span>
             <h1 id="titulo-app">🏠 Análise de Imóveis</h1>
         </div>
         <div class="header-controls">
@@ -39,8 +46,8 @@
             </select>
             <span id="data-atualizacao" class="badge"></span>
             <nav class="version-nav">
-                <a href="index.html" class="active">Padrão</a>
-                <a href="v1-original.html">Original</a>
+                <a href="index.html">Padrão</a>
+                <a href="v1-original.html" class="active">Original</a>
             </nav>
         </div>
     </header>
@@ -208,11 +215,11 @@
             <section class="full-width">
                 <h2>🗺️ Mapa dos Imóveis</h2>
                 <div class="map-legend">
-                    <span class="lg-green">R$/m² &lt; 4k</span>
-                    <span class="lg-blue">4k – 6k</span>
-                    <span class="lg-amber">6k – 8k</span>
-                    <span class="lg-red">8k – 12k</span>
-                    <span class="lg-purple">12k+</span>
+                    <span style="background:#e8f5e9;color:#2e7d32;">R$/m² &lt; 4k</span>
+                    <span style="background:#e3f2fd;color:#1565c0;">4k – 6k</span>
+                    <span style="background:#fff3e0;color:#e65100;">6k – 8k</span>
+                    <span style="background:#ffebee;color:#c62828;">8k – 12k</span>
+                    <span style="background:#f3e5f5;color:#6a1b9a;">12k+</span>
                 </div>
                 <div id="mapa"></div>
             </section>
@@ -224,7 +231,7 @@
         </main>
     </div>
 
-    <p class="footer-nav">Versão Padrão · <a href="v1-original.html">Original</a></p>
+    <p class="footer-nav">Versão Original · <a href="index.html">Padrão (verde)</a></p>
 
     <script src="js/scores.js?v=8"></script>
     <script src="js/predicao.js?v=8"></script>
