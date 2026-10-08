@@ -188,6 +188,8 @@ function renderizarFormularioPredicao() {
         return wrap;
     }
 
+    var colLocal = null;
+    var localNaTela = false;
     GRUPOS_PRED.forEach(function(g) {
         var col = document.createElement('div');
         col.className = 'pred-form-col';
@@ -225,8 +227,26 @@ function renderizarFormularioPredicao() {
                 col.appendChild(labd);
             }
         }
-        if (tem) box.appendChild(col);
+        if (tem) {
+            box.appendChild(col);
+            if (g[0] === 'local') { colLocal = col; localNaTela = true; }
+        }
     });
+    // O bairro alimenta as derivadas de localização (valor_bairro_mean,
+    // metro_quadrado_bairro_*, scores...): renderiza sempre que houver stats,
+    // mesmo que o modelo não o use como feature bruta.
+    if (bairroStats && feats.indexOf('bairro') === -1) {
+        if (!localNaTela) {
+            colLocal = document.createElement('div');
+            colLocal.className = 'pred-form-col';
+            var tituloLocal = document.createElement('h4');
+            tituloLocal.textContent = '📍 Localização';
+            colLocal.appendChild(tituloLocal);
+            box.appendChild(colLocal);
+        }
+        colLocal.appendChild(criarCampo('bairro', WIDGETS.bairro));
+        popularBairrosPredicao();
+    }
 }
 
 function geocodificar(rua, numero, bairro, cidade) {
