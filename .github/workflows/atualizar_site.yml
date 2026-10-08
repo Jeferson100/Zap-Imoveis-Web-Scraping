@@ -65,6 +65,7 @@ jobs:
 
           # Copiar tudo de site_estatico (GERADO NESTE MESMO RUNNER acima)
           cp -r "$GITHUB_WORKSPACE/site_estatico/index.html" .
+          cp -r "$GITHUB_WORKSPACE/site_estatico/v1-original.html" .
           cp -r "$GITHUB_WORKSPACE/site_estatico/css" .
           cp -r "$GITHUB_WORKSPACE/site_estatico/js" .
           cp -r "$GITHUB_WORKSPACE/site_estatico/data" .

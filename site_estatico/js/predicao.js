@@ -68,8 +68,9 @@ function carregarPredicao(cidade) {
 
         topicModel = modeloJson.topics || null;
 
-        console.log('Predicao JSON carregada:', cidade, '|', modeloJson.ensemble.type,
-            '|', modeloJson.ensemble.n_estimators, 'trees');
+        var ensInfo = modeloJson.ensemble || {};
+        console.log('Predicao JSON carregada:', cidade, '|', ensInfo.type || modeloJson.model_type || '?',
+            '|', ensInfo.n_estimators != null ? ensInfo.n_estimators + ' trees' : 'n/a');
         renderizarFormularioPredicao();
         popularBairrosPredicao();
         return true;
