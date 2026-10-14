@@ -25,7 +25,7 @@ TIMEOUT_DOWNLOAD = float(os.getenv("IMAGENS_TIMEOUT_DOWNLOAD", "15"))
 TIMEOUT_LLM = float(os.getenv("IMAGENS_TIMEOUT_LLM", "30"))
 MAX_BYTES_IMAGEM = int(os.getenv("IMAGENS_MAX_BYTES", str(10 * 1024 * 1024)))
 MAX_CONCURRENT_LOTES = int(os.getenv("IMAGENS_MAX_CONCURRENT_LOTES", "8"))
-MODEL_VISION = os.getenv("IMAGENS_MODEL_VISION", "mistralai/ministral-14b-instruct-2512")
-#MODEL_TEXTO = os.getenv("IMAGENS_MODEL_TEXTO", "deepseek-ai/deepseek-v4-pro")
+# Modelos de visão/texto: seleção dinâmica via catálogo
+# (src/roteador_llms/selecao_modelos.py). Sem defaults manuais aqui.
 USAR_URL_DIRETA: bool = _parse_bool(os.getenv("IMAGENS_USAR_URL_DIRETA"), True)  # =true requer suporte do modelo LLM_Visão a URLs externas
 CACHE_DOWNLOADS: bool = _parse_bool(os.getenv("IMAGENS_CACHE_DOWNLOADS"), True)

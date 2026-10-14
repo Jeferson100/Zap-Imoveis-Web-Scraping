@@ -84,12 +84,6 @@ async def avaliar_potencial_flip(state: GrafoPotencialFlipState) -> Dict[str, An
         messages=prompt,
         strutured_output=AnalisePotencialFlip,
         api_key=state.api_key,
-        api_nvidia_models=[
-            "deepseek-ai/deepseek-v4-flash",
-            "deepseek-ai/deepseek-v4-pro",
-            "mistralai/mistral-large-3-675b-instruct-2512",
-            "google/gemma-4-31b-it",
-        ],
     )
     resultado = await router.llm_router()
 
@@ -132,12 +126,6 @@ async def refletor_potencial_flip(state: GrafoPotencialFlipState) -> Dict[str, A
         messages=prompt,
         strutured_output=FeedbackPotencialFlip,
         api_key=state.api_key,
-        api_nvidia_models=[
-            "deepseek-ai/deepseek-v4-flash",
-            "deepseek-ai/deepseek-v4-pro",
-            "mistralai/mistral-large-3-675b-instruct-2512",
-            "google/gemma-4-31b-it",
-        ],
     )
     resultado = await router.llm_router()
 

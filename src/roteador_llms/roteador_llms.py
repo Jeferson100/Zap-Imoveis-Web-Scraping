@@ -23,6 +23,13 @@ class AllProvidersFailedError(Exception):
     """Exceção levantada quando todos os provedores LLM falham"""
 
 
+# Circuit breaker em memória (por processo/job): provedor com N falhas
+# completas seguidas é pulado no resto da execução. Evita repetir varreduras
+# condenadas (~2 min de 410/429) a cada imóvel.
+_FALHAS_PROVEDOR: dict = {}
+_LIMITE_FALHAS_SEGUIDAS = 2
+
+
 class LlmRouter:
     def __init__(
         self,
@@ -33,62 +40,20 @@ class LlmRouter:
         self.messages = messages
         self.strutured_output = strutured_output
 
-        # Centraliza os modelos default
+        # Seleção dinâmica: None = resolver via catálogo na hora do llm_router.
+        # OpenRouter permanece fixo (decisão de custo: ["openrouter/free"]).
+        # Nenhum id de modelo é escrito à mão aqui.
         self.models = {
-            "Groq": kwargs.get(
-                "groq_models",
-                [
-                    "llama-3.3-70b-versatile",
-                    "openai/gpt-oss-120b",
-                ],
-            ),
-            "Cerebras": kwargs.get(
-                "cerebras_models",
-                ["gpt-oss-120b"],
-            ),
-            "API_Nvidia": kwargs.get(
-                "api_nvidia_models",
-                [
-                    "mistralai/ministral-14b-instruct-2512",
-                    "deepseek-ai/deepseek-v4-pro",
-                    "meta/llama-3.2-11b-vision-instruct",
-                    "qwen/qwen3.5-122b-a10b",
-                    "nemotron-3-nano-omni-30b-a3b-reasoning",
-                ],
-            ),
-            "Langchain_nvidia": kwargs.get(
-                "api_langchain_nvidia_models",
-                [
-                "deepseek-ai/deepseek-v4-pro",
-                "meta/llama-3.1-70b-instruct",
-                "nvidia/nemotron-3-super-120b-a12b",
-                "openai/gpt-oss-120b",
-                "qwen/qwen3-next-80b-a3b-thinking",
-                "moonshotai/kimi-k2-instruct",
-                "moonshotai/kimi-k2-thinking"
-            ]
-            ),
-            "Openai_nvidia": kwargs.get(
-                "api_openai_nvidia_models",
-                [
-                    "mistralai/ministral-14b-instruct-2512",
-                    "deepseek-ai/deepseek-v4-pro",
-                    "meta/llama-3.2-11b-vision-instruct",
-                    "qwen/qwen3.5-122b-a10b",
-                    "nemotron-3-nano-omni-30b-a3b-reasoning",
-                ],
-            ),
+            "Groq": kwargs.get("groq_models"),
+            "Cerebras": kwargs.get("cerebras_models"),
+            "API_Nvidia": kwargs.get("api_nvidia_models"),
+            "Langchain_nvidia": kwargs.get("api_langchain_nvidia_models"),
+            "Openai_nvidia": kwargs.get("api_openai_nvidia_models"),
             "OpenRouter": kwargs.get(
                 "openrouter_models",
                 ["openrouter/free"],
             ),
-            "Zai": kwargs.get(
-                "zai_models",
-                [
-                    "GLM-4.7-Flash",
-                    "GLM-4.5-Flash",
-                ],
-            ),
+            "Zai": kwargs.get("zai_models"),
         }
 
     async def _try_provider(
@@ -97,7 +62,7 @@ class LlmRouter:
         """
         Método genérico para tentar modelos de um provedor específico.
         """
-        models = self.models.get(provider_name, [])
+        models = self.models.get(provider_name) or []
         for model in models:
             logger.info("Tentando %s %s", provider_name, model)
             try:
@@ -116,36 +81,15 @@ class LlmRouter:
     async def llm_router(self) -> Any:
         logger.info("Iniciando roteamento LLM")
 
-        # Configuração dos provedores: (Nome, Classe do Roteador, Método a chamar)
+        # Ordem por taxa de sucesso observada (probe 2026-10-14):
+        # Nvidia/Groq primeiro; OpenRouter e Zai (cota 429) por último.
+        # Cerebras fora da rota (402 Payment Required).
         providers = [
-            (
-                "Zai",
-                RouterZai,
-                (
-                    "llm_zai_structured"
-                    if self.strutured_output
-                    else "llm_zai"
-                ),
-            ),
             ("API_Nvidia", RouterApiNvidia, "ainvoke"),
-            (
-                "Langchain_nvidia",
-                RouterLangChainNvidia,
-                "llm_nvidia_structured" if self.strutured_output else "llm_nvidia",
-            ),
             (
                 "Groq",
                 RouterGroq,
                 "llm_structured_groq" if self.strutured_output else "llm_groq",
-            ),
-            (
-                "Cerebras",
-                RouterCerebras,
-                (
-                    "get_response_cerebras_structured_async"
-                    if self.strutured_output
-                    else "get_response_cerebras_async"
-                ),
             ),
             (
                 "Openai_nvidia",
@@ -157,6 +101,11 @@ class LlmRouter:
                 ),
             ),
             (
+                "Langchain_nvidia",
+                RouterLangChainNvidia,
+                "llm_nvidia_structured" if self.strutured_output else "llm_nvidia",
+            ),
+            (
                 "OpenRouter",
                 RouterOpenRouter,
                 (
@@ -165,20 +114,52 @@ class LlmRouter:
                     else "llm_openrouter"
                 ),
             ),
+            (
+                "Zai",
+                RouterZai,
+                (
+                    "llm_zai_structured"
+                    if self.strutured_output
+                    else "llm_zai"
+                ),
+            ),
         ]
+
+        # Resolução lazy: listas None viram seleção dinâmica pelo catálogo.
+        # Visão (messages em lista, ex. fotos) ou texto, por provedor.
+        capacidade = "visao" if isinstance(self.messages, list) else "texto"
+        from .selecao_modelos import modelos_para_async
+
+        for name in list(self.models):
+            if self.models[name] is None and name != "OpenRouter":
+                try:
+                    self.models[name] = await modelos_para_async(capacidade, name)
+                except Exception as e:  # sem catálogo nem live -> provedor vazio
+                    logger.warning("Sem modelos para %s (%s)", name, e)
+                    self.models[name] = []
 
         errors = {}
         for name, cls, method in providers:
+            if _FALHAS_PROVEDOR.get(name, 0) >= _LIMITE_FALHAS_SEGUIDAS:
+                logger.warning(
+                    "⏭️ Pulando provedor %s (circuit breaker: %d falhas seguidas)",
+                    name, _FALHAS_PROVEDOR[name],
+                )
+                errors[name] = "Pulado pelo circuit breaker"
+                continue
             try:
                 logger.info("🔄 Rotando para provedor %s", name)
                 response = await self._try_provider(name, cls, method)
 
                 if response:
                     logger.info("✅ %s sucesso", name)
+                    _FALHAS_PROVEDOR[name] = 0
                     return response
 
                 errors[name] = "Todos os modelos deste provedor falharam"
+                _FALHAS_PROVEDOR[name] = _FALHAS_PROVEDOR.get(name, 0) + 1
             except Exception as e:  # pylint: disable=broad-exception-caught
                 errors[name] = str(e)
+                _FALHAS_PROVEDOR[name] = _FALHAS_PROVEDOR.get(name, 0) + 1
 
         raise AllProvidersFailedError(f"Falha total: {errors}")

@@ -50,15 +50,6 @@ async def validar_dados(state: SubgrafoValidacaoState) -> Dict[str, Any]:
         messages=prompt,
         strutured_output=ValidacaoDados,
         api_key=state.api_key,
-        api_nvidia_models=[
-                "z-ai/glm-5.2",
-                "deepseek-ai/deepseek-v4-flash",
-                "z-ai/glm-5.2",
-                "mistralai/mistral-large-3-675b-instruct-2512",
-                "google/gemma-4-31b-it",
-                "deepseek-ai/deepseek-v4-pro",
-                "qwen/qwen3.5-397b-a17b",
-            ],
     )
     resultado = await router.llm_router()
     if resultado:
@@ -105,15 +96,6 @@ async def refletor_validacao(state: SubgrafoValidacaoState) -> Dict[str, Any]:
         messages=prompt,
         strutured_output=FeedbackValidacao,
         api_key=state.api_key,
-        api_nvidia_models=[
-                "z-ai/glm-5.2",
-                "deepseek-ai/deepseek-v4-flash",
-                "z-ai/glm-5.2",
-                "mistralai/mistral-large-3-675b-instruct-2512",
-                "google/gemma-4-31b-it",
-                "deepseek-ai/deepseek-v4-pro",
-                "qwen/qwen3.5-397b-a17b",
-            ],
     )
     resultado = await router.llm_router()
     if resultado:

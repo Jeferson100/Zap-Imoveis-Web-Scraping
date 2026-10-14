@@ -19,10 +19,15 @@ from phoenix.otel import register
 
 load_dotenv()
 
-tracer_provider = register(
-  project_name="agente-imoveis",
-  auto_instrument=True
-)
+# Phoenix/OTEL desligado no CI via PHOENIX_ENABLED=false: o export falhava
+# em loop (retries inúteis) e os traces se perdiam mesmo assim.
+# Local continua ativado por padrão; defina PHOENIX_ENABLED=false para desligar.
+tracer_provider = None
+"""if os.getenv("PHOENIX_ENABLED", "true").lower() != "false":
+    tracer_provider = register(
+      project_name="agente-imoveis",
+      auto_instrument=True
+    )"""
 
 logging.basicConfig(
     level=logging.INFO, format="%(asctime)s %(message)s", datefmt="%H:%M:%S"

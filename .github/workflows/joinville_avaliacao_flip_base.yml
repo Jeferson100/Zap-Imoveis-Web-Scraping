@@ -47,8 +47,7 @@ jobs:
         run: uv run codigos_rodando/joinville/joinville_avaliacao_flip.py
         env:
           NVIDIA_API_KEY: ${{ secrets.NVIDIA_API_KEY }}
-          PHOENIX_API_KEY: ${{ secrets.PHOENIX_API_KEY }}
-          PHOENIX_COLLECTOR_ENDPOINT: ${{ secrets.PHOENIX_COLLECTOR_ENDPOINT }}
+          PHOENIX_ENABLED: "false"
           CEREBRAS_API_KEY: ${{ secrets.CEREBRAS_API_KEY }}
           GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
           PYDANTIC_API_KEY: ${{ secrets.PYDANTIC_API_KEY }}

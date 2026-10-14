@@ -80,14 +80,7 @@ async def extrair_analise(state: SubgrafoImagensState) -> Dict[str, Any]:
             strutured_output=AnaliseImagens,
             api_key=state.api_key,
             timeout=TIMEOUT_LLM,
-            api_nvidia_models=[
-                "deepseek-ai/deepseek-v4-flash",
-                "z-ai/glm-5.2",
-                "mistralai/mistral-large-3-675b-instruct-2512",
-                "google/gemma-4-31b-it",
-                "deepseek-ai/deepseek-v4-pro",
-                "qwen/qwen3.5-397b-a17b",
-            ],
+            api_nvidia_models=None,  # seleção dinâmica via catálogo
         )
         resultado = await router.llm_router()
         if resultado:
@@ -132,14 +125,7 @@ async def refletor_imagens(state: SubgrafoImagensState) -> Dict[str, Any]:
             strutured_output=FeedbackImagens,
             api_key=state.api_key,
             timeout=TIMEOUT_LLM,
-            api_nvidia_models=[
-                "deepseek-ai/deepseek-v4-flash",
-                "z-ai/glm-5.2",
-                "mistralai/mistral-large-3-675b-instruct-2512",
-                "google/gemma-4-31b-it",
-                "deepseek-ai/deepseek-v4-pro",
-                "qwen/qwen3.5-397b-a17b",
-            ],
+            api_nvidia_models=None,  # seleção dinâmica via catálogo
         )
         resultado = await router.llm_router()
         if resultado:

@@ -108,29 +108,9 @@ async def _processar_um_lote(
 
     llm = LlmRouter(
         conteudo,
-        # API_Nvidia: modelos de visão via httpx direto
-        api_nvidia_models=[
-            "nvidia/nemotron-3-nano-omni-30b-a3b-reasoning",
-            "meta/llama-3.2-11b-vision-instruct",
-            "meta/llama-3.2-90b-vision-instruct",
-            "mistralai/ministral-14b-instruct-2512",
-        ],
-        # Langchain_nvidia: modelos de visão via ChatNVIDIA (suportam content como lista)
-        api_langchain_nvidia_models=[
-            "meta/llama-4-maverick-17b-128e-instruct",
-            "nvidia/nemotron-nano-12b-v2-vl",
-            "microsoft/phi-4-multimodal-instruct",
-        ],
-        # Openai_nvidia: modelos de visão via AsyncOpenAI + Nvidia
-        api_openai_nvidia_models=[
-            "meta/llama-4-maverick-17b-128e-instruct",
-            "nvidia/nemotron-nano-12b-v2-vl",
-        ],
-        # Groq: suporta visão com llama-4-scout
-        groq_models=[
-            "meta-llama/llama-4-scout-17b-16e-instruct",
-        ],
-        # Cerebras não tem modelos de visão
+        # Visão via seleção dinâmica (catálogo, grupos ambos/visao).
+        # Groq/Cerebras sem visão provada: pulados rapidamente.
+        groq_models=[],
         cerebras_models=[],
     )
     response = await llm.llm_router()

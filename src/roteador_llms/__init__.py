@@ -7,6 +7,15 @@ from .roteador_llms import LlmRouter
 from .roteador_openai_nvidia import RouterOpenaiNvidia
 from .roteador_openrouter import RouterOpenRouter
 from .roteador_zai import RouterZai
+from .listar_modelos import (
+    listar_modelos,
+    listar_openrouter_detalhado,
+    classificar_modelos,
+    exportar_catalogo_parquet,
+    normalizar_id,
+    enriquecer_com_openrouter,
+)
+from .selecao_modelos import modelos_para, modelos_para_async, registrar_probe
 
 __all__ = [
     "RouterGroq",
@@ -18,4 +27,13 @@ __all__ = [
     "RouterZai",
     "LlmRouter",
     "RouterApiNvidia",
+    "listar_modelos",
+    "listar_openrouter_detalhado",
+    "classificar_modelos",
+    "exportar_catalogo_parquet",
+    "normalizar_id",
+    "enriquecer_com_openrouter",
+    "modelos_para",
+    "modelos_para_async",
+    "registrar_probe",
 ]
