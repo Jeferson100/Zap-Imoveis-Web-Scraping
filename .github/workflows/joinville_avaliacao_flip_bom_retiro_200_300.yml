@@ -15,7 +15,6 @@ jobs:
     secrets: inherit
 
   batch_210_220:
-    needs: [batch_200_210]
     if: always()
     uses: ./.github/workflows/joinville_avaliacao_flip_base.yml
     with:
@@ -25,7 +24,7 @@ jobs:
     secrets: inherit
 
   batch_220_230:
-    needs: [batch_210_220]
+    needs: [batch_200_210]
     if: always()
     uses: ./.github/workflows/joinville_avaliacao_flip_base.yml
     with:
@@ -35,7 +34,7 @@ jobs:
     secrets: inherit
 
   batch_230_240:
-    needs: [batch_220_230]
+    needs: [batch_210_220]
     if: always()
     uses: ./.github/workflows/joinville_avaliacao_flip_base.yml
     with:
@@ -45,7 +44,7 @@ jobs:
     secrets: inherit
 
   batch_240_250:
-    needs: [batch_230_240]
+    needs: [batch_220_230]
     if: always()
     uses: ./.github/workflows/joinville_avaliacao_flip_base.yml
     with:
@@ -55,7 +54,7 @@ jobs:
     secrets: inherit
 
   batch_250_260:
-    needs: [batch_240_250]
+    needs: [batch_230_240]
     if: always()
     uses: ./.github/workflows/joinville_avaliacao_flip_base.yml
     with:
@@ -65,7 +64,7 @@ jobs:
     secrets: inherit
 
   batch_260_270:
-    needs: [batch_250_260]
+    needs: [batch_240_250]
     if: always()
     uses: ./.github/workflows/joinville_avaliacao_flip_base.yml
     with:
@@ -75,7 +74,7 @@ jobs:
     secrets: inherit
 
   batch_270_280:
-    needs: [batch_260_270]
+    needs: [batch_250_260]
     if: always()
     uses: ./.github/workflows/joinville_avaliacao_flip_base.yml
     with:
@@ -85,7 +84,7 @@ jobs:
     secrets: inherit
 
   batch_280_290:
-    needs: [batch_270_280]
+    needs: [batch_260_270]
     if: always()
     uses: ./.github/workflows/joinville_avaliacao_flip_base.yml
     with:
@@ -94,7 +93,7 @@ jobs:
       bairro: "bom retiro"
     secrets: inherit
   batch_290_300:
-    needs: [batch_280_290]
+    needs: [batch_270_280]
     if: always()
     uses: ./.github/workflows/joinville_avaliacao_flip_base.yml
     with:
