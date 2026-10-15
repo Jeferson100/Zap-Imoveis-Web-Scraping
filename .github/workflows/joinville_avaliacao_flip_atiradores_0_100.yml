@@ -13,6 +13,8 @@ jobs:
     secrets: inherit
 
   batch_10_20:
+    needs: [batch_0_10]
+    if: always()
     uses: ./.github/workflows/joinville_avaliacao_flip_base.yml
     with:
       limite_inferior: "10"
@@ -21,6 +23,8 @@ jobs:
     secrets: inherit
 
   batch_20_30:
+    needs: [batch_10_20]
+    if: always()
     uses: ./.github/workflows/joinville_avaliacao_flip_base.yml
     with:
       limite_inferior: "20"
@@ -29,6 +33,8 @@ jobs:
     secrets: inherit
 
   batch_30_40:
+    needs: [batch_20_30]
+    if: always()
     uses: ./.github/workflows/joinville_avaliacao_flip_base.yml
     with:
       limite_inferior: "30"
@@ -37,6 +43,8 @@ jobs:
     secrets: inherit
 
   batch_40_50:
+    needs: [batch_30_40]
+    if: always()
     uses: ./.github/workflows/joinville_avaliacao_flip_base.yml
     with:
       limite_inferior: "40"
@@ -45,6 +53,8 @@ jobs:
     secrets: inherit
 
   batch_50_60:
+    needs: [batch_40_50]
+    if: always()
     uses: ./.github/workflows/joinville_avaliacao_flip_base.yml
     with:
       limite_inferior: "50"
@@ -53,6 +63,8 @@ jobs:
     secrets: inherit
 
   batch_60_70:
+    needs: [batch_50_60]
+    if: always()
     uses: ./.github/workflows/joinville_avaliacao_flip_base.yml
     with:
       limite_inferior: "60"
@@ -61,6 +73,8 @@ jobs:
     secrets: inherit
 
   batch_70_80:
+    needs: [batch_60_70]
+    if: always()
     uses: ./.github/workflows/joinville_avaliacao_flip_base.yml
     with:
       limite_inferior: "70"
@@ -69,6 +83,8 @@ jobs:
     secrets: inherit
 
   batch_80_90:
+    needs: [batch_70_80]
+    if: always()
     uses: ./.github/workflows/joinville_avaliacao_flip_base.yml
     with:
       limite_inferior: "80"
@@ -76,6 +92,8 @@ jobs:
       bairro: "atiradores"
     secrets: inherit
   batch_90_100:
+    needs: [batch_80_90]
+    if: always()
     uses: ./.github/workflows/joinville_avaliacao_flip_base.yml
     with:
       limite_inferior: "90"

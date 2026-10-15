@@ -15,6 +15,8 @@ jobs:
     secrets: inherit
 
   batch_110_120:
+    needs: [batch_100_110]
+    if: always()
     uses: ./.github/workflows/joinville_avaliacao_flip_base.yml
     with:
       limite_inferior: "110"
@@ -23,6 +25,8 @@ jobs:
     secrets: inherit
 
   batch_120_130:
+    needs: [batch_110_120]
+    if: always()
     uses: ./.github/workflows/joinville_avaliacao_flip_base.yml
     with:
       limite_inferior: "120"
@@ -31,6 +35,8 @@ jobs:
     secrets: inherit
 
   batch_130_140:
+    needs: [batch_120_130]
+    if: always()
     uses: ./.github/workflows/joinville_avaliacao_flip_base.yml
     with:
       limite_inferior: "130"
@@ -39,6 +45,8 @@ jobs:
     secrets: inherit
 
   batch_140_150:
+    needs: [batch_130_140]
+    if: always()
     uses: ./.github/workflows/joinville_avaliacao_flip_base.yml
     with:
       limite_inferior: "140"
@@ -47,6 +55,8 @@ jobs:
     secrets: inherit
 
   batch_150_160:
+    needs: [batch_140_150]
+    if: always()
     uses: ./.github/workflows/joinville_avaliacao_flip_base.yml
     with:
       limite_inferior: "150"
@@ -55,6 +65,8 @@ jobs:
     secrets: inherit
 
   batch_160_170:
+    needs: [batch_150_160]
+    if: always()
     uses: ./.github/workflows/joinville_avaliacao_flip_base.yml
     with:
       limite_inferior: "160"
@@ -63,6 +75,8 @@ jobs:
     secrets: inherit
 
   batch_170_180:
+    needs: [batch_160_170]
+    if: always()
     uses: ./.github/workflows/joinville_avaliacao_flip_base.yml
     with:
       limite_inferior: "170"
@@ -71,6 +85,8 @@ jobs:
     secrets: inherit
 
   batch_180_190:
+    needs: [batch_170_180]
+    if: always()
     uses: ./.github/workflows/joinville_avaliacao_flip_base.yml
     with:
       limite_inferior: "180"
@@ -79,6 +95,8 @@ jobs:
     secrets: inherit
 
   batch_190_200:
+    needs: [batch_180_190]
+    if: always()
     uses: ./.github/workflows/joinville_avaliacao_flip_base.yml
     with:
       limite_inferior: "190"

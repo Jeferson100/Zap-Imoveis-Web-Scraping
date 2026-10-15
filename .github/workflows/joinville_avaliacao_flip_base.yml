@@ -26,12 +26,6 @@ jobs:
   avaliacao_flip:
     runs-on: ubuntu-latest
     timeout-minutes: 360
-    # Serializa os batches DENTRO de cada wave (mesmo run_id fila 1 a 1,
-    # sem cancelar); waves/bairros com run_id diferente seguem em paralelo.
-    # Sem isso, 20-30 jobs disputam as mesmas cotas free de LLM ao mesmo tempo.
-    concurrency:
-      group: flip-${{ github.run_id }}
-      cancel-in-progress: false
 
     steps:
       - uses: actions/checkout@v4
