@@ -1,5 +1,6 @@
 import asyncio
 import logging
+import time
 from typing import Any, Optional, Type
 
 from pydantic import BaseModel
@@ -23,11 +24,18 @@ class AllProvidersFailedError(Exception):
     """Exceção levantada quando todos os provedores LLM falham"""
 
 
-# Circuit breaker em memória (por processo/job): provedor com N falhas
-# completas seguidas é pulado no resto da execução. Evita repetir varreduras
-# condenadas (~2 min de 410/429) a cada imóvel.
-_FALHAS_PROVEDOR: dict = {}
+# Breaker em dois níveis (por processo/job):
+# - MORTE (410/404/402 no modelo): pula o MODELO no resto da execução.
+# - THROTTLE (429/503/timeout e demais falhas do provedor): backoff com
+#   half-open — após _MEIA_VIDA_THROTTLE_S, 1 tentativa-teste é liberada.
+#   Sucesso zera tudo. Sem isso, 2 falhas no início do job desligavam
+#   todos os provedores para as 6h restantes.
+_FALHAS_PROVEDOR: dict = {}  # provedor -> [falhas_seguidas, timestamp_ultimo_trip]
+_MODELOS_MORTOS: set = set()  # (provedor, modelo) com morte confirmada
 _LIMITE_FALHAS_SEGUIDAS = 2
+_MEIA_VIDA_THROTTLE_S = 180  # 3 min
+_SINAIS_MORTE = ("410", "404", "402", "Gone", "Not Found",
+                 "Payment Required", "Unauthorized")
 
 
 class LlmRouter:
@@ -61,9 +69,16 @@ class LlmRouter:
     ) -> Any:
         """
         Método genérico para tentar modelos de um provedor específico.
+
+        - Modelos com morte confirmada (410/404/402) são pulados.
+        - Se strutured_output foi pedido e o provedor devolveu str (ex. Cerebras),
+          tenta validar no schema; se não der, descarta (refletores nunca
+          recebem str -> fim do "'str' has no attribute 'feedback'").
         """
         models = self.models.get(provider_name) or []
         for model in models:
+            if (provider_name, model) in _MODELOS_MORTOS:
+                continue
             logger.info("Tentando %s %s", provider_name, model)
             try:
                 router = router_class(self.messages, model, self.strutured_output)
@@ -71,10 +86,26 @@ class LlmRouter:
                 func = getattr(router, method_name)
                 result = await func() if asyncio.iscoroutinefunction(func) else func()
 
+                if result and self.strutured_output and isinstance(result, str):
+                    try:
+                        result = self.strutured_output.model_validate_json(result)
+                    except Exception:
+                        logger.warning(
+                            "Descartando str não-validável de %s %s",
+                            provider_name, model,
+                        )
+                        continue
                 if result:
                     return result
             except Exception as e:  # pylint: disable=broad-exception-caught
-                logger.warning("Falha no %s %s %s", provider_name, model, e)
+                if any(s in str(e) for s in _SINAIS_MORTE):
+                    logger.warning(
+                        "💀 Modelo morto %s %s — fora do resto do job",
+                        provider_name, model,
+                    )
+                    _MODELOS_MORTOS.add((provider_name, model))
+                else:
+                    logger.warning("Falha no %s %s %s", provider_name, model, e)
                 continue
         return None
 
@@ -140,26 +171,32 @@ class LlmRouter:
 
         errors = {}
         for name, cls, method in providers:
-            if _FALHAS_PROVEDOR.get(name, 0) >= _LIMITE_FALHAS_SEGUIDAS:
-                logger.warning(
-                    "⏭️ Pulando provedor %s (circuit breaker: %d falhas seguidas)",
-                    name, _FALHAS_PROVEDOR[name],
-                )
-                errors[name] = "Pulado pelo circuit breaker"
-                continue
+            trip = _FALHAS_PROVEDOR.get(name)
+            if trip and trip[0] >= _LIMITE_FALHAS_SEGUIDAS:
+                parado_ha = time.monotonic() - trip[1]
+                if parado_ha < _MEIA_VIDA_THROTTLE_S:
+                    logger.warning(
+                        "⏭️ Pulando provedor %s (throttle há %.0fs, reteste em %.0fs)",
+                        name, parado_ha, _MEIA_VIDA_THROTTLE_S - parado_ha,
+                    )
+                    errors[name] = "Em backoff (throttle)"
+                    continue
+                logger.info("🔓 Half-open: retestando provedor %s", name)
             try:
                 logger.info("🔄 Rotando para provedor %s", name)
                 response = await self._try_provider(name, cls, method)
 
                 if response:
                     logger.info("✅ %s sucesso", name)
-                    _FALHAS_PROVEDOR[name] = 0
+                    _FALHAS_PROVEDOR.pop(name, None)
                     return response
 
                 errors[name] = "Todos os modelos deste provedor falharam"
-                _FALHAS_PROVEDOR[name] = _FALHAS_PROVEDOR.get(name, 0) + 1
+                anterior = _FALHAS_PROVEDOR.get(name, [0, 0.0])[0]
+                _FALHAS_PROVEDOR[name] = [anterior + 1, time.monotonic()]
             except Exception as e:  # pylint: disable=broad-exception-caught
                 errors[name] = str(e)
-                _FALHAS_PROVEDOR[name] = _FALHAS_PROVEDOR.get(name, 0) + 1
+                anterior = _FALHAS_PROVEDOR.get(name, [0, 0.0])[0]
+                _FALHAS_PROVEDOR[name] = [anterior + 1, time.monotonic()]
 
         raise AllProvidersFailedError(f"Falha total: {errors}")
