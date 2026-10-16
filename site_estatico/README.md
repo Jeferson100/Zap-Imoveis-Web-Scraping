@@ -66,7 +66,7 @@ site_estatico/
 │   └── predicao.js           # Inferencia de preco em JS puro
 └── data/
     ├── dados_{cidade}.js      # Dados dos imoveis (via <script>)
-    ├── bairro_stats_{cidade}.json  # Estatisticas por bairro (via fetch)
+    ├── stats_{cidade}.js      # Estatisticas por bairro
     ├── modelo_{cidade}.json   # Modelo de predicao (arvores + preprocessing)
     └── config_aluguel.json    # Cidades com dados de aluguel
 ```
