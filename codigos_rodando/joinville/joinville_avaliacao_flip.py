@@ -200,6 +200,9 @@ async def processar_um(linha: pd.Series, idx: int, total: int) -> dict:
 
 
 async def main():
+    from src.roteador_llms.selecao_modelos import preflight_modelos
+
+    await preflight_modelos()  # ordem viva da run (~100 chamadas mínimas)
     df = carregar_imoveis()
     if df.empty:
         logger.warning("Nenhum imovel encontrado para avaliacao.")
