@@ -5,23 +5,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Análise de Imóveis</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
-<<<<<<< HEAD
-    <link rel="preconnect" href="https://cdn.plot.ly" crossorigin>
-    <link rel="preconnect" href="https://unpkg.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="css/v4-verde.css?v=2">
-=======
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="css/v4-verde.css?v=2">
     <script src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>
->>>>>>> d9d01301c62ece7e981b7e18e6d4adb47f4e11ba
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-    <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css" />
-    <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css" />
-    <!-- defer em TODOS os scripts preserva a ordem de execução e libera o parser -->
-    <script defer src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>
-    <script defer src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-    <script defer src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 </head>
 <body>
     <header>
@@ -63,11 +51,10 @@
             <button id="btn-limpar" class="btn-limpar">🔄 Limpar Filtros</button>
 
             <div class="filter-group">
-                <label class="checkbox-inline" title="Remove anúncios com preço/m² muito fora do padrão (método do intervalo interquartil)">
-                    <input type="checkbox" id="remover-outliers" aria-describedby="dica-outliers">
+                <label class="checkbox-inline">
+                    <input type="checkbox" id="remover-outliers">
                     Remover Outliers (IQR)
                 </label>
-                <small id="dica-outliers" class="dica">Exclui preços/m² extremos do resultado</small>
             </div>
 
             <div class="filter-group">
@@ -137,7 +124,7 @@
             </div>
 
             <div class="filter-group">
-                <label title="Diferença percentual entre o preço/m² do anúncio e a mediana do bairro">Desvio da Mediana</label>
+                <label>Desvio da Mediana</label>
                 <div class="range-row">
                     <input type="number" id="desvio-min" placeholder="Mín" step="0.1">
                     <input type="number" id="desvio-max" placeholder="Máx" step="0.1">
@@ -239,14 +226,8 @@
 
     <p class="footer-nav">Versão Padrão · <a href="v1-original.html">Original</a></p>
 
-<<<<<<< HEAD
-    <script defer src="js/scores.js?v=8"></script>
-    <script defer src="js/predicao.js?v=8"></script>
-    <script defer src="js/app.js?v=8"></script>
-=======
     <script src="js/scores.js?v=8"></script>
     <script src="js/predicao.js?v=8"></script>
     <script src="js/app.js?v=8"></script>
->>>>>>> d9d01301c62ece7e981b7e18e6d4adb47f4e11ba
 </body>
 </html>
