@@ -1,9 +1,30 @@
 let todosImoveis = [];
 let mapa = null;
 let markers = [];
+let clusterGroup = null;
 let modoAtual = 'venda';
 let cidadesComAluguel = [];
 let cidadesComPredicao = ['joinville', 'balneario_camboriu'];
+
+// Paleta do tema (v4-verde.css): gráficos e mapa usam as mesmas cores.
+const PALETA = {
+    primaria: '#047857',
+    primariaEscura: '#064e3b',
+    cta: '#d97706',
+    pizza: ['#047857', '#d97706', '#064e3b', '#e8a838', '#65a30d', '#0d9488'],
+    mapa: ['#16a34a', '#0284c7', '#d97706', '#dc2626', '#7c3aed'],
+};
+
+// Debounce único para todos os filtros (checkboxes incluídos).
+const _debounceTimers = {};
+function aplicarFiltrosDebounced(atraso) {
+    clearTimeout(_debounceTimers.filtros);
+    _debounceTimers.filtros = setTimeout(aplicarFiltros, atraso || 300);
+}
+
+function movimentoSuave() {
+    return !(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
+}
 
 const CIDADES_NOMES = {
     'joinville': 'Joinville',
@@ -143,7 +164,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     document.getElementById('btn-limpar').addEventListener('click', limparFiltros);
 
-    document.getElementById('remover-outliers').addEventListener('change', aplicarFiltros);
+    document.getElementById('remover-outliers').addEventListener('change', () => aplicarFiltrosDebounced(300));
 
     const debounceTimer = {};
     document.querySelectorAll('.sidebar input[type=number]').forEach(input => {
@@ -278,7 +299,7 @@ function popularCheckbox(containerId, opcoes) {
         const cb = document.createElement('input');
         cb.type = 'checkbox';
         cb.value = op;
-        cb.addEventListener('change', aplicarFiltros);
+        cb.addEventListener('change', () => aplicarFiltrosDebounced(300));
         label.appendChild(cb);
         label.appendChild(document.createTextNode(' ' + op));
         container.appendChild(label);
@@ -445,20 +466,20 @@ function renderizarGraficos(dados) {
 
     if (bairrosNomes.length) {
         const top15 = bairrosNomes.slice(0, 15);
-        Plotly.newPlot('chart-bairros', [
+        Plotly.react('chart-bairros', [
             {
                 x: top15,
                 y: top15.map(b => Math.round(media(porBairro[b]))),
                 type: 'bar',
                 name: 'Média',
-                marker: { color: '#636EFA' },
+                marker: { color: PALETA.cta },
             },
             {
                 x: top15,
                 y: top15.map(b => Math.round(mediana(porBairro[b]))),
                 type: 'bar',
                 name: 'Mediana',
-                marker: { color: '#EF553B' },
+                marker: { color: PALETA.primaria },
             },
         ], {
             ...layoutBase,
@@ -470,7 +491,7 @@ function renderizarGraficos(dados) {
             height: 420,
         }, { responsive: true });
     } else {
-        Plotly.newPlot('chart-bairros', [], { ...layoutBase, title: { text: 'Sem dados suficientes' } });
+        Plotly.react('chart-boxplot', [], { ...layoutBase, title: { text: 'Sem dados suficientes' } });
     }
 
     // ── Histograma ──
@@ -479,11 +500,11 @@ function renderizarGraficos(dados) {
         .filter(v => !isNaN(v) && v > 0 && v < 50000);
 
     if (ppm2Filtrados.length > 10) {
-        Plotly.newPlot('chart-histograma', [{
+        Plotly.react('chart-histograma', [{
             x: ppm2Filtrados,
             type: 'histogram',
             nbinsx: 50,
-            marker: { color: '#1565c0', line: { width: 1, color: 'white' } },
+            marker: { color: PALETA.primaria, line: { width: 1, color: 'white' } },
         }], {
             ...layoutBase,
             title: { text: 'Distribuição de ' + labelPreco + '/m²', font: { size: 14 } },
@@ -493,7 +514,7 @@ function renderizarGraficos(dados) {
             height: 420,
         }, { responsive: true });
     } else {
-        Plotly.newPlot('chart-histograma', [], { ...layoutBase, title: 'Sem dados suficientes' });
+        Plotly.react('chart-histograma', [], { ...layoutBase, title: { text: 'Sem dados suficientes' } });
     }
 
     // ── Boxplot ──
@@ -506,7 +527,7 @@ function renderizarGraficos(dados) {
             boxpoints: 'outliers',
         }));
 
-        Plotly.newPlot('chart-boxplot', tracesBox, {
+        Plotly.react('chart-boxplot', tracesBox, {
             ...layoutBase,
             title: { text: 'Dispersão de ' + labelPreco + '/m² por Bairro', font: { size: 14 } },
             yaxis: { title: labelPreco + '/m² (R$)' + unidade, tickprefix: 'R$ ' },
@@ -514,7 +535,7 @@ function renderizarGraficos(dados) {
             height: 420,
         }, { responsive: true });
     } else {
-        Plotly.newPlot('chart-boxplot', [], { ...layoutBase, title: 'Sem dados suficientes' });
+        Plotly.react('chart-boxplot', [], { ...layoutBase, title: 'Sem dados suficientes' });
     }
 
     // ── Composição por tipo ──
@@ -527,8 +548,8 @@ function renderizarGraficos(dados) {
 
     const tipoLabels = Object.keys(porTipo);
     if (tipoLabels.length > 0) {
-        const cores = ['#636EFA', '#EF553B', '#00CC96', '#AB63FA', '#FFA15A', '#19D3F3'];
-        Plotly.newPlot('chart-composicao', [{
+        const cores = PALETA.pizza;
+        Plotly.react('chart-composicao', [{
             labels: tipoLabels,
             values: tipoLabels.map(t => porTipo[t]),
             type: 'pie',
@@ -543,15 +564,20 @@ function renderizarGraficos(dados) {
             height: 420,
         }, { responsive: true });
     } else {
-        Plotly.newPlot('chart-composicao', [], { ...layoutBase, title: 'Sem dados' });
+        Plotly.react('chart-composicao', [], { ...layoutBase, title: { text: 'Sem dados' } });
     }
 }
 
 // ── Mapa ──
 function renderizarMapa(dados) {
-    markers.forEach(m => {
-        if (mapa) mapa.removeLayer(m);
-    });
+    if (clusterGroup && mapa) {
+        mapa.removeLayer(clusterGroup);
+    } else {
+        markers.forEach(m => {
+            if (mapa) mapa.removeLayer(m);
+        });
+    }
+    clusterGroup = null;
     markers = [];
 
     const comCoords = dados.filter(d => {
@@ -585,9 +611,12 @@ function renderizarMapa(dados) {
         mapa.setView([centroLat, centroLng], 12);
     }
 
-    const fragment = document.createDocumentFragment();
     const MAX_MARKERS = 2000;
     const comCoordsLimited = comCoords.slice(0, MAX_MARKERS);
+
+    const usaCluster = typeof L.markerClusterGroup === 'function';
+    clusterGroup = usaCluster ? L.markerClusterGroup({ maxClusterRadius: 60 }) : null;
+    const cores = PALETA.mapa;
 
     comCoordsLimited.forEach(d => {
         const lat = parseNum(d.lat);
@@ -596,11 +625,11 @@ function renderizarMapa(dados) {
 
         let cor = '#999';
         if (!isNaN(ppm2)) {
-            if (ppm2 < 4000) cor = '#4caf50';
-            else if (ppm2 < 6000) cor = '#2196f3';
-            else if (ppm2 < 8000) cor = '#ff9800';
-            else if (ppm2 < 12000) cor = '#f44336';
-            else cor = '#9c27b0';
+            if (ppm2 < 4000) cor = cores[0];
+            else if (ppm2 < 6000) cor = cores[1];
+            else if (ppm2 < 8000) cor = cores[2];
+            else if (ppm2 < 12000) cor = cores[3];
+            else cor = cores[4];
         }
 
         const marker = L.circleMarker([lat, lng], {
@@ -609,7 +638,7 @@ function renderizarMapa(dados) {
             color: '#333',
             weight: 1,
             fillOpacity: 0.85,
-        }).addTo(mapa);
+        });
         const link = d.url ? `<a href="${d.url}" target="_blank" style="color:#1565c0;">Ver anúncio</a>` : '';
         const titulo = d.titulo || 'Sem título';
         const bairro = d.bairro || '-';
@@ -629,7 +658,10 @@ function renderizarMapa(dados) {
         `);
 
         markers.push(marker);
+        if (clusterGroup) clusterGroup.addLayer(marker);
+        else marker.addTo(mapa);
     });
+    if (clusterGroup) mapa.addLayer(clusterGroup);
 
     setTimeout(() => mapa.invalidateSize(), 150);
 }
@@ -685,6 +717,7 @@ function atualizarCabecalhoTabela() {
     colunas.forEach(col => {
         const th = document.createElement('th');
         th.textContent = col.titulo;
+        th.setAttribute('scope', 'col');
         thead.appendChild(th);
     });
 }
@@ -821,5 +854,7 @@ function _renderizarTabelaPagina() {
 window.irPaginaTabela = function(pag) {
     tabelaPagina = pag;
     _renderizarTabelaPagina();
-    document.getElementById('tabela-imoveis').scrollIntoView({ behavior: 'smooth', block: 'start' });
+    document.getElementById('tabela-imoveis').scrollIntoView(
+        movimentoSuave() ? { behavior: 'smooth', block: 'start' } : { block: 'start' }
+    );
 };

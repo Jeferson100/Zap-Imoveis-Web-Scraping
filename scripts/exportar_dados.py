@@ -21,7 +21,6 @@ CIDADES = {
 }
 
 dados_todas_cidades = {}
-stats_todas_cidades = {}
 dados_aluguel_cidades = {}
 cidades_com_aluguel = []
 
@@ -129,8 +128,8 @@ def exportar_cidade(cidade, base_dir):
     pasta_saida = base_dir / 'site_estatico' / 'data'
     pasta_saida.mkdir(parents=True, exist_ok=True)
 
-    with open(pasta_saida / f'imoveis_{cidade}.json', 'w', encoding='utf-8') as f:
-        json.dump(data, f, ensure_ascii=False, default=str)
+    # imoveis_{cidade}.json removido: duplicava dados_{cidade}.js (201 MB),
+    # que é a única fonte lida pelo site (carregarDados usa DADOS_IMOVEIS).
 
     stats_cols = {}
     if 'preco_por_m2' in df.columns:
@@ -214,8 +213,8 @@ def exportar_aluguel_cidade(cidade, base_dir):
     pasta_saida = base_dir / 'site_estatico' / 'data'
     pasta_saida.mkdir(parents=True, exist_ok=True)
 
-    with open(pasta_saida / f'imoveis_aluguel_{cidade}.json', 'w', encoding='utf-8') as f:
-        json.dump(data, f, ensure_ascii=False, default=str)
+    # imoveis_aluguel_{cidade}.json removido: duplicava dados_aluguel_{cidade}.js,
+    # que é a única fonte lida pelo site (DADOS_ALUGUEL).
 
     print(f'  Exportados {len(data)} imóveis de aluguel ({data_ref})')
     return data
@@ -236,14 +235,8 @@ def gerar_dados_js(base_dir):
 
         print(f'  Gerado dados_{cidade}.js ({len(data)} imóveis)')
 
-    for cidade, stats in stats_todas_cidades.items():
-        js = f'window.DADOS_STATS = window.DADOS_STATS || {{}};\n'
-        js += f'window.DADOS_STATS["{cidade}"] = '
-        js += json.dumps(stats, ensure_ascii=False, default=str, separators=(',', ':'))
-        js += ';\n'
-
-        with open(pasta_saida / f'stats_{cidade}.js', 'w', encoding='utf-8') as f:
-            f.write(js)
+    # stats_{cidade}.js removido: window.DADOS_STATS nunca é lido pelo site
+    # (bairro_stats_{cidade}.json via fetch cobre as estatísticas por bairro).
 
     total_imoveis = sum(len(v) for v in dados_todas_cidades.values())
     print(f'\nGerados arquivos JS para {total_imoveis} imóveis de {len(dados_todas_cidades)} cidades')
@@ -289,11 +282,9 @@ def main():
 
     for cidade in cidades_exportar:
         print(f'\nExportando {CIDADES.get(cidade, cidade)}...')
-        data, stats = exportar_cidade(cidade, base_dir)
+        data, _stats = exportar_cidade(cidade, base_dir)
         if data is not None:
             dados_todas_cidades[cidade] = data
-        if stats is not None:
-            stats_todas_cidades[cidade] = stats
 
         aluguel = exportar_aluguel_cidade(cidade, base_dir)
         if aluguel is not None:
