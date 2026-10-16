@@ -18,7 +18,7 @@ from .listar_modelos import (
     normalizar_id,
     enriquecer_com_openrouter,
 )
-from .selecao_modelos import modelos_para, modelos_para_async, preflight_modelos, registrar_probe
+from .selecao_modelos import modelos_para, modelos_para_async, registrar_probe
 
 __all__ = [
     "RouterGroq",
@@ -37,7 +37,6 @@ __all__ = [
     "enriquecer_com_openrouter",
     "modelos_para",
     "modelos_para_async",
-    "preflight_modelos",
     "registrar_probe",
 ]
 

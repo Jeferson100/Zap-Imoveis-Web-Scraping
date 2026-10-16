@@ -64,13 +64,6 @@ def _df_catalogo() -> pd.DataFrame:
 STATUS_MORTO = "morto"
 STATUS_VIVO = "vivo"
 
-# Ordem viva da run, preenchida por preflight_modelos().
-# {(capacidade, provedor_router): [ids]} — só memória, nada no parquet.
-ORDEM_PREFLIGHT: dict = {}
-
-SINAIS_VIDA = ("visao", "vl", "omni", "scout", "image")
-TIMEOUT_PREFLIGHT_S = 25
-
 
 def _filtrar(df: pd.DataFrame, provedor_cat: str, grupos: tuple, n: int) -> list:
     if "status_probe" not in df.columns:
@@ -159,108 +152,6 @@ async def _live_listing(provedor_cat: str, grupos: tuple, n: int) -> list:
     return out
 
 
-def _e_visao_candidato(model_id: str) -> bool:
-    m = model_id.lower()
-    return any(s in m for s in SINAIS_VIDA)
-
-
-def _msg_visao():
-    import base64
-    import io
-
-    from PIL import Image
-
-    buf = io.BytesIO()
-    Image.new("RGB", (8, 8), (10, 20, 30)).save(buf, format="PNG")
-    b64 = base64.b64encode(buf.getvalue()).decode()
-    return [{"type": "text", "text": "Descreva em uma palavra."},
-            {"type": "image_url", "image_url": {"url": "data:image/png;base64," + b64}}]
-
-
-async def preflight_modelos() -> dict:
-    """Testa os modelos do catálogo (via listar_modelos) e fixa a ordem da run.
-
-    Vivos primeiro (ordem de resposta); 429/5xx/timeout no fim da fila;
-    410/404/402/401 fora. Só memória — nada é gravado no parquet.
-    """
-    import asyncio
-    import time
-
-    from .listar_modelos import listar_modelos
-    from .roteador_llms import AllProvidersFailedError, LlmRouter
-
-    catalogo = await listar_modelos(["nvidia", "groq", "cerebras", "zai"],
-                                    so_open_source=True)
-    chave_router = {"nvidia": "api_nvidia_models", "groq": "groq_models",
-                    "cerebras": "cerebras_models", "zai": "zai_models"}
-    vazio = {k: [] for k in ("groq_models", "cerebras_models", "api_nvidia_models",
-                             "api_langchain_nvidia_models", "api_openai_nvidia_models",
-                             "openrouter_models", "zai_models")}
-
-    async def testar(prov_cat: str, mid: str):
-        import src.roteador_llms.roteador_llms as _R
-
-        for com_imagem in (False, True):
-            if com_imagem and not _e_visao_candidato(mid):
-                continue
-            # Isola o teste: o breaker global acumularia falhas entre modelos
-            # e pularia tudo após 2 falhas (foi o que zerou a 1ª versão).
-            # _MODELOS_MORTOS acumula de propósito (acelera os próximos testes).
-            _R._FALHAS_PROVEDOR.clear()
-            kw = dict(vazio)
-            kw[chave_router[prov_cat]] = [mid]
-            msg = _msg_visao() if com_imagem else "oi"
-            t0 = time.monotonic()
-            try:
-                await asyncio.wait_for(LlmRouter(msg, **kw).llm_router(),
-                                       timeout=TIMEOUT_PREFLIGHT_S)
-                return (mid, "vivo", round(time.monotonic() - t0, 1))
-            except AllProvidersFailedError as e:
-                texto = str(e)
-                if any(s in texto for s in ("410", "404", "402", "401", "Gone",
-                                            "Not Found", "Payment Required",
-                                            "Unauthorized")):
-                    return (mid, "morto", round(time.monotonic() - t0, 1))
-            except Exception:
-                pass
-        return (mid, "adiado", round(time.monotonic() - t0, 1))
-
-    ORDEM_PREFLIGHT.clear()
-    for prov_cat, ids in catalogo.items():
-        if isinstance(ids, dict):  # provedor fora: pula sem derrubar os demais
-            logger.warning("Pre-flight pulou %s: %s", prov_cat, ids["_erro"])
-            continue
-        vivos, adiados = [], []
-        for mid in ids:
-            _, status, dt = await testar(prov_cat, mid)
-            logger.info("pre-flight %s %s -> %s (%.1fs)", prov_cat, mid, status, dt)
-            if status == "vivo":
-                vivos.append(mid)
-            elif status == "adiado":
-                adiados.append(mid)
-        for capacidade in ("texto", "visao"):
-            ORDEM_PREFLIGHT[(capacidade, prov_cat)] = list(vivos) + list(adiados)
-    import src.roteador_llms.roteador_llms as _R2
-
-    _R2._FALHAS_PROVEDOR.clear()  # breaker do flip começa limpo
-    n_v = sum(1 for v in ORDEM_PREFLIGHT.values() for _ in v)
-    logger.info("pre-flight concluído: %d modelos ordenados.", n_v)
-    return ORDEM_PREFLIGHT
-
-
-def _via_preflight(capacidade: str, provedor: str, n: int):
-    """Ordem do pre-flight mapeada para nomes do catálogo, ou None."""
-    provedor_cat = MAPA_PROVEDOR.get(provedor)
-    if provedor_cat is None:
-        return None
-    ordem = ORDEM_PREFLIGHT.get((capacidade, provedor_cat))
-    if not ordem:
-        return None
-    logger.info("modelos_para(%s, %s) via pre-flight -> %s",
-                capacidade, provedor, ordem[:n])
-    return list(ordem[:n])
-
-
 async def modelos_para_async(
     capacidade: str, provedor: str, n: int = 3
 ) -> list:
@@ -270,9 +161,6 @@ async def modelos_para_async(
     provedor_cat = MAPA_PROVEDOR.get(provedor)
     if provedor_cat is None:
         raise ValueError(f"provedor fora da seleção dinâmica: {provedor}")
-    pre = _via_preflight(capacidade, provedor, n)
-    if pre:
-        return pre
     try:
         out = _filtrar(_df_catalogo(), provedor_cat, grupos, n)
         if not out:
@@ -287,15 +175,12 @@ async def modelos_para_async(
 
 
 def modelos_para(capacidade: str, provedor: str, n: int = 3) -> list:
-    """Versão síncrona (pre-flight > catálogo; erro explícito sem nenhum)."""
+    """Versão síncrona (só catálogo; erro explícito sem parquet válido)."""
     assert capacidade in ("visao", "texto"), capacidade
     grupos = GRUPOS_VISAO if capacidade == "visao" else GRUPOS_TEXTO
     provedor_cat = MAPA_PROVEDOR.get(provedor)
     if provedor_cat is None:
         raise ValueError(f"provedor fora da seleção dinâmica: {provedor}")
-    pre = _via_preflight(capacidade, provedor, n)
-    if pre:
-        return pre
     out = _filtrar(_df_catalogo(), provedor_cat, grupos, n)
     if not out:
         raise ValueError(
