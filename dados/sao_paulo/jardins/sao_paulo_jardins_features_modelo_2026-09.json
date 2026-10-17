@@ -37,10 +37,7 @@
     "score_hospitais",
     "dist_centro",
     "score_escola_publica",
-    "lng",
-    "tem_elevador",
-    "bairro_cluster",
-    "dist_centro_faixa"
+    "lng"
   ],
   "features_categoricas": [
     "novo_lancamento",
@@ -65,6 +62,5 @@
   "rmse_otimizado": 2088151.6406293747,
   "r2_otimizado": 0.8331476187754797,
   "mes_ref": "2026-09",
-  "data_treino": "2026-09-21T17:01:57.709583",
-  "fonte": "backfill-joblib+otimizados"
+  "data_treino": "2026-10-17T18:50:55.911461"
 }
