@@ -24,7 +24,6 @@ jobs:
     secrets: inherit
 
   batch_320_330:
-    needs: [batch_300_310]
     if: always()
     uses: ./.github/workflows/joinville_avaliacao_flip_base.yml
     with:
@@ -34,7 +33,7 @@ jobs:
     secrets: inherit
 
   batch_330_340:
-    needs: [batch_310_320]
+    needs: [batch_300_310]
     if: always()
     uses: ./.github/workflows/joinville_avaliacao_flip_base.yml
     with:
@@ -44,7 +43,7 @@ jobs:
     secrets: inherit
 
   batch_340_350:
-    needs: [batch_320_330]
+    needs: [batch_310_320]
     if: always()
     uses: ./.github/workflows/joinville_avaliacao_flip_base.yml
     with:
@@ -54,7 +53,7 @@ jobs:
     secrets: inherit
 
   batch_350_360:
-    needs: [batch_330_340]
+    needs: [batch_320_330]
     if: always()
     uses: ./.github/workflows/joinville_avaliacao_flip_base.yml
     with:
@@ -64,7 +63,7 @@ jobs:
     secrets: inherit
 
   batch_360_370:
-    needs: [batch_340_350]
+    needs: [batch_330_340]
     if: always()
     uses: ./.github/workflows/joinville_avaliacao_flip_base.yml
     with:
@@ -74,7 +73,7 @@ jobs:
     secrets: inherit
 
   batch_370_380:
-    needs: [batch_350_360]
+    needs: [batch_340_350]
     if: always()
     uses: ./.github/workflows/joinville_avaliacao_flip_base.yml
     with:
@@ -84,7 +83,7 @@ jobs:
     secrets: inherit
 
   batch_380_390:
-    needs: [batch_360_370]
+    needs: [batch_350_360]
     if: always()
     uses: ./.github/workflows/joinville_avaliacao_flip_base.yml
     with:
@@ -94,7 +93,7 @@ jobs:
     secrets: inherit
 
   batch_390_400:
-    needs: [batch_370_380]
+    needs: [batch_360_370]
     if: always()
     uses: ./.github/workflows/joinville_avaliacao_flip_base.yml
     with:
