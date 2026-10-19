@@ -80,11 +80,18 @@ jobs:
               # paralelos do mesmo batch) sem perder nada de nenhum lado
               # shellcheck disable=SC2086
               uv run codigos_rodando/joinville/union_flip_parquet.py $ARQ
+              # --mixed: índice = árvore de origin/main, working tree preservado.
+              # Com --soft o índice velho ia junto no commit e revertia/deletava
+              # arquivos que outros batches acabaram de publicar no main.
+              git reset origin/main
               git add $ARQ 2>/dev/null || true
-              # Recria UM commit sobre o main atual (evita replay com conflito):
-              # o reset preserva worktree+index, só move a base.
-              git reset --soft origin/main
-              git commit -m "flip parcial ${{ inputs.bairro }} ${{ inputs.limite_inferior }}-${{ inputs.limite_superior }}" || true
+              # Nada novo após o union (batch já integrado): não cria commit vazio
+              if git diff --cached --quiet; then
+                echo "batch já integrado ao main, nada a commitar"
+                OK=true
+                break
+              fi
+              git commit -m "flip parcial ${{ inputs.bairro }} ${{ inputs.limite_inferior }}-${{ inputs.limite_superior }}"
               if git push origin main; then OK=true; break; fi
               echo "push rejeitado (tentativa $tentativa)"
               sleep 20

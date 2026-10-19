@@ -134,15 +134,27 @@ jobs:
             # Merge toca o consolidado + deleta batches: retry com union-resolve
             # (concat + dedupe por url) em vez de rebase -X ours, que descarta linhas.
             ARQ="dados/joinville/*avaliacao_flip*.parquet dados/joinville/avaliacao_flip_*.parquet"
+            # Delta deste merge: reaplicamos so o que ESTE job mudou, para nao
+            # reverter arquivos que outros jobs publicaram enquanto rodavamos.
+            DELTA=$(git diff --name-only HEAD~1 HEAD || true)
+
             OK=false
             for tentativa in 1 2 3; do
               git fetch origin main || { sleep 20; continue; }
               # shellcheck disable=SC2086
               uv run codigos_rodando/joinville/union_flip_parquet.py $ARQ
 
-              git add -A dados/joinville/
-              git reset --soft origin/main
-              git commit -m "Avaliacao Flip Joinville [0-300]: merge batches bucarein" || true
+              # --mixed: indice = main atual; worktree (merge + union) preservado.
+              # Com --soft, o indice velho ia no commit e revertia/deletava
+              # arquivos que outros jobs acabaram de publicar no main.
+              git reset origin/main
+              if [ -n "$DELTA" ]; then echo "$DELTA" | xargs -r git add -A --; fi
+              if git diff --cached --quiet; then
+                echo "merge ja integrado ao main, nada a commitar"
+                OK=true
+                break
+              fi
+              git commit -m "Avaliacao Flip Joinville [0-300]: merge batches bucarein"
               if git push origin main; then OK=true; break; fi
               echo "push rejeitado (tentativa $tentativa)"
               sleep 20
