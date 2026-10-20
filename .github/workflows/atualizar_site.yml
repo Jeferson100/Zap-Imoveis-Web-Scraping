@@ -6,6 +6,10 @@ on:
     branches: [main]
     paths:
       - 'dados/**'
+      - 'site_estatico/**'
+      - 'scripts/exportar_dados.py'
+      - 'scripts/exportar_modelo_js.py'
+      - 'scripts/validar_site.py'
   workflow_dispatch:
 
 jobs:
