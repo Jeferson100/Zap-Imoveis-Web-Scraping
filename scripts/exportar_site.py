@@ -22,7 +22,7 @@ def main():
 
     print(f'=== Exportando site para: {cidade} ===')
 
-    print('\n[1/2] Exportando dados...')
+    print('\n[1/3] Exportando dados...')
     env = os.environ.copy()
     env['CIDADE_EXPORTAR'] = cidade
     r = subprocess.run(
@@ -34,13 +34,22 @@ def main():
         print(f'Erro ao exportar dados (rc={r.returncode})')
         sys.exit(1)
 
-    print('\n[2/2] Exportando modelo...')
+    print('\n[2/3] Exportando modelo...')
     r = subprocess.run(
         [sys.executable, str(scripts_dir / 'exportar_modelo_js.py'), cidade],
         cwd=str(base_dir),
     )
     if r.returncode != 0:
         print(f'Erro ao exportar modelo (rc={r.returncode})')
+        sys.exit(1)
+
+    print('\n[3/3] Validando artefatos...')
+    r = subprocess.run(
+        [sys.executable, str(scripts_dir / 'validar_site.py')],
+        cwd=str(base_dir),
+    )
+    if r.returncode != 0:
+        print(f'Erro na validacao do site (rc={r.returncode})')
         sys.exit(1)
 
     print(f'\n=== Concluido: {cidade} ===')

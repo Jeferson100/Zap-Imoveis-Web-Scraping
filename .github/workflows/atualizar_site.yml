@@ -39,6 +39,10 @@ jobs:
         run: |
           uv run python scripts/exportar_modelo_js.py todas
 
+      - name: Validar artefatos do site
+        run: |
+          uv run python scripts/validar_site.py
+
       - name: Sincronizar site_estatico para Analise-imoveis
         run: |
           set -e

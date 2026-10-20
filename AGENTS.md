@@ -8,7 +8,7 @@ Python 3.12 only (`.python-version`). Package layout: `package-dir = src/`; inst
 - Run everything with `uv run <path>` (e.g. `uv run codigos_rodando/joinville/joinville_limpando_dados_imoveis.py`), never bare `python` — CI and `rodando_joinville.py` assume `uv run`.
 - Single test: `uv run pytest tests/test_chaves_mao_preco.py -v` (same for `test_agente_avaliacao_imagens.py`, `test_subgrafo_imagens_routing.py`). No `pytest.ini`/config in repo.
 - Streamlit: `streamlit run app/app_streamlit.py` (entry; per-city files `app/1_Joinville-Imoveis.py` etc. are legacy/single-city). Reads newest `dados/<cidade>/*_imoveis_limpo_*.parquet` by filename date.
-- Site export: `CIDADE_PASTA=joinville python scripts/exportar_site.py` → runs `exportar_dados.py` + `exportar_modelo_js.py`. `CIDADE_EXPORTAR=todas` exports all. Output goes to `site_estatico/` (synced to `Jeferson100/Analise-imoveis` by `atualizar_site.yml` — keep export+sync in one job, separate jobs lose artifacts).
+- Site export: `CIDADE_PASTA=joinville python scripts/exportar_site.py` → runs `exportar_dados.py` + `exportar_modelo_js.py` + `validar_site.py`. `CIDADE_EXPORTAR=todas` exports all. Output goes to `site_estatico/` (synced to `Jeferson100/Analise-imoveis` by `atualizar_site.yml` — keep export+sync in one job, separate jobs lose artifacts). `scripts/validar_site.py` falha em JSON inválido, modelo incompleto ou marcadores de conflito git; nunca resolva conflito em `site_estatico/data/` na mão — regenere os artefatos.
 - Node scrapers: `scraping-node/` (`npm install`, `npm run chave-mao` → `node chave-mao/coleta.js`). Requires Playwright browsers separately.
 
 ## Architecture — where to edit
