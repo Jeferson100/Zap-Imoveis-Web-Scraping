@@ -1,0 +1,55 @@
+{
+  "features": [
+    "metragem",
+    "quartos",
+    "lat",
+    "vagas",
+    "dist_centro",
+    "banheiros",
+    "lng",
+    "comum_elevador",
+    "suites",
+    "comum_academia",
+    "comum_piscina",
+    "priv_varanda",
+    "comum_spa",
+    "tipo_imovel"
+  ],
+  "features_numericas": [
+    "metragem",
+    "quartos",
+    "lat",
+    "vagas",
+    "dist_centro",
+    "banheiros",
+    "lng",
+    "comum_elevador",
+    "suites",
+    "comum_academia",
+    "comum_piscina",
+    "priv_varanda",
+    "comum_spa"
+  ],
+  "features_categoricas": [
+    "tipo_imovel"
+  ],
+  "n_features": 14,
+  "modelo": "GradientBoosting",
+  "tratamento": "minmax_mean_ohe",
+  "transform": "none",
+  "scaler": "MinMaxScaler",
+  "imputer_num": "mean",
+  "encoder": "OneHotEncoder",
+  "target_transform": "none",
+  "best_params": {
+    "n_estimators": 100,
+    "max_depth": 5,
+    "learning_rate": 0.235165531200088,
+    "subsample": 0.8516293266830691,
+    "min_samples_leaf": 1
+  },
+  "rmse_otimizado": 2755139.2990283817,
+  "r2_otimizado": 0.5407039299053467,
+  "mes_ref": "2026-10",
+  "data_treino": "2026-10-28T12:15:26.089739"
+}
