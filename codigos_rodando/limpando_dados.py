@@ -2,6 +2,7 @@ import pandas as pd
 import warnings
 import logging
 import asyncio
+import os
 from funcoes_limpando_dados_imoveis import (limpar_valor_iptu,
                                             limpar_banheiros, 
                                             limpar_metragem, 
@@ -492,18 +493,38 @@ def limpando_dados(
     #df_chave_mao_endereco =  pd.concat([df_chave_mao, df_chave_mao_endereco_limpo], axis=1)
     #df_olx_endereco =  pd.concat([df_olx, df_olx_endereco_limpo], axis=1)
 
-    df = pd.concat([
-                    df_zap_endereco if name_arquivo_zap is not None else pd.DataFrame(), 
-                    df_vivareal_endereco if name_arquivo_vivareal is not None else pd.DataFrame(),
-                    df_chave_mao_endereco if name_arquivo_chave_mao is not None else pd.DataFrame(),
-                    df_olx_endereco if name_arquivo_olx is not None else pd.DataFrame(),
-                    df_imovelweb_endereco if name_arquivo_imovelweb is not None else pd.DataFrame()], 
-                   axis=0, ignore_index=True)
-    
+    frames = [
+        df_zap_endereco if name_arquivo_zap is not None else pd.DataFrame(),
+        df_vivareal_endereco if name_arquivo_vivareal is not None else pd.DataFrame(),
+        df_chave_mao_endereco if name_arquivo_chave_mao is not None else pd.DataFrame(),
+        df_olx_endereco if name_arquivo_olx is not None else pd.DataFrame(),
+        df_imovelweb_endereco if name_arquivo_imovelweb is not None else pd.DataFrame(),
+    ]
+    # DataFrames vazios não têm colunas: concatená-los gera um df sem colunas e
+    # o filtro por 'cidade' explode com KeyError em vez de apontar a causa real.
+    frames = [f for f in frames if not f.empty]
+
+    if not frames:
+        raise RuntimeError(
+            f"Nenhum dado de entrada encontrado em {pasta_dados} para os padrões "
+            f"solicitados: zap={name_arquivo_zap}, vivareal={name_arquivo_vivareal}, "
+            f"chave_mao={name_arquivo_chave_mao}, olx={name_arquivo_olx}, "
+            f"imovelweb={name_arquivo_imovelweb}. "
+            "Verifique se a coleta/consolidação rodou e se os arquivos estão no checkout."
+        )
+
+    df = pd.concat(frames, axis=0, ignore_index=True)
+
     #logger.info(f"Total de registros carregados: {len(df)} (zap: {len(df_zap)} | vivareal: {len(df_vivareal)} | chave_mao: {len(df_chave_mao)} | olx: {len(df_olx)})")
-    
+
+    if 'cidade' not in df.columns:
+        raise RuntimeError(
+            f"Coluna 'cidade' ausente após o parsing de endereço. "
+            f"Colunas disponíveis: {list(df.columns)}"
+        )
+
     logger.info(f"Filtrando por cidade: {cidade_limpeza}...")
-    
+
     df_cidade = df[df['cidade'].isin([cidade_limpeza])]
     
     logger.info(f"Registros após filtro de cidade: {len(df_cidade)} | Registros removidos: {len(df) - len(df_cidade)}")
@@ -719,6 +740,11 @@ def limpando_dados(
                 logger.warning(
                     f"⚠️ Fonte(s) ausente(s): {', '.join(fontes_faltando)}. "
                     "Nenhum arquivo original será deletado."
+                )
+            elif os.getenv("MANTER_ARQUIVOS_BRUTOS", "false").lower() == "true":
+                logger.info(
+                    "MANTER_ARQUIVOS_BRUTOS=true — arquivos brutos preservados "
+                    "para permitir reprocessamento/re-run da limpeza."
                 )
             else:
                 logger.info("✅ Dados de localização validados. Procedendo com a deleção dos arquivos temporários.")

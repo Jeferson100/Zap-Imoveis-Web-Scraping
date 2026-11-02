@@ -49,6 +49,14 @@ on:
         required: false
         type: boolean
         default: true
+      checkout_ref:
+        required: false
+        type: string
+        default: ""
+      manter_arquivos_brutos:
+        required: false
+        type: boolean
+        default: false
       BAIRRO:
         required: false
         type: string
@@ -87,6 +95,7 @@ jobs:
       - name: Copia os arquivos do repo
         uses: actions/checkout@v4
         with:
+          ref: ${{ inputs.checkout_ref != '' && inputs.checkout_ref || github.sha }}
           sparse-checkout: |
             codigos_rodando/
             dados/
@@ -149,6 +158,7 @@ jobs:
           MAX_CONCURRENCY_LOCALIZACAO: ${{ inputs.max_concurrency_localizacao }}
           BATCH_LIMPEZA: ${{ inputs.batch_limpeza }}
           TIPO_ASYNC: ${{ inputs.tipo_async }}
+          MANTER_ARQUIVOS_BRUTOS: ${{ inputs.manter_arquivos_brutos }}
           CIDADE_LOCALIZACAO: ${{ inputs.cidade_localizacao }}
           ESTADO_LIMPEZA: ${{ inputs.estado_limpeza }}
           ESTADO_LOCALIZACAO: ${{ inputs.estado_localizacao }}

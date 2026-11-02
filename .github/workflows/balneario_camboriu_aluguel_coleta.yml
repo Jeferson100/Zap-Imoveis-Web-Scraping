@@ -75,4 +75,8 @@ jobs:
       cidade_localizacao: Balneario Camboriu
       estado_limpeza: sc
       estado_localizacao: SC
+      # A junção empurra os brutos para o main durante ESTE run; sem isso o
+      # checkout ficaria no SHA antigo e a limpeza não veria os arquivos.
+      checkout_ref: refs/heads/main
+      manter_arquivos_brutos: true
     secrets: inherit
