@@ -17,18 +17,18 @@ from typing import Any, Dict, List, Optional
 
 from deepagents import create_deep_agent
 from langchain.tools import tool
-from langchain_nvidia_ai_endpoints import ChatNVIDIA
 from pydantic import BaseModel, Field
 
 from agente_avaliacao_imagens.prompts import PROMPT_DESCREVER_FOTO
 from agente_avaliacao_imagens.utils import processar_todos_lotes
 from shared.serialization import converter_numpy
 
+from .modelo_llm import criar_modelo_flip, modelo_flip_padrao
 from .schemas import AnalisePotencialFlip
 
 logger = logging.getLogger(__name__)
 
-SUPERVISOR_MODEL = "moonshotai/kimi-k2-instruct"  # tools: True (tabela langchain-nvidia)
+SUPERVISOR_MODEL = modelo_flip_padrao()
 FOTOS_POR_LOTE = 5
 MAX_FOTOS_MSG = 6
 
@@ -117,7 +117,7 @@ ETAPA 3: com os dois relatórios, dê o veredito final.
 """ + REGRAS_INVESTIMENTO
 
 agente_avaliacao_flip = create_deep_agent(
-    model=ChatNVIDIA(model=SUPERVISOR_MODEL),
+    model=criar_modelo_flip(SUPERVISOR_MODEL),
     subagents=[fotos_subagent, dados_subagent],
     system_prompt=SYSTEM_INVESTIDOR,
     response_format=AnalisePotencialFlip,

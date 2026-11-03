@@ -6,6 +6,15 @@ from .deep_agent_flip import (
     agente_avaliacao_flip, avaliar_imovel_deep,
     fotos_subagent, dados_subagent,
 )
+from .react_agent_flip import (
+    agente_react_flip, avaliar_imovel_react, montar_mensagem,
+    FALLBACK_SOMBRA,
+)
+from .tools_flip import (
+    calcular_metricas_flip, ajustar_saida_pela_regra,
+    metricas_flip_tool, think_tool, ROI_MINIMO, limpar_nan,
+)
+from .trace_flip import TrilhaFlip, ExigePensamento
 
 __all__ = [
     "grafo_principal", "EstadoGlobal",
@@ -14,4 +23,9 @@ __all__ = [
     "PROMPT_AVALIAR_POTENCIAL_FLIP",
     "agente_avaliacao_flip", "avaliar_imovel_deep",
     "fotos_subagent", "dados_subagent",
+    "agente_react_flip", "avaliar_imovel_react", "montar_mensagem",
+    "FALLBACK_SOMBRA",
+    "calcular_metricas_flip", "ajustar_saida_pela_regra",
+    "metricas_flip_tool", "think_tool", "ROI_MINIMO", "limpar_nan",
+    "TrilhaFlip", "ExigePensamento",
 ]
