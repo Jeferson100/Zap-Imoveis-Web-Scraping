@@ -95,7 +95,7 @@ jobs:
       - name: Copia os arquivos do repo
         uses: actions/checkout@v4
         with:
-          ref: ${{ inputs.checkout_ref != '' && inputs.checkout_ref || github.sha }}
+          ref: ${{ inputs.checkout_ref != '' && inputs.checkout_ref || github.ref }}
           sparse-checkout: |
             codigos_rodando/
             dados/
@@ -180,6 +180,7 @@ jobs:
           git add dados/
           git commit -m "Pipeline ${{ inputs.cidade_pasta}}: $(date +'%Y-%m-%d')" || echo "Nada para commitar"
           git pull --rebase --autostash -X ours origin main
-          git push origin main
+          # HEAD:main funciona tanto em branch local quanto em checkout detached
+          git push origin HEAD:main
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
