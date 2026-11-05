@@ -416,7 +416,19 @@ class VivaRealDadosImovelAsync:
             try:
                 await page.add_init_script(ANTI_DETECT_JS)
                 logger.info("Tentativa %d/%d — %s", tentativa, self.MAX_RETRIES, self.url)
-                await page.goto(self.url, wait_until="networkidle", timeout=30000)
+                # O Viva Real é o mesmo motor do ZAP: networkidle não assenta.
+                try:
+                    await page.goto(self.url, wait_until="domcontentloaded", timeout=45000)
+                except Exception as e:
+                    logger.warning("goto lento na página do imóvel (%s); tentando extrair assim mesmo", str(e)[:80])
+                try:
+                    await page.wait_for_selector(
+                        "h1, [data-testid='description-content'], "
+                        "[data-testid='location-address']",
+                        timeout=15000,
+                    )
+                except Exception:
+                    logger.debug("Seletores principais não apareceram em 15s: %s", self.url)
                 dados = await self._extrair_dados_da_pagina(page)
                 logger.info("Dados extraídos com sucesso")
                 return dados

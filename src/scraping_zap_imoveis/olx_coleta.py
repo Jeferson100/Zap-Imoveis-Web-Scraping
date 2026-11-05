@@ -246,8 +246,12 @@ class OLXColeta:
 
                 try:
                     dado = await scraper.extrair_anuncio(url)
-                    if dado:
+                    # Casca vazia não é dado: sem título e sem preço o registro
+                    # não serve para nada e só infla a contagem do pipeline.
+                    if dado and (dado.get("titulo") or dado.get("valor_imovel")):
                         resultados.append(dado)
+                    elif dado:
+                        logger.warning("Descartado registro sem título nem preço: %s", url)
                 except Exception as e:
                     logger.error(f"Worker {worker_id} falhou ao extrair {url}: {e}")
                 finally:
@@ -296,8 +300,12 @@ class OLXColeta:
             logger.info(f"Links ignorados: {len_before - len_after}")
 
         if not todos_os_links:
-            logger.error("Nenhum link foi encontrado. Encerrando.")
-            return
+            # Isso já custou um mês de coleta OLX: o step terminou em 22s, exit
+            # code 0, sem arquivo, e os 5 jobs do workflow ficaram verdes.
+            raise RuntimeError(
+                "Nenhum link de anúncio foi encontrado na OLX "
+                f"(total_pages={total_pages}, limite_falhas={limite_falhas})."
+            )
 
         # --- ETAPA 3: PAUSA DE RESPIRO PARA O IP ---
         if cooldown_seconds > 0:
@@ -342,7 +350,12 @@ class OLXColeta:
         
         self._save_to_json(output_file)
 
-        logger.info(f"Execução finalizada. Total de imóveis processados: {len(self.lista_dados)}")
+        total = len(todos_os_links)
+        extraidos = len(self.lista_dados)
+        logger.info(
+            "Execução finalizada. %d/%d anúncios com dados (%.1f%% descartados)",
+            extraidos, total, 100 * (1 - extraidos / total) if total else 0.0,
+        )
         return self.lista_dados
      
 

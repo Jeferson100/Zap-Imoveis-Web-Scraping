@@ -10,6 +10,7 @@ modulo `react_agent_flip.py`.
 import json
 import logging
 import math
+import os
 from typing import Any, Dict, List
 
 from langchain.tools import tool
@@ -27,6 +28,10 @@ logger = logging.getLogger(__name__)
 FOTOS_POR_LOTE = 5
 MAX_FOTOS_TOOL = 6
 ROI_MINIMO = 0.15  # REGRA DE OURO 15%
+# Custo de reforma explicito, por metro quadrado (configuravel por env). A
+# reserva de 10% do ARV continua cobrindo custos ocultos (patologias, titulo,
+# ITBI); a reforma vira um custo tangivel e auditavel no METRICAS_JSON.
+CUSTO_REFORMA_M2 = float(os.environ.get("FLIP_CUSTO_REFORMA_M2", "1500"))
 
 
 def _num(valor: Any, default: float = 0.0) -> float:
@@ -51,7 +56,8 @@ def calcular_metricas_flip(dados: Dict[str, Any]) -> Dict[str, Any]:
 
     Cruza preco_por_m2 com valor_m2_predicao e valor_m2_bairro (mesmas contas
     de `preparar_dados`) e aplica a regra de ouro: ROI >= 15% sobre o valor de
-    compra, reservando 10% do ARV para custos ocultos/reforma.
+    compra, reservando 10% do ARV para custos ocultos e descontando o custo de
+    reforma explicito (`CUSTO_REFORMA_M2 * metragem`, default R$ 1500/m2).
 
     NaN/None/inf nunca propagam: viram 0 na conta (o imovel cai no benchmark
     do bairro) e None na saida. Sem isso, um `valor_predito` nulo reprovava o
@@ -65,7 +71,8 @@ def calcular_metricas_flip(dados: Dict[str, Any]) -> Dict[str, Any]:
     pm2 = round(valor / metragem, 2) if metragem and valor else 0
     m2p = round(pred / metragem, 2) if metragem and pred else 0
     arv = (max(m2p, p50) * metragem) if metragem and (m2p or p50) else 0
-    lucro = arv * 0.90 - valor if arv and valor else 0
+    custo_reforma = round(CUSTO_REFORMA_M2 * metragem, 2) if metragem else 0.0
+    lucro = arv * 0.90 - valor - custo_reforma if arv and valor else 0
     roi = (lucro / valor) if valor else 0.0
     return {
         **d,
@@ -75,6 +82,9 @@ def calcular_metricas_flip(dados: Dict[str, Any]) -> Dict[str, Any]:
         "discount_vs_predicao_pct": round((m2p - pm2) / m2p * 100, 2) if m2p else 0.0,
         "discount_vs_bairro_pct": round((p50 - pm2) / p50 * 100, 2) if p50 else 0.0,
         "arv_estimado": round(arv, 2),
+        "custo_reforma_estimado": custo_reforma,
+        "custo_reforma_por_m2": CUSTO_REFORMA_M2,
+        "lucro_projetado": round(lucro, 2),
         "roi_conservador": round(roi, 4),
         "passa_regra_15pct": bool(roi >= ROI_MINIMO),
     }

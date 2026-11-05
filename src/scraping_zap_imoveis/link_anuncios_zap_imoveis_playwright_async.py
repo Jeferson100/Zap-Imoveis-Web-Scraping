@@ -141,18 +141,18 @@ class ZapScraperLinksAsync:
             page = await self._context.new_page()
             try:
                 await page.add_init_script(ANTI_DETECT_JS)
-                await page.goto(url, wait_until="networkidle", timeout=60000)
-                await asyncio.sleep(random.uniform(2, 4))
-                await page.evaluate("window.scrollTo(0, document.body.scrollHeight / 3)")
-                await asyncio.sleep(random.uniform(0.5, 1.5))
-                await page.evaluate("window.scrollTo(0, document.body.scrollHeight * 2 / 3)")
-                await asyncio.sleep(random.uniform(0.5, 1.5))
-                await page.evaluate("window.scrollTo(0, document.body.scrollHeight)")
+                await self._navegar(page, url)
+                await self._rolar(page)
+                if await self._bloqueado_pelo_cloudflare(page):
+                    # Contexto já marcado: nenhum reload resolve (testado). Só
+                    # um browser novo passa, então falha rápido em vez de gastar
+                    # 30s nos wait_for_selector.
+                    raise RuntimeError("Cloudflare challenge (contexto bloqueado)")
                 seletores = ['li[data-cy="rp-property-cd"] a[href*="/imovel/"]', 'a[href*="/imovel/"]']
                 links = []
                 for seletor in seletores:
                     try:
-                        await page.wait_for_selector(seletor, timeout=15000)
+                        await page.wait_for_selector(seletor, timeout=10000)
                         links = await page.locator(seletor).evaluate_all("nodes => nodes.map(n => n.href)")
                         if links:
                             break
@@ -166,8 +166,48 @@ class ZapScraperLinksAsync:
                 logger.error(f"Tentativa {i+1} falhou para {url}: {e}")
             finally:
                 await page.close()
-            await asyncio.sleep(random.uniform(15, 30))
+            # Só vale esperar se ainda houver tentativa pela frente. Antes, com
+            # retries=1, dormia 15-30s depois da única tentativa e descartava a
+            # página sem nunca ler o DOM (que já estava renderizado).
+            if i + 1 < retries:
+                await asyncio.sleep(random.uniform(3, 6))
         return []
+
+    async def _navegar(self, page, url: str) -> None:
+        """Navega sem depender de networkidle.
+
+        No ZAP a rede nunca fica ociosa (ads, analytics, heartbeat) e o
+        networkidle estourava 60s em ~25% das páginas que já estavam
+        renderizadas. O conteúdo é SSR; o wait_for_selector em get_links é
+        quem garante que os cards chegaram.
+        """
+        try:
+            await page.goto(url, wait_until="domcontentloaded", timeout=45000)
+        except Exception as e:
+            # Timeout de navegação não significa página vazia: segue para o DOM.
+            logger.warning("goto lento em %s (%s); tentando ler o DOM mesmo assim", url, str(e)[:80])
+
+    @staticmethod
+    async def _bloqueado_pelo_cloudflare(page) -> bool:
+        try:
+            titulo = (await page.title()) or ""
+        except Exception:
+            return False
+        return any(
+            marca in titulo
+            for marca in ("Attention Required", "Just a moment", "Cloudflare")
+        )
+
+    async def _rolar(self, page) -> None:
+        await asyncio.sleep(random.uniform(1, 2))
+        try:
+            await page.evaluate("window.scrollTo(0, document.body.scrollHeight / 3)")
+            await asyncio.sleep(random.uniform(0.5, 1.5))
+            await page.evaluate("window.scrollTo(0, document.body.scrollHeight * 2 / 3)")
+            await asyncio.sleep(random.uniform(0.5, 1.5))
+            await page.evaluate("window.scrollTo(0, document.body.scrollHeight)")
+        except Exception as e:
+            logger.debug("Scroll falhou (página ainda carregando?): %s", e)
 
 
 if __name__ == "__main__":

@@ -444,7 +444,23 @@ class ZapScraperDadosImovelAsync:
             try:
                 await page.add_init_script(ANTI_DETECT_JS)
                 logger.info("Tentativa %d/%d — %s", tentativa, self.MAX_RETRIES, self.url)
-                await page.goto(self.url, wait_until="networkidle", timeout=30000)
+                # Mesmo motivo da listagem: networkidle nunca assenta no ZAP.
+                try:
+                    await page.goto(self.url, wait_until="domcontentloaded", timeout=45000)
+                except Exception as e:
+                    logger.warning("goto lento na página do imóvel (%s); tentando extrair assim mesmo", str(e)[:80])
+                # Garante que o bloco principal do anúncio já está no DOM antes
+                # de disparar as ~15 extrações em paralelo (cada uma com timeout
+                # de 3s, o que somava falhas em cascata quando a página atrasava).
+                try:
+                    await page.wait_for_selector(
+                        "h1.text-neutral-130, h2.text-neutral-130, "
+                        "[data-testid='description-content'], "
+                        "[data-testid='location-address']",
+                        timeout=15000,
+                    )
+                except Exception:
+                    logger.debug("Seletores principais não apareceram em 15s: %s", self.url)
                 dados = await self._extrair_dados_da_pagina(page)
                 logger.info("Dados extraídos com sucesso")
                 return dados

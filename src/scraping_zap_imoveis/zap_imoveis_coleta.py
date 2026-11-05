@@ -3,6 +3,7 @@ import time
 import logging
 import json
 import sys
+import unicodedata
 from .extrair_dados_zap_imoveis_playwright_async import ZapScraperDadosImovelAsync
 from .total_page_zap import TotalPageZap
 from .link_anuncios_zap_imoveis_playwright_async import ZapScraperLinksAsync
@@ -16,6 +17,24 @@ warnings.filterwarnings("ignore")
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
 
 logger = logging.getLogger(__name__)
+
+# Títulos que o ZAP serve quando o anúncio saiu do ar ou o id não existe.
+# Sem isso, a "página não disponível" entra como um imóvel com título e sem
+# nenhum outro campo.
+TITULOS_INVALIDOS = (
+    "nao esta mais disponivel",
+    "nao encontramos",
+    "pagina nao encontrada",
+    "imovel nao encontrado",
+)
+
+
+def _normalizar(texto: str) -> str:
+    return "".join(
+        c for c in unicodedata.normalize("NFD", texto.lower())
+        if unicodedata.category(c) != "Mn"
+    )
+
 
 class ZapImoveisColeta:
     def __init__(self, base_url_template, headless=True, max_concurrency=5, retries=1, max_concurrency_links=1):
@@ -46,10 +65,56 @@ class ZapImoveisColeta:
         
     async def _get_links_from_page(self, page_number):
         url = self.base_url_template.format(pagina=page_number)
+        # Browser novo por página é intencional: o Cloudflare do ZAP passa a
+        # devolver "Attention Required!" a partir da 2ª requisição feita no
+        # mesmo contexto (reload não resolve; só um browser/contexto novo).
         async with ZapScraperLinksAsync(headless=self.headless) as scanner:
             links = await scanner.get_links(url, retries= self.retries)
             logger.info(f"Página {page_number}: {len(links)} links encontrados.")
             return links
+
+    async def _coletar_links_de_todas_as_paginas(self, total_pages, limite_falhas):
+        """Coleta os links de todas as páginas, uma falha por vez."""
+        todos_os_links = []
+        contador_falhas = 0
+
+        for pagina in tqdm(range(1, total_pages + 1), desc="Coletando Links"):
+            logger.info(f"--- Obtendo links da Página {pagina}/{total_pages} ---")
+
+            # O Cloudflare às vezes derruba uma página isolada; como só um
+            # browser novo passa, a retentativa é no nível da página (e não
+            # dentro de get_links, que reusaria o contexto já marcado).
+            links = []
+            tentativas_por_pagina = 2 if self.retries > 0 else 1
+            for tentativa in range(1, tentativas_por_pagina + 1):
+                links = await self._get_links_from_page(pagina)
+                if links:
+                    break
+                if tentativa < tentativas_por_pagina:
+                    espera = random.uniform(5, 10)
+                    logger.warning(
+                        "Página %s sem links (tentativa %s/%s); novo browser em %.0fs",
+                        pagina, tentativa, tentativas_por_pagina, espera,
+                    )
+                    await asyncio.sleep(espera)
+
+            if links:
+                todos_os_links.extend(links)
+                logger.info(f"Página {pagina}: {len(links)} links encontrados.")
+                contador_falhas = 0  # Reseta o contador porque encontrou dados
+            else:
+                contador_falhas += 1
+                logger.warning(f"Página {pagina} não retornou links. Falhas consecutivas: {contador_falhas}")
+
+            # Verifica se deve parar a coleta de links
+            if contador_falhas >= limite_falhas:
+                logger.error(f"Interrompendo: {limite_falhas} páginas seguidas sem links. Iniciando extração do que foi coletado.")
+                break
+
+            # Pequeno delay aleatório para não ser bloqueado na listagem
+            await asyncio.sleep(random.uniform(1.5, 4))
+
+        return todos_os_links
     
     async def _get_links_from_page_smartphone(self, page_number, semaphore):
         """
@@ -77,7 +142,18 @@ class ZapImoveisColeta:
         async with semaphore:
             try:
                 async with ZapScraperDadosImovelAsync(url, headless=self.headless) as scraper:
-                    return await scraper.extrair()
+                    dados = await scraper.extrair()
+                # O extractor devolve DadosImovel(url=...) quando não consegue
+                # parsear nada, e uma página de anúncio removido devolve o
+                # título "Essa página não está mais disponível". Nos dois casos
+                # não há imóvel: entrar no parquet só infla a contagem e
+                # envenena o treino.
+                titulo = _normalizar(dados.titulo or "")
+                invalido = any(marca in titulo for marca in TITULOS_INVALIDOS)
+                if invalido or not (dados.titulo or dados.valor_imovel):
+                    logger.warning("Descartado registro inválido (%s): %s", dados.titulo or "sem título", url)
+                    return None
+                return dados
             except Exception as e:
                 logger.error(f"Erro ao extrair {url}: {e}")
                 return None
@@ -205,31 +281,8 @@ class ZapImoveisColeta:
         
         logger.info("Parametros recebidos: total_pages=%s, limite_falhas=%s, max_concurrency=%s, self.retries=%s", total_pages, limite_falhas, self.max_concurrency, self.retries)
         
-        todos_os_links = []
-        # --- Lógica de Interrupção ---
-        contador_falhas = 0
-
         # --- ETAPA 2: COLETAR APENAS OS LINKS ---
-        for pagina in tqdm(range(1, total_pages + 1), desc="Coletando Links"):
-            logger.info(f"--- Obtendo links da Página {pagina}/{total_pages} ---")
-            
-            links = await self._get_links_from_page(pagina)
-            
-            if links:
-                todos_os_links.extend(links)
-                logger.info(f"Página {pagina}: {len(links)} links encontrados.")
-                contador_falhas = 0  # Reseta o contador porque encontrou dados
-            else:
-                contador_falhas += 1
-                logger.warning(f"Página {pagina} não retornou links. Falhas consecutivas: {contador_falhas}")
-
-            # Verifica se deve parar a coleta de links
-            if contador_falhas >= limite_falhas:
-                logger.error(f"Interrompendo: {limite_falhas} páginas seguidas sem links. Iniciando extração do que foi coletado.")
-                break
-            
-            # Pequeno delay aleatório para não ser bloqueado na listagem
-            await asyncio.sleep(random.uniform(1.5, 4))
+        todos_os_links = await self._coletar_links_de_todas_as_paginas(total_pages, limite_falhas)
 
         # Remove duplicatas de links
         todos_os_links = list(set(todos_os_links))

@@ -13,8 +13,15 @@ from .react_agent_flip import (
 from .tools_flip import (
     calcular_metricas_flip, ajustar_saida_pela_regra,
     metricas_flip_tool, think_tool, ROI_MINIMO, limpar_nan,
+    CUSTO_REFORMA_M2,
 )
 from .trace_flip import TrilhaFlip, ExigePensamento
+from .langgraph_flip import (
+    GRAFO as grafo_loop_flip,
+    LoopFlipState,
+    avaliar_imovel_flip_loop,
+    verificar_veredito,
+)
 
 __all__ = [
     "grafo_principal", "EstadoGlobal",
@@ -27,5 +34,8 @@ __all__ = [
     "FALLBACK_SOMBRA",
     "calcular_metricas_flip", "ajustar_saida_pela_regra",
     "metricas_flip_tool", "think_tool", "ROI_MINIMO", "limpar_nan",
+    "CUSTO_REFORMA_M2",
     "TrilhaFlip", "ExigePensamento",
+    "grafo_loop_flip", "LoopFlipState", "avaliar_imovel_flip_loop",
+    "verificar_veredito",
 ]

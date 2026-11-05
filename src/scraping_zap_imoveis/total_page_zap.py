@@ -57,8 +57,14 @@ class TotalPageZap:
             try:
                 logger.info(f"Acessando Zap para calcular páginas: {url[:50]}...")
                 
-                # 'networkidle' é essencial aqui para esperar o contador renderizar
-                await page.goto(url, wait_until="networkidle", timeout=60000)
+                # O conteúdo é SSR; o wait_for em rp-searchTitle-txt abaixo é
+                # quem garante que o contador renderizou. 'networkidle' ficava
+                # pendurado nas requisições de ads/analytics e estourava 60s,
+                # derrubando este passo no fallback de 50 páginas.
+                try:
+                    await page.goto(url, wait_until="domcontentloaded", timeout=45000)
+                except Exception as e:
+                    logger.warning("goto lento no cálculo de páginas (%s); seguindo para o contador", str(e)[:80])
 
                 # Seletor baseado no data-cy (mais estável no Zap)
                 locator_total = page.locator('[data-cy="rp-searchTitle-txt"]')

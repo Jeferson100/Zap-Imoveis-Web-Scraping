@@ -141,13 +141,8 @@ class VivaRealScraperLinksAsync:
             page = await self._context.new_page()
             try:
                 await page.add_init_script(ANTI_DETECT_JS)
-                await page.goto(url, wait_until="networkidle", timeout=60000)
-                await asyncio.sleep(random.uniform(2, 4))
-                await page.evaluate("window.scrollTo(0, document.body.scrollHeight / 3)")
-                await asyncio.sleep(random.uniform(0.5, 1.5))
-                await page.evaluate("window.scrollTo(0, document.body.scrollHeight * 2 / 3)")
-                await asyncio.sleep(random.uniform(0.5, 1.5))
-                await page.evaluate("window.scrollTo(0, document.body.scrollHeight)")
+                await self._navegar(page, url)
+                await self._rolar(page)
                 seletores = ['li[data-cy="rp-property-cd"] a[href*="/imovel/"]', 'a[href*="/imovel/"]']
                 links = []
                 for seletor in seletores:
@@ -166,8 +161,33 @@ class VivaRealScraperLinksAsync:
                 logger.error(f"Tentativa {i+1} falhou para {url}: {e}")
             finally:
                 await page.close()
-            await asyncio.sleep(random.uniform(15, 30))
+            # Só vale esperar se ainda houver tentativa pela frente (ver o
+            # mesmo ajuste em link_anuncios_zap_imoveis_playwright_async.py).
+            if i + 1 < retries:
+                await asyncio.sleep(random.uniform(3, 6))
         return []
+
+    async def _navegar(self, page, url: str) -> None:
+        """Navega sem depender de networkidle.
+
+        O Viva Real é o mesmo motor do ZAP e mantém requisições em voo
+        indefinidamente; o wait_for_selector em get_links já espera o conteúdo.
+        """
+        try:
+            await page.goto(url, wait_until="domcontentloaded", timeout=45000)
+        except Exception as e:
+            logger.warning("goto lento em %s (%s); tentando ler o DOM mesmo assim", url, str(e)[:80])
+
+    async def _rolar(self, page) -> None:
+        await asyncio.sleep(random.uniform(1, 2))
+        try:
+            await page.evaluate("window.scrollTo(0, document.body.scrollHeight / 3)")
+            await asyncio.sleep(random.uniform(0.5, 1.5))
+            await page.evaluate("window.scrollTo(0, document.body.scrollHeight * 2 / 3)")
+            await asyncio.sleep(random.uniform(0.5, 1.5))
+            await page.evaluate("window.scrollTo(0, document.body.scrollHeight)")
+        except Exception as e:
+            logger.debug("Scroll falhou (página ainda carregando?): %s", e)
 
 
 if __name__ == "__main__":

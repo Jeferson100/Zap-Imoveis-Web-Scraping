@@ -18,14 +18,40 @@ from agente_potencial_flip.tools_flip import (
 
 def test_metricas_regra_15pct_aprovado():
     m = calcular_metricas_flip({
-        "valor_imovel": 300000, "metragem": 100,
+        "valor_imovel": 200000, "metragem": 100,
+        "valor_predito": 600000, "p50_bairro": 4800,
+    })
+    assert m["preco_por_m2"] == 2000.0
+    assert m["valor_m2_predicao"] == 6000.0
+    assert m["arv_estimado"] == 600000
+    # 600k * 0.90 - 200k (compra) - 150k (reforma 1500/m2 * 100m2)
+    assert m["custo_reforma_estimado"] == 150000.0
+    assert m["lucro_projetado"] == 190000.0
+    assert m["roi_conservador"] == 0.95
+    assert m["passa_regra_15pct"] is True
+
+
+def test_custo_reforma_1500_por_m2():
+    m = calcular_metricas_flip({
+        "valor_imovel": 200000, "metragem": 80, "valor_predito": 600000,
+    })
+    assert m["custo_reforma_por_m2"] == 1500.0
+    assert m["custo_reforma_estimado"] == 120000.0
+    assert m["lucro_projetado"] == 600000 * 0.90 - 200000 - 120000
+    sem_area = calcular_metricas_flip({"valor_imovel": 200000})
+    assert sem_area["custo_reforma_estimado"] == 0.0
+
+
+def test_custo_reforma_reprova_imovel_que_passaria():
+    """Reforma explicita derruba ROI de imovel que passava sem ela."""
+    m = calcular_metricas_flip({
+        "valor_imovel": 380000, "metragem": 100,
         "valor_predito": 500000, "p50_bairro": 4800,
     })
-    assert m["preco_por_m2"] == 3000.0
-    assert m["valor_m2_predicao"] == 5000.0
-    assert m["arv_estimado"] == 500000
-    assert m["roi_conservador"] == 0.5
-    assert m["passa_regra_15pct"] is True
+    # sem reforma: 450000 - 380000 = 70000 -> roi 0.18
+    # com reforma: 450000 - 380000 - 150000 = -80000 -> reprova
+    assert m["lucro_projetado"] == -80000.0
+    assert m["passa_regra_15pct"] is False
 
 
 def test_metricas_regra_15pct_reprovado():
@@ -45,12 +71,14 @@ def test_metricas_sem_metragem_nao_quebra():
 def test_metricas_nan_valor_predito_cai_no_bairro():
     """valor_predito nulo NAO pode reprovar o imovel nem vazar NaN."""
     m = calcular_metricas_flip({
-        "valor_imovel": 300000, "metragem": 100,
+        "valor_imovel": 200000, "metragem": 100,
         "valor_predito": float("nan"), "p50_bairro": 4800,
     })
     assert m["valor_m2_predicao"] == 0
     assert m["arv_estimado"] == 480000  # 4800 * 100, benchmark do bairro
-    assert m["roi_conservador"] == 0.44
+    # 480k * 0.90 - 200k - 150k (reforma) = 82k -> roi 0.41
+    assert m["lucro_projetado"] == 82000.0
+    assert m["roi_conservador"] == 0.41
     assert m["passa_regra_15pct"] is True
 
 
@@ -142,7 +170,7 @@ def test_fallback_leva_metricas(monkeypatch):
     monkeypatch.setattr(react_agent_flip.agente_react_flip, "ainvoke", _boom)
     monkeypatch.setattr(react_agent_flip.asyncio, "sleep", _nosleep)
     out = asyncio.run(react_agent_flip.avaliar_imovel_react(
-        {"dados_imovel": {"valor_imovel": 300000, "metragem": 100,
+        {"dados_imovel": {"valor_imovel": 200000, "metragem": 100,
                           "valor_predito": 500000}}
     ))
     assert out["metricas_flip"]["passa_regra_15pct"] is True

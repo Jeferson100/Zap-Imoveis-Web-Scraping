@@ -294,6 +294,38 @@ class OLXScraperAsync:
                 return [], []
         return priv, comum
 
+    CAMPOS_NUMERICOS = (
+        "valor_imovel", "metragem", "quartos", "banheiros",
+        "vagas", "condominio", "iptu",
+    )
+
+    @staticmethod
+    def _completar_com_html(dados: "DadosImovel", via_html: dict) -> None:
+        """Preenche o que o DOM não encontrou, sem sobrescrever o que encontrou.
+
+        O HTML server-rendered (JSON-LD/dataLayer) muda muito menos que os
+        seletores CSS — é a mesma fonte que gerou os dados completos de outubro.
+        """
+        def vazio(valor):
+            return valor is None or valor == "" or valor == [] or valor == 0
+
+        for campo in DadosImovel.__dataclass_fields__:
+            if campo == "url":
+                continue
+            valor_html = via_html.get(campo)
+            if valor_html is None or valor_html == []:
+                continue
+            if vazio(getattr(dados, campo)):
+                setattr(dados, campo, valor_html)
+
+        # A via Playwright devolve string ("50"), a via HTML devolve int (50).
+        # Sem normalizar, a mesma coluna vira object no parquet.
+        for campo in OLXScraperAsync.CAMPOS_NUMERICOS:
+            valor = getattr(dados, campo)
+            if isinstance(valor, str):
+                digitos = re.sub(r"\D", "", valor)
+                setattr(dados, campo, int(digitos) if digitos else None)
+
     async def _extrair_dados_da_pagina(self, url: str) -> DadosImovel:
         (
             metragem_raw,
@@ -326,7 +358,7 @@ class OLXScraperAsync:
         valor_imovel = await self._get_valor_imovel()
         priv, comum = await self._extrair_caracteristicas()
 
-        return DadosImovel(
+        dados = DadosImovel(
             url=url,
             titulo=titulo,
             valor_imovel=valor_imovel,
@@ -345,7 +377,18 @@ class OLXScraperAsync:
             caracteristicas_comum=comum,
         )
 
-    async def extrair_anuncio(self, url: str) -> dict:
+        try:
+            via_html = self._parse_html_anuncio(url, await self._page.content())
+        except Exception as e:
+            logger.warning("Parse do HTML falhou em %s: %s", url, e)
+            via_html = None
+
+        if via_html:
+            self._completar_com_html(dados, via_html)
+
+        return dados
+
+    async def extrair_anuncio(self, url: str) -> Optional[dict]:
         dados = await self._extrair_anuncio_curl(url)
         if dados is not None:
             logger.info("Anúncio extraído via curl_cffi: %s", url)
@@ -529,7 +572,7 @@ class OLXScraperAsync:
     # ---------------------------------------------------------------
     # Fallback: Playwright (implementação original)
     # ---------------------------------------------------------------
-    async def _extrair_anuncio_playwright(self, url: str) -> dict:
+    async def _extrair_anuncio_playwright(self, url: str) -> Optional[dict]:
         await self._ensure_browser()
         for tentativa in range(1, self.MAX_RETRIES + 1):
             try:
@@ -542,7 +585,10 @@ class OLXScraperAsync:
                 await asyncio.sleep(random.uniform(0.1, 0.5)) 
                 
                 dados = await self._extrair_dados_da_pagina(url)
-                logger.info(f"Sucesso: {dados.titulo[:30]}...")
+                # titulo é None quando o seletor de título falha (layout novo da
+                # OLX). O slice em None levantava TypeError e mandava um registro
+                # já extraído para o except — que devolvia a casca vazia.
+                logger.info(f"Sucesso: {(dados.titulo or url)[:30]}...")
                 return dados.to_dict()
 
             except Exception as e:
@@ -551,7 +597,10 @@ class OLXScraperAsync:
                     await asyncio.sleep(self.RETRY_DELAY * tentativa)
                 else:
                     logger.error(f"Falha definitiva em {url}")
-                    return DadosImovel(url=url).to_dict()
+                    # None é ignorado pelo worker (olx_coleta.py:249).
+                    # Devolver DadosImovel(url=url) gravava 17 campos default
+                    # no JSON e contava como "imóvel processado".
+                    return None
 
 if __name__ == "__main__":
     async def main():
