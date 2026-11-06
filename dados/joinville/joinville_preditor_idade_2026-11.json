@@ -1,0 +1,52 @@
+{
+  "modelo": "catboost",
+  "params": {
+    "iterations": 150,
+    "depth": 8,
+    "learning_rate": 0.18826185915538232,
+    "l2_leaf_reg": 1.0960170340889996,
+    "subsample": 0.8953622178900082
+  },
+  "features_numericas": [
+    "metragem",
+    "quartos",
+    "vagas",
+    "valor_imovel",
+    "condominio",
+    "preco_por_m2",
+    "dias_publicacao",
+    "quartos_por_metro",
+    "vagas_por_metro",
+    "n_carac_comum",
+    "n_carac_privada",
+    "comum_elevador",
+    "comum_piscina",
+    "comum_churrasqueira_parrilla",
+    "comum_playground",
+    "comum_fitness_sala_de_ginastica",
+    "priv_varanda",
+    "priv_lavanderia",
+    "priv_piscina",
+    "priv_ar_condicionado"
+  ],
+  "features_categoricas": [
+    "bairro",
+    "tipo_imovel"
+  ],
+  "metricas_cv": {
+    "rmse": 3.4766914520104146,
+    "n_folds": 5,
+    "n_trials": 80
+  },
+  "metricas_teste": {
+    "rmse": 1.3209982059773593,
+    "mae": 0.6471159873984577,
+    "mape": Infinity,
+    "mdape": 3.8899213172977434,
+    "r2": 0.9873184929395745,
+    "rmsle": 0.23528469177731773
+  },
+  "n_amostras": 4290,
+  "data_treino": "2026-11-06T10:14:49.667152",
+  "arquivo_dados": "C:\\Users\\jefer\\Documents\\Ciencia-de-dados\\Preco-Imoveis\\dados\\joinville\\joinville_imovelweb_2026-11.parquet"
+}
