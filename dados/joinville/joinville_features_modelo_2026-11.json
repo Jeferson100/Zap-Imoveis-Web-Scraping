@@ -50,12 +50,12 @@
   "best_params": {
     "n_estimators": 200,
     "max_depth": 8,
-    "learning_rate": 0.08103420951613498,
-    "subsample": 0.9320778693782682,
-    "min_samples_leaf": 2
+    "learning_rate": 0.07632587134256504,
+    "subsample": 0.8249437992177742,
+    "min_samples_leaf": 1
   },
-  "rmse_otimizado": 420822.01957026956,
-  "r2_otimizado": 0.8528474898057359,
-  "mes_ref": "2026-10",
-  "data_treino": "2026-10-05T22:12:59.423470"
+  "rmse_otimizado": 444862.8022886305,
+  "r2_otimizado": 0.8324611447711183,
+  "mes_ref": "2026-11",
+  "data_treino": "2026-11-06T06:07:58.711497"
 }
