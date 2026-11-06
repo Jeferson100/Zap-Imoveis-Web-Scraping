@@ -86,11 +86,22 @@ on:
         required: false
         type: string
         default: "false"
-      
+      # Jobs de treino/análise (preditor de idade, junção, limpeza) não abrem
+      # navegador. Instalar o Chromium neles custa vários minutos, é o passo
+      # mais frágil do pipeline (apt + download de ~150MB) e já travou um run
+      # por 6h até o limite do GitHub.
+      instalar_playwright:
+        required: false
+        type: boolean
+        default: true
+
 
 jobs:
   build:
     runs-on: ubuntu-latest
+    # Sem isso vale o default de 360 min: um hang em qualquer step (já
+    # aconteceu no `playwright install`) segura a cadeia workflow_run por 6h.
+    timeout-minutes: 90
     steps:
       - name: Copia os arquivos do repo
         uses: actions/checkout@v4
@@ -133,11 +144,49 @@ jobs:
           source .venv/bin/activate
           make uv_install
 
-      - name: Instalar o Playwright
+      - name: Instalar o projeto
+        # `-e .` instala os pacotes de src/ (scraping_zap_imoveis, agente_*,
+        # shared). Isto NÃO é redundante com `make uv_install`, que só resolve
+        # as dependências da pyproject. O que era redundante era o
+        # `uv pip install playwright` que existia aqui.
+        run: uv pip install -e .
+
+      - name: Descobrir versao do Playwright
+        id: playwright_versao
+        if: ${{ inputs.instalar_playwright }}
         run: |
-          uv pip install -e .
-          uv pip install playwright
-          uv run playwright install --with-deps chromium
+          VERSAO=$(.venv/bin/playwright --version | tr -dc 'a-zA-Z0-9._-')
+          echo "versao=$VERSAO" >> "$GITHUB_OUTPUT"
+          echo "Playwright instalado: $VERSAO"
+
+      - name: Cache dos browsers do Playwright
+        if: ${{ inputs.instalar_playwright }}
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          # Chave pela versão instalada: `playwright>=1.58.0` flutua, então um
+          # hash de pyproject/uv.lock acertaria o cache com o browser errado.
+          key: ${{ runner.os }}-playwright-${{ steps.playwright_versao.outputs.versao }}
+          restore-keys: |
+            ${{ runner.os }}-playwright-
+
+      - name: Instalar o Chromium do Playwright
+        if: ${{ inputs.instalar_playwright }}
+        timeout-minutes: 15
+        env:
+          DEBIAN_FRONTEND: noninteractive
+        run: |
+          # O apt é o ponto frágil deste step: espelho lento ou lock do dpkg
+          # travam sem emitir nada, e foi assim que um run ficou 6h parado.
+          # Os timeouts abaixo transformam a espera infinita em falha rápida.
+          sudo apt-get update \
+            -o Acquire::http::Timeout=30 \
+            -o Acquire::https::Timeout=30 \
+            -o Acquire::Retries=3
+          # --no-sync: o `uv run` sincroniza com o uv.lock e pode trocar a
+          # versão do Playwright no meio do step, instalando um browser
+          # diferente do que gerou a chave do cache.
+          timeout 600 uv run --no-sync playwright install --with-deps chromium
 
       - name: Rodar o código do imóvel
         if: ${{ inputs.arquivo_rodando_imovel != '' }}

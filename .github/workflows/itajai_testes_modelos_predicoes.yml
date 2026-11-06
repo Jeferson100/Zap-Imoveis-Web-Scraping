@@ -12,6 +12,7 @@ jobs:
         with:
             cidade_pasta: itajai
             arquivo_rodando_imovel: itajai_melhores_configuraoes_modelo.py
+            instalar_playwright: false
             DATABRICKS_HOST: "https://dbc-ed602b14-1f14.cloud.databricks.com"
             LOCALIZAZAO_COMPLETA : "Itajai, Santa Catarina, Brasil"
         secrets: inherit

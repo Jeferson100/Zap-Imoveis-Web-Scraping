@@ -12,6 +12,7 @@ jobs:
         with:
             cidade_pasta: balneario_picaras
             arquivo_rodando_imovel: balneario_picaras_melhores_configuraoes_modelo.py
+            instalar_playwright: false
             DATABRICKS_HOST: "https://dbc-ed602b14-1f14.cloud.databricks.com"
             LOCALIZAZAO_COMPLETA : "Balneario Picarras, Santa Catarina, Brasil"
         secrets: inherit

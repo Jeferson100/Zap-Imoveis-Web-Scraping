@@ -13,5 +13,6 @@ jobs:
     with:
       cidade_pasta: rio_janeiro
       arquivo_rodando_imovel: rio_janeiro_otimizando_melhores_modelos.py
+      instalar_playwright: false
       bairro: tijuca
     secrets: inherit

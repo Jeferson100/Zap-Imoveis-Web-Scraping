@@ -13,5 +13,6 @@ jobs:
     with:
       cidade_pasta: sao_paulo
       arquivo_rodando_imovel: sao_paulo_otimizando_melhores_modelos.py
+      instalar_playwright: false
       bairro: moema
     secrets: inherit

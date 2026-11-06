@@ -16,6 +16,8 @@ jobs:
       cidade_localizacao: Joinville
       estado_limpeza: sc
       estado_localizacao: SC
+      # Junção/limpeza/preditor não abrem navegador nenhum.
+      instalar_playwright: false
     secrets: inherit
 
   limpeza:
@@ -31,6 +33,7 @@ jobs:
       # A junção empurra os brutos para o main durante ESTE run; sem isso o
       # checkout ficaria no SHA antigo e a limpeza não veria os arquivos.
       checkout_ref: refs/heads/main
+      instalar_playwright: false
     secrets: inherit
 
   preditor_idade:
@@ -44,4 +47,5 @@ jobs:
       estado_limpeza: sc
       estado_localizacao: SC
       checkout_ref: refs/heads/main
+      instalar_playwright: false
     secrets: inherit
