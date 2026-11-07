@@ -99,9 +99,6 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
-    # Sem isso vale o default de 360 min: um hang em qualquer step (já
-    # aconteceu no `playwright install`) segura a cadeia workflow_run por 6h.
-    timeout-minutes: 90
     steps:
       - name: Copia os arquivos do repo
         uses: actions/checkout@v4
