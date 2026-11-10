@@ -98,3 +98,8 @@ include = [
     "roteador_llms*",
     "shared*",
 ]
+
+[dependency-groups]
+dev = [
+    "opencode-ai==0.1.0a36",
+]

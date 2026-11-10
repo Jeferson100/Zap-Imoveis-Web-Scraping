@@ -37,6 +37,12 @@
       "skillPath": "config/skills/ecosystem-primer/SKILL.md",
       "computedHash": "cdcbe9115ec444518fc963fa1a5425aacad984f2b03c5e56980e4f9ad3888bc1"
     },
+    "engineering-features-for-machine-learning": {
+      "source": "jeremylongshore/tons-of-skills-marketplace",
+      "sourceType": "github",
+      "skillPath": "skills/.curated/engineering-features-for-machine-learning/SKILL.md",
+      "computedHash": "69b35b03dd47d323cf284f2c1d5cc0cba720666d7bc4db747b461e969f60cbb8"
+    },
     "eval-engineering": {
       "source": "langchain-ai/langchain-skills",
       "sourceType": "github",
