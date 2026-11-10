@@ -1,5 +1,10 @@
+import logging
+import re
+
 import pandas as pd
 import numpy as np
+
+logger = logging.getLogger(__name__)
 
 PADRAO_NOVO_LANCAMENTO = r'''
     \bnovo\b|\bnova\b|\blan[çc]amento\b|\bpr[eé]-?lan[çc]amento\b|
@@ -198,7 +203,142 @@ def criar_clusters_bairro(train, test, random_state=42, save_path=None):
     return train, test
 
 
-def engenharia_features_completa(train, test):
+# ── Score de texto ────────────────────────────────────────────────────────────
+# Versao da limpeza. Se os regex mudarem, incrementar: treino e inferencia
+# precisam usar exatamente a mesma transformacao, senao a feature deriva em
+# silencio.
+SCORE_TEXTO_VERSAO = 1
+
+_RE_MOEDA = re.compile(r"R\$\s*[\d\.,]*", re.IGNORECASE)
+_RE_PALAVRA_PRECO = re.compile(
+    r"\b(valor|pre[çc]o|reais?|mil|milh[ãa]o|milh[õo]es)\b", re.IGNORECASE
+)
+_RE_NUMEROS = re.compile(r"\d[\d\.,]*")
+
+
+def _texto_limpo(df):
+    """Titulo + descricao sem numeros, 'R$' e palavras de preco.
+
+    24% das descricoes contem o proprio valor do imovel e 28% trazem 'R$'.
+    Sem essa limpeza o modelo aprende a ler o preco escrito no anuncio em vez
+    das caracteristicas do imovel (vazamento do alvo).
+    """
+    n = len(df)
+    titulo = (
+        df["titulo"].fillna("").astype(str).to_numpy()
+        if "titulo" in df.columns
+        else np.full(n, "", dtype=object)
+    )
+    descricao = (
+        df["descricao"].fillna("").astype(str).to_numpy()
+        if "descricao" in df.columns
+        else np.full(n, "", dtype=object)
+    )
+    texto = pd.Series(titulo + " " + descricao, dtype="object")
+    texto = texto.str.replace(_RE_MOEDA, " ", regex=True)
+    texto = texto.str.replace(_RE_PALAVRA_PRECO, " ", regex=True)
+    return texto.str.replace(_RE_NUMEROS, " ", regex=True)
+
+
+def _ajustar_score_texto(train, alpha, max_features):
+    """Ajusta TF-IDF + Ridge no treino e devolve (artefato, X, y, mascara_valida)."""
+    from sklearn.feature_extraction.text import TfidfVectorizer
+    from sklearn.linear_model import Ridge
+
+    y = np.log1p(
+        pd.to_numeric(train["valor_imovel"], errors="coerce").values.astype(float)
+    )
+    valido = np.isfinite(y)
+    if valido.sum() < 10:
+        raise ValueError(
+            "score_texto: treino com menos de 10 valores validos de valor_imovel"
+        )
+
+    vec = TfidfVectorizer(
+        max_features=max_features, ngram_range=(1, 2), min_df=3, sublinear_tf=True,
+    )
+    X = vec.fit_transform(_texto_limpo(train))
+    ridge = Ridge(alpha=alpha).fit(X[valido], y[valido])
+
+    artefato = {
+        "vectorizer": vec,
+        "ridge": ridge,
+        "alpha": alpha,
+        "versao": SCORE_TEXTO_VERSAO,
+        "target_transform": "log1p",
+    }
+    return artefato, X, y, valido
+
+
+def treinar_score_texto(train, alpha=3.0, max_features=20000):
+    """Ajusta o modelo de texto no treino e devolve apenas o artefato serializavel."""
+    artefato, _, _, _ = _ajustar_score_texto(train, alpha, max_features)
+    return artefato
+
+
+def aplicar_score_texto(df, artefato):
+    """Aplica um artefato ja treinado (teste, dataset completo ou anuncio novo)."""
+    X = artefato["vectorizer"].transform(_texto_limpo(df))
+    return artefato["ridge"].predict(X)
+
+
+def criar_score_texto(train, test, alpha=3.0, random_state=42, n_splits=5,
+                      max_features=20000, save_path=None):
+    """Feature `score_texto`: previsao do log do preco a partir do texto.
+
+    - treino: valor out-of-fold (KFold), para que cada imovel seja previsto por
+      um modelo que nao o viu;
+    - teste/inferencia: previsao do Ridge ajustado no treino inteiro.
+
+    `save_path` (opcional) grava o artefato em joblib; sem ele nao ha como
+    calcular a feature em anuncios novos.
+    """
+    from sklearn.model_selection import KFold
+    from sklearn.linear_model import Ridge
+    import joblib
+
+    if "valor_imovel" not in train.columns or "descricao" not in train.columns:
+        logger.warning(
+            "score_texto nao criado: faltam 'valor_imovel' e/ou 'descricao'"
+        )
+        return train, test, None
+
+    n_validos = int(
+        np.isfinite(
+            pd.to_numeric(train["valor_imovel"], errors="coerce").values.astype(float)
+        ).sum()
+    )
+    if n_validos < 10:
+        logger.warning(
+            "score_texto nao criado: apenas %d valores validos de valor_imovel",
+            n_validos,
+        )
+        return train, test, None
+
+    artefato, X, y, valido = _ajustar_score_texto(train, alpha, max_features)
+
+    n_splits = max(2, min(int(n_splits), int(valido.sum())))
+    oof = np.full(X.shape[0], np.nan, dtype=float)
+    for idx_fit, idx_pred in KFold(
+        n_splits, shuffle=True, random_state=random_state
+    ).split(X):
+        mask = valido[idx_fit]
+        if mask.sum() < 2:
+            continue
+        fold = Ridge(alpha=alpha).fit(X[idx_fit][mask], y[idx_fit][mask])
+        oof[idx_pred] = fold.predict(X[idx_pred])
+
+    train["score_texto"] = oof
+    test["score_texto"] = aplicar_score_texto(test, artefato)
+
+    if save_path:
+        joblib.dump(artefato, save_path)
+        logger.info("Modelo de score_texto salvo: %s", save_path)
+
+    return train, test, artefato
+
+
+def engenharia_features_completa(train, test, score_texto_path=None):
     """Aplica todas as funcoes de engenharia de features."""
     train, test = criar_features_bairro(train, test)
     train, test = criar_razoes(train, test)
@@ -207,4 +347,5 @@ def engenharia_features_completa(train, test):
     train, test = extrair_sem_rua(train, test)
     train, test = extrair_amenidades_train_test(train, test)
     train, test = criar_clusters_bairro(train, test)
+    train, test, _ = criar_score_texto(train, test, save_path=score_texto_path)
     return train, test

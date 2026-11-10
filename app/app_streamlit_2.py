@@ -136,7 +136,18 @@ def carregar_modelo_e_stats(pasta, prefixo_name):
         topicos_path = pasta / f"{prefixo_name}_topicos_modelo.pkl"
         topicos_data = joblib.load(topicos_path) if topicos_path.exists() else None
 
-    return modelo, bairro_stats, mes_ref, preditor, feature_names_modelo, km_cluster, scaler_cluster, target_transform, topicos_data
+    # ── Carregar modelo de score de texto (TfidfVectorizer + Ridge) ──
+    score_texto_data = None
+    if "score_texto" in feature_names_modelo:
+        score_texto_path = pasta / f"{prefixo_name}_score_texto_{mes_ref}.pkl"
+        if score_texto_path.exists():
+            score_texto_data = joblib.load(score_texto_path)
+        else:
+            st.warning(
+                "Modelo de score de texto nao encontrado — usando a media do bairro."
+            )
+
+    return modelo, bairro_stats, mes_ref, preditor, feature_names_modelo, km_cluster, scaler_cluster, target_transform, topicos_data, score_texto_data
 
 
 def montar_features_predicao(metragem, quartos, banheiros, vagas,
@@ -272,7 +283,7 @@ DERIVADAS_PRED = {'lat', 'lng', 'dist_centro', 'dist_centro_faixa',
     'metro_quadrado_bairro_mean', 'metro_quadrado_bairro_median', 'valor_bairro_mean',
     'bairro_rank', 'bairro_cluster', 'quartos_por_metro', 'vagas_por_metro',
     'banheiros_por_quarto', 'sem_rua', 'componente_0', 'componente_1',
-    'componente_2', 'componente_3'}
+    'componente_2', 'componente_3', 'score_texto'}
 
 # feature -> (tipo_widget, rotulo, args). Feature futura desconhecida: number genérico.
 WIDGETS_PRED = {
@@ -310,7 +321,7 @@ def gerar_pagina_predicao(cidade_path, prefixo_name, cidade_nome_poi):
     pasta = Path(__file__).resolve().parent.parent / 'dados' / cidade_path
     pasta.mkdir(parents=True, exist_ok=True)
 
-    modelo, bairro_stats, mes_ref, preditor, feature_names, km_cluster, scaler_cluster, target_transform, topicos_data = carregar_modelo_e_stats(pasta, prefixo_name)
+    modelo, bairro_stats, mes_ref, preditor, feature_names, km_cluster, scaler_cluster, target_transform, topicos_data, score_texto_data = carregar_modelo_e_stats(pasta, prefixo_name)
 
     indices = None
     try:
@@ -401,9 +412,15 @@ def gerar_pagina_predicao(cidade_path, prefixo_name, cidade_nome_poi):
             extras['suites'] = suites_val
 
         modelo_precisa_topicos = any(c.startswith("componente_") for c in feature_names)
-        if modelo_precisa_topicos:
+        modelo_precisa_score_texto = 'score_texto' in feature_names
+        if modelo_precisa_topicos or modelo_precisa_score_texto:
+            ajuda = []
+            if modelo_precisa_topicos:
+                ajuda.append("topicos NMF")
+            if modelo_precisa_score_texto:
+                ajuda.append("score de texto")
             descricao = st.text_area("Descricao (opcional)", height=100,
-                                     help="Descricao do imovel — usada para topicos NMF. Quanto mais detalhes, melhor.")
+                                     help=f"Descricao do imovel — usada para {', '.join(ajuda)}. Quanto mais detalhes, melhor.")
         else:
             descricao = ""
 
@@ -437,6 +454,15 @@ def gerar_pagina_predicao(cidade_path, prefixo_name, cidade_nome_poi):
 
         if modelo_precisa_topicos and topicos_data is not None:
             _aplicar_topicos_descricao(descricao, topicos_data, X_pred)
+
+        if 'score_texto' in feature_names and score_texto_data is not None:
+            if descricao and descricao.strip():
+                from funcoes_engenharia_features import aplicar_score_texto
+                X_pred['score_texto'] = aplicar_score_texto(
+                    pd.DataFrame({'descricao': [descricao]}), score_texto_data
+                )[0]
+            elif 'score_texto' not in X_pred.columns:
+                X_pred['score_texto'] = 0.0
 
         for c in TOPIC_COLS:
             if c not in X_pred.columns:

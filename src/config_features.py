@@ -19,6 +19,10 @@ NUMERIC_FEATURES = [
     
     # NOVA - SUITES
     "suites",
+
+    # NOVA - SCORE DE TEXTO (TfidfVectorizer + Ridge sobre titulo+descricao)
+    # OOF no treino; em producao precisa do artefato {cidade}_score_texto_{mes}.pkl
+    "score_texto",
 ]
 
 CATEGORICAL_FEATURES = [

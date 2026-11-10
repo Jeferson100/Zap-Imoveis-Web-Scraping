@@ -289,7 +289,10 @@ def treinar_melhor_modelo_geral(
     )
     df_filtrado = df_full[mask].copy()
     df_filtrado = df_filtrado.dropna(subset=["valor_imovel"])
-    df_filtrado, _ = engenharia_features_completa(df_filtrado, df_filtrado.copy())
+    score_texto_path = pasta_dados / f"{cidade}_score_texto_{mes_ref}.pkl"
+    df_filtrado, _ = engenharia_features_completa(
+        df_filtrado, df_filtrado.copy(), score_texto_path=score_texto_path
+    )
 
     # ── 10b. Salvar bairro_stats para o Streamlit ─────────────────────
     bairro_stats = df_filtrado.groupby('bairro').agg(
@@ -345,6 +348,10 @@ def treinar_melhor_modelo_geral(
         if f.name != cluster_path.name:
             f.unlink()
             logger.info("Cluster models anterior removido: %s", f.name)
+    for f in pasta_dados.glob(f"{cidade}_score_texto_*.pkl"):
+        if f.name != score_texto_path.name:
+            f.unlink()
+            logger.info("Score de texto anterior removido: %s", f.name)
     if incluir_topicos:
         for f in pasta_dados.glob(f"{cidade}_topicos_modelo.pkl"):
             if topicos_path and f.name != topicos_path.name:
