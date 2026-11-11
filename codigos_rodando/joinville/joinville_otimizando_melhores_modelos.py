@@ -27,6 +27,11 @@ cidade_nome = os.getenv("LOCALIZAZAO_COMPLETA", "Joinville, Santa Catarina, Bras
 
 N_TRIALS = int(os.getenv("N_TRIALS_OPTUNA", "300"))
 
+# Teto de tempo da otimizacao. O job do Actions morre em 6h; sem esse teto a
+# busca era interrompida no meio e o "Commit e Push" (que roda depois) nunca
+# executava — 6h de compute resultavam em zero artefatos.
+MAX_HORAS = float(os.getenv("MAX_HORAS_OTIMIZACAO", "4.5"))
+
 SELECTION_MODE = os.getenv("SELECTION_MODE", "combinado")
 
 TOP_K = int(os.getenv("TOP_K", "5"))
@@ -71,6 +76,7 @@ resultados = otimizar_melhores_incrementos(
     top_k=TOP_K,
     top_k_modelo=TOP_K_MODELO,
     incluir_mlp=INCLUIR_MLP,
+    max_horas=MAX_HORAS,
 )
 
 if not resultados.empty:

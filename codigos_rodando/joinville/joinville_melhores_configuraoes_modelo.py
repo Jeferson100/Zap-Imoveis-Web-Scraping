@@ -93,7 +93,7 @@ mlf = MLflowManager(
 
 mlf.conectar()
 
-DELETAR_RUNS = True
+DELETAR_RUNS = os.getenv("DELETAR_RUNS", "true").lower() == "true"
 if DELETAR_RUNS:
     from selecao_modelos_mlflow import deletar_runs_experimento
     deletar_runs_experimento(

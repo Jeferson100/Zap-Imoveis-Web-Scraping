@@ -1,5 +1,6 @@
 import json
 import logging
+import time
 import pandas as pd
 import numpy as np
 import optuna
@@ -203,8 +204,23 @@ def carregar_dados(pasta_dados, mes_ref, cidade, cidade_nome=None):
     if train_path.exists() and test_path.exists():
         train = pd.read_parquet(train_path)
         test  = pd.read_parquet(test_path)
-        logger.info("Dados carregados do cache: treino %s, teste %s", len(train), len(test))
-        return train, test
+        # O cache e um contrato implicito: se uma feature nova foi adicionada em
+        # config_features e o parquet e antigo, carrega-lo em silencio faria a
+        # feature desaparecer do modelo sem nenhum erro. Validar antes de aceitar.
+        try:
+            from config_features import NUMERIC_FEATURES, CATEGORICAL_FEATURES
+            esperadas = list(NUMERIC_FEATURES) + list(CATEGORICAL_FEATURES)
+        except ImportError:
+            esperadas = []
+        faltando = [f for f in esperadas if f not in train.columns]
+        if faltando:
+            logger.warning(
+                "Cache %s desatualizado (faltam %s) — regenerando a partir do imoveis_limpo",
+                train_path.name, faltando,
+            )
+        else:
+            logger.info("Dados carregados do cache: treino %s, teste %s", len(train), len(test))
+            return train, test
 
     # ── Gerar cache inline a partir do imoveis_limpo ────────────────
     imoveis_path = pasta_dados / f"{cidade}_imoveis_limpo_{mes_ref}.parquet"
@@ -300,6 +316,19 @@ def deletar_runs_experimento(experimento_mlflow, confirmacao=False, databricks_w
     logger.info(f"{len(runs)} runs deletados do experimento '{exp.name}'")
 
 
+def orcamento_por_run(deadline, total_runs, indice, timeout_trial, min_por_run_s=300):
+    """Segundos de Optuna para o run `indice` (0-based) dentro do orcamento global.
+
+    Divide o tempo restante entre os runs que ainda faltam e nunca passa do teto
+    por estudo. Retorna 0 quando nao ha tempo util; o chamador deve parar.
+    """
+    restante = deadline - time.monotonic()
+    runs_faltando = total_runs - indice
+    if runs_faltando <= 0 or restante <= min_por_run_s:
+        return 0
+    return int(min(timeout_trial, restante / runs_faltando))
+
+
 def otimizar_melhores_incrementos(
     experimento_mlflow,
     train, test,
@@ -313,12 +342,20 @@ def otimizar_melhores_incrementos(
     top_k=10,
     top_k_modelo=3,
     incluir_mlp=True,
+    max_horas=4.5,
+    timeout_trial=600,
 ):
+    # Orcamento global: o job do GitHub Actions morre em 6h (limite da plataforma)
+    # e a busca era `nº de runs x 600s` sem teto agregado — estourava o job e o
+    # "Commit e Push" (que roda depois) nunca executava, perdendo tudo.
+    deadline = time.monotonic() + max_horas * 3600
+
     logger.info(f"Buscando melhores incrementos no experimento '{experimento_mlflow}'")
     logger.info(f"Minimo de features: {min_features}")
     logger.info(f"Metrica: {metrica}")
     logger.info(f"Otimalizando {n_trials} vezes")
     logger.info(f"Modo de selecao: {selection_mode}")
+    logger.info(f"Orcamento da otimizacao: {max_horas:.1f}h | teto por estudo: {timeout_trial}s")
     if selection_mode in ("top_n", "combinado"):
         logger.info(f"Top K geral: {top_k}")
     if selection_mode in ("por_modelo", "combinado"):
@@ -383,7 +420,23 @@ def otimizar_melhores_incrementos(
         )
 
     resultados = []
-    for _, row in tqdm(melhores.iterrows(), total=len(melhores), desc="Otimizando runs"):
+    total_runs = len(melhores)
+    for i, (_, row) in enumerate(
+        tqdm(melhores.iterrows(), total=total_runs, desc="Otimizando runs")
+    ):
+        timeout_run = orcamento_por_run(deadline, total_runs, i, timeout_trial)
+        if timeout_run <= 0:
+            logger.warning(
+                "Orcamento de %.1fh esgotado: %d de %d runs nao otimizados. "
+                "O parquet sera gravado com os %d runs concluidos.",
+                max_horas, total_runs - i, total_runs, len(resultados),
+            )
+            break
+        logger.info(
+            "Run %d/%d | orcamento restante %.0f min | teto deste estudo %ds",
+            i + 1, total_runs, (deadline - time.monotonic()) / 60, timeout_run,
+        )
+
         feat_map = json.loads(row["feature_transform_map"])
         all_features = list(feat_map.keys())
         if not all_features:
@@ -513,6 +566,7 @@ def otimizar_melhores_incrementos(
                 n_trials=n_trials_mlp,
                 epochs=100,
                 nome=f"optuna_{run_name}",
+                timeout_trial=timeout_run,
             )
             if estudo is None:
                 continue
@@ -583,7 +637,7 @@ def otimizar_melhores_incrementos(
         otim = OtimizadorOptuna(
             preprocessador=pp, X=X_tr, y=y_fit,
             mlflow_manager=None,
-            n_trials=n_trials, n_folds=5,
+            n_trials=n_trials, n_folds=5, timeout_trial=timeout_run,
         )
         estudo = otim.otimizar(f"optuna_{run_name}", factory, log_trials=False)
         if not estudo:

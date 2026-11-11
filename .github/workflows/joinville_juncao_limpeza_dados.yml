@@ -18,6 +18,8 @@ jobs:
       estado_localizacao: SC
       # Junção/limpeza/preditor não abrem navegador nenhum.
       instalar_playwright: false
+      # Não rodar a cadeia se a coleta que a disparou foi cancelada/falhou.
+      exigir_sucesso_anterior: true
     secrets: inherit
 
   limpeza:

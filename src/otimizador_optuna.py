@@ -41,7 +41,7 @@ def _rmsle(y_true, y_pred):
 class OtimizadorOptuna:
     """Otimizacao de hiperparametros com Optuna + cross-validation + MLflow."""
 
-    def __init__(self, preprocessador, X, y, mlflow_manager=None, n_trials=40, n_folds=3, random_state=42, n_jobs=-1):
+    def __init__(self, preprocessador, X, y, mlflow_manager=None, n_trials=40, n_folds=3, random_state=42, n_jobs=-1, timeout_trial=600):
         self.preprocessador = preprocessador
         self.X = X
         self.y = y
@@ -50,6 +50,9 @@ class OtimizadorOptuna:
         self.n_folds = n_folds
         self.random_state = random_state
         self.n_jobs = n_jobs
+        # Teto de tempo por estudo (segundos). `n_trials` raramente e atingido:
+        # o timeout e que manda. Ver orcamento global em selecao_modelos_mlflow.
+        self.timeout_trial = timeout_trial
         self.cv = KFold(n_splits=n_folds, shuffle=True, random_state=random_state)
         self.melhores_params = {}
         self.estudos = {}
@@ -126,7 +129,7 @@ class OtimizadorOptuna:
                 study_name=nome,
                 sampler=optuna.samplers.TPESampler(seed=self.random_state),
             )
-            study.optimize(self._objective(nome, factory), n_trials=self.n_trials, timeout=600, show_progress_bar=False)
+            study.optimize(self._objective(nome, factory), n_trials=self.n_trials, timeout=self.timeout_trial, show_progress_bar=False)
 
             try:
                 self.melhores_params[nome] = study.best_params
@@ -352,7 +355,7 @@ class OtimizadorMLP:
         )
         return model
 
-    def otimizar(self, X_train, y_train, X_val, y_val, input_dim, n_trials=30, epochs=100, nome="mlp_keras", log_trials=True):
+    def otimizar(self, X_train, y_train, X_val, y_val, input_dim, n_trials=30, epochs=100, nome="mlp_keras", log_trials=True, timeout_trial=600):
         import mlflow
         import keras
         from sklearn.metrics import mean_absolute_error, mean_absolute_percentage_error, r2_score
@@ -420,7 +423,7 @@ class OtimizadorMLP:
                 direction="minimize",
                 sampler=optuna.samplers.TPESampler(seed=self.random_state),
             )
-            study.optimize(objective_mlp, n_trials=n_trials, timeout=600, show_progress_bar=False)
+            study.optimize(objective_mlp, n_trials=n_trials, timeout=timeout_trial, show_progress_bar=False)
 
             try:
                 for k, v in study.best_params.items():

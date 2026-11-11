@@ -94,11 +94,35 @@ on:
         required: false
         type: boolean
         default: true
+      # Guarda de conclusao: quando true, o job nao roda se o workflow que o
+      # disparou (workflow_run) terminou cancelado ou com falha. Sem isso, um
+      # pai morto pelo limite de 6h do Actions ainda disparava o filho, que
+      # otimizava um estado de MLflow truncado e tambem estourava.
+      # Default false para nao mudar cadeias de coleta, onde as fontes sao
+      # independentes (OLX pode falhar e a ZAP ainda deve rodar).
+      exigir_sucesso_anterior:
+        required: false
+        type: boolean
+        default: false
+      # Teto do job. O default do GitHub e 360 min (6h); deixar 10 min de folga
+      # transforma o "cancelled" silencioso em um limite explicito, com tempo
+      # para o step "Commit e Push" (if: always) ainda rodar.
+      timeout_minutos:
+        required: false
+        type: number
+        default: 350
+      # Orcamento da otimizacao (horas), lido por joinville_otimizando_melhores_modelos.py.
+      max_horas_otimizacao:
+        required: false
+        type: string
+        default: "4.5"
 
 
 jobs:
   build:
     runs-on: ubuntu-latest
+    timeout-minutes: ${{ inputs.timeout_minutos }}
+    if: ${{ !inputs.exigir_sucesso_anterior || github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success' }}
     steps:
       - name: Copia os arquivos do repo
         uses: actions/checkout@v4
@@ -218,8 +242,13 @@ jobs:
           DATABRICKS_HOST: ${{ inputs.DATABRICKS_HOST }}
           LOCALIZAZAO_COMPLETA: ${{ inputs.LOCALIZAZAO_COMPLETA }}
           INCLUIR_TOPICOS: ${{ inputs.INCLUIR_TOPICOS }}
+          MAX_HORAS_OTIMIZACAO: ${{ inputs.max_horas_otimizacao }}
 
       - name: Commit e Push
+        # always(): um run interrompido no meio (timeout, falha) ainda persiste o
+        # que ja foi escrito em dados/ — em especial o cache de train/test, que
+        # e gerado antes da busca longa. Sem isso, 6h de compute viravam zero.
+        if: always()
         run: |
           git config user.name "github-actions"
           git config user.email "github-actions@github.com"
