@@ -169,8 +169,71 @@ def extrair_amenidades_train_test(train, test):
     return train, test
 
 
-CLUSTER_COLS = [
-    "score_escola_privada", "score_escola_publica", "score_hospitais",
+KM_POR_GRAU = 111.0
+
+
+def sanitizar_coordenadas(df, max_km=50.0):
+    """Substitui coordenadas de fallback do geocoder pelo centroide do bairro.
+
+    Medido em Joinville/2026-11: 2.896 de 23.063 imoveis (12,6%) compartilham
+    apenas 10 coordenadas, todas a 400-600 km da cidade (Parana, Minas, RS,
+    Brasilia). Sao fallbacks do Nominatim para endereco ambiguo, nao imoveis.
+
+    O estrago nao e so a coordenada: `dist_centro` e todos os `score_*` de POI
+    sao calculados a partir de lat/lng, entao essas 2.896 linhas recebem
+    distancia e vizinhanca de outra cidade. Por isso a funcao precisa rodar
+    ANTES de `CriandoIndicesIndividuais.calcular_indices`.
+
+    O centroide da cidade e a MEDIANA (robusta aos 12,6% de outliers) e a
+    reposicao usa o centroide do proprio bairro, calculado apenas com as
+    coordenadas plausiveis. Nao usa o alvo, entao e livre de vazamento e
+    idempotente.
+    """
+    if "lat" not in df.columns or "lng" not in df.columns:
+        return df
+
+    lat = pd.to_numeric(df["lat"], errors="coerce").to_numpy(dtype=float)
+    lng = pd.to_numeric(df["lng"], errors="coerce").to_numpy(dtype=float)
+    validos = np.isfinite(lat) & np.isfinite(lng)
+    if validos.sum() < 10:
+        return df
+
+    lat0 = float(np.median(lat[validos]))
+    lng0 = float(np.median(lng[validos]))
+    d_km = np.hypot(
+        (lat - lat0) * KM_POR_GRAU,
+        (lng - lng0) * KM_POR_GRAU * np.cos(np.radians(lat0)),
+    )
+    ruim = ~validos | (np.isfinite(d_km) & (d_km > max_km))
+    n = int(ruim.sum())
+    if n == 0:
+        return df
+
+    ok = ~ruim
+    lat_fix = np.full(len(df), np.nan, dtype=float)
+    lng_fix = np.full(len(df), np.nan, dtype=float)
+    if "bairro" in df.columns and ok.any():
+        bairros = df["bairro"].astype(str).to_numpy()
+        centros = (
+            pd.DataFrame({"b": bairros[ok], "lat": lat[ok], "lng": lng[ok]})
+            .groupby("b")[["lat", "lng"]].median()
+        )
+        lat_fix = pd.Series(bairros).map(centros["lat"]).to_numpy(dtype=float)
+        lng_fix = pd.Series(bairros).map(centros["lng"]).to_numpy(dtype=float)
+
+    lat[ruim] = np.where(np.isfinite(lat_fix[ruim]), lat_fix[ruim], lat0)
+    lng[ruim] = np.where(np.isfinite(lng_fix[ruim]), lng_fix[ruim], lng0)
+    df["lat"] = lat
+    df["lng"] = lng
+
+    logger.warning(
+        "coordenadas implausiveis corrigidas: %d linha(s) a mais de %.0f km do "
+        "centroide (%.3f, %.3f)", n, max_km, lat0, lng0,
+    )
+    return df
+
+
+CLUSTER_COLS = [    "score_escola_privada", "score_escola_publica", "score_hospitais",
     "score_mercado", "score_farmacia", "score_parque",
     "score_seguranca",
 ]
@@ -331,6 +394,29 @@ def criar_score_texto(train, test, alpha=3.0, random_state=42, n_splits=5,
     train["score_texto"] = oof
     test["score_texto"] = aplicar_score_texto(test, artefato)
 
+    # Guarda de vazamento. score_texto e uma previsao do ALVO empilhada como
+    # feature; so e legitimo enquanto for out-of-fold. Se o loop acima nao rodar
+    # (n_splits degenerado, indice desalinhado), entra valor in-sample, a
+    # correlacao sobe e nenhuma metrica de teste avisa. OOF tem de ser
+    # visivelmente PIOR que o ajuste pleno no mesmo treino.
+    insample = artefato["ridge"].predict(X)
+    c_oof = float(np.corrcoef(oof[valido], y[valido])[0, 1])
+    c_in = float(np.corrcoef(insample[valido], y[valido])[0, 1])
+    # So faz sentido acusar quando existe sinal a proteger: se o texto nao
+    # explica nada (base pequena, descricoes identicas), OOF e in-sample sao
+    # ambos ~0 e a guarda daria falso positivo.
+    if np.isfinite(c_in) and c_in >= 0.15 and (c_in - c_oof) < 0.01:
+        raise RuntimeError(
+            "score_texto suspeito: OOF r=%.4f vs in-sample r=%.4f (folga esperada "
+            "> 0.01). O valor in-sample vazou na coluna de treino." % (c_oof, c_in)
+        )
+    artefato["corr_oof"] = c_oof
+    artefato["corr_insample"] = c_in
+    logger.info(
+        "score_texto: OOF r=%.4f | in-sample r=%.4f | folga %.4f",
+        c_oof, c_in, c_in - c_oof,
+    )
+
     if save_path:
         joblib.dump(artefato, save_path)
         logger.info("Modelo de score_texto salvo: %s", save_path)
@@ -340,6 +426,8 @@ def criar_score_texto(train, test, alpha=3.0, random_state=42, n_splits=5,
 
 def engenharia_features_completa(train, test, score_texto_path=None):
     """Aplica todas as funcoes de engenharia de features."""
+    train = sanitizar_coordenadas(train)
+    test = sanitizar_coordenadas(test)
     train, test = criar_features_bairro(train, test)
     train, test = criar_razoes(train, test)
     train, test = extrair_novo_lancamento(train, test)

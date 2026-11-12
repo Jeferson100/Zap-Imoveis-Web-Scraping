@@ -1,5 +1,6 @@
 import json
 import logging
+import os
 import time
 import pandas as pd
 import numpy as np
@@ -244,6 +245,11 @@ def carregar_dados(pasta_dados, mes_ref, cidade, cidade_nome=None):
         raise KeyError(f"Colunas obrigatorias ausentes: {cols_obrig - set(dados.columns)}")
 
     if cidade_nome:
+        # Coordenadas de fallback do geocoder (12,6% da base, a 400-600 km)
+        # precisam sair ANTES de calcular POIs: dist_centro e todos os score_*
+        # derivam de lat/lng e ficariam apontando para outra cidade.
+        from funcoes_engenharia_features import sanitizar_coordenadas
+        dados = sanitizar_coordenadas(dados)
         logger.info("Calculando indices de localizacao...")
         indices = CriandoIndicesIndividuais(cidade=cidade_nome, cache_dir=pasta_dados)
         dados = indices.calcular_indices(imoveis_df=dados)
@@ -268,6 +274,23 @@ def carregar_dados(pasta_dados, mes_ref, cidade, cidade_nome=None):
             len(fora), fora.to_dict(orient="records"),
         )
     df_modelo = df_modelo.loc[mask_pm2].copy()
+
+    # Metragem plausivel por tipo. O teto de R$/m2 nao pega isto: um apartamento
+    # de 8.505 m2 por R$ 1,06 mi da R$ 124/m2, que passa no filtro acima, e vira
+    # a maior predicao errada do modelo (R$ 4,5 mi). Sao erros de coleta.
+    TETO_METRAGEM = {"apartamento": 1_000, "casa": 3_000}
+    metragem_num = pd.to_numeric(df_modelo["metragem"], errors="coerce")
+    teto = df_modelo["tipo_imovel"].map(TETO_METRAGEM)
+    plausivel = (teto.isna() | (metragem_num <= teto)) & metragem_num.notna()
+    if not plausivel.all():
+        barrados = df_modelo.loc[~plausivel]
+        logger.warning(
+            "Metragem implausivel barrada no treino (%d de %d): %s",
+            len(barrados), len(df_modelo),
+            barrados[["tipo_imovel", "metragem", "valor_imovel", "preco_por_m2"]]
+            .head(10).to_dict(orient="records"),
+        )
+        df_modelo = df_modelo.loc[plausivel].copy()
 
     train, test = train_test_split(df_modelo, test_size=0.25, random_state=42)
     train, test = engenharia_features_completa(train, test)
@@ -314,6 +337,44 @@ def deletar_runs_experimento(experimento_mlflow, confirmacao=False, databricks_w
     for run in runs:
         client.delete_run(run.info.run_id)
     logger.info(f"{len(runs)} runs deletados do experimento '{exp.name}'")
+
+
+def escolher_melhor_config(df_otim, criterio=None):
+    """Indice da linha vencedora da tabela de otimizados.
+
+    `criterio` pode ser "rmse" (default, comportamento historico) ou "mdape",
+    ou vir da env CRITERIO_SELECAO. Medido em Joinville/2026-11, os dois
+    rankings discordam:
+
+        por RMSE  -> GradientBoosting 42 feats | R2 0,8620 | RMSE 404k | MdAPE 10,30%
+        por MdAPE -> RandomForest     18 feats | R2 0,8305 | RMSE 447k | MdAPE  9,97%
+
+    Ou seja: trocar para MdAPE ganha 0,33 p.p. no erro tipico e custa 3 pontos
+    de R2 e R$ 44 mil de RMSE. Nao e uma correcao obvia, e uma escolha de
+    produto — por isso o default continua sendo RMSE. A busca upstream usa
+    MdAPE, entao quem quiser coerencia ponta a ponta liga CRITERIO_SELECAO=mdape.
+    """
+    if criterio is None:
+        criterio = os.getenv("CRITERIO_SELECAO", "rmse")
+
+    ordem = ["mdape_otimizado", "rmse_otimizado"] if criterio.lower() == "mdape" \
+        else ["rmse_otimizado", "mdape_otimizado"]
+
+    for chave in ordem:
+        if chave in df_otim.columns and df_otim[chave].notna().any():
+            logger.info("Melhor configuracao escolhida por %s", chave)
+            alternativa = ordem[1]
+            if alternativa in df_otim.columns and df_otim[alternativa].notna().any():
+                alt = df_otim[alternativa].idxmin()
+                detalhe = {
+                    c: df_otim.loc[alt, c]
+                    for c in ("r2_otimizado", "rmse_otimizado", "mdape_otimizado")
+                    if c in df_otim.columns
+                }
+                logger.info("  (por %s a escolha seria a linha %s: %s)",
+                            alternativa, alt, detalhe)
+            return df_otim[chave].idxmin()
+    raise KeyError("df_otim sem 'mdape_otimizado' nem 'rmse_otimizado'")
 
 
 def orcamento_por_run(deadline, total_runs, indice, timeout_trial, min_por_run_s=300):
@@ -515,6 +576,9 @@ def otimizar_melhores_incrementos(
                 "feature_history_run_name": row.get("feature_history_run_name", ""),
                 "feature_transform_map": row.get("feature_transform_map", ""),
                 "best_params": json.dumps(best_params),
+                # CV no espaco do alvo. Auditoria: permite comparar configs sem
+                # escolher pelo conjunto de teste.
+                "best_cv_rmse": best_cv_rmse,
                 "r2_original": row["r2"],
                 "rmse_original": row["rmse"],
                 "mae_original": row["mae"],
@@ -605,6 +669,7 @@ def otimizar_melhores_incrementos(
                 "target_transform": target_transform,
                 "target_transformer": target_transform,
                 "best_params": json.dumps(best_params),
+                "best_cv_rmse": best_cv_rmse,
                 "r2_original": row["r2"],
                 "rmse_original": row["rmse"],
                 "mae_original": row["mae"],
@@ -688,6 +753,7 @@ def otimizar_melhores_incrementos(
             "target_transform": target_transform,
             "target_transformer": target_transform,
             "best_params": json.dumps(best_params),
+            "best_cv_rmse": best_cv_rmse,
             "r2_original": row["r2"],
             "rmse_original": row["rmse"],
             "mae_original": row["mae"],

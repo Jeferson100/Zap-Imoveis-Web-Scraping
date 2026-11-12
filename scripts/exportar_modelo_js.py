@@ -23,6 +23,13 @@ CIDADES = {
 
 def extract_trees(modelo):
     estimator = modelo.named_steps['modelo']
+    # A calibracao isotonica nao e exportavel para JS. Exportar o modelo base
+    # sem ela produz precos sistematicamente diferentes dos do Python (vies de
+    # +4% a -6% por faixa), entao o aviso e obrigatorio e nao silencioso.
+    if type(estimator).__name__ == 'CalibradorIsotonico':
+        print('  AVISO: camada de calibracao isotonica NAO exportada para JS.')
+        print('         O navegador usara o modelo base, sem correcao de vies.')
+        estimator = getattr(estimator, 'estimador_', estimator)
     name = type(estimator).__name__
 
     if name == 'GradientBoostingRegressor':

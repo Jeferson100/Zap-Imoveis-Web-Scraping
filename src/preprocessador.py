@@ -1,10 +1,57 @@
+import logging
+
 import numpy as np
 import pandas as pd
+from sklearn.base import BaseEstimator, TransformerMixin
 from sklearn.compose import ColumnTransformer
 from sklearn.impute import SimpleImputer
 from sklearn.metrics import mean_absolute_error, mean_squared_error, mean_squared_log_error, r2_score
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import FunctionTransformer, OneHotEncoder, StandardScaler, PowerTransformer
+
+logger = logging.getLogger(__name__)
+
+# Funcoes cruas, aplicadas coluna a coluna por TransformadorPorColuna.
+TRANSFORM_FUNCS = {"log": np.log1p, "sqrt": np.sqrt}
+TRANSFORM_INVERSA = {"log": np.expm1, "sqrt": np.square}
+
+
+class TransformadorPorColuna(BaseEstimator, TransformerMixin):
+    """Aplica a transformacao apenas nas colunas estritamente nao-negativas.
+
+    log/sqrt em coluna negativa gera NaN, e o passo `cleanup` seguinte converte
+    esse NaN em 0.0: a feature vira uma coluna de zeros e o modelo nem avisa.
+    Foi assim que lat (-26) e lng (-49) deixaram de existir em producao.
+
+    PowerTransformer (box-cox / yeo-johnson) nao passa por aqui: ja e ajustado
+    por coluna e cuida do proprio dominio.
+    """
+
+    def __init__(self, metodo="log"):
+        # `metodo`, nao `transform`: um atributo chamado `transform` sombrearia
+        # o metodo transform() exigido pelo sklearn.
+        self.metodo = metodo
+
+    def fit(self, X, y=None):
+        Xa = np.asarray(X, dtype=np.float64)
+        self.positivas_ = np.all(np.isfinite(Xa) & (Xa >= 0), axis=0)
+        omitidas = int((~self.positivas_).sum())
+        if omitidas:
+            logger.warning(
+                "transform=%s ignorada em %d coluna(s) com valores negativos",
+                self.metodo, omitidas,
+            )
+        return self
+
+    def transform(self, X):
+        Xa = np.asarray(X, dtype=np.float64).copy()
+        Xa[:, self.positivas_] = TRANSFORM_FUNCS[self.metodo](Xa[:, self.positivas_])
+        return Xa
+
+    def inverse_transform(self, X):
+        Xa = np.asarray(X, dtype=np.float64).copy()
+        Xa[:, self.positivas_] = TRANSFORM_INVERSA[self.metodo](Xa[:, self.positivas_])
+        return Xa
 
 
 TRANSFORM_MAP = {
@@ -17,8 +64,8 @@ TRANSFORM_MAP = {
 
 TRANSFORMACOES = {
     None: None,
-    "log": FunctionTransformer(np.log1p, validate=False, feature_names_out="one-to-one"),
-    "sqrt": FunctionTransformer(np.sqrt, validate=False, feature_names_out="one-to-one"),
+    "log": TransformadorPorColuna(metodo="log"),
+    "sqrt": TransformadorPorColuna(metodo="sqrt"),
     "boxcox": PowerTransformer(method="box-cox"),
     "yeojohnson": PowerTransformer(method="yeo-johnson"),
 }
@@ -50,6 +97,8 @@ SKOPS_TRUSTED_TYPES = [
     "numpy.dtype",
     "preprocessador._replace_inf",
     "preprocessador._cleanup_transform",
+    "preprocessador.TransformadorPorColuna",
+    "calibracao.CalibradorIsotonico",
     "sklearn.tree._tree.Tree",
     # Regressores de terceiros candidatos em FactoryModelos (otimizador_optuna):
     # sem eles, o mês em que vencerem quebra o log_model no MLflow.

@@ -71,10 +71,15 @@ def processar_prefixo(pasta, prefixo, arquivos_otim, force=False):
     _, mes_otim = m.group(1), m.group(2)
 
     df = pd.read_parquet(otim_path)
-    if df.empty or "rmse_otimizado" not in df.columns:
+    if df.empty or not {"mdape_otimizado", "rmse_otimizado"}.intersection(df.columns):
         logger.warning("Sem linhas válidas: %s", otim_path.name)
         return None
-    best = df.loc[df["rmse_otimizado"].idxmin()]
+    # Mesmo criterio de melhor_modelo_geral: a busca e conduzida por MdAPE.
+    try:
+        from selecao_modelos_mlflow import escolher_melhor_config
+        best = df.loc[escolher_melhor_config(df)]
+    except ImportError:
+        best = df.loc[df["rmse_otimizado"].idxmin()]
 
     try:
         feat_map = json.loads(best.get("feature_transform_map") or "{}")

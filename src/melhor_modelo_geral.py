@@ -26,7 +26,7 @@ from preprocessador import PreprocessadorFactory, SKOPS_TRUSTED_TYPES
 from otimizador_optuna import FactoryModelos
 from mlflow_manager import MLflowManager
 from criando_indices_individuais import CriandoIndicesIndividuais
-from funcoes_engenharia_features import engenharia_features_completa, criar_clusters_bairro
+from funcoes_engenharia_features import engenharia_features_completa, criar_clusters_bairro, sanitizar_coordenadas
 
 
 logger = logging.getLogger(__name__)
@@ -75,10 +75,14 @@ def treinar_melhor_modelo_geral(
     df_otim = pd.read_parquet(otim_path)
     logger.info("Resultados carregados: %d linhas", len(df_otim))
 
-    # ── 2. Melhor configuração (menor rmse_otimizado) ───────────────────
-    best_idx = df_otim["rmse_otimizado"].idxmin()
-    
-    logger.info("Melhor indice: %d | rmse_otimizado=%.2f", best_idx, df_otim.loc[best_idx, "rmse_otimizado"])
+    # ── 2. Melhor configuração ──────────────────────────────────────────
+    from selecao_modelos_mlflow import escolher_melhor_config
+    best_idx = escolher_melhor_config(df_otim)
+    logger.info(
+        "Melhor indice: %d | rmse_otimizado=%.2f | mdape_otimizado=%s",
+        best_idx, df_otim.loc[best_idx, "rmse_otimizado"],
+        df_otim.loc[best_idx].get("mdape_otimizado", "n/d"),
+    )
     
     best = df_otim.loc[best_idx]
     
@@ -165,7 +169,17 @@ def treinar_melhor_modelo_geral(
         raise ValueError(f"Modelo '{best['modelo']}' nao mapeado em MODEL_KEY_MAP")
 
     trial_fixo = optuna.trial.FixedTrial(best_params)
-    modelo = factory(trial_fixo)
+    # Calibracao isotonica: DESLIGADA por padrao. Medido em Joinville/2026-11 no
+    # teste honesto, ela piorou (R2 0,8677 -> 0,8560; MdAPE 10,81% -> 11,00%) e
+    # quase nao moveu o vies por faixa (Q1 +4,53->+3,91; Q5 -7,91->-8,17).
+    # O GradientBoosting ja sai razoavelmente calibrado e o isotonic, mesmo em
+    # OOF, adiciona variancia. Fica disponivel para quando o modelo base mudar.
+    if os.getenv("CALIBRAR_MODELO", "false").lower() == "true":
+        from calibracao import CalibradorIsotonico
+        modelo = CalibradorIsotonico(estimador=factory(trial_fixo), n_folds=5)
+        logger.info("Calibracao isotonica LIGADA (CALIBRAR_MODELO=true)")
+    else:
+        modelo = factory(trial_fixo)
     
     logger.info("Reconstruindo modelo: %s | best_params=%s", best["modelo"], best_params)
 
@@ -174,6 +188,7 @@ def treinar_melhor_modelo_geral(
     y_fit = np.log1p(y_train) if target_transform == "log" else y_train
     pipe.fit(X_train, y_fit)
     logger.info("Pipeline treinado com %d amostras (target_transform=%s)", len(X_train), target_transform)
+    logger.info("Camada de calibracao: %r", pipe.named_steps["modelo"])
     del X_train, y_train
 
     # ── 7. Preditor com intervalo conformal ──────────────────────────────
@@ -280,6 +295,7 @@ def treinar_melhor_modelo_geral(
         logger.info("Total: %d registros (%d fontes)", len(df_full), len(partes))
 
     indices = CriandoIndicesIndividuais(cidade=cidade_nome, cache_dir=pasta_dados)
+    df_full = sanitizar_coordenadas(df_full)
     df_full = indices.calcular_indices(imoveis_df=df_full)
 
     mask = (
