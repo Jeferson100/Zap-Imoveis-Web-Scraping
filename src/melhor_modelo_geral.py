@@ -424,9 +424,19 @@ def treinar_melhor_modelo_geral(
             )
 
     # ── 12. Limpeza dos caches ──────────────────────────────────────────
+    # O cache de train/test do MES CORRENTE fica: e o unico holdout honesto para
+    # avaliar o modelo publicado (o notebook e as auditorias dependem dele) e
+    # evita recalcular indices + engenharia em todo run. Meses anteriores saem,
+    # para o repositorio nao crescer (~30 MB por cidade por mes).
+    for prefixo in ("train", "test"):
+        atual = f"{cidade}_{prefixo}_{mes_ref}.parquet"
+        for p in pasta_dados.glob(f"{cidade}_{prefixo}_*.parquet"):
+            if p.name == atual:
+                continue
+            p.unlink()
+            logger.info("Cache de outro mes removido: %s", p.name)
+
     for nome in [
-        f"{cidade}_train_{mes_ref}.parquet",
-        f"{cidade}_test_{mes_ref}.parquet",
         #f"{cidade}_otimizados_melhores_incrementos_{mes_ref}.parquet",
         f"{cidade}_melhores_por_incremento_{mes_ref}.parquet",
         f"{cidade}_melhores_por_incremento_{mes_ref}.csv",

@@ -8,6 +8,7 @@ from sklearn.impute import SimpleImputer
 from sklearn.metrics import mean_absolute_error, mean_squared_error, mean_squared_log_error, r2_score
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import FunctionTransformer, OneHotEncoder, StandardScaler, PowerTransformer
+from sklearn.utils.validation import check_is_fitted
 
 logger = logging.getLogger(__name__)
 
@@ -52,6 +53,27 @@ class TransformadorPorColuna(BaseEstimator, TransformerMixin):
         Xa = np.asarray(X, dtype=np.float64).copy()
         Xa[:, self.positivas_] = TRANSFORM_INVERSA[self.metodo](Xa[:, self.positivas_])
         return Xa
+
+    def get_feature_names_out(self, input_features=None):
+        """One-to-one: os nomes de entrada passam intactos.
+
+        Contrato que o FunctionTransformer antigo cumpria via
+        `feature_names_out="one-to-one"`. Sem ele,
+        `ColumnTransformer.get_feature_names_out()` levanta AttributeError e o
+        `_agregar_importancias_por_feature` do teste incremental engolia o erro,
+        seguia com tamanhos desalinhados e estourava IndexError FORA do try —
+        derrubando o run inteiro depois de ~90 min de busca.
+        """
+        check_is_fitted(self, "positivas_")
+        n = self.positivas_.size
+        if input_features is None:
+            return np.asarray([f"x{i}" for i in range(n)], dtype=object)
+        nomes = np.asarray(input_features, dtype=object)
+        if nomes.shape[0] != n:
+            raise ValueError(
+                f"input_features tem {nomes.shape[0]} nomes, esperado {n}"
+            )
+        return nomes
 
 
 TRANSFORM_MAP = {

@@ -104,6 +104,7 @@ def _agregar_importancias_por_feature(importances, preprocessor, feat_names):
     """Agrega importancias SHAP de colunas OHE de volta pra feature original."""
     trans_names = preprocessor.get_feature_names_out()
     agg = {f: 0.0 for f in feat_names}
+    nao_casadas = 0
     for i, tn in enumerate(trans_names):
         stem = tn.split('__', 1)[-1] if '__' in tn else tn
         for fn in feat_names:
@@ -111,7 +112,15 @@ def _agregar_importancias_por_feature(importances, preprocessor, feat_names):
                 agg[fn] += importances[i]
                 break
         else:
-            agg[feat_names[i % len(feat_names)]] += importances[i]
+            # Antes: agg[feat_names[i % len(feat_names)]] += importances[i].
+            # Isso jogava a importancia de uma coluna desconhecida em uma
+            # feature arbitraria, corrompendo a ordenacao em silencio.
+            nao_casadas += 1
+    if nao_casadas:
+        logger.warning(
+            "%d coluna(s) transformada(s) sem feature de origem; importancia ignorada",
+            nao_casadas,
+        )
     return np.array([agg[f] for f in feat_names])
 
 
@@ -304,6 +313,17 @@ class TesteIncrementalFeaturesAsync:
                 )
             except Exception as exc:
                 logger.warning("Falha ao agregar SHAP: %s", exc)
+
+        # Guarda. Se a agregacao falhar (ou vier com tamanho estranho), ordenar
+        # pelo vetor cru estourava IndexError na linha seguinte, FORA de qualquer
+        # try, e derrubava o run inteiro depois de ~90 min de busca. Voltar para
+        # a ordem original e degradacao aceitavel; morrer nao e.
+        if len(importances) != len(feat_names):
+            logger.warning(
+                "SHAP: %d importancias para %d features; mantendo a ordem original",
+                len(importances), len(feat_names),
+            )
+            return list(feat_names)
 
         return [feat_names[i] for i in np.argsort(importances)[::-1]]
 

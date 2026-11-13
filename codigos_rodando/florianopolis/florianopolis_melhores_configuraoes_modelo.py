@@ -48,8 +48,15 @@ else:
     logger.info(f"Carregados {len(arquivos)} fontes: {len(dados):,} linhas")
     if not {'descricao', 'bairro', 'metragem', 'preco_por_m2', 'tipo_imovel'}.issubset(dados.columns):
         raise KeyError("Colunas obrigatorias ausentes no parquet")
+    # Coordenadas de fallback do geocoder (12,6% da base, a 400-600 km) precisam
+    # sair ANTES dos POIs: dist_centro e todos os score_* derivam de lat/lng.
+    logger.info("Sanitizando coordenadas de localizacao...")
+    from funcoes_engenharia_features import sanitizar_coordenadas
+    dados = sanitizar_coordenadas(dados)
     logger.info("Calculando indices de localizacao...")
-    indices = CriandoIndicesIndividuais(cidade=cidade_nome)
+    # cache_dir: sem ele carregar_pois() baixa os 6 grupos do Overpass a cada
+    # run (~60 dos 90 min) e ignora o pois_<cidade>.parquet ja commitado.
+    indices = CriandoIndicesIndividuais(cidade=cidade_nome, cache_dir=PASTA_DADOS)
     dados = indices.calcular_indices(imoveis_df=dados)
     df_modelo = dados[
         (dados["metragem"] > 20)

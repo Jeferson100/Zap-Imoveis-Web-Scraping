@@ -62,6 +62,11 @@ else:
     if not {'descricao', 'bairro', 'metragem', 'preco_por_m2', 'tipo_imovel'}.issubset(dados.columns):
         raise KeyError("Colunas obrigatorias ausentes no parquet")
 
+    # Coordenadas de fallback do geocoder precisam sair ANTES dos POIs:
+    # dist_centro e todos os score_* derivam de lat/lng.
+    logger.info("Sanitizando coordenadas de localizacao...")
+    from funcoes_engenharia_features import sanitizar_coordenadas
+    dados = sanitizar_coordenadas(dados)
     logger.info("Calculando indices de localizacao...")
     indices = CriandoIndicesIndividuais(cidade=cidade_nome, cache_dir=PASTA_DADOS)
     dados = indices.calcular_indices(imoveis_df=dados)
