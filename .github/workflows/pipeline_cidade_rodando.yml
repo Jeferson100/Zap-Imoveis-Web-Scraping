@@ -104,6 +104,32 @@ on:
         required: false
         type: boolean
         default: false
+      # Aceita pai `cancelled` (teto de 6h do Actions) como condicao para rodar.
+      # Distingue RECURSO esgotado de BUG no codigo:
+      #   success            -> segue
+      #   cancelled          -> segue, consumindo o parcial do MLflow
+      #   failure/skipped/.. -> bloqueia (bug: nao publicar modelo de busca quebrada)
+      # Requer o piso de cobertura em melhor_modelo_geral (COBERTURA_MINIMA).
+      permitir_parcial:
+        required: false
+        type: boolean
+        default: true
+      # Orcamento de parede da busca (horas). Ao estourar, o script para de abrir
+      # blocos novos, grava o parcial e SAI 0 — a cadeia segue.
+      max_horas_busca:
+        required: false
+        type: string
+        default: "4.0"
+      # Threads por ajuste. Vazio = cpu_count // 4 (4 tarefas concorrentes).
+      treino_n_jobs:
+        required: false
+        type: string
+        default: ""
+      # Amostragem do treino para a busca (0/vazio = sem amostra).
+      max_samples_busca:
+        required: false
+        type: string
+        default: ""
       # Teto do job. O default do GitHub e 360 min (6h); deixar 10 min de folga
       # transforma o "cancelled" silencioso em um limite explicito, com tempo
       # para o step "Commit e Push" (if: always) ainda rodar.
@@ -122,12 +148,18 @@ jobs:
   build:
     runs-on: ubuntu-latest
     timeout-minutes: ${{ inputs.timeout_minutos }}
-    if: ${{ !inputs.exigir_sucesso_anterior || github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success' }}
+    if: ${{ !inputs.exigir_sucesso_anterior || github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success' || (inputs.permitir_parcial && github.event.workflow_run.conclusion == 'cancelled') }}
     steps:
       - name: Copia os arquivos do repo
         uses: actions/checkout@v4
         with:
           ref: ${{ inputs.checkout_ref != '' && inputs.checkout_ref || github.ref }}
+          # Clone parcial: o historico tem ~14 GB de parquet reescrito todo mes
+          # por ~30 cidades, e cada job pagava 7 min so para copiar o passado.
+          # `blob:none` mantem os commits (rebase/push continuam funcionando) e
+          # baixa apenas os blobs da arvore atual — o que `fetch-depth: 1` faria,
+          # sem o risco de quebrar `git pull --rebase` num clone raso.
+          filter: blob:none
           sparse-checkout: |
             codigos_rodando/
             dados/
@@ -146,10 +178,16 @@ jobs:
       - name: Cache Python dependencies
         uses: actions/cache@v4
         with:
-          path: ~/.cache/pip
-          key: ${{ runner.os }}-pip-${{ hashFiles('**/pyproject.toml') }}
+          # O projeto instala com `uv pip install -r pyproject.toml` (Makefile),
+          # entao o cache util e ~/.cache/uv. Cachear so ~/.cache/pip guardava
+          # um diretorio que o uv nunca escreve. A chave passa a ser o uv.lock,
+          # que e o arquivo que realmente trava as versoes.
+          path: |
+            ~/.cache/pip
+            ~/.cache/uv
+          key: ${{ runner.os }}-uv-${{ hashFiles('uv.lock') }}
           restore-keys: |
-            ${{ runner.os }}-pip-
+            ${{ runner.os }}-uv-
 
       - name: Instalar o uv
         run: |
@@ -243,6 +281,9 @@ jobs:
           LOCALIZAZAO_COMPLETA: ${{ inputs.LOCALIZAZAO_COMPLETA }}
           INCLUIR_TOPICOS: ${{ inputs.INCLUIR_TOPICOS }}
           MAX_HORAS_OTIMIZACAO: ${{ inputs.max_horas_otimizacao }}
+          MAX_HORAS_BUSCA: ${{ inputs.max_horas_busca }}
+          TREINO_N_JOBS: ${{ inputs.treino_n_jobs }}
+          MAX_SAMPLES_BUSCA: ${{ inputs.max_samples_busca }}
 
       - name: Commit e Push
         # always(): um run interrompido no meio (timeout, falha) ainda persiste o

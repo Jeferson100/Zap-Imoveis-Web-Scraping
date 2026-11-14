@@ -1,0 +1,35 @@
+name: Sentinela de Modelos
+
+# Falha quando uma cidade para de publicar modelo. Existe porque em 13/11/2026
+# a Joinville ficou 2 dias sem modelo novo e o congelamento foi silencioso:
+# o gate da cadeia (`exigir_sucesso_anterior`) pulou otimizacao e predicao sem
+# que nada apontasse para isso.
+on:
+  schedule:
+    - cron: '0 11 * * *'   # diario, 11:00 UTC (08:00 BRT)
+  workflow_dispatch:
+
+jobs:
+  checar:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Copia os arquivos do repo
+        uses: actions/checkout@v4
+        with:
+          filter: blob:none
+          sparse-checkout: |
+            dados/
+            scripts/
+            .github/
+          sparse-checkout-cone-mode: false
+
+      - name: Instalar o Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Checar idade dos modelos
+        # O script usa a data no NOME do arquivo (nao o mtime, que em checkout
+        # e a hora do clone) e emite ::error/::warning por cidade.
+        run: python scripts/sentinela_modelos.py --limite 60 --aviso 45

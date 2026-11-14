@@ -239,6 +239,39 @@ def treinar_melhor_modelo_geral(
         json.dump({"target_transformer": target_transform}, f)
     logger.info("Metadado salvo: %s", meta_path.name)
 
+    # ── 9a1. Cobertura da busca (comparabilidade entre meses) ───────────
+    # Um mes cuja busca parou em 60% dos blocos produz um numero que parece
+    # igual ao de um mes completo. Registra junto do modelo para que a
+    # comparacao entre meses nao seja feita no escuro. Nao altera a publicacao:
+    # o piso (COBERTURA_MINIMA) fica como decisao futura, com dado na mao.
+    busca_cobertura = None
+    busca_completa = None
+    estado_busca = pasta_dados / f"{cidade}_{mes_ref}_busca_estado.json"
+    if estado_busca.exists():
+        try:
+            est = json.loads(estado_busca.read_text(encoding="utf-8"))
+            blocos = len(est.get("blocos_concluidos") or [])
+            planejado = int(est.get("total_planejado") or 0)
+            busca_cobertura = (blocos / planejado) if planejado else None
+            busca_completa = est.get("completa")
+            logger.info(
+                "Cobertura da busca: %d/%d blocos (%.0f%%) | completa=%s | atualizado=%s",
+                blocos, planejado, 100 * (busca_cobertura or 0),
+                busca_completa, est.get("atualizado_em"),
+            )
+            minimo = float(os.getenv("COBERTURA_MINIMA", "0") or 0)
+            if minimo and busca_cobertura is not None and busca_cobertura < minimo:
+                logger.warning(
+                    "ATENCAO: cobertura %.0f%% abaixo do piso %.0f%% (COBERTURA_MINIMA). "
+                    "O modelo sera publicado mesmo assim; revise antes de confiar.",
+                    100 * busca_cobertura, 100 * minimo,
+                )
+        except Exception as exc:
+            logger.warning("Estado da busca ilegivel (%s): %s", estado_busca.name, exc)
+    else:
+        logger.info("Sem estado de busca para %s (%s) — cobertura desconhecida",
+                    cidade, mes_ref)
+
     # ── 9a2. Salvar features do modelo final ────────────────────────────
     features_info = {
         "features": best_features,
@@ -255,6 +288,8 @@ def treinar_melhor_modelo_geral(
         "best_params": best_params,
         "rmse_otimizado": float(best["rmse_otimizado"]),
         "r2_otimizado": float(best["r2_otimizado"]),
+        "busca_cobertura": busca_cobertura,
+        "busca_completa": busca_completa,
         "mes_ref": mes_ref,
         "data_treino": datetime.now().isoformat(),
     }

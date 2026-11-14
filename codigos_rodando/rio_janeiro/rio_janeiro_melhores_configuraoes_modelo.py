@@ -116,6 +116,7 @@ async def main():
     teste = TesteIncrementalFeaturesAsync(
         experimento_mlflow=EXPERIMENTO,
         target_log=True,
+        max_samples=(int(os.getenv("MAX_SAMPLES_BUSCA", "0") or 0) or None),
     )
     df = await teste.        testar_tratamentos_modelos_incrementais_async(
         train=train, test=test, target_col=TARGET,
@@ -125,6 +126,8 @@ async def main():
         otimizar_mlp=False,
         max_concurrent=MAX_CONCURRENT,
         feature_selection="shap",
+        max_horas=float(os.getenv("MAX_HORAS_BUSCA", "0") or 0),
+        estado_path=PASTA_DADOS / f"{cidade}_{MES_REF}_busca_estado.json",
     )
     return df
 

@@ -1,4 +1,5 @@
 import asyncio
+import json
 import logging
 import os
 import time
@@ -75,19 +76,67 @@ MODELOS_OTIMIZAVEIS = {
     "HistGB_opt":       FactoryModelos().hist_gb,
 }
 
+# ── Orcamento de threads por ajuste ──────────────────────────────────────────
+# Cada job do CI roda `max_workers = min(max_concurrent, cpu_count)` tarefas
+# concorrentes. Se cada RandomForest/CatBoost pedir todos os nucleos, o job
+# multiplica threads por 4 sem ganho (medido: 16 threads em 4 nucleos).
+# TREINO_N_JOBS fixa o orcamento POR AJUSTE; 0/ausente = cpu_count // 4.
+_CORES = os.cpu_count() or 4
+TREINO_N_JOBS = int(os.getenv("TREINO_N_JOBS", "0") or 0) or max(1, _CORES // 4)
+
+
+# ── Estado duravel da busca (retomada entre execucoes) ───────────────────────
+# O teto de 6 h do Actions deixa de ser um muro: o que ja foi feito fica
+# registrado e o disparo seguinte pula. Escrito a cada bloco concluido para
+# sobreviver a um `cancelled`.
+def ler_estado_busca(path):
+    if not path:
+        return {"blocos_concluidos": [], "incrementos": {}, "total_planejado": 0,
+                "completa": False}
+    p = Path(path)
+    if not p.exists():
+        return {"blocos_concluidos": [], "incrementos": {}, "total_planejado": 0,
+                "completa": False}
+    try:
+        estado = json.loads(p.read_text(encoding="utf-8"))
+    except Exception as exc:
+        logging.getLogger(__name__).warning(
+            "estado da busca ilegivel (%s) — comecando do zero", exc)
+        return {"blocos_concluidos": [], "incrementos": {}, "total_planejado": 0,
+                "completa": False}
+    estado.setdefault("blocos_concluidos", [])
+    estado.setdefault("incrementos", {})
+    estado.setdefault("total_planejado", 0)
+    estado.setdefault("completa", False)
+    return estado
+
+
+def salvar_estado_busca(path, estado):
+    if not path:
+        return
+    p = Path(path)
+    p.parent.mkdir(parents=True, exist_ok=True)
+    estado["atualizado_em"] = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
+    tmp = p.with_name(p.name + ".tmp")
+    tmp.write_text(json.dumps(estado, indent=2, ensure_ascii=False), encoding="utf-8")
+    tmp.replace(p)  # atomico: dois jobs nunca veem arquivo pela metade
+
+
 MODELOS_SIMPLES_TRAT = {
     #"Linear": lambda: LinearRegression(),
     #"Ridge": lambda: Ridge(),
     "DecisionTree": lambda: DecisionTreeRegressor(random_state=42),
     "RandomForest": lambda: RandomForestRegressor(
-        n_estimators=200, max_depth=12, random_state=42, n_jobs=-1
+        n_estimators=200, max_depth=12, random_state=42, n_jobs=TREINO_N_JOBS
     ),
     "GradientBoosting": lambda: GradientBoostingRegressor(
         n_estimators=200, max_depth=5, learning_rate=0.1, random_state=42
     ),
     #"KNeighbors": lambda: KNeighborsRegressor(n_jobs=-1),
     #"SVR": lambda: SVR(kernel="rbf"),
-    "CatBoost": lambda: CatBoostRegressor(verbose=0, random_seed=42),
+    "CatBoost": lambda: CatBoostRegressor(
+        verbose=0, random_seed=42, thread_count=TREINO_N_JOBS
+    ),
     "MLP": None,
 }
 
@@ -132,14 +181,16 @@ class TesteIncrementalFeaturesAsync:
         "Ridge": Ridge(),
         "DecisionTree": DecisionTreeRegressor(random_state=42),
         "RandomForest": RandomForestRegressor(
-            n_estimators=200, max_depth=12, random_state=42, n_jobs=-1
+            n_estimators=200, max_depth=12, random_state=42, n_jobs=TREINO_N_JOBS
         ),
         "GradientBoosting": GradientBoostingRegressor(
             n_estimators=200, max_depth=5, learning_rate=0.1, random_state=42
         ),
-        "KNeighbors": KNeighborsRegressor(n_jobs=-1),
+        "KNeighbors": KNeighborsRegressor(n_jobs=TREINO_N_JOBS),
         "SVR": SVR(kernel="rbf"),
-        "CatBoost": CatBoostRegressor(verbose=0, random_seed=42),
+        "CatBoost": CatBoostRegressor(
+            verbose=0, random_seed=42, thread_count=TREINO_N_JOBS
+        ),
     }
 
     ESCALADORES_PADRAO = {
@@ -701,8 +752,32 @@ class TesteIncrementalFeaturesAsync:
         categorical_fixas=None,
         modo="simples",
         cidade="joinville",
+        max_horas=None,
+        estado_path=None,
     ):
         import random as _random
+
+        # ── Orcamento e retomada (o teto de 6 h do Actions) ──────────────
+        # max_horas: teto de parede desta execucao. Ao estourar, para de abrir
+        # blocos novos e RETORNA o parcial — o processo sai 0 e a cadeia segue.
+        # estado_path: arquivo de progresso; permite que a proxima execucao
+        # continue de onde esta parou em vez de recomecar.
+        if max_horas is None:
+            max_horas = float(os.getenv("MAX_HORAS_BUSCA", "0") or 0)
+        if estado_path is None:
+            estado_path = os.getenv("BUSCA_ESTADO_PATH") or None
+        deadline = (time.monotonic() + max_horas * 3600) if max_horas and max_horas > 0 else None
+        self._busca_estado = ler_estado_busca(estado_path)
+        self._busca_estado_path = estado_path
+        # custo medio rolante de um bloco, para decidir se o proximo cabe
+        self._custo_bloco_medio = None
+        if deadline:
+            logger.info("Orcamento desta execucao: %.1f h | estado: %s",
+                        max_horas, estado_path or "desativado")
+        if self._busca_estado["blocos_concluidos"]:
+            logger.info("Retomando: %d bloco(s) ja concluido(s) em execucao anterior",
+                        len(self._busca_estado["blocos_concluidos"]))
+
         if modo == "simples":
             modelos_otimizaveis = {}
             modelos_simples = MODELOS_SIMPLES_TRAT
@@ -761,8 +836,35 @@ class TesteIncrementalFeaturesAsync:
             n_transf = len(self.TRANSFORM_OPCOES)
             n_modelos = qtd_optuna + qtd_simples
             total = len(TRATAMENTOS) * n_transf * len(pool) * n_modelos
+            self._busca_estado["total_planejado"] = self._busca_estado.get("total_planejado") or total
+            _sem_orcamento = False
             for trat in TRATAMENTOS:
                 for transf_name in self.TRANSFORM_OPCOES:
+                    chave_bloco = f"{trat['nome']}|{transf_name}"
+                    if chave_bloco in self._busca_estado["blocos_concluidos"]:
+                        logger.info("bloco %s ja concluido em execucao anterior — pulando",
+                                    chave_bloco)
+                        continue
+                    # Pare antes de ABRIR um bloco novo se ele nao couber no
+                    # orcamento. Usa a media do que ja rodou nesta execucao; sem
+                    # media ainda (primeiro bloco), so recusa se o prazo ja
+                    # estourou — nao vale abrir nada que nao vai terminar.
+                    if deadline is not None:
+                        restante = deadline - time.monotonic()
+                        estimado = self._custo_bloco_medio
+                        estourou = (restante <= 0) if estimado is None else (restante < estimado)
+                        if estourou:
+                            logger.warning(
+                                "orcamento esgotado: restam %.0f min (bloco estimado: %s); "
+                                "%d de %d blocos nao executados nesta execucao",
+                                restante / 60,
+                                "%.0f min" % (estimado / 60) if estimado else "sem medida",
+                                n_transf * len(TRATAMENTOS) - len(self._busca_estado["blocos_concluidos"]),
+                                n_transf * len(TRATAMENTOS),
+                            )
+                            _sem_orcamento = True
+                            break
+                    _t_bloco = time.monotonic()
                     num_feats = [c for c in pool if c not in categorical_features]
                     cat_feats = [c for c in pool if c in categorical_features]
                     cols_full = categorical_fixas_list + num_feats + cat_feats
@@ -816,6 +918,26 @@ class TesteIncrementalFeaturesAsync:
                             run_name_base=f"{trat['nome']}|{transf_name}",
                             transf_unica=transf_name,
                         )
+
+                    # bloco concluido (todos os incrementos) — progresso duravel
+                    self._busca_estado["blocos_concluidos"].append(chave_bloco)
+                    self._busca_estado["incrementos"][chave_bloco] = len(ordem)
+                    salvar_estado_busca(self._busca_estado_path, self._busca_estado)
+                    _dur = time.monotonic() - _t_bloco
+                    self._custo_bloco_medio = (
+                        _dur if self._custo_bloco_medio is None
+                        else 0.7 * self._custo_bloco_medio + 0.3 * _dur
+                    )
+                    logger.info(
+                        "bloco %s concluido em %.0f min (%d/%d blocos)",
+                        chave_bloco, _dur / 60,
+                        len(self._busca_estado["blocos_concluidos"]),
+                        n_transf * len(TRATAMENTOS),
+                    )
+                    if _sem_orcamento:
+                        break
+                if _sem_orcamento:
+                    break
         elif feature_selection == "sequential":
             all_candidates = categorical_fixas_list + list(pool)
             n_transf = len(self.TRANSFORM_OPCOES)
@@ -876,6 +998,20 @@ class TesteIncrementalFeaturesAsync:
                     run_name_base=str(size),
                 )
         print()
+        # ── Cobertura da busca (comparabilidade entre meses) ────────────
+        # Um mes com 60% dos blocos produz um numero indistinguivel de um mes
+        # com 100%. Registra no estado para o sentinela e para o relatorio.
+        if feature_selection == "shap":
+            _blocos = len(self._busca_estado["blocos_concluidos"])
+            _blocos_total = len(TRATAMENTOS) * len(self.TRANSFORM_OPCOES)
+            self._busca_estado["completa"] = bool(_blocos_total and _blocos >= _blocos_total)
+            salvar_estado_busca(self._busca_estado_path, self._busca_estado)
+            logger.info(
+                "COBERTURA DA BUSCA: %d/%d blocos (%.0f%%) | completa=%s | resultados=%d",
+                _blocos, _blocos_total,
+                100 * _blocos / _blocos_total if _blocos_total else 0,
+                self._busca_estado["completa"], len(resultados),
+            )
         df = pd.DataFrame(resultados)
         if not df.empty:
             saida = Path.cwd().parent / "dados" / cidade
