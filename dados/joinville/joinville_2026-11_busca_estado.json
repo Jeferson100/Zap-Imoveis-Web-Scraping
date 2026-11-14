@@ -1,0 +1,17 @@
+{
+  "blocos_concluidos": [
+    "std_median_ohe|none",
+    "std_median_ohe|log",
+    "std_median_ohe|sqrt",
+    "std_median_ohe|boxcox"
+  ],
+  "incrementos": {
+    "std_median_ohe|none": 44,
+    "std_median_ohe|log": 44,
+    "std_median_ohe|sqrt": 44,
+    "std_median_ohe|boxcox": 44
+  },
+  "total_planejado": 6600,
+  "completa": false,
+  "atualizado_em": "2026-11-14T19:55:13Z"
+}
