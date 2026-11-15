@@ -1,0 +1,13 @@
+{
+  "blocos_concluidos": [
+    "std_median_ohe|none",
+    "std_median_ohe|log"
+  ],
+  "incrementos": {
+    "std_median_ohe|none": 39,
+    "std_median_ohe|log": 39
+  },
+  "total_planejado": 5850,
+  "completa": false,
+  "atualizado_em": "2026-11-15T22:14:10Z"
+}
