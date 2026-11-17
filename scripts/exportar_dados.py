@@ -2,6 +2,7 @@ import os
 import pandas as pd
 import numpy as np
 import json
+import re
 from pathlib import Path
 
 
@@ -24,6 +25,90 @@ dados_todas_cidades = {}
 stats_todas_cidades = {}
 dados_aluguel_cidades = {}
 cidades_com_aluguel = []
+
+
+def _chave_anuncio(url):
+    """Chave estável do anúncio, sem parâmetros de rastreamento da URL.
+
+    Cada portal expõe o ID de um jeito diferente. Quando não há ID reconhecido,
+    a própria URL normalizada é usada como chave.
+    """
+    if not isinstance(url, str):
+        return None
+
+    limpa = url.split('?', 1)[0].split('#', 1)[0].rstrip('/')
+    for padrao in (r'-id-(\d+)', r'/id-(\d+)', r'-(\d+)\.html', r'-(\d+)$'):
+        encontrado = re.search(padrao, limpa, re.IGNORECASE)
+        if encontrado:
+            return encontrado.group(1)
+    return limpa.lower()
+
+
+def exportar_ineditos(cidade, base_dir, df, df_export, mes_atual):
+    """Exporta os anúncios que não existiam no snapshot do mês anterior.
+
+    A comparação é por ID do anúncio (não por idade do imóvel nem por dias de
+    publicação), e só é feita para Joinville, cidade da página de inéditos.
+    """
+    if cidade != 'joinville':
+        return None
+
+    meses = []
+    pasta_dados = base_dir / 'dados' / cidade
+    for arquivo in pasta_dados.glob(f'{cidade}_imoveis_limpo_*.parquet'):
+        encontrado = re.search(r'(\d{4}-\d{2})$', arquivo.stem)
+        if encontrado and encontrado.group(1) < mes_atual:
+            meses.append((encontrado.group(1), arquivo))
+
+    mes_anterior = None
+    chaves_anteriores = set()
+    tem_anterior = False
+    if meses:
+        mes_anterior, arquivo_anterior = max(meses, key=lambda par: par[0])
+        try:
+            anterior = pd.read_parquet(arquivo_anterior, columns=['url'])
+        except Exception as exc:
+            print(f'  Aviso: nao foi possivel ler {arquivo_anterior.name}: {exc}')
+            mes_anterior = None
+        else:
+            chaves_anteriores = set(anterior['url'].map(_chave_anuncio).dropna())
+            tem_anterior = True
+
+    if tem_anterior:
+        chaves_atuais = df['url'].map(_chave_anuncio)
+        ineditos = ~chaves_atuais.isin(chaves_anteriores)
+        dados_ineditos = df_export.loc[ineditos].to_dict(orient='records')
+    else:
+        # Sem snapshot anterior não há como saber o que é inédito: melhor
+        # entregar lista vazia do que marcar tudo como novo.
+        dados_ineditos = []
+
+    pasta_saida = base_dir / 'site_estatico' / 'data'
+    pasta_saida.mkdir(parents=True, exist_ok=True)
+
+    with open(pasta_saida / 'imoveis_ineditos_joinville.json', 'w', encoding='utf-8') as f:
+        json.dump(dados_ineditos, f, ensure_ascii=False, default=str)
+
+    js = 'window.DADOS_INEDITOS = window.DADOS_INEDITOS || {};\n'
+    js += 'window.DADOS_INEDITOS["joinville"] = '
+    js += json.dumps(dados_ineditos, ensure_ascii=False, default=str, separators=(',', ':'))
+    js += ';\n'
+    with open(pasta_saida / 'dados_ineditos_joinville.js', 'w', encoding='utf-8') as f:
+        f.write(js)
+
+    config = {
+        'joinville': {
+            'mes_atual': mes_atual,
+            'mes_anterior': mes_anterior or '',
+            'total': len(dados_ineditos),
+            'total_base': len(df_export),
+        }
+    }
+    with open(pasta_saida / 'config_ineditos.json', 'w', encoding='utf-8') as f:
+        json.dump(config, f, ensure_ascii=False, indent=2)
+
+    print(f'  Ineditos: {len(dados_ineditos)} anuncios ({mes_anterior or "sem mes anterior"} -> {mes_atual})')
+    return dados_ineditos
 
 
 def _carregar_por_bairros(base_dir, cidade, rotulo):
@@ -131,6 +216,9 @@ def exportar_cidade(cidade, base_dir):
 
     with open(pasta_saida / f'imoveis_{cidade}.json', 'w', encoding='utf-8') as f:
         json.dump(data, f, ensure_ascii=False, default=str)
+
+    if cidade == 'joinville':
+        exportar_ineditos(cidade, base_dir, df, df_export, data_ref)
 
     stats_cols = {}
     if 'preco_por_m2' in df.columns:

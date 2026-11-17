@@ -46,6 +46,13 @@ em **12 cidades** brasileiras com **340+ mil imoveis**.
 - Joinville e Balneario Camboriu possuem dados de aluguel
 - Metricas: valor do aluguel, condominio, IPTU
 
+### :new: Anuncios Ineditos (Joinville)
+- Pagina `ineditos.html`: mesmos filtros, tabela e mapa da pagina padrao
+- Mostra apenas anuncios que **nao existiam no snapshot do mes anterior**
+- Comparacao por ID do anuncio extraido da URL (nao por idade do imovel nem dias de publicacao)
+- Arquivos: `data/dados_ineditos_joinville.js`, `data/imoveis_ineditos_joinville.json` e `data/config_ineditos.json`
+- Referencia (`mes_atual`, `mes_anterior`, `total`) vem de `config_ineditos.json`
+
 ### :brain: Predicao de Preco
 > Disponivel para Joinville e Balneario Camboriu
 
@@ -59,6 +66,8 @@ em **12 cidades** brasileiras com **340+ mil imoveis**.
 ```
 site_estatico/
 ├── index.html                # Pagina principal
+├── ineditos.html             # Anuncios ineditos de Joinville (vs. mes anterior)
+├── v1-original.html          # Versao antiga
 ├── css/
 │   └── style.css             # Estilos com gradientes e responsividade
 ├── js/
@@ -66,6 +75,8 @@ site_estatico/
 │   └── predicao.js           # Inferencia de preco em JS puro
 └── data/
     ├── dados_{cidade}.js      # Dados dos imoveis (via <script>)
+    ├── dados_ineditos_joinville.js  # Recorte de anuncios ineditos
+    ├── config_ineditos.json   # Meses comparados e total de ineditos
     ├── stats_{cidade}.js      # Estatisticas por bairro
     ├── modelo_{cidade}.json   # Modelo de predicao (arvores + preprocessing)
     └── config_aluguel.json    # Cidades com dados de aluguel

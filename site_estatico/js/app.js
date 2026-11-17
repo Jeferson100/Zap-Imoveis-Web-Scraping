@@ -5,6 +5,14 @@ let modoAtual = 'venda';
 let cidadesComAluguel = [];
 let cidadesComPredicao = ['joinville', 'balneario_camboriu'];
 
+// Páginas secundárias (ex.: ineditos.html) podem trocar a fonte dos dados
+// sem duplicar este arquivo. index.html/v1-original.html não definem nada e
+// mantêm o comportamento original.
+const CONFIG_PAGINA = window.CONFIG_PAGINA || {};
+const CHAVE_DADOS_PADRAO = CONFIG_PAGINA.chaveDados || 'DADOS_IMOVEIS';
+const PREFIXO_DADOS = CONFIG_PAGINA.prefixoDados || 'dados_';
+const CIDADE_INICIAL = CONFIG_PAGINA.cidadeInicial || 'joinville';
+
 const CIDADES_NOMES = {
     'joinville': 'Joinville',
     'florianopolis': 'Florianópolis',
@@ -85,7 +93,7 @@ function removerOutliersIQR(dados) {
 
 // ── Inicialização ──
 document.addEventListener('DOMContentLoaded', () => {
-    const cidadeInicial = 'joinville';
+    const cidadeInicial = CIDADE_INICIAL;
     document.getElementById('cidade-select').value = cidadeInicial;
 
     fetch('data/config_aluguel.json')
@@ -187,11 +195,18 @@ function configurarModoAluguel(cidade) {
 }
 
 function atualizarTitulo(cidade) {
+    const titulo = document.getElementById('titulo-app');
+    if (CONFIG_PAGINA.titulo) {
+        titulo.textContent = CONFIG_PAGINA.titulo;
+        atualizarLabelsSidebar();
+        return;
+    }
+
     const nome = CIDADES_NOMES[cidade] || cidade;
     let sufixo = 'Venda';
     if (modoAtual === 'aluguel') sufixo = 'Aluguéis';
     else if (modoAtual === 'predicao') sufixo = 'Predição';
-    document.getElementById('titulo-app').textContent = '🏠 Análise de Imóveis ' + nome + ' - ' + sufixo;
+    titulo.textContent = '🏠 Análise de Imóveis ' + nome + ' - ' + sufixo;
     atualizarLabelsSidebar();
 }
 
@@ -217,8 +232,8 @@ function carregarDados(cidade) {
     atualizarTitulo(cidade);
 
     const fonte = modoAtual === 'aluguel' ? 'aluguel' : 'venda';
-    const chaveDados = modoAtual === 'aluguel' ? 'DADOS_ALUGUEL' : 'DADOS_IMOVEIS';
-    const prefixoJs = modoAtual === 'aluguel' ? 'dados_aluguel_' : 'dados_';
+    const chaveDados = modoAtual === 'aluguel' ? 'DADOS_ALUGUEL' : CHAVE_DADOS_PADRAO;
+    const prefixoJs = modoAtual === 'aluguel' ? 'dados_aluguel_' : PREFIXO_DADOS;
 
     if (window[chaveDados] && window[chaveDados][cidade]) {
         todosImoveis = window[chaveDados][cidade];

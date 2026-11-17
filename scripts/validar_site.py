@@ -117,6 +117,43 @@ def validar_cidades(base_dir, pasta_data):
     return erros
 
 
+def validar_ineditos(base_dir, pasta_data):
+    """A página de inéditos precisa da página, dos dados e do config."""
+    erros = []
+
+    pagina = base_dir / 'ineditos.html'
+    if not pagina.exists():
+        erros.append('arquivo ausente: ineditos.html')
+    else:
+        html = pagina.read_text(encoding='utf-8')
+        if 'DADOS_INEDITOS' not in html or 'dados_ineditos_' not in html:
+            erros.append('ineditos.html sem a configuracao DADOS_INEDITOS')
+
+    for nome in (
+        'dados_ineditos_joinville.js',
+        'imoveis_ineditos_joinville.json',
+        'config_ineditos.json',
+    ):
+        if not (pasta_data / nome).exists():
+            erros.append(f'arquivo ausente: data/{nome}')
+
+    config = pasta_data / 'config_ineditos.json'
+    if config.exists():
+        try:
+            with open(config, encoding='utf-8') as f:
+                dados = json.load(f)
+        except Exception:
+            pass  # já reportado por validar_json
+        else:
+            info = (dados.get('joinville') or {})
+            if not info.get('mes_atual'):
+                erros.append('config_ineditos.json sem mes_atual')
+            if not isinstance(info.get('total'), int):
+                erros.append('config_ineditos.json sem total')
+
+    return erros
+
+
 def main():
     base_dir = Path(__file__).resolve().parent.parent / 'site_estatico'
     pasta_data = base_dir / 'data'
@@ -130,6 +167,7 @@ def main():
     erros.extend(validar_json(pasta_data))
     erros.extend(validar_modelos(pasta_data))
     erros.extend(validar_cidades(base_dir, pasta_data))
+    erros.extend(validar_ineditos(base_dir, pasta_data))
 
     if erros:
         print(f'Validacao falhou ({len(erros)} problema(s)):')
