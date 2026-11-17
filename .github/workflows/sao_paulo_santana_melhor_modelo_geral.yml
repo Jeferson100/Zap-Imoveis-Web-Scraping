@@ -13,6 +13,5 @@ jobs:
     with:
       cidade_pasta: sao_paulo
       arquivo_rodando_imovel: sao_paulo_melhor_modelo_geral.py
-      instalar_playwright: false
       bairro: santana
     secrets: inherit
