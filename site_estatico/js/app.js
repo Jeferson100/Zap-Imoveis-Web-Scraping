@@ -4,14 +4,7 @@ let markers = [];
 let modoAtual = 'venda';
 let cidadesComAluguel = [];
 let cidadesComPredicao = ['joinville', 'balneario_camboriu'];
-
-// Páginas secundárias (ex.: ineditos.html) podem trocar a fonte dos dados
-// sem duplicar este arquivo. index.html/v1-original.html não definem nada e
-// mantêm o comportamento original.
-const CONFIG_PAGINA = window.CONFIG_PAGINA || {};
-const CHAVE_DADOS_PADRAO = CONFIG_PAGINA.chaveDados || 'DADOS_IMOVEIS';
-const PREFIXO_DADOS = CONFIG_PAGINA.prefixoDados || 'dados_';
-const CIDADE_INICIAL = CONFIG_PAGINA.cidadeInicial || 'joinville';
+let cidadesComIneditos = ['joinville'];
 
 const CIDADES_NOMES = {
     'joinville': 'Joinville',
@@ -93,7 +86,7 @@ function removerOutliersIQR(dados) {
 
 // ── Inicialização ──
 document.addEventListener('DOMContentLoaded', () => {
-    const cidadeInicial = CIDADE_INICIAL;
+    const cidadeInicial = 'joinville';
     document.getElementById('cidade-select').value = cidadeInicial;
 
     fetch('data/config_aluguel.json')
@@ -101,7 +94,7 @@ document.addEventListener('DOMContentLoaded', () => {
         .then(config => {
             cidadesComAluguel = config.cidades || [];
             console.log('Cidades com aluguel:', cidadesComAluguel);
-            configurarModoAluguel(cidadeInicial);
+            configurarModosDisponiveis(cidadeInicial);
             atualizarCabecalhoTabela();
         })
         .catch(() => {
@@ -113,7 +106,13 @@ document.addEventListener('DOMContentLoaded', () => {
     carregarDados(cidadeInicial);
 
     document.getElementById('cidade-select').addEventListener('change', async (e) => {
-        configurarModoAluguel(e.target.value);
+        // Inéditos existe só em Joinville: se a cidade nova não tiver o
+        // recorte, volta para Venda em vez de deixar a tabela vazia.
+        if (modoAtual === 'ineditos' && !cidadesComIneditos.includes(e.target.value)) {
+            modoAtual = 'venda';
+            document.getElementById('modo-select').value = 'venda';
+        }
+        configurarModosDisponiveis(e.target.value);
         atualizarCabecalhoTabela();
 
         if (modoAtual === 'predicao') {
@@ -131,6 +130,7 @@ document.addEventListener('DOMContentLoaded', () => {
         modoAtual = e.target.value;
         const cidade = document.getElementById('cidade-select').value;
         atualizarTitulo(cidade);
+        atualizarInfoIneditos(cidade);
         atualizarCabecalhoTabela();
 
         const secaoPred = document.getElementById('secao-predicao');
@@ -178,14 +178,19 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 });
 
-function configurarModoAluguel(cidade) {
+function configurarModosDisponiveis(cidade) {
     const modoSelect = document.getElementById('modo-select');
-    if (cidadesComAluguel.includes(cidade) || cidadesComPredicao.includes(cidade)) {
+    if (
+        cidadesComAluguel.includes(cidade)
+        || cidadesComPredicao.includes(cidade)
+        || cidadesComIneditos.includes(cidade)
+    ) {
         modoSelect.classList.remove('hidden');
         const opts = modoSelect.options;
         for (let i = opts.length - 1; i >= 0; i--) {
             if (opts[i].value === 'aluguel') opts[i].disabled = !cidadesComAluguel.includes(cidade);
             if (opts[i].value === 'predicao') opts[i].disabled = !cidadesComPredicao.includes(cidade);
+            if (opts[i].value === 'ineditos') opts[i].disabled = !cidadesComIneditos.includes(cidade);
         }
     } else {
         modoSelect.classList.add('hidden');
@@ -195,19 +200,44 @@ function configurarModoAluguel(cidade) {
 }
 
 function atualizarTitulo(cidade) {
-    const titulo = document.getElementById('titulo-app');
-    if (CONFIG_PAGINA.titulo) {
-        titulo.textContent = CONFIG_PAGINA.titulo;
-        atualizarLabelsSidebar();
-        return;
-    }
-
     const nome = CIDADES_NOMES[cidade] || cidade;
     let sufixo = 'Venda';
     if (modoAtual === 'aluguel') sufixo = 'Aluguéis';
     else if (modoAtual === 'predicao') sufixo = 'Predição';
-    titulo.textContent = '🏠 Análise de Imóveis ' + nome + ' - ' + sufixo;
+    else if (modoAtual === 'ineditos') sufixo = 'Inéditos';
+    document.getElementById('titulo-app').textContent = '🏠 Análise de Imóveis ' + nome + ' - ' + sufixo;
     atualizarLabelsSidebar();
+}
+
+
+/** Badge com os meses comparados no modo Inéditos (Joinville). */
+async function atualizarInfoIneditos(cidade) {
+    const el = document.getElementById('info-ineditos');
+    if (!el) return;
+
+    if (modoAtual !== 'ineditos' || !cidadesComIneditos.includes(cidade)) {
+        el.style.display = 'none';
+        el.textContent = '';
+        return;
+    }
+
+    el.style.display = '';
+    try {
+        const resposta = await fetch('data/config_ineditos.json');
+        const config = await resposta.json();
+        const info = config[cidade] || {};
+        if (!info.mes_anterior) {
+            el.textContent = 'Sem mês anterior disponível para comparar';
+            return;
+        }
+        const nomes = ['jan', 'fev', 'mar', 'abr', 'mai', 'jun', 'jul', 'ago', 'set', 'out', 'nov', 'dez'];
+        const fmt = mes => nomes[Number(mes.split('-')[1]) - 1] + '/' + mes.split('-')[0];
+        el.textContent = 'Anúncios inéditos em ' + fmt(info.mes_atual)
+            + ' vs. ' + fmt(info.mes_anterior)
+            + ' · ' + Number(info.total).toLocaleString('pt-BR') + ' anúncios';
+    } catch (err) {
+        el.textContent = 'Referência dos inéditos indisponível';
+    }
 }
 
 function atualizarLabelsSidebar() {
@@ -230,10 +260,14 @@ function atualizarLabelsSidebar() {
 // ── Carregar Dados ──
 function carregarDados(cidade) {
     atualizarTitulo(cidade);
+    atualizarInfoIneditos(cidade);
 
-    const fonte = modoAtual === 'aluguel' ? 'aluguel' : 'venda';
-    const chaveDados = modoAtual === 'aluguel' ? 'DADOS_ALUGUEL' : CHAVE_DADOS_PADRAO;
-    const prefixoJs = modoAtual === 'aluguel' ? 'dados_aluguel_' : PREFIXO_DADOS;
+    const fonte = modoAtual === 'aluguel' ? 'aluguel'
+        : (modoAtual === 'ineditos' ? 'inéditos' : 'venda');
+    const chaveDados = modoAtual === 'aluguel' ? 'DADOS_ALUGUEL'
+        : (modoAtual === 'ineditos' ? 'DADOS_INEDITOS' : 'DADOS_IMOVEIS');
+    const prefixoJs = modoAtual === 'aluguel' ? 'dados_aluguel_'
+        : (modoAtual === 'ineditos' ? 'dados_ineditos_' : 'dados_');
 
     if (window[chaveDados] && window[chaveDados][cidade]) {
         todosImoveis = window[chaveDados][cidade];

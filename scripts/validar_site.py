@@ -15,7 +15,7 @@ import sys
 from pathlib import Path
 
 CONFLITO_RE = re.compile(rb'^(?:<<<<<<< |=======$|>>>>>>> )', re.MULTILINE)
-MODO_VALORES = {'venda', 'aluguel', 'predicao'}
+MODO_VALORES = {'venda', 'aluguel', 'predicao', 'ineditos'}
 ARQUIVOS_TEXTO = {'.html', '.js', '.json', '.css', '.md'}
 
 
@@ -118,16 +118,13 @@ def validar_cidades(base_dir, pasta_data):
 
 
 def validar_ineditos(base_dir, pasta_data):
-    """A página de inéditos precisa da página, dos dados e do config."""
+    """A aba Inéditos precisa do option no seletor, dos dados e do config."""
     erros = []
 
-    pagina = base_dir / 'ineditos.html'
-    if not pagina.exists():
-        erros.append('arquivo ausente: ineditos.html')
-    else:
-        html = pagina.read_text(encoding='utf-8')
-        if 'DADOS_INEDITOS' not in html or 'dados_ineditos_' not in html:
-            erros.append('ineditos.html sem a configuracao DADOS_INEDITOS')
+    for pagina in ('index.html', 'v1-original.html'):
+        html = (base_dir / pagina).read_text(encoding='utf-8')
+        if '<option value="ineditos">Inéditos</option>' not in html:
+            erros.append(f'{pagina} sem a aba Inéditos no seletor de modo')
 
     for nome in (
         'dados_ineditos_joinville.js',

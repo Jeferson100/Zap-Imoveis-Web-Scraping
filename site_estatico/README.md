@@ -46,8 +46,9 @@ em **12 cidades** brasileiras com **340+ mil imoveis**.
 - Joinville e Balneario Camboriu possuem dados de aluguel
 - Metricas: valor do aluguel, condominio, IPTU
 
-### :new: Anuncios Ineditos (Joinville)
-- Pagina `ineditos.html`: mesmos filtros, tabela e mapa da pagina padrao
+### :new: Modo Ineditos (Joinville)
+- Quarta aba do seletor Venda / Aluguel / Predicao / **Ineditos** (index.html e v1-original.html)
+- Mesmos filtros, tabela e mapa do modo Venda
 - Mostra apenas anuncios que **nao existiam no snapshot do mes anterior**
 - Comparacao por ID do anuncio extraido da URL (nao por idade do imovel nem dias de publicacao)
 - Arquivos: `data/dados_ineditos_joinville.js`, `data/imoveis_ineditos_joinville.json` e `data/config_ineditos.json`
@@ -65,9 +66,8 @@ em **12 cidades** brasileiras com **340+ mil imoveis**.
 
 ```
 site_estatico/
-├── index.html                # Pagina principal
-├── ineditos.html             # Anuncios ineditos de Joinville (vs. mes anterior)
-├── v1-original.html          # Versao antiga
+├── index.html                # Pagina principal (abas Venda/Aluguel/Predicao/Ineditos)
+├── v1-original.html          # Versao antiga (mesmas abas)
 ├── css/
 │   └── style.css             # Estilos com gradientes e responsividade
 ├── js/
