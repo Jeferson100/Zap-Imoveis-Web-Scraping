@@ -11,6 +11,8 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent / 'src'))
 
 import json
+import os
+import re
 import joblib
 import numpy as np
 import pandas as pd
@@ -117,6 +119,15 @@ def extract_preprocessor(modelo):
                         for col, val in zip(cols, tr.power_)
                     }
                     result['numeric']['boxcox_method'] = 'box-cox'
+                elif hasattr(tr, 'metodo') and hasattr(tr, 'positivas_'):
+                    # TransformadorPorColuna (log/sqrt). So vale nas colunas nao
+                    # negativas; as demais passam cruas. Sem isto o JS alimentaria
+                    # as arvores em escala diferente da do treino — previsao
+                    # silenciosamente deformada.
+                    result['numeric']['transform'] = tr.metodo
+                    result['numeric']['transform_cols'] = [
+                        col for col, ok in zip(cols, tr.positivas_) if ok
+                    ]
 
         elif name.startswith('cat'):
             pipe_steps = trans.named_steps
@@ -138,13 +149,36 @@ def exportar_cidade(cidade, base_dir):
 
     print(f'\n=== {cidade.upper()} ===')
 
-    modelos = sorted(pasta_dados.glob(f'{cidade}_modelo_geral_*.joblib'))
-    if not modelos:
-        print(f'  Nenhum modelo encontrado para {cidade}')
-        return
-    modelo_path = modelos[-1]
+    # ── Modelo a exportar ────────────────────────────────────────────────
+    # MODELO_JS_PATH permite exportar o "modelo de site" (features que o
+    # navegador consegue calcular) em vez do modelo de producao completo.
+    modelo_env = os.environ.get('MODELO_JS_PATH', '').strip()
+    if modelo_env:
+        modelo_path = Path(modelo_env)
+        if not modelo_path.is_absolute():
+            modelo_path = base_dir / modelo_path
+        if not modelo_path.exists():
+            raise SystemExit(f'MODELO_JS_PATH nao encontrado: {modelo_path}')
+        print(f'  Modelo (MODELO_JS_PATH): {modelo_path.name}')
+    else:
+        # Preferir o modelo de site: e o unico que o navegador consegue
+        # reproduzir. Sem isto, o export automatico pegaria o modelo de
+        # producao (com score_texto) e falharia na allowlist do JS.
+        site_modelos = sorted(pasta_dados.glob(f'{cidade}_modelo_site_*.joblib'))
+        if site_modelos:
+            modelo_path = site_modelos[-1]
+            print(f'  Modelo de site: {modelo_path.name}')
+        else:
+            modelos = sorted(pasta_dados.glob(f'{cidade}_modelo_geral_*.joblib'))
+            if not modelos:
+                print(f'  Nenhum modelo encontrado para {cidade}')
+                return
+            modelo_path = modelos[-1]
+            print(f'  Modelo: {modelo_path.name}')
     mes_ref = modelo_path.stem.split('_')[-1]
-    print(f'  Modelo: {modelo_path.name}')
+    if not re.fullmatch(r'\d{4}-\d{2}', mes_ref):
+        # modelo_site_<cidade>_2026-11 -> ultimo token ainda e o mes
+        mes_ref = re.findall(r'\d{4}-\d{2}', modelo_path.stem)[-1]
 
     modelo = joblib.load(modelo_path)
 
@@ -157,6 +191,19 @@ def exportar_cidade(cidade, base_dir):
         feature_names = []
 
     print(f'  Features ({len(feature_names)})')
+
+    # ── Allowlist: o navegador precisa conseguir calcular TODAS as features ──
+    # score_texto e um Ridge sobre TF-IDF de 20k termos: nao ha como reproduzir
+    # no JS. Exportar mesmo assim faria o formulario prever com 0 nessa coluna,
+    # que e a 2a feature mais importante do modelo — previsao deformada sem aviso.
+    NAO_CALCULAVEIS_EM_JS = {'score_texto'}
+    bloqueadas = [f for f in feature_names if f in NAO_CALCULAVEIS_EM_JS]
+    if bloqueadas:
+        raise RuntimeError(
+            f'{cidade}: features que o navegador nao calcula: {bloqueadas}. '
+            'O site MANTEM o modelo antigo desta cidade. Gere o modelo de site '
+            '(scripts/treinar_modelo_site.py) ou remova essas features do modelo.'
+        )
 
     model_type = type(modelo.named_steps['modelo']).__name__
     print(f'  Tipo do modelo: {model_type}')
@@ -173,17 +220,52 @@ def exportar_cidade(cidade, base_dir):
         target_transform = 'none'
 
     # ── Features oficiais do treino (mesmo método do app) ──
+    # Ao exportar o modelo de site, o `features` tem de vir do JSON DELE: herdar
+    # o da producao traria score_texto para a lista que o formulario usa, e o
+    # navegador passaria a alimentar a arvore com 0 numa coluna que o modelo
+    # nem tem.
     features_info = None
-    feat_path = pasta_dados / f'{cidade}_features_modelo_{mes_ref}.json'
-    if feat_path.exists():
-        try:
-            with open(feat_path, encoding='utf-8') as f:
+    eh_modelo_site = '_modelo_site_' in modelo_path.name
+    if eh_modelo_site:
+        site_json = pasta_dados / f'{cidade}_modelo_site_{mes_ref}.json'
+        if site_json.exists():
+            with open(site_json, encoding='utf-8') as f:
                 features_info = json.load(f)
-            print(f"  Features oficiais: {features_info.get('n_features')} ({features_info.get('fonte', '?')})")
-        except Exception as exc:
-            print(f'  Aviso: falha ao ler {feat_path.name} ({exc})')
+            features_info['fonte'] = 'modelo_site'
+            # Cobertura da busca pertence ao modelo de PRODUCAO que definiu a
+            # configuracao; o modelo de site herda os hiperparametros dele.
+            prod_json = pasta_dados / f'{cidade}_features_modelo_{mes_ref}.json'
+            if prod_json.exists():
+                try:
+                    prod = json.loads(prod_json.read_text(encoding='utf-8'))
+                    for k in ('busca_cobertura', 'busca_completa'):
+                        features_info.setdefault(k, prod.get(k))
+                except Exception:
+                    pass
+            print(f"  Features oficiais (modelo de site): {features_info.get('n_features')}")
+    if features_info is None:
+        feat_path = pasta_dados / f'{cidade}_features_modelo_{mes_ref}.json'
+        if feat_path.exists():
+            try:
+                with open(feat_path, encoding='utf-8') as f:
+                    features_info = json.load(f)
+                print(f"  Features oficiais: {features_info.get('n_features')} ({features_info.get('fonte', '?')})")
+            except Exception as exc:
+                print(f'  Aviso: falha ao ler {feat_path.name} ({exc})')
     if features_info is None:
         features_info = {'features': list(feature_names), 'fonte': 'pipeline'}
+
+    # Coerencia obrigatoria: a lista de features do JSON tem de ser a que o
+    # pipeline realmente usa. Divergencia aqui ja causou formulario prevendo com
+    # zeros em features que o modelo treinado esperava.
+    declaradas = set(features_info.get('features') or [])
+    if declaradas and declaradas != set(feature_names):
+        so_json = sorted(declaradas - set(feature_names))
+        so_pipe = sorted(set(feature_names) - declaradas)
+        raise SystemExit(
+            f'  ERRO: features do JSON divergem do pipeline em {cidade}: '
+            f'so no JSON={so_json} | so no pipeline={so_pipe}'
+        )
 
     precisa_topicos = any(c.startswith('componente_') for c in feature_names)
     topic_data = None
@@ -203,6 +285,42 @@ def exportar_cidade(cidade, base_dir):
             }
             print(f'  Topicos: {len(vec.vocabulary_)} vocab')
 
+    # ── Cobertura real da busca ──────────────────────────────────────────
+    # Lida do estado (fonte primaria, escrita pelo treino), nao do JSON do
+    # modelo, que pode estar defasado. Blocos e combinacoes sao grandezas
+    # diferentes: misturar as duas foi o que produziu um "0,06%" irreal.
+    cobertura_blocos = None
+    cobertura_combos = None
+    completa = (features_info or {}).get('busca_completa')
+    estado_path = pasta_dados / f'{cidade}_{mes_ref}_busca_estado.json'
+    if estado_path.exists():
+        try:
+            est = json.loads(estado_path.read_text(encoding='utf-8'))
+            blocos = len(est.get('blocos_concluidos') or [])
+            planejados = int(est.get('blocos_planejados') or 0)
+            if not planejados:
+                # estados gravados antes de `blocos_planejados` existir
+                try:
+                    from teste_incremental_features_async import (
+                        TRATAMENTOS,
+                        TesteIncrementalFeaturesAsync as _T,
+                    )
+                    planejados = len(TRATAMENTOS) * len(_T.TRANSFORM_OPCOES)
+                except Exception:
+                    planejados = 0
+            combos = sum((est.get('incrementos') or {}).values())
+            total_combos = int(est.get('total_planejado') or 0)
+            cobertura_blocos = (blocos / planejados) if planejados else None
+            cobertura_combos = (combos / total_combos) if total_combos else None
+            completa = est.get('completa', completa)
+            print(f'  Cobertura da busca: {blocos}/{planejados or "?"} blocos '
+                  f'({100 * (cobertura_blocos or 0):.0f}%) | '
+                  f'{combos}/{total_combos or "?"} combinacoes')
+        except Exception as exc:
+            print(f'  Aviso: estado da busca ilegivel ({exc})')
+    if cobertura_blocos is None:
+        cobertura_blocos = (features_info or {}).get('busca_cobertura')
+
     model_export = {
         'model_type': model_type,
         'feature_names': feature_names,
@@ -210,7 +328,33 @@ def exportar_cidade(cidade, base_dir):
         'target_transform': target_transform,
         'ensemble': trees_data,
         'preprocessor': preprocessor_data,
+        # Proveniencia: qual arquivo gerou este JSON e quao completa foi a busca
+        # que escolheu a configuracao. Sem isso o site mostra um numero sem dizer
+        # de onde ele veio.
+        'modelo_arquivo': modelo_path.name,
+        'mes_ref': mes_ref,
+        'busca_cobertura': cobertura_blocos,
+        'busca_combos': cobertura_combos,
+        'busca_completa': completa,
+        'calc_em_js': NAO_CALCULAVEIS_EM_JS.isdisjoint(feature_names),
     }
+
+    # ── Features cujo 0 e implausivel ────────────────────────────────────
+    # O JS preenche feature ausente com 0. Para uma coluna cujo centro esta a
+    # mais de 5 desvios do zero (ex.: lng ~ -48,8), isso manda um z-score
+    # absurdo para dentro da arvore e deforma a previsao sem avisar. Nesses
+    # casos o site deve dizer "indisponivel", nao inventar um numero.
+    num_cfg = preprocessor_data.get('numeric', {})
+    centro = num_cfg.get('scaler_center') or num_cfg.get('scaler_mean') or {}
+    escala = num_cfg.get('scaler_scale') or {}
+    obrigatorias = [
+        col for col in feature_names
+        if centro.get(col) is not None and escala.get(col)
+        and abs(centro[col]) / escala[col] > 5
+    ]
+    model_export['features_obrigatorias'] = obrigatorias
+    if obrigatorias:
+        print(f'  Features obrigatorias (0 seria implausivel): {obrigatorias}')
 
     if topic_data:
         model_export['topics'] = topic_data

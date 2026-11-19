@@ -251,13 +251,18 @@ def treinar_melhor_modelo_geral(
         try:
             est = json.loads(estado_busca.read_text(encoding="utf-8"))
             blocos = len(est.get("blocos_concluidos") or [])
-            planejado = int(est.get("total_planejado") or 0)
-            busca_cobertura = (blocos / planejado) if planejado else None
+            planejados = int(est.get("blocos_planejados") or 0)
+            combos = sum((est.get("incrementos") or {}).values())
+            total_combos = int(est.get("total_planejado") or 0)
+            # Cobertura = blocos concluidos / blocos planejados. Antes eu dividia
+            # blocos por total_planejado (que e de COMBINACOES) e o numero saia
+            # ~220x menor que o real.
+            busca_cobertura = (blocos / planejados) if planejados else None
             busca_completa = est.get("completa")
             logger.info(
-                "Cobertura da busca: %d/%d blocos (%.0f%%) | completa=%s | atualizado=%s",
-                blocos, planejado, 100 * (busca_cobertura or 0),
-                busca_completa, est.get("atualizado_em"),
+                "Cobertura da busca: %d/%s blocos (%s) | %d/%s combinacoes | completa=%s",
+                blocos, planejados or "?", f"{100*busca_cobertura:.0f}%" if busca_cobertura else "?",
+                combos, total_combos or "?", busca_completa,
             )
             minimo = float(os.getenv("COBERTURA_MINIMA", "0") or 0)
             if minimo and busca_cobertura is not None and busca_cobertura < minimo:

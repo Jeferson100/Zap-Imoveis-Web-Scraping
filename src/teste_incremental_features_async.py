@@ -837,6 +837,10 @@ class TesteIncrementalFeaturesAsync:
             n_modelos = qtd_optuna + qtd_simples
             total = len(TRATAMENTOS) * n_transf * len(pool) * n_modelos
             self._busca_estado["total_planejado"] = self._busca_estado.get("total_planejado") or total
+            # Blocos (tratamento x transform) sao a unidade de progresso; `total`
+            # e de COMBINACOES (blocos x features x modelos). Misturar os dois
+            # dava cobertura errada por ~220x.
+            self._busca_estado["blocos_planejados"] = n_transf * len(TRATAMENTOS)
             _sem_orcamento = False
             for trat in TRATAMENTOS:
                 for transf_name in self.TRANSFORM_OPCOES:

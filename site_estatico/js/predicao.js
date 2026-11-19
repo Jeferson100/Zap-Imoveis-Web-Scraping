@@ -64,6 +64,11 @@ function carregarPredicao(cidade) {
             todas_features: getModelFeatures(),
             features_categoricas: ['tipo_imovel', 'bairro', 'tem_elevador', 'novo_lancamento', 'dist_centro_faixa', 'bairro_cluster'],
             features_tematicas: getModelFeatures().filter(function(f) { return f.indexOf('componente_') === 0; }),
+            // Proveniencia para exibir ao usuario: de onde vem este numero.
+            mes_ref: modeloJson.mes_ref || null,
+            modelo_arquivo: modeloJson.modelo_arquivo || null,
+            busca_cobertura: modeloJson.busca_cobertura,
+            r2: (modeloJson.features_info || {}).r2_otimizado,
         };
 
         topicModel = modeloJson.topics || null;
@@ -470,13 +475,32 @@ function preverValor(features) {
     var featureNames = modeloJson.feature_names;
     var catFeatures = configPredicao.features_categoricas;
 
+    // Features cujo 0 seria implausivel (ex.: lng): sem elas a previsao seria
+    // um numero inventado. Melhor devolver null e a interface avisar.
+    var obrigatorias = modeloJson.features_obrigatorias || [];
+    for (var oi = 0; oi < obrigatorias.length; oi++) {
+        var ov = features[obrigatorias[oi]];
+        if (ov === undefined || ov === null || ov === '' || isNaN(parseFloat(ov))) {
+            console.warn('Feature obrigatoria ausente:', obrigatorias[oi]);
+            return null;
+        }
+    }
+
     var numValues = [];
     var numNames = [];
     featureNames.forEach(function(f) {
         if (catFeatures.indexOf(f) === -1) {
             var val = features[f];
-            if (val === undefined || val === null || val === '') val = 0;
-            numValues.push(parseFloat(val) || 0);
+            // Ausente NAO vira 0: o sklearn preenche com a mediana do treino, e
+            // o JS tem essa mediana no JSON. Trocar por 0 fazia a previsao
+            // divergir do Python em toda linha com campo faltando (ex.: suites,
+            // ausente em 75% dos anuncios).
+            if (val === undefined || val === null || val === '') {
+                val = NaN;
+            } else {
+                val = parseFloat(val);
+            }
+            numValues.push(val);
             numNames.push(f);
         }
     });
@@ -512,11 +536,23 @@ function preprocessNumeric(values, names, numConfig) {
     var scale = numConfig.scaler_scale || {};
     var yjMean = numConfig.yj_standardize_mean || {};
     var yjScale = numConfig.yj_standardize_scale || {};
+    // TransformadorPorColuna: log/sqrt antes do scaler, so nas colunas
+    // nao-negativas. A ordem importa: o scaler foi ajustado no espaco
+    // transformado.
+    var tMetodo = numConfig.transform || null;
+    var tCols = numConfig.transform_cols || null;
 
     return values.map(function(v, i) {
         var name = names[i];
         if (isNaN(v) || v === null || v === undefined) {
-            v = median[name] || 0;
+            v = median[name] !== undefined ? median[name] : 0;
+        }
+        if (tMetodo && (tCols === null || tCols.indexOf(name) !== -1)) {
+            if (tMetodo === 'log') {
+                v = Math.log1p(v);
+            } else if (tMetodo === 'sqrt' && v >= 0) {
+                v = Math.sqrt(v);
+            }
         }
         if (lambdas[name] !== undefined) {
             v = yeoJohnson(v, lambdas[name]);
@@ -649,6 +685,16 @@ function executarPredicao() {
 
         try {
             var valorPredito = preverValor(features);
+            if (valorPredito === null) {
+                resultDiv.innerHTML =
+                    '<p style="color:#b45309;text-align:center;padding:1rem;">' +
+                    'Nao foi possivel calcular: faltam dados de localizacao ou do imovel. ' +
+                    'Informe a rua e o numero (ou confira o bairro e a metragem) e tente de novo.' +
+                    '</p>';
+                btn.disabled = false;
+                btn.textContent = 'Prever Valor';
+                return;
+            }
             var intervalo = calcularIntervalo(features, valorPredito);
 
             resultDiv.innerHTML =
@@ -656,6 +702,10 @@ function executarPredicao() {
                     '<div class="pred-label">Valor Previsto</div>' +
                     '<div class="pred-valor">' + formatarMoedaPred(valorPredito) + '</div>' +
                     '<div class="pred-intervalo">Intervalo 90%: ' + formatarMoedaPred(intervalo.lo) + ' ~ ' + formatarMoedaPred(intervalo.hi) + '</div>' +
+                    '<div class="pred-intervalo" style="opacity:.7;">Estimativa aproximada &middot; modelo ' +
+                        (configPredicao.mes_ref || '?') +
+                        (configPredicao.r2 ? ' &middot; R&sup2; ' + Number(configPredicao.r2).toFixed(3) : '') +
+                    '</div>' +
                 '</div>' +
                 '<div class="pred-cards-row">' +
                     '<div class="pred-card">' +

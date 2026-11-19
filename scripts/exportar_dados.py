@@ -167,6 +167,36 @@ def exportar_cidade(cidade, base_dir):
         print(f'  Carregando {arquivo.name}...')
         df = pd.read_parquet(arquivo)
 
+    # ── Predicao so dentro da distribuicao de treino ────────────────────
+    # O modelo aprendeu casa/apartamento urbano plausivel. Prever para chacara
+    # disfarcada de casa, imovel comercial ou preco pedido corrompido gerava
+    # razoes de 0,00x a 39x na tabela do site — que parecem erro do modelo e
+    # sao, na verdade, imovel fora de escopo. Melhor mostrar "-" do que um
+    # numero que nao sustenta.
+    if 'valor_predito' in df.columns:
+        TETO_METRAGEM = {'apartamento': 1000, 'casa': 3000}
+        PRECO_MIN, PRECO_MAX = 50_000, 15_000_000
+        tipo = df['tipo_imovel'].astype(str).str.lower().str.strip()
+        m2 = pd.to_numeric(df['metragem'], errors='coerce')
+        valor = pd.to_numeric(df['valor_imovel'], errors='coerce')
+        teto = tipo.map(TETO_METRAGEM)
+        dentro = (
+            tipo.isin(['casa', 'apartamento'])
+            & (teto.isna() | (m2 <= teto))
+            & valor.between(PRECO_MIN, PRECO_MAX)
+        )
+        fora = ~dentro
+        preditas = pd.to_numeric(df['valor_predito'], errors='coerce').notna()
+        suprimir = fora & preditas
+        if suprimir.any():
+            print(
+                f'  Predicao suprimida em {int(suprimir.sum())} imoveis fora de escopo '
+                f'(tipo/metragem/preco implausivel)'
+            )
+            for c in ('valor_predito', 'valor_predito_lo', 'valor_predito_hi'):
+                if c in df.columns:
+                    df.loc[suprimir, c] = np.nan
+
     cols_base = [
         'url', 'titulo', 'bairro', 'rua', 'tipo_imovel', 'fonte',
         'metragem', 'quartos', 'banheiros', 'vagas',
