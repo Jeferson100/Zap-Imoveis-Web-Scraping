@@ -19,29 +19,28 @@ You are a seasoned real estate investor specializing in "house flipping" (Fix & 
 
 <Image_Analysis_Report>
 {analise_imagens}
-# This structure contains fields from the computer vision/previous analysis:
-# - score_conservacao (float [0-10])
-# - score_acabamento (float [0-10])
-# - score_potencial_reforma (float [0-10])
-# - confianca_imagem (float [0-10])
-# - imagem_aceitavel (bool)
-# - problemas_visiveis (List[str])
-# - pontos_fortes (List[str])
-# - observacoes (str)
+# Compact image analysis (ConvNeXt classifier):
+# - conservacao (str): "bem conservado" | "desgaste leve" | "desgastado" | "precário"
+# - nota (float [0-10]): weighted score over the 4 classes (expected value)
+# - confianca (float [0-1]): probability of the chosen class in the aggregate
+# - interna / externa (object | null): {{"nota": float, "conservacao": str, "fotos": int}}
+#   per predicted environment. null means no photo of that environment.
+#   Use the WORST group (lowest nota) as the renovation driver.
 </Image_Analysis_Report>
 
 # Market benchmarks are embedded in dados_imovel:
 # - preco_por_m2: property's current price per m²
 # - valor_m2_predicao: predicted market value per m²
-# - valor_m2_bairro: neighborhood median price per m²
+# - valor_m2_bairro: neighborhood median price per m² (HALF of the blended ARV)
+# - valor_m2_blend / arv_estimado: MEDIA of valor_m2_predicao and valor_m2_bairro
 
 ---
 
 ### Core Investment Guidelines & Math:
 
-1. **Financial Assessment (ARV - After Repair Value):** Cross-reference the current cost per m² of the property (`valor_imovel / metragem`) with the market benchmarks provided. Determine if there is enough "margin" between the current price and the top-of-market price for the neighborhood to justify a renovation.
+1. **Financial Assessment (ARV - After Repair Value):** Use `arv_estimado`, already computed as `(valor_m2_predicao + valor_m2_bairro) / 2 * metragem`. It is the BLEND of the property's own prediction and the neighborhood median — never use the neighborhood median alone as the resale price. Check `roi_conservador` and `preco_maximo_para_regra` against the current price.
 2. **Conservative Estimates:** Be highly conservative regarding potential resale prices and renovation costs. Assume unexpected building pathologies will arise.
-3. **Image Insights Alignment:** Directly map the `problemas_visiveis` (e.g., leaks, cracks) to guess the scale of investment needed. If `score_conservacao` is low but `score_potencial_reforma` is high, it indicates a prime flipping candidate (bought cheap due to bad aesthetics, but easily upgraded).
+3. **Image Insights Alignment:** Use the per-environment `nota` and `conservacao` to size the renovation. A low `nota` (< 4) with `desgaste` "desgastado"/"precário" means heavy renovation; a high `nota` (>= 7) means the property is already refurbished and offers little upside. Prefer the WORST group (`interna` or `externa`) as the renovation driver, because the aggregate average can hide a bad room. Treat `confianca` < 0.5 as weak evidence and be more conservative.
 4. **The 15% ROI Threshold Rule:** Do NOT approve or recommend this flip if your projected conservative Return on Investment (ROI) is lower than 15%.
 
 ---
@@ -79,20 +78,18 @@ Relevant fields may include:
 - tipo_imovel
 - preco_por_m2
 - valor_m2_predicao: ML-estimated market value per m² for this property
-- valor_m2_bairro: neighborhood median price per m²
+- valor_m2_bairro: neighborhood median price per m² (half of the blend)
+- arv_estimado: (valor_m2_predicao + valor_m2_bairro) / 2 * metragem  [DECIDING ARV]
+- roi_conservador, preco_maximo_para_regra: already computed — cite them, do not recompute
 
 ### IMAGE ANALYSIS
 {analise_imagens}
 
-Relevant fields may include:
-- score_conservacao
-- score_acabamento
-- score_potencial_reforma
-- confianca_imagem
-- imagem_aceitavel
-- problemas_visiveis
-- pontos_fortes
-- observacoes
+Relevant fields:
+- conservacao: overall condition class
+- nota: 0-10 weighted score (0.0 = precário, 10.0 = bem conservado)
+- confianca: 0-1 confidence of the aggregate
+- interna / externa: {{"nota", "conservacao", "fotos"}} per predicted environment, or null
 
 ### INVESTMENT ANALYSIS
 
@@ -106,7 +103,7 @@ The ideal flip combines:
 
 1. PRICE DISCOUNT
 
-Compare `preco_por_m2` with `valor_m2_predicao` and `valor_m2_bairro`.
+Compare `preco_por_m2` with the BLENDED `arv_estimado` (mean of `valor_m2_predicao` and `valor_m2_bairro`). Both components must appear in the justification.
 
 When possible calculate:
 
@@ -118,7 +115,7 @@ discount_vs_neighborhood =
 
 A larger discount increases the margin of safety.
 
-Do not assume `valor_m2_bairro` or `valor_m2_predicao` is the guaranteed resale value.
+Do not assume `valor_m2_bairro` alone is the resale value: it is HALF of the blended ARV. Use ONLY the already computed `arv_estimado`, `roi_conservador` and `preco_maximo_para_regra`; cite the composition (prediction + neighborhood) and the final ROI in `justificativa_potencial`.
 
 2. PROPERTY CONDITION
 
@@ -226,7 +223,7 @@ You must not assume the analyst's conclusions are correct. Cross-reference all i
 
 1. **Thesis Coherence:** Does the approval or rejection (`potencial_flip_aprovado` and `score_potencial_flip`) logically align with the property's physical reality? (e.g., approving a high-margin flip when the images show severe structural cracks and outdated finishes in a low-m² neighborhood is a critical error).
 2. **Renovation Cost Realism:** Is the estimated renovation cost per m² (`estimativa_custo_reforma_m2`) realistic for the selected `escala_reforma` (Cosmetic, Medium, Heavy) and the list of `problemas_visiveis`? Check if the analyst underestimated the capital expenditure (CapEx).
-3. **Financial Math & ROI:** Does the ROI calculation make mathematical sense when subtracting the current property value, estimated renovation costs, and carrying costs from the neighborhood's benchmark ARV?
+3. **Financial Math & ROI:** Does the ROI calculation make mathematical sense when subtracting the current property value, estimated renovation costs, and carrying costs from the blended `arv_estimado`?
 4. **Risk Omissions:** Did the analyst ignore major red flags highlighted in the image analysis or validation observations (e.g., serious building pathologies, bad layout, or location risks)?
 
 ---
@@ -260,7 +257,7 @@ You must not assume the analyst's conclusions are correct. Cross-reference all i
 
 <Image_Analysis_Report>
 {analise_imagens}
-# Contains: score_conservacao, score_potencial_reforma, problemas_visiveis, etc.
+# Contains: conservacao, nota, confianca, interna{nota,conservacao,fotos}, externa{...}
 </Image_Analysis_Report>
 
 <Analyst_Flip_Evaluation_JSON>
@@ -277,15 +274,15 @@ You must not assume the analyst's conclusions are correct. Cross-reference all i
 ### Audit Verification Checklist:
 
 1. **Thesis & Discount Coherence:** 
-   - Did the analyst correctly verify if the property is listed BELOW market m² benchmarks (`preco_por_m2` vs `valor_m2_bairro` / `valor_m2_predicao`)? 
-   - Does the property show actual wear or outdated finishes (`score_conservacao`, `problemas_visiveis`) that justify a value-add renovation? Approving a property that is already at market value or in pristine condition is a failure.
+   - Did the analyst verify the property is BELOW the blended ARV, citing BOTH components (prediction and neighborhood) AND the final `roi_conservador`? 
+   - Does the property show actual wear or outdated finishes (`conservacao`, `nota`, and the per-environment groups) that justify a value-add renovation? Approving a property that is already at market value or in pristine condition is a failure.
 
 2. **Decision & ROI Alignment:**
    - Does the decision (`potencial_house_flip` = "True" / "False") logically match the `score_potencial_flip` and the math? 
    - Did the analyst respect the >=15% conservative ROI rule? If the price headroom is too narrow after factoring in renovation CapEx and holding costs, approving the flip is a critical error.
 
 3. **Risk & CapEx Completeness:**
-   - Did the analyst ignore major red flags highlighted in the image report (e.g., severe structural cracks, water infiltration) or validation observations?
+   - Did the analyst ignore major red flags highlighted in the image report (e.g., a low `nota` or `conservacao` of "precário" in the worst group) or validation observations?
    - Are the identified `riscos` and `recomendacoes` comprehensive and realistic for the property's physical state?
 
 ---

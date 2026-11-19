@@ -23,11 +23,13 @@ def test_metricas_regra_15pct_aprovado():
     })
     assert m["preco_por_m2"] == 2000.0
     assert m["valor_m2_predicao"] == 6000.0
-    assert m["arv_estimado"] == 600000
-    # 600k * 0.90 - 200k (compra) - 150k (reforma 1500/m2 * 100m2)
+    # BLEND: (6000 + 4800) / 2 = 5400/m2 * 100 m2 (o antigo max dava 600000)
+    assert m["arv_estimado"] == 540000
+    assert m["arv_fonte"] == "blend_mediana_predicao"
+    # 540k * 0.90 - 200k (compra) - 150k (reforma 1500/m2 * 100m2)
     assert m["custo_reforma_estimado"] == 150000.0
-    assert m["lucro_projetado"] == 190000.0
-    assert m["roi_conservador"] == 0.95
+    assert m["lucro_projetado"] == 136000.0
+    assert m["roi_conservador"] == 0.68
     assert m["passa_regra_15pct"] is True
 
 
@@ -48,9 +50,9 @@ def test_custo_reforma_reprova_imovel_que_passaria():
         "valor_imovel": 380000, "metragem": 100,
         "valor_predito": 500000, "p50_bairro": 4800,
     })
-    # sem reforma: 450000 - 380000 = 70000 -> roi 0.18
-    # com reforma: 450000 - 380000 - 150000 = -80000 -> reprova
-    assert m["lucro_projetado"] == -80000.0
+    # sem reforma: ARV blend 490000 * 0.90 - 380000 = 61000 -> roi 0.16
+    # com reforma: 441000 - 380000 - 150000 = -89000 -> reprova
+    assert m["lucro_projetado"] == -89000.0
     assert m["passa_regra_15pct"] is False
 
 
@@ -278,3 +280,119 @@ def test_sem_retry_em_erro_permanente(monkeypatch):
     out = asyncio.run(react_agent_flip.avaliar_imovel_react({'dados_imovel': {}}))
     assert chamadas['n'] == 1
     assert out['potencial_house_flip'] == 'False'
+
+
+def test_custo_reforma_lido_na_chamada(monkeypatch):
+    """Override por env vale mesmo DEPOIS do import (o valor nao e congelado)."""
+    from agente_potencial_flip import tools_flip
+
+    monkeypatch.setenv("FLIP_CUSTO_REFORMA_M2", "2000")
+    dados = {"valor_imovel": 200000, "metragem": 100, "valor_predito": 600000}
+    m = tools_flip.calcular_metricas_flip(dados)
+    assert tools_flip.custo_reforma_m2() == 2000.0
+    assert m["custo_reforma_por_m2"] == 2000.0
+    assert m["custo_reforma_estimado"] == 200000.0
+    assert m["lucro_projetado"] == 600000 * 0.90 - 200000 - 200000
+
+
+def test_custo_reforma_env_invalido_volta_ao_padrao(monkeypatch):
+    from agente_potencial_flip.tools_flip import (
+        CUSTO_REFORMA_PADRAO_M2,
+        custo_reforma_m2,
+    )
+
+    for ruim in ("", "abc", "0", "-1500", "nan", "inf"):
+        monkeypatch.setenv("FLIP_CUSTO_REFORMA_M2", ruim)
+        assert custo_reforma_m2() == CUSTO_REFORMA_PADRAO_M2
+
+
+def test_custo_reforma_argumento_explicito():
+    """Cenario what-if sem tocar no ambiente."""
+    dados = {"valor_imovel": 200000, "metragem": 100, "valor_predito": 600000}
+    m = calcular_metricas_flip(dados, custo_m2=2500)
+    assert m["custo_reforma_por_m2"] == 2500.0
+    assert m["custo_reforma_estimado"] == 250000.0
+    assert m["lucro_projetado"] == 600000 * 0.90 - 200000 - 250000
+
+
+def test_explicar_metricas_tem_oito_passos(monkeypatch):
+    from agente_potencial_flip.tools_flip import PASSOS_METRICAS, explicar_metricas
+
+    monkeypatch.setenv("FLIP_CUSTO_REFORMA_M2", "1500")
+    dados = {"valor_imovel": 800000, "metragem": 120,
+             "valor_predito": 888000, "p50_bairro": 6900}
+    det = explicar_metricas(dados)
+    assert [o["passo"] for o in det["operacoes"]] == list(PASSOS_METRICAS)
+    assert len(det["operacoes"]) == 8
+    assert det["roi_conservador"] == calcular_metricas_flip(dados)["roi_conservador"]
+    passo_regra = next(o for o in det["operacoes"] if o["passo"] == "passa_regra_15pct")
+    assert det["passa_regra_15pct"] is passo_regra["resultado"]
+
+
+def test_preco_maximo_para_regra_e_a_regua_de_negociacao(monkeypatch):
+    """O teto de compra sai da tool: sem ele o modelo inventa o alvo (ja inventou)."""
+    from agente_potencial_flip.tools_flip import ROI_MINIMO, explicar_metricas
+
+    monkeypatch.setenv("FLIP_CUSTO_REFORMA_M2", "1500")
+    dados = {"valor_imovel": 330000, "metragem": 46,
+             "valor_predito": 331892.67, "p50_bairro": 6973.12}
+    m = calcular_metricas_flip(dados)
+    esperado = round((m["arv_estimado"] * 0.90 - m["custo_reforma_estimado"])
+                     / (1 + ROI_MINIMO), 2)
+    assert m["preco_maximo_para_regra"] == esperado
+    assert m["preco_maximo_para_regra"] < dados["valor_imovel"]  # compra acima do teto
+    assert m["passa_regra_15pct"] is False
+
+    # comprar pelo teto fecha os 15% (com folga de 1 real para o arredondamento)
+    no_teto = calcular_metricas_flip({**dados, "valor_imovel": esperado - 1})
+    assert no_teto["passa_regra_15pct"] is True
+    assert abs(no_teto["roi_conservador"] - ROI_MINIMO) < 0.01
+
+    det = explicar_metricas(dados)
+    teto = next(o for o in det["operacoes"] if o["passo"] == "preco_maximo_para_regra")
+    assert teto["resultado"] == esperado
+    assert set(teto["entradas"]) == {"arv_estimado", "custo_reforma_estimado", "ROI_MINIMO"}
+
+
+def test_compra_bem_abaixo_do_arv_aprova_flip(monkeypatch):
+    """Sem um caso aprovado, o ramo 'True' do G4 nunca roda."""
+    monkeypatch.setenv("FLIP_CUSTO_REFORMA_M2", "1500")
+    m = calcular_metricas_flip({"valor_imovel": 165946.0, "metragem": 46,
+                                "valor_predito": 331892.67, "p50_bairro": 6973.12})
+    assert m["passa_regra_15pct"] is True
+    assert m["roi_conservador"] > 0.15
+    assert m["margem_vs_arv_pct"] > 45
+
+
+def test_contexto_tem_comparativos_e_bairro_arredondado(monkeypatch):
+    from agente_potencial_flip.tools_flip import CONTEXTO_METRICAS, explicar_metricas
+
+    monkeypatch.setenv("FLIP_CUSTO_REFORMA_M2", "1500")
+    dados = {"valor_imovel": 330000, "metragem": 46,
+             "valor_predito": 331892.67, "p50_bairro": 6973.118279569892}
+    det = explicar_metricas(dados)
+    assert tuple(det["contexto"]) == CONTEXTO_METRICAS
+    assert det["contexto"]["valor_m2_bairro"] == 6973.12
+    assert det["contexto"]["discount_vs_bairro_pct"] == round(
+        (6973.118279569892 - det["preco_por_m2"]) / 6973.118279569892 * 100, 2)
+    assert det["contexto"]["margem_vs_arv_pct"] == round(
+        (det["arv_estimado"] - 330000) / det["arv_estimado"] * 100, 2)
+
+
+def test_explicar_metricas_mostra_passo_da_reforma(monkeypatch):
+    from agente_potencial_flip.tools_flip import explicar_metricas
+
+    monkeypatch.setenv("FLIP_CUSTO_REFORMA_M2", "1500")
+    dados = {"valor_imovel": 800000, "metragem": 120,
+             "valor_predito": 888000, "p50_bairro": 6900}
+    det = explicar_metricas(dados)
+
+    reforma = next(o for o in det["operacoes"] if o["passo"] == "custo_reforma_estimado")
+    assert reforma["entradas"] == {"custo_reforma_por_m2": 1500.0, "metragem": 120.0}
+    assert reforma["resultado"] == 180000.0
+    assert "custo_reforma_por_m2 * metragem" in reforma["formula"]
+
+    lucro = next(o for o in det["operacoes"] if o["passo"] == "lucro_projetado")
+    assert lucro["entradas"]["custo_reforma_estimado"] == 180000.0
+    esperado = det["arv_estimado"] * 0.90 - 800000 - 180000
+    assert abs(lucro["resultado"] - esperado) < 0.02

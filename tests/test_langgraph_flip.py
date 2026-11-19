@@ -204,7 +204,9 @@ def test_trava_15pct_sobrescreve_veredito(monkeypatch):
 
     assert out["potencial_house_flip"] == "False"
     assert "Trava regra 15%" in out["observacoes"]
-    assert out["metricas_flip"]["roi_conservador"] == -0.375
+    # BLEND: (5000 + 4800) / 2 * 100 = 490000 -> lucro 441000 - 630000 = -189000
+    esperado_roi = round((0.90 * 490000 - 480000 - 150000) / 480000, 4)
+    assert out["metricas_flip"]["roi_conservador"] == esperado_roi
     assert out["verificacao"] == "aprovada"  # o veredito em si passou no G2
 
 

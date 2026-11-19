@@ -1,5 +1,6 @@
 import asyncio
 import logging
+import os
 import time
 from typing import Any, Optional, Type
 
@@ -63,6 +64,15 @@ class LlmRouter:
             ),
             "Zai": kwargs.get("zai_models"),
         }
+
+        # Fallback de modelos testados, SOMENTE para chamadas de TEXTO com schema.
+        # Chamadas de visao (messages em lista) continuam usando o catalogo.
+        override = os.environ.get("ROTEADOR_MODELOS_TEXTO_NVIDIA", "").strip()
+        if override and self.strutured_output is not None and isinstance(messages, str):
+            modelos = [m.strip() for m in override.split(",") if m.strip()]
+            if modelos:
+                self.models["API_Nvidia"] = modelos
+                logger.warning("API_Nvidia (texto) via env: %s", modelos)
 
     async def _try_provider(
         self, provider_name: str, router_class: Type, method_name: str

@@ -1,0 +1,184 @@
+name: "TESTE — Agente ReAct flip (create_deep_agent)"
+
+# Workflow de validacao, NAO de producao. Disparo manual.
+# Objetivo: provar que o agente novo roda no runner do GitHub antes de trocar
+# o joinville_avaliacao_flip_base.yml (que ainda aponta para o grafo antigo).
+
+on:
+  workflow_dispatch:
+    inputs:
+      bairro:
+        description: "Bairro para selecionar (substring, ex.: atiradores)"
+        required: true
+        default: "atiradores"
+      limite:
+        description: "Quantos imoveis avaliar (os mais baratos por m2)"
+        required: true
+        default: "10"
+      modelo:
+        description: "Modelo principal (deixe vazio para o default lightning-30b)"
+        required: false
+        default: "nvidia/nemotron-3.5-lightning-30b-a3b"
+      testar_fallback:
+        description: "Rodar tambem job que forca o principal a falhar"
+        required: false
+        type: boolean
+        default: true
+
+jobs:
+  teste_agente:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Instalar uv e dependencias
+        run: |
+          pip install uv
+          uv venv
+          uv pip install -e .
+          uv pip install huggingface_hub
+
+      - name: Rodar agente ReAct (deep agent)
+        run: |
+          mkdir -p logs
+          uv run codigos_rodando/joinville/joinville_avaliacao_flip_react.py 2>&1 | tee logs/flip_react.log
+        env:
+          LIMITE_INFERIOR_FLIP: "0"
+          LIMITE_SUPERIOR_FLIP: ${{ inputs.limite }}
+          BAIRRO_SELECAO: ${{ inputs.bairro }}
+          SNAPSHOT_DATA: "true"
+          FLIP_MODEL: ${{ inputs.modelo }}
+          FLIP_MODEL_FALLBACKS: nvidia/nemotron-3-ultra-550b-a55b,nvidia/nemotron-3.5-bolt-e4b,mistralai/mistral-large-4-1t-a52b,meta/muse-glimmer-30b
+          ROTEADOR_MODELOS_TEXTO_NVIDIA: nvidia/nemotron-3.5-lightning-30b-a3b,nvidia/nemotron-3-ultra-550b-a55b,nvidia/nemotron-3.5-bolt-e4b,mistralai/mistral-large-4-1t-a52b,meta/muse-glimmer-30b
+          NVIDIA_API_KEY: ${{ secrets.NVIDIA_API_KEY }}
+          GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
+          CEREBRAS_API_KEY: ${{ secrets.CEREBRAS_API_KEY }}
+          OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
+          ZAI_API_KEY: ${{ secrets.ZAI_API_KEY }}
+          LANGCHAIN_API_KEY: ${{ secrets.LANGCHAIN_API_KEY }}
+          LANGCHAIN_TRACING_V2: "true"
+          LANGCHAIN_PROJECT: Agente-Imovel-CI-Teste
+          FLIP_LS_PROJETO: Agente-Imovel-CI-Teste
+          FLIP_LOTE_TAG: teste-${{ inputs.bairro }}
+          FLIP_MAX_TENTATIVAS: "2"
+          FLIP_LOOP_TIMEOUT_S: "240"
+
+      - name: Validar resultado e log
+        env:
+          LIMITE: ${{ inputs.limite }}
+          BAIRRO: ${{ inputs.bairro }}
+        run: |
+          uv run python - <<'PY'
+          import glob
+          import os
+          import pandas as pd
+
+          limite = int(os.environ["LIMITE"])
+          bairro = os.environ["BAIRRO"].strip().lower()
+          arquivos = glob.glob(
+              f"dados/joinville/joinville_avaliacao_flip_*_0_{limite}*.parquet"
+          )
+          assert arquivos, f"parquet de resultado nao encontrado (limite={limite})"
+          df = pd.read_parquet(arquivos[0])
+          print(f"linhas: {len(df)} | colunas: {list(df.columns)}")
+
+          erros = df["erro"].dropna() if "erro" in df else []
+          assert len(erros) == 0, f"imoveis com erro: {list(erros)[:3]}"
+
+          vereditos = set(df["potencial_house_flip"].dropna().astype(str))
+          assert vereditos <= {"True", "False"} and vereditos, f"vereditos invalidos: {vereditos}"
+
+          if "arv_fonte" in df:
+              fontes = df["arv_fonte"].dropna().astype(str)
+              permitidas = {"blend_mediana_predicao", "predicao_sem_bairro",
+                            "bairro_sem_predicao"}
+              ruins = [f for f in fontes if f not in permitidas]
+              print("arv_fonte:", fontes.value_counts().to_dict())
+              assert not ruins, f"arv_fonte inesperada: {ruins}"
+
+          log = open("logs/flip_react.log", encoding="utf-8", errors="replace").read()
+          marcadores = ["classificar_fotos_tool", "validar_dados_tool",
+                        "calcular_metricas_tool", "think_tool", "registrar_decisao"]
+          faltando = [m for m in marcadores if m not in log]
+          assert not faltando, f"ferramentas ausentes no log: {faltando}"
+          # o deep agent nao pode cair no loop de filesystem que vimos no smoke
+          assert log.count("menu enxuto: ['ls'") == 0, "ferramenta ls apareceu no menu"
+          print("LOOP/graders:", [ln for ln in log.splitlines()
+                                 if "LOOP " in ln or "G7" in ln][-6:])
+          print("OK: workflow de teste aprovado")
+          PY
+
+      - name: Enviar artefatos
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: teste-flip-react-${{ inputs.bairro }}
+          path: |
+            dados/joinville/*avaliacao_flip*.parquet
+            logs/flip_react.log
+          if-no-files-found: warn
+          retention-days: 7
+
+  teste_fallback:
+    if: ${{ inputs.testar_fallback }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Instalar uv e dependencias
+        run: |
+          pip install uv
+          uv venv
+          uv pip install -e .
+          uv pip install huggingface_hub
+
+      - name: Rodar com modelo principal INVALIDO (forca fallback)
+        run: |
+          mkdir -p logs
+          uv run codigos_rodando/joinville/joinville_avaliacao_flip_react.py 2>&1 | tee logs/flip_fallback.log
+        env:
+          LIMITE_INFERIOR_FLIP: "0"
+          LIMITE_SUPERIOR_FLIP: "2"
+          BAIRRO_SELECAO: ${{ inputs.bairro }}
+          SNAPSHOT_DATA: "true"
+          FLIP_MODEL: nvidia/modelo-inexistente-xyz
+          FLIP_MODEL_FALLBACKS: nvidia/nemotron-3.5-lightning-30b-a3b
+          ROTEADOR_MODELOS_TEXTO_NVIDIA: nvidia/nemotron-3.5-lightning-30b-a3b
+          NVIDIA_API_KEY: ${{ secrets.NVIDIA_API_KEY }}
+          LANGCHAIN_TRACING_V2: "false"
+
+      - name: Validar fallback
+        run: |
+          uv run python - <<'PY'
+          import glob
+          import pandas as pd
+
+          fs = glob.glob("dados/joinville/joinville_avaliacao_flip_*_0_2*.parquet")
+          assert fs, "parquet do teste de fallback nao encontrado"
+          df = pd.read_parquet(fs[0])
+          assert len(df) >= 1, "fallback nao gerou nenhum veredito"
+          erros = df["erro"].dropna() if "erro" in df else []
+          assert len(erros) == 0, f"fallback com erro: {list(erros)[:2]}"
+          log = open("logs/flip_fallback.log", encoding="utf-8", errors="replace").read()
+          assert "modelo-inexistente-xyz" in log or "falha" in log.lower(), \
+              "o principal invalido deveria ter falhado antes do fallback"
+          print("OK: fallback funcionou")
+          PY
+
+      - name: Enviar artefato do fallback
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: teste-flip-fallback
+          path: logs/flip_fallback.log
+          if-no-files-found: warn
+          retention-days: 7
