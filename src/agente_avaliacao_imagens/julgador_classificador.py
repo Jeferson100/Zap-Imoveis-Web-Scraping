@@ -87,6 +87,14 @@ def _carregar() -> Dict[str, List[Tuple[Any, dict]]]:
                     from classificador_fotos import carregar_checkpoint
                 except Exception as exc:  # pragma: no cover - ambiente
                     raise ClassificadorIndisponivel(f"import de classificador_fotos: {exc}") from exc
+                # Falha rapido: sem folds, `_prever_tarefa` devolveria nan 0-d e
+                # o `np.dot` com NOTA_POR_CLASSE estourava em float() (CI sem os
+                # pesos, que sao gitignored).
+                faltando = [t for t in ("conservacao", "ambiente") if not _folds(t)]
+                if faltando:
+                    raise ClassificadorIndisponivel(
+                        "pesos fold*.pt ausentes para: " + ", ".join(faltando)
+                    )
                 _MODELOS = {
                     tarefa: [carregar_checkpoint(p) for p in _folds(tarefa)]
                     for tarefa in ("conservacao", "ambiente")
@@ -99,6 +107,8 @@ def _prever_tarefa(tarefa: str, caminho: Path) -> np.ndarray:
     from classificador_fotos import prever_caminhos
 
     modelos = _carregar()[tarefa]
+    if not modelos:
+        raise ClassificadorIndisponivel(f"sem checkpoints para a tarefa '{tarefa}'")
     probs = []
     for modelo, ck in modelos:
         size = int(ck.get("img", 192))
@@ -236,7 +246,9 @@ def _grupos_por_ambiente(
 
 def _resumo_grupo(lista_pc: Sequence[np.ndarray]) -> Tuple[float, str, float]:
     """(nota, classe, confiança) para um conjunto de fotos do mesmo ambiente."""
-    pc = np.mean(list(lista_pc), axis=0)
+    pc = np.asarray(np.mean(list(lista_pc), axis=0), dtype=float).ravel()
+    if pc.shape != (4,):
+        raise ValueError(f"esperado probs (4,) no grupo, veio {pc.shape}")
     return (
         round(float(np.dot(pc, NOTA_POR_CLASSE)), 1),
         LABELS[int(np.argmax(pc))],
@@ -261,7 +273,11 @@ def _agregar(pcs: Sequence[np.ndarray], pas: Sequence[np.ndarray]) -> AnaliseIma
     for nome, lista in grupos.items():
         if not lista:
             continue
-        nota, classe, conf = _resumo_grupo(lista)
+        try:
+            nota, classe, conf = _resumo_grupo(lista)
+        except ValueError as exc:
+            logger.warning("classificador: grupo %s ignorado (%s)", nome, exc)
+            continue
         extra[f"score_conservacao_{nome}"] = nota
         extra[f"classe_conservacao_{nome}"] = classe
         extra[f"confianca_conservacao_{nome}"] = conf
@@ -282,6 +298,11 @@ def julgar_fotos(urls: Sequence[str]) -> AnaliseImagens:
     urls = _limitar(urls)
     if not urls:
         return _fallback("Sem fotos para o classificador")
+
+    if not disponivel():
+        # CI sem os pesos (dados/modelo_fotos e gitignored): sem esta guarda o
+        # `_prever_tarefa` devolvia nan 0-d e o dot/float estourava TypeError.
+        return _fallback("Pesos do classificador ausentes (fold*.pt); usando fallback")
 
     if len(urls) == 1:
         return julgar_foto(urls[0])
@@ -310,6 +331,10 @@ def julgar_fotos_detalhado(urls: Sequence[str]) -> Dict[str, Any]:
     urls = _limitar(urls)
     if not urls:
         return {"por_foto": [], "agregado": _fallback("Sem fotos para o classificador")}
+
+    if not disponivel():
+        motivo = "Pesos do classificador ausentes (fold*.pt); usando fallback"
+        return {"por_foto": [], "agregado": _fallback(motivo)}
 
     por_foto: List[Dict[str, Any]] = []
     pcs, pas = [], []
