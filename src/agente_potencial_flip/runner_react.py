@@ -167,6 +167,7 @@ async def _invocar(sessao, entrada):
         sessao["recursao_atingida"] = True
     except Exception as exc:  # noqa: BLE001 - HTTP 400/429/timeout nao podem matar a celula
         logger.warning("chamada do agente falhou: %s: %s", type(exc).__name__, str(exc)[:300])
+        logger.warning("traceback da falha:\n%s", __import__("traceback").format_exc())
         sessao["erro_etapa"] = f"{type(exc).__name__}: {str(exc)[:300]}"
     msgs, flip = await _historico_do_checkpointer(sessao)
     return {"messages": msgs, "structured_response": flip}

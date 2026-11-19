@@ -106,7 +106,9 @@ async def processar_um(linha: pd.Series, i: int, total: int) -> dict:
         metricas = saida.graders.get("metricas_tool") or {}
         erro = None
     except Exception as exc:  # noqa: BLE001
+        import traceback
         logger.error("Falha no imovel %s: %s", url, exc)
+        logger.error("traceback:\n%s", traceback.format_exc())
         saida, metricas, erro = None, {}, str(exc)
 
     registro = {
