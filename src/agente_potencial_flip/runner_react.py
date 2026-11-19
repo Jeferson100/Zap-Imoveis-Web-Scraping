@@ -13,7 +13,7 @@ from langgraph.types import Command
 from agente_potencial_flip.ferramentas_react import (
     ESTADO_AGENTE, SESSOES, PROXIMO_PASSO, _marcar,
     classificar_fotos_tool, validar_dados_tool, calcular_metricas_tool,
-    registrar_decisao, criar_agente,
+    registrar_decisao, criar_agente, julgar_fotos,
 )
 from agente_potencial_flip.schemas_react import (
     AvaliacaoImovel, montar_saida, graders_sem_pecas,

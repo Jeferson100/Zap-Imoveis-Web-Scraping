@@ -501,19 +501,6 @@ def _middlewares():
     return base
 
 
-def criar_agente():
-    # create_agent (nao deep): o deep injeta um subagente general-purpose e uma
-    # tool `task`, que o modelo usava para re-delegar e estourar a recursao.
-    # As 5 ferramentas rodam na ordem do prompt; uma depende da outra.
-    return create_agent(
-        model=MODELO_AGENTE,
-        tools=[classificar_fotos_tool, validar_dados_tool,
-               calcular_metricas_tool, think_tool, registrar_decisao],
-        middleware=_middlewares(),
-        system_prompt=SYSTEM_FLIP_NB,
-        response_format=AnalisePotencialFlip,
-        checkpointer=MemorySaver(),
-    )
 
 
 
