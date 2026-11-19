@@ -180,6 +180,21 @@ def exportar_cidade(cidade, base_dir):
         # modelo_site_<cidade>_2026-11 -> ultimo token ainda e o mes
         mes_ref = re.findall(r'\d{4}-\d{2}', modelo_path.stem)[-1]
 
+    # ── Guarda de frescor ────────────────────────────────────────────────
+    # O export nao treina nada: se o modelo de site ficou no mes anterior, o
+    # site publicaria numero velho junto com dados novos, sem erro nenhum.
+    # RuntimeError e capturada por main(): a cidade e pulada com AVISO e as
+    # demais seguem. O JSON antigo permanece no repo, entao o site nao quebra.
+    if '_modelo_site_' in modelo_path.name:
+        gerais = sorted(pasta_dados.glob(f'{cidade}_modelo_geral_*.joblib'))
+        if gerais:
+            mes_prod = re.findall(r'\d{4}-\d{2}', gerais[-1].stem)[-1]
+            if mes_ref < mes_prod:
+                raise RuntimeError(
+                    f'modelo de site {mes_ref} esta atrasado em relacao a producao '
+                    f'{mes_prod} — rode scripts/treinar_modelo_site.py antes de publicar'
+                )
+
     modelo = joblib.load(modelo_path)
 
     try:

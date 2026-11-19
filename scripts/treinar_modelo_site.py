@@ -50,25 +50,24 @@ def carregar(cidade, mes, pasta):
     tr = pasta / f"{cidade}_train_{mes}.parquet"
     te = pasta / f"{cidade}_test_{mes}.parquet"
     if not (tr.exists() and te.exists()):
-        raise SystemExit(
+        raise FileNotFoundError(
             f"Cache ausente: {tr.name} / {te.name}. Rode o Treinamento da cidade primeiro."
         )
     return pd.read_parquet(tr), pd.read_parquet(te)
 
 
-def main(argv=None):
-    ap = argparse.ArgumentParser()
-    ap.add_argument("--cidade", default="joinville")
-    ap.add_argument("--mes", required=True, help="AAAA-MM")
-    ap.add_argument("--dados", default="dados")
-    args = ap.parse_args(argv)
+def treinar_site(cidade, mes, pasta):
+    """Treina e salva o modelo do site.
 
-    pasta = Path(args.dados) / args.cidade
-    train, test = carregar(args.cidade, args.mes, pasta)
+    Usado tanto pela CLI quanto por `melhor_modelo_geral`, que o chama logo
+    depois de gravar o modelo de producao — assim o site nunca fica preso a um
+    mes anterior por esquecimento.
+    """
+    train, test = carregar(cidade, mes, pasta)
     print(f"cache: treino {len(train):,} | teste {len(test):,}")
 
     # Topicos: o site sabe calcula-los (vocabulario + idf + NMF vao no JSON).
-    topicos_path = pasta / f"{args.cidade}_topicos_modelo.pkl"
+    topicos_path = pasta / f"{cidade}_topicos_modelo.pkl"
     if topicos_path.exists():
         topicos = joblib.load(topicos_path)
         aplicar_topicos(train, topicos)
@@ -90,7 +89,7 @@ def main(argv=None):
 
     # ── hiperparametros: os da producao, se forem GradientBoosting ──────
     params = dict(PARAMS_PADRAO)
-    feat_json = pasta / f"{args.cidade}_features_modelo_{args.mes}.json"
+    feat_json = pasta / f"{cidade}_features_modelo_{mes}.json"
     if feat_json.exists():
         try:
             info = json.loads(feat_json.read_text(encoding="utf-8"))
@@ -140,15 +139,15 @@ def main(argv=None):
         except Exception:
             pass
 
-    modelo_path = pasta / f"{args.cidade}_modelo_site_{args.mes}.joblib"
+    modelo_path = pasta / f"{cidade}_modelo_site_{mes}.joblib"
     joblib.dump(pipe, modelo_path, compress=3)
-    info_path = pasta / f"{args.cidade}_modelo_site_{args.mes}.json"
+    info_path = pasta / f"{cidade}_modelo_site_{mes}.json"
     info_path.write_text(
         json.dumps(
             {
                 "tipo": "modelo_site",
-                "cidade": args.cidade,
-                "mes_ref": args.mes,
+                "cidade": cidade,
+                "mes_ref": mes,
                 "features_numericas": num,
                 "features_categoricas": cat,
                 "features": num + cat,
@@ -157,6 +156,11 @@ def main(argv=None):
                 "target_transform": "log",
                 "best_params": params,
                 "metricas_holdout": met,
+                # O predicao.js le features_info.r2_otimizado (mesma chave do
+                # JSON de producao). Sem o alias a legenda do resultado mostrava
+                # so o mes, sem o R2.
+                "r2_otimizado": met["r2"],
+                "rmse_otimizado": met["rmse"],
                 "data_treino": datetime.now().isoformat(),
                 "topico_modelo": topicos_path.name if topicos_path.exists() else None,
             },
@@ -167,6 +171,31 @@ def main(argv=None):
     )
     print(f"\nsalvo: {modelo_path.name}")
     print(f"salvo: {info_path.name}")
+
+    # A limpeza fica aqui, junto de quem cria o arquivo, em vez de duplicar a
+    # responsabilidade no bloco 9b do melhor_modelo_geral. Mantem 2 meses
+    # (1,2 MB cada) para permitir comparacao entre versoes.
+    meses = sorted({
+        p.stem.rsplit("_", 1)[-1]
+        for p in pasta.glob(f"{cidade}_modelo_site_*.joblib")
+    })
+    for antigo in meses[:-2]:
+        for ext in ("joblib", "json"):
+            velho = pasta / f"{cidade}_modelo_site_{antigo}.{ext}"
+            if velho.exists():
+                velho.unlink()
+                print(f"modelo de site anterior removido: {velho.name}")
+
+    return {"joblib": str(modelo_path), "json": str(info_path), "metricas": met}
+
+
+def main(argv=None):
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--cidade", default="joinville")
+    ap.add_argument("--mes", required=True, help="AAAA-MM")
+    ap.add_argument("--dados", default="dados")
+    args = ap.parse_args(argv)
+    treinar_site(args.cidade, args.mes, Path(args.dados) / args.cidade)
     return 0
 
 

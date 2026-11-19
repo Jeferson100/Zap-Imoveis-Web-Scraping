@@ -38,6 +38,17 @@ ALL_FEATURES = NUMERIC_FEATURES + CATEGORICAL_FEATURES
 TOPIC_COLS = ["componente_0", "componente_1", "componente_2", "componente_3"]
 
 
+def _treinar_modelo_site(cidade, mes_ref, pasta_dados):
+    """Carrega scripts/treinar_modelo_site.py sem poluir o sys.path do pipeline."""
+    import importlib.util
+
+    script = Path(__file__).resolve().parent.parent / "scripts" / "treinar_modelo_site.py"
+    spec = importlib.util.spec_from_file_location("treinar_modelo_site", script)
+    modulo = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(modulo)
+    return modulo.treinar_site(cidade, mes_ref, pasta_dados)
+
+
 def treinar_melhor_modelo_geral(
     cidade=None,
     cidade_nome=None,
@@ -302,6 +313,19 @@ def treinar_melhor_modelo_geral(
     with open(features_path, "w", encoding="utf-8") as f:
         json.dump(features_info, f, indent=2, ensure_ascii=False, default=str)
     logger.info("Features do modelo salvas: %s (%d features)", features_path.name, len(best_features))
+
+    # ── 9a3. Modelo do site ──────────────────────────────────────────────
+    # Depois das features (o treinador herda `best_params` delas) e com o
+    # topicos_modelo.pkl ja atualizado pelo Treinamento. Sem este passo o site
+    # fica preso ao mes anterior em silencio: o exportador acha o modelo de
+    # site mais antigo, publica, e nada falha.
+    # Nao propaga a excecao: o modelo de producao ja esta salvo e a guarda de
+    # frescor do exportador vai sinalizar a cidade sem derrubar as demais.
+    try:
+        info_site = _treinar_modelo_site(cidade, mes_ref, pasta_dados)
+        logger.info("Modelo do site salvo: %s", info_site["joblib"])
+    except Exception:
+        logger.exception("Falha ao treinar modelo do site de %s/%s", cidade, mes_ref)
 
     # ── 10. Predicao com intervalo no imoveis_limpo ─────────────────────
     logger.info("Gerando predicoes com intervalo no dataset completo...")
