@@ -272,10 +272,27 @@ def calcular_metricas_tool(dados_imovel_json: str = "", refazer: bool = False) -
         return json.dumps(saida, ensure_ascii=False, default=str)
     if bruto:
         try:
-            dados = json.loads(bruto)
+            informado = json.loads(bruto)
         except (TypeError, ValueError) as exc:
             return json.dumps({"erro": f"JSON invalido: {exc}"[:200]}, ensure_ascii=False)
-        aplicadas, base = {}, "informado"
+        if not isinstance(informado, dict):
+            return json.dumps({"erro": "JSON invalido: esperado um objeto"}, ensure_ascii=False)
+        # O JSON do modelo COMPLEMENTA o imovel em avaliacao; nao substitui.
+        # Substituir apagava valor_predito/p50_bairro e o ARV caia para
+        # `sem_ancora` (5 de 10 imoveis no CI).
+        if validacao is not None:
+            dados, aplicadas = _dados_para_metricas(payload, validacao)
+            base = "validado" if aplicadas else "validado_sem_correcao"
+        else:
+            dados = dict(payload.get("dados_imovel") or {})
+            aplicadas, base = {}, "bruto_sem_validacao"
+        dados.update(informado)
+        # Ancoras do anuncio nunca sao sobrescritas pelo modelo: o ROI precisa
+        # continuar deterministico (mesma regra do _dados_para_metricas).
+        originais = payload.get("dados_imovel") or {}
+        for campo in ("valor_predito", "p50_bairro", "preco_por_m2"):
+            if campo in originais:
+                dados[campo] = originais[campo]
     elif validacao is not None:
         dados, aplicadas = _dados_para_metricas(payload, validacao)
         base = "validado" if aplicadas else "validado_sem_correcao"

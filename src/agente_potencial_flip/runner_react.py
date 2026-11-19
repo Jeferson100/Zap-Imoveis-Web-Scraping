@@ -173,6 +173,17 @@ async def _invocar(sessao, entrada):
     return {"messages": msgs, "structured_response": flip}
 
 
+def _decisoes_para(req, decisao: str):
+    """Uma decision por tool call pendente (o middleware exige N == N)."""
+    valor = getattr(req, "value", req)
+    n = 1
+    if isinstance(valor, dict):
+        acoes = valor.get("action_requests")
+        if isinstance(acoes, list) and acoes:
+            n = len(acoes)
+    return [{"type": decisao}] * n
+
+
 async def _resolver_interrupts(sessao, out):
     """Retoma ate acabar as pausas, ou para quando quem decide e o humano."""
     while out.get("__interrupt__"):
@@ -181,7 +192,8 @@ async def _resolver_interrupts(sessao, out):
         if sessao["decisao_humana"] is None:
             return out, True
         out = await _invocar(
-            sessao, Command(resume={"decisions": [{"type": sessao["decisao_humana"]}]})
+            sessao,
+            Command(resume={"decisions": _decisoes_para(req, sessao["decisao_humana"])}),
         )
     return out, False
 
@@ -498,7 +510,10 @@ async def iniciar_avaliacao(payload, thread_id, decisao_humana=None, max_tentati
 async def retomar_avaliacao(thread_id, decisao="approve", max_tentativas=1):
     sessao = SESSOES[thread_id]
     sessao["decisao_humana"] = decisao
-    out = await _invocar(sessao, Command(resume={"decisions": [{"type": decisao}]}))
+    ultima = (sessao.get("solicitacoes") or [None])[-1]
+    out = await _invocar(
+        sessao, Command(resume={"decisions": _decisoes_para(ultima, decisao)})
+    )
     sessao["out"] = out
     return await _processar(sessao, out, max_tentativas)
 
