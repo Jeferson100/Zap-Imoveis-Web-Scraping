@@ -1,4 +1,4 @@
-from typing import Any, List, Optional
+from typing import Any, Dict, List, Optional
 
 from pydantic import BaseModel, Field, field_validator
 
@@ -36,6 +36,46 @@ class AnaliseImagens(BaseModel):
     problemas_visiveis: List[str]
     pontos_fortes: List[str]
     observacoes: str
+    # Saida do classificador de fotos (opcional: o LLM/Laya nao preenchem).
+    ambiente: str = "desconhecido"
+    confianca_ambiente: float = 0.0
+    classe_conservacao: Optional[str] = None
+    confianca_conservacao: float = 0.0
+    # Conservacao separada por ambiente previsto das fotos (None quando nao ha
+    # nenhuma foto daquele ambiente).
+    score_conservacao_interna: Optional[float] = None
+    classe_conservacao_interna: Optional[str] = None
+    confianca_conservacao_interna: float = 0.0
+    score_conservacao_externa: Optional[float] = None
+    classe_conservacao_externa: Optional[str] = None
+    confianca_conservacao_externa: float = 0.0
+    fotos_por_ambiente: Dict[str, int] = {}
+
+    def resumo(self) -> Dict[str, Any]:
+        """Versao compacta para tools e prompts (5 chaves em vez de 19)."""
+
+        def _grupo(nome: str) -> Optional[Dict[str, Any]]:
+            nota = getattr(self, f"score_conservacao_{nome}")
+            if nota is None:
+                return None
+            return {
+                "nota": nota,
+                "conservacao": getattr(self, f"classe_conservacao_{nome}"),
+                "fotos": int(self.fotos_por_ambiente.get(nome, 0)),
+            }
+
+        return {
+            "conservacao": self.classe_conservacao,
+            "nota": self.score_conservacao,
+            "confianca": self.confianca_conservacao,
+            "interna": _grupo("interna"),
+            "externa": _grupo("externa"),
+        }
+
+    @field_validator("ambiente", mode="after")
+    @classmethod
+    def _normaliza_ambiente(cls, v: str) -> str:
+        return v if v in ("interna", "externa", "desconhecido") else "desconhecido"
 
     @field_validator("problemas_visiveis", "pontos_fortes", mode="before")
     @classmethod
