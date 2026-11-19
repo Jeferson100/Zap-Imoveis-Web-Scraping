@@ -1,3 +1,4 @@
+import asyncio
 import logging
 import time
 from typing import Any, Dict, Literal
@@ -8,8 +9,14 @@ from roteador_llms.roteador_llms import LlmRouter
 
 from .config import (
             #MODEL_TEXTO_EXTRACAO, 
+            JULGADOR,
             TAMANHO_LOTE, 
             TIMEOUT_LLM)
+from .julgador_classificador import disponivel as classificador_disponivel
+from .julgador_classificador import julgar_fotos
+from .julgador_laya import LayaIndisponivel
+from .julgador_laya import disponivel as laya_disponivel
+from .julgador_laya import julgar_descricao
 from .prompts import (
     PROMPT_EXTRAIR_ANALISE,
     PROMPT_REFLEXAO_IMAGENS,
@@ -105,6 +112,45 @@ async def extrair_analise(state: SubgrafoImagensState) -> Dict[str, Any]:
     return {"analise": _analise_fallback("Falha na extracao estruturada")}
 
 
+async def julgar_imagens(state: SubgrafoImagensState) -> Dict[str, Any]:
+    """Julga a descrição com perguntas tipadas (Laya) ou cai para o LLM.
+
+    `IMAGENS_JULGADOR=laya` (padrão) usa o julgador local; `=llm` mantém o
+    comportamento antigo. Se o pacote `laya` não estiver instalado, usa o LLM.
+    """
+    if JULGADOR != "laya":
+        return await extrair_analise(state)
+
+    if not laya_disponivel():
+        logger.warning(
+            "IMAGENS_JULGADOR=laya, mas o pacote laya nao esta instalado; "
+            "usando extrair_analise (LLM)."
+        )
+        return await extrair_analise(state)
+
+    descricao = state.descricao_foto if state.descricao_foto else "Nenhuma foto disponivel."
+    if state.feedback:
+        descricao = f"{descricao}\n\nFeedback da revisao anterior:\n{state.feedback}"
+
+    inicio = time.perf_counter()
+    # `predict` do Laya é síncrono e usa CPU: roda fora do event loop.
+    try:
+        analise = await asyncio.to_thread(julgar_descricao, descricao)
+    except LayaIndisponivel as exc:
+        logger.warning("Julgar via Laya indisponivel (%s); usando extrair_analise.", exc)
+        return await extrair_analise(state)
+    except Exception as exc:
+        logger.error("Julgador Laya falhou (%s); usando extrair_analise.", exc)
+        return await extrair_analise(state)
+    logger.info(
+        "julgar_imagens (laya): aceitavel=%s conservacao=%.1f duracao=%.2fs",
+        analise.imagem_aceitavel,
+        analise.score_conservacao,
+        time.perf_counter() - inicio,
+    )
+    return {"analise": analise}
+
+
 async def refletor_imagens(state: SubgrafoImagensState) -> Dict[str, Any]:
     if state.analise is None:
         return {"feedback": "Analise vazia, refaca."}
@@ -174,7 +220,7 @@ def decidir_proximo_imagens(
     return "__end__"
 
 
-def decidir_apos_extracao(
+def decidir_apos_julgamento(
     state: SubgrafoImagensState,
 ) -> Literal["refletor_imagens", "__end__"]:
     if state.max_tentativas == 0:
@@ -184,20 +230,70 @@ def decidir_apos_extracao(
     return "refletor_imagens"
 
 
+# Compatibilidade: o nome antigo continua exportado (testes/imports existentes).
+decidir_apos_extracao = decidir_apos_julgamento
+
+
+async def julgar_classificador(state: SubgrafoImagensState) -> Dict[str, Any]:
+    """Avalia as fotos com o classificador ConvNeXt (conservação + ambiente)."""
+    if not state.fotos_urls:
+        return {"analise": _analise_fallback("Sem foto para o classificador")}
+
+    inicio = time.perf_counter()
+    try:
+        analise = await asyncio.to_thread(julgar_fotos, list(state.fotos_urls))
+    except Exception as exc:
+        logger.error("Classificador de fotos falhou (%s); usando extrair_analise.", exc)
+        return await extrair_analise(state)
+
+    logger.info(
+        "julgar_classificador: ambiente=%s classe=%s conf=%.2f duracao=%.2fs",
+        analise.ambiente,
+        analise.classe_conservacao,
+        analise.confianca_conservacao,
+        time.perf_counter() - inicio,
+    )
+    return {"analise": analise}
+
+
+def rotear_entrada(
+    state: SubgrafoImagensState,
+) -> Literal["descrever_fotos", "julgar_classificador"]:
+    """O classificador não precisa de descrição: entra direto quando disponível."""
+    if JULGADOR == "classificador" and classificador_disponivel():
+        return "julgar_classificador"
+    if JULGADOR == "classificador":
+        logger.warning(
+            "IMAGENS_JULGADOR=classificador, mas os checkpoints estao ausentes; "
+            "usando o caminho com descricao."
+        )
+    return "descrever_fotos"
+
+
 builder = StateGraph(SubgrafoImagensState)
 
 builder.add_node("descrever_fotos", descrever_fotos)
-builder.add_node("extrair_analise", extrair_analise)
+builder.add_node("julgar_imagens", julgar_imagens)
+builder.add_node("julgar_classificador", julgar_classificador)
 builder.add_node("refletor_imagens", refletor_imagens)
 
-builder.set_entry_point("descrever_fotos")
+builder.set_conditional_entry_point(
+    rotear_entrada,
+    {
+        "descrever_fotos": "descrever_fotos",
+        "julgar_classificador": "julgar_classificador",
+    },
+)
 
-builder.add_edge("descrever_fotos", "extrair_analise")
+builder.add_edge("descrever_fotos", "julgar_imagens")
 builder.add_conditional_edges(
-    "extrair_analise",
-    decidir_apos_extracao,
+    "julgar_imagens",
+    decidir_apos_julgamento,
     {"refletor_imagens": "refletor_imagens", "__end__": END},
 )
+
+# O classificador é determinístico e não tem descrição para auditar: termina aqui.
+builder.add_edge("julgar_classificador", END)
 
 builder.add_conditional_edges(
     "refletor_imagens",
