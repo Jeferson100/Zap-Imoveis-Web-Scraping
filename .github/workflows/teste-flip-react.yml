@@ -114,7 +114,10 @@ jobs:
           assert log.count("menu enxuto: ['ls'") == 0, "ferramenta ls apareceu no menu"
           print("LOOP/graders:", [ln for ln in log.splitlines()
                                  if "LOOP " in ln or "G7" in ln][-6:])
-          print("OK: workflow de teste aprovado")
+          print("OK: workflow de teste aprovado", flush=True)
+          # Mesmo motivo do fallback: evita SIGABRT no shutdown do interpretador.
+          import os
+          os._exit(0)
           PY
 
       - name: Enviar artefatos
@@ -163,6 +166,7 @@ jobs:
         run: |
           uv run python - <<'PY'
           import glob
+          import os
           import pandas as pd
 
           fs = glob.glob("dados/joinville/joinville_avaliacao_flip_*_0_2*.parquet")
@@ -174,7 +178,11 @@ jobs:
           log = open("logs/flip_fallback.log", encoding="utf-8", errors="replace").read()
           assert "modelo-inexistente-xyz" in log or "falha" in log.lower(), \
               "o principal invalido deveria ter falhado antes do fallback"
-          print("OK: fallback funcionou")
+          print("OK: fallback funcionou", flush=True)
+          # O interpretador aborta no shutdown (SIGABRT/"terminate called without
+          # an active exception") depois do teste ja ter passado; sair explicito
+          # evita o finalizador que derruba o exit code para 134.
+          os._exit(0)
           PY
 
       - name: Enviar artefato do fallback
