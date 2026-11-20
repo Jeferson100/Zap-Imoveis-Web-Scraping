@@ -121,6 +121,13 @@ async def processar_um(linha: pd.Series, i: int, total: int) -> dict:
         "observacoes": getattr(saida, "observacoes", None),
         "valor_m2_blend": metricas.get("valor_m2_blend"),
         "arv_fonte": metricas.get("arv_fonte"),
+        # Auditoria: sem estas colunas nao da para saber pelo parquet se o
+        # veredito passou nos graders nem se a analise de imagem foi real.
+        "aprovado_graders": getattr(saida, "aprovado_graders", None),
+        "tentativas": getattr(saida, "tentativas", None),
+        "ambiente_fotos": getattr(saida, "ambiente_fotos", None),
+        "conservacao_fotos": getattr(saida, "conservacao_fotos", None),
+        "metricas_base": metricas.get("base_dados"),
         "erro": erro,
     }
     salvar_checkpoint(registro)

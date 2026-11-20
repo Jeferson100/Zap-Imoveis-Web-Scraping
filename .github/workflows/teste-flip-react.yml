@@ -70,7 +70,9 @@ jobs:
           # 1 tentativa: sem os pesos do classificador o G1 reprova sempre e a
           # segunda tentativa so dobra o tempo do job.
           FLIP_MAX_TENTATIVAS: "1"
-          FLIP_LOOP_TIMEOUT_S: "240"
+          # Teto por imovel: um loop de classificacao sem veredito nao consome
+          # o job inteiro (antes o unico limite era o timeout-minutes de 90).
+          FLIP_LOOP_TIMEOUT_S: "600"
 
       - name: Validar resultado e log
         env:
@@ -161,6 +163,7 @@ jobs:
           ROTEADOR_MODELOS_TEXTO_NVIDIA: nvidia/nemotron-3.5-lightning-30b-a3b
           NVIDIA_API_KEY: ${{ secrets.NVIDIA_API_KEY }}
           LANGCHAIN_TRACING_V2: "false"
+          FLIP_LOOP_TIMEOUT_S: "600"
 
       - name: Validar fallback
         run: |

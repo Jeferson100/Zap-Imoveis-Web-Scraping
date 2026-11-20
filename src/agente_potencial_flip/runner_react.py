@@ -1,5 +1,6 @@
 """Executor do agente ReAct (extraido de c0de6003)."""
 
+import asyncio
 import hashlib
 import json as _json
 import logging
@@ -18,7 +19,9 @@ from agente_potencial_flip.ferramentas_react import (
 from agente_potencial_flip.schemas_react import (
     AvaliacaoImovel, montar_saida, graders_sem_pecas,
 )
-from agente_potencial_flip.loop_engineering import avaliar_graders, grader_narrativa
+from agente_potencial_flip.loop_engineering import (
+    avaliar_graders, grader_narrativa, veredito_fallback,
+)
 
 logger = logging.getLogger("agente_ci")
 
@@ -199,9 +202,26 @@ async def _resolver_interrupts(sessao, out):
 
 
 def _saida(sessao, graders):
+    flip = sessao.get("flip")
+    metricas = sessao.get("metricas_tool") or ESTADO_AGENTE.get("metricas_tool") or {}
+    # O modelo as vezes emite o veredito estruturado com justificativa vazia
+    # (aconteceu em 1 de 10 no lote). Sem texto, o parquet fica inutil para
+    # revisao: preenche com o resumo deterministico das metricas.
+    if flip is not None and not str(getattr(flip, "justificativa_potencial", "") or "").strip():
+        sintetico = veredito_fallback(
+            metricas, len(sessao["historico"]), "justificativa vazia do modelo"
+        )
+        flip = flip.model_copy(update={
+            "justificativa_potencial": sintetico.justificativa_potencial,
+            "riscos": list(getattr(flip, "riscos", []) or []) or list(sintetico.riscos),
+            "recomendacoes": (list(getattr(flip, "recomendacoes", []) or [])
+                              or list(sintetico.recomendacoes)),
+        })
+        sessao["flip"] = flip
+        logger.warning("justificativa vazia: preenchida com o resumo deterministico")
     saida = montar_saida(
         sessao.get("imagem") or julgar_fotos([]),
-        sessao.get("flip"),
+        flip,
         sessao.get("validacao"),
         graders,
         len(sessao["historico"]),
@@ -518,6 +538,44 @@ async def retomar_avaliacao(thread_id, decisao="approve", max_tentativas=1):
     return await _processar(sessao, out, max_tentativas)
 
 
+def _timeout_imovel() -> float:
+    """Teto de segundos por imovel (0 = desligado). Lido a cada chamada."""
+    bruto = os.getenv("FLIP_LOOP_TIMEOUT_S")
+    if bruto is None or str(bruto).strip() == "":
+        return 0.0
+    try:
+        return max(0.0, float(str(bruto).strip()))
+    except (TypeError, ValueError):
+        logger.warning("FLIP_LOOP_TIMEOUT_S invalido (%r); desligado", bruto)
+        return 0.0
+
+
+def _saida_por_timeout(limite_s: float) -> "AvaliacaoImovel":
+    """Veredito deterministico quando o loop passa do teto de tempo.
+
+    Sem isso, um imovel que gira em `classificar_fotos_tool` consome o job
+    inteiro (o teto de 90 min do workflow era o unico limite).
+    """
+    metricas = dict(ESTADO_AGENTE.get("metricas_tool") or {})
+    if not metricas:
+        # O modelo foi cancelado, mas a conta e deterministica: roda a etapa que
+        # faltou para o veredito sintetizado nao sair com ARV 0.
+        try:
+            calcular_metricas_tool.invoke({})
+            metricas = dict(ESTADO_AGENTE.get("metricas_tool") or {})
+        except Exception as exc:  # noqa: BLE001 - sintese nunca derruba o lote
+            logger.warning("metricas no timeout falharam: %s", exc)
+            metricas = {}
+    imagem = ESTADO_AGENTE.get("imagem") or julgar_fotos([])
+    validacao = ESTADO_AGENTE.get("validacao")
+    flip = veredito_fallback(metricas, 0, f"timeout de {limite_s:.0f}s")
+    graders = avaliar_graders(imagem, flip, validacao, metricas or None)
+    historico = [{"tentativa": 0, "ok": graders["ok"], "erros": graders["erros"]}]
+    saida = montar_saida(imagem, flip, validacao, graders, 1, historico)
+    saida.graders["timeout_s"] = limite_s
+    return saida
+
+
 async def avaliar_imovel_agente(payload, max_tentativas=1) -> "AvaliacaoImovel":
     """Atalho sem pausa humana (usado nos lotes e no teste de 3 imoveis)."""
     # O hash sozinho colide entre imoveis parecidos; o _id do lote na frente
@@ -526,8 +584,21 @@ async def avaliar_imovel_agente(payload, max_tentativas=1) -> "AvaliacaoImovel":
     thread = (f"auto-{_marca}-" if _marca else "auto-") + hashlib.sha1(
         _json.dumps(payload["dados_imovel"], sort_keys=True, default=str).encode("utf-8")
     ).hexdigest()[:10]
-    r = await iniciar_avaliacao(payload, thread, decisao_humana="approve",
-                                max_tentativas=max_tentativas)
+
+    limite = _timeout_imovel()
+    if limite:
+        try:
+            r = await asyncio.wait_for(
+                iniciar_avaliacao(payload, thread, decisao_humana="approve",
+                                  max_tentativas=max_tentativas),
+                timeout=limite,
+            )
+        except asyncio.TimeoutError:
+            logger.warning("timeout de %.0fs no imovel; sintetizando veredito", limite)
+            return _saida_por_timeout(limite)
+    else:
+        r = await iniciar_avaliacao(payload, thread, decisao_humana="approve",
+                                    max_tentativas=max_tentativas)
     if "saida" not in r:
         s = r["sessao"]
         g = {"passou": {"G1": False, "G2": False, "G3": False,

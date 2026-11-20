@@ -71,3 +71,81 @@ def test_decisoes_para_uma_por_tool_chamada_pendente():
 def test_decisoes_para_sem_metadados_usa_uma():
     assert rr._decisoes_para(_Interrupt({}), "reject") == [{"type": "reject"}]
     assert rr._decisoes_para(None, "approve") == [{"type": "approve"}]
+
+
+class _Flip:
+    """Dublê mínimo do AnalisePotencialFlip (model_copy do pydantic)."""
+    def __init__(self, justificativa="", riscos=None, recomendacoes=None):
+        self.potencial_house_flip = "True"
+        self.score_potencial_flip = 8.0
+        self.justificativa_potencial = justificativa
+        self.riscos = list(riscos or [])
+        self.recomendacoes = list(recomendacoes or [])
+        self.observacoes = ""
+
+    def model_copy(self, update=None):
+        novo = _Flip(self.justificativa_potencial, self.riscos, self.recomendacoes)
+        for k, v in (update or {}).items():
+            setattr(novo, k, v)
+        return novo
+
+
+def _sessao(flip):
+    return {
+        "flip": flip,
+        "imagem": None,
+        "validacao": None,
+        "historico": [],
+        "pensamentos": [],
+        "solicitacoes": [],
+        "decisao_humana": "approve",
+        "metricas_tool": {
+            "arv_estimado": 540000, "roi_conservador": 0.2,
+            "preco_maximo_para_regra": 400000, "passa_regra_15pct": True,
+            "metragem": 100, "custo_reforma_estimado": 150000,
+            "custo_reforma_por_m2": 1500,
+        },
+    }
+
+
+def _graders():
+    return {"passou": {"G1": False}, "ok": False, "erros": {"G3": ["justificativa vazia"]}}
+
+
+def test_saida_preenche_justificativa_vazia():
+    fr.ESTADO_AGENTE.clear()
+    sessao = _sessao(_Flip(justificativa=""))
+
+    saida = rr._saida(sessao, _graders())
+
+    assert saida.justificativa_potencial.strip()
+    assert "ARV" in saida.justificativa_potencial or "ROI" in saida.justificativa_potencial
+    assert saida.riscos  # herdados do veredito deterministico
+
+
+def test_saida_mantem_justificativa_do_modelo():
+    fr.ESTADO_AGENTE.clear()
+    sessao = _sessao(_Flip(justificativa="texto do modelo", riscos=["r1"]))
+
+    saida = rr._saida(sessao, _graders())
+
+    assert saida.justificativa_potencial == "texto do modelo"
+
+
+def test_timeout_imovel_le_env(monkeypatch):
+    monkeypatch.setenv("FLIP_LOOP_TIMEOUT_S", "600")
+    assert rr._timeout_imovel() == 600.0
+    monkeypatch.setenv("FLIP_LOOP_TIMEOUT_S", "abc")
+    assert rr._timeout_imovel() == 0.0
+    monkeypatch.delenv("FLIP_LOOP_TIMEOUT_S", raising=False)
+    assert rr._timeout_imovel() == 0.0
+
+
+def test_saida_por_timeout_sintetiza_veredito():
+    fr.ESTADO_AGENTE.clear()
+
+    saida = rr._saida_por_timeout(600)
+
+    assert saida.potencial_house_flip == "False"
+    assert saida.graders["timeout_s"] == 600
+    assert "timeout" in saida.justificativa_potencial.lower()
