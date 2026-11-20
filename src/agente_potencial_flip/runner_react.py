@@ -201,21 +201,29 @@ async def _resolver_interrupts(sessao, out):
     return out, False
 
 
+def _texto_util(texto) -> bool:
+    """True se o texto tem conteudo de verdade ('...' e vazio na pratica)."""
+    limpo = str(texto or "").strip().strip(".… \t\n")
+    return len(limpo) >= 10
+
+
 def _saida(sessao, graders):
     flip = sessao.get("flip")
     metricas = sessao.get("metricas_tool") or ESTADO_AGENTE.get("metricas_tool") or {}
-    # O modelo as vezes emite o veredito estruturado com justificativa vazia
-    # (aconteceu em 1 de 10 no lote). Sem texto, o parquet fica inutil para
-    # revisao: preenche com o resumo deterministico das metricas.
-    if flip is not None and not str(getattr(flip, "justificativa_potencial", "") or "").strip():
+    # O modelo as vezes emite o veredito estruturado com justificativa vazia ou
+    # so pontuacao ("...") -- aconteceu em 1 de 10 no lote. Sem texto, o parquet
+    # fica inutil para revisao: preenche com o resumo deterministico.
+    if flip is not None and not _texto_util(getattr(flip, "justificativa_potencial", "")):
         sintetico = veredito_fallback(
             metricas, len(sessao["historico"]), "justificativa vazia do modelo"
         )
+        observacoes = getattr(flip, "observacoes", "")
         flip = flip.model_copy(update={
             "justificativa_potencial": sintetico.justificativa_potencial,
             "riscos": list(getattr(flip, "riscos", []) or []) or list(sintetico.riscos),
             "recomendacoes": (list(getattr(flip, "recomendacoes", []) or [])
                               or list(sintetico.recomendacoes)),
+            "observacoes": observacoes if _texto_util(observacoes) else sintetico.observacoes,
         })
         sessao["flip"] = flip
         logger.warning("justificativa vazia: preenchida com o resumo deterministico")
@@ -573,6 +581,10 @@ def _saida_por_timeout(limite_s: float) -> "AvaliacaoImovel":
     historico = [{"tentativa": 0, "ok": graders["ok"], "erros": graders["erros"]}]
     saida = montar_saida(imagem, flip, validacao, graders, 1, historico)
     saida.graders["timeout_s"] = limite_s
+    # Sem isto o parquet do imovel que estourou o tempo saia sem valor_m2_blend
+    # nem arv_fonte, embora o veredito tenha usado essas ancoras.
+    saida.graders["metricas_tool"] = metricas
+    saida.graders["metricas_base"] = metricas.get("base_dados")
     return saida
 
 

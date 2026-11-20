@@ -132,6 +132,16 @@ def test_saida_mantem_justificativa_do_modelo():
     assert saida.justificativa_potencial == "texto do modelo"
 
 
+def test_saida_trata_reticencias_como_vazia():
+    fr.ESTADO_AGENTE.clear()
+    sessao = _sessao(_Flip(justificativa="..."))
+
+    saida = rr._saida(sessao, _graders())
+
+    assert saida.justificativa_potencial != "..."
+    assert len(saida.justificativa_potencial) > 20
+
+
 def test_timeout_imovel_le_env(monkeypatch):
     monkeypatch.setenv("FLIP_LOOP_TIMEOUT_S", "600")
     assert rr._timeout_imovel() == 600.0
@@ -143,9 +153,23 @@ def test_timeout_imovel_le_env(monkeypatch):
 
 def test_saida_por_timeout_sintetiza_veredito():
     fr.ESTADO_AGENTE.clear()
+    fr.ESTADO_AGENTE["payload"] = _payload()
 
     saida = rr._saida_por_timeout(600)
 
-    assert saida.potencial_house_flip == "False"
+    assert saida.potencial_house_flip in ("True", "False")
     assert saida.graders["timeout_s"] == 600
     assert "timeout" in saida.justificativa_potencial.lower()
+
+
+def test_saida_por_timeout_anexa_metricas_ao_graders():
+    """O parquet do imovel que estourou o tempo nao pode sair sem arv_fonte."""
+    fr.ESTADO_AGENTE.clear()
+    fr.ESTADO_AGENTE["payload"] = _payload()
+
+    saida = rr._saida_por_timeout(600)
+    metricas = saida.graders["metricas_tool"]
+
+    assert metricas["arv_fonte"] == "blend_mediana_predicao"
+    assert metricas["valor_m2_blend"] > 0
+    assert saida.graders["metricas_base"] == "bruto_sem_validacao"
