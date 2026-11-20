@@ -1,16 +1,18 @@
 import json
 import logging
+import os
 from typing import Any, Dict, Optional
 
+from dotenv import load_dotenv
 from groq import AsyncGroq
 from pydantic import BaseModel
+
+load_dotenv()
 
 logging.basicConfig(
     level=logging.INFO, format="%(asctime)s %(message)s", datefmt="%m/%d/%Y %I:%M:%S %p"
 )
 logger = logging.getLogger(__name__)
-
-client = AsyncGroq()
 
 
 class RouterGroq:
@@ -23,6 +25,18 @@ class RouterGroq:
         self.messages = messages
         self.strutured_output = strutured_output
         self.model_llm = model_llm
+        # Cliente lazy: sem GROQ_API_KEY o import do modulo nao pode quebrar
+        # (o CI nem sempre tem essa chave). O LlmRouter captura o ValueError e
+        # pula o provedor.
+        self.client = self._get_client()
+
+    def _get_client(self) -> AsyncGroq:
+        api_key = os.getenv("GROQ_API_KEY")
+        if not api_key:
+            raise ValueError(
+                "GROQ_API_KEY não está definida nas variáveis de ambiente."
+            )
+        return AsyncGroq(api_key=api_key)
 
     async def llm_structured_groq(self) -> Dict[str, Any] | None:
         """
@@ -35,7 +49,7 @@ class RouterGroq:
                 "structured_output precisa estar definido para usar essa função."
             )
         try:
-            response = await client.chat.completions.create(  # type: ignore[no-matching-overload]
+            response = await self.client.chat.completions.create(  # type: ignore[no-matching-overload]
                 model=self.model_llm,
                 messages=[
                     {"role": "user", "content": self.messages},
@@ -58,7 +72,7 @@ class RouterGroq:
         """
         Chama modelo Groq sem saída estruturada
         """
-        response = await client.chat.completions.create(  # type: ignore[no-matching-overload]
+        response = await self.client.chat.completions.create(  # type: ignore[no-matching-overload]
             model=self.model_llm,
             messages=[
                 {"role": "user", "content": self.messages},

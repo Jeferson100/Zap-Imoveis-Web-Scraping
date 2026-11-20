@@ -13,10 +13,6 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
-client = AsyncOpenAI(
-    base_url="https://integrate.api.nvidia.com/v1", api_key=os.getenv("NVIDIA_API_KEY")
-)
-
 
 class RouterOpenaiNvidia:
     def __init__(
@@ -28,6 +24,19 @@ class RouterOpenaiNvidia:
         self.messages = messages
         self.strutured_output = strutured_output
         self.model_llm = model_llm
+        # Cliente lazy: sem NVIDIA_API_KEY o import nao quebra; o LlmRouter
+        # captura o ValueError e pula o provedor.
+        self.client = self._get_client()
+
+    def _get_client(self) -> AsyncOpenAI:
+        api_key = os.getenv("NVIDIA_API_KEY")
+        if not api_key:
+            raise ValueError(
+                "NVIDIA_API_KEY não está definida nas variáveis de ambiente."
+            )
+        return AsyncOpenAI(
+            base_url="https://integrate.api.nvidia.com/v1", api_key=api_key
+        )
 
     async def llm_structured_openai_nvidia(self) -> Dict[str, Any] | None:
         """
@@ -40,7 +49,7 @@ class RouterOpenaiNvidia:
                 "structured_output precisa estar definido para usar essa função."
             )
         try:
-            response = await client.chat.completions.parse(  # type: ignore[no-matching-overload]
+            response = await self.client.chat.completions.parse(  # type: ignore[no-matching-overload]
                 model=self.model_llm,
                 messages=[
                     {"role": "user", "content": self.messages},
@@ -59,7 +68,7 @@ class RouterOpenaiNvidia:
         """
         Chama modelo Openai Nvidia sem saída estruturada
         """
-        response = await client.chat.completions.create(  # type: ignore[no-matching-overload]
+        response = await self.client.chat.completions.create(  # type: ignore[no-matching-overload]
             model=self.model_llm,
             messages=[
                 {"role": "user", "content": self.messages},
