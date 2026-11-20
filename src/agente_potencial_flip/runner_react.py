@@ -214,19 +214,16 @@ def _saida(sessao, graders):
     # so pontuacao ("...") -- aconteceu em 1 de 10 no lote. Sem texto, o parquet
     # fica inutil para revisao: preenche com o resumo deterministico.
     if flip is not None and not _texto_util(getattr(flip, "justificativa_potencial", "")):
+        # Veredito sem texto util nao e confiavel nem internamente: no lote
+        # apareceu "ROI 29,53% -> False, score 0". Substitui o veredito INTEIRO
+        # pelo deterministico (mesma fonte do timeout), que deriva o booleano de
+        # passa_regra_15pct e o score do ROI.
         sintetico = veredito_fallback(
             metricas, len(sessao["historico"]), "justificativa vazia do modelo"
         )
-        observacoes = getattr(flip, "observacoes", "")
-        flip = flip.model_copy(update={
-            "justificativa_potencial": sintetico.justificativa_potencial,
-            "riscos": list(getattr(flip, "riscos", []) or []) or list(sintetico.riscos),
-            "recomendacoes": (list(getattr(flip, "recomendacoes", []) or [])
-                              or list(sintetico.recomendacoes)),
-            "observacoes": observacoes if _texto_util(observacoes) else sintetico.observacoes,
-        })
+        flip = sintetico
         sessao["flip"] = flip
-        logger.warning("justificativa vazia: preenchida com o resumo deterministico")
+        logger.warning("justificativa vazia: veredito substituido pelo deterministico")
     saida = montar_saida(
         sessao.get("imagem") or julgar_fotos([]),
         flip,

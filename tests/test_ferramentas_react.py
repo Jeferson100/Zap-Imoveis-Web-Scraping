@@ -123,6 +123,20 @@ def test_saida_preenche_justificativa_vazia():
     assert saida.riscos  # herdados do veredito deterministico
 
 
+def test_saida_veredito_vazio_vem_do_deterministico():
+    """Sem texto, o booleano/score tambem saem das metricas (nao do modelo)."""
+    fr.ESTADO_AGENTE.clear()
+    sessao = _sessao(_Flip(justificativa=""))
+    assert rr._saida(sessao, _graders()).potencial_house_flip == "True"
+
+    sessao = _sessao(_Flip(justificativa="..."))
+    sessao["metricas_tool"].update({"passa_regra_15pct": False, "roi_conservador": 0.05})
+    saida = rr._saida(sessao, _graders())
+
+    assert saida.potencial_house_flip == "False"
+    assert saida.score_potencial_flip == 0.5
+
+
 def test_saida_mantem_justificativa_do_modelo():
     fr.ESTADO_AGENTE.clear()
     sessao = _sessao(_Flip(justificativa="texto do modelo", riscos=["r1"]))
