@@ -78,6 +78,8 @@
   },
   "rmse_otimizado": 877724.8799064705,
   "r2_otimizado": 0.8747344035462908,
+  "busca_cobertura": null,
+  "busca_completa": null,
   "mes_ref": "2026-10",
-  "data_treino": "2026-10-21T01:20:31.790535"
+  "data_treino": "2026-11-21T00:02:48.727265"
 }
