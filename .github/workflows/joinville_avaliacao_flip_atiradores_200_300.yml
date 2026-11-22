@@ -12,6 +12,7 @@ jobs:
       limite_inferior: "200"
       limite_superior: "210"
       bairro: "atiradores"
+      motor: react
     secrets: inherit
 
   batch_210_220:
@@ -21,6 +22,7 @@ jobs:
       limite_inferior: "210"
       limite_superior: "220"
       bairro: "atiradores"
+      motor: react
     secrets: inherit
 
   batch_220_230:
@@ -30,6 +32,7 @@ jobs:
       limite_inferior: "220"
       limite_superior: "230"
       bairro: "atiradores"
+      motor: react
     secrets: inherit
 
   batch_230_240:
@@ -40,6 +43,7 @@ jobs:
       limite_inferior: "230"
       limite_superior: "240"
       bairro: "atiradores"
+      motor: react
     secrets: inherit
 
   batch_240_250:
@@ -50,6 +54,7 @@ jobs:
       limite_inferior: "240"
       limite_superior: "250"
       bairro: "atiradores"
+      motor: react
     secrets: inherit
 
   batch_250_260:
@@ -60,6 +65,7 @@ jobs:
       limite_inferior: "250"
       limite_superior: "260"
       bairro: "atiradores"
+      motor: react
     secrets: inherit
 
   batch_260_270:
@@ -70,6 +76,7 @@ jobs:
       limite_inferior: "260"
       limite_superior: "270"
       bairro: "atiradores"
+      motor: react
     secrets: inherit
 
   batch_270_280:
@@ -80,6 +87,7 @@ jobs:
       limite_inferior: "270"
       limite_superior: "280"
       bairro: "atiradores"
+      motor: react
     secrets: inherit
 
   batch_280_290:
@@ -90,6 +98,7 @@ jobs:
       limite_inferior: "280"
       limite_superior: "290"
       bairro: "atiradores"
+      motor: react
     secrets: inherit
   batch_290_300:
     needs: [batch_260_270]
@@ -99,4 +108,5 @@ jobs:
       limite_inferior: "290"
       limite_superior: "300"
       bairro: "atiradores"
+      motor: react
     secrets: inherit

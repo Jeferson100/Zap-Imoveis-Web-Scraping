@@ -21,6 +21,11 @@ on:
         required: false
         type: string
         default: ""
+      motor:
+        description: "grafo (padrao, script antigo) ou react (agente novo)"
+        required: false
+        type: string
+        default: "grafo"
 
 jobs:
   avaliacao_flip:
@@ -44,7 +49,14 @@ jobs:
           uv pip install huggingface_hub
 
       - name: Rodar avaliacao flip
-        run: uv run codigos_rodando/joinville/joinville_avaliacao_flip.py
+        run: |
+          if [ "${{ inputs.motor }}" = "react" ]; then
+            echo "motor: react -> joinville_avaliacao_flip_react.py"
+            uv run codigos_rodando/joinville/joinville_avaliacao_flip_react.py
+          else
+            echo "motor: grafo -> joinville_avaliacao_flip.py"
+            uv run codigos_rodando/joinville/joinville_avaliacao_flip.py
+          fi
         env:
           NVIDIA_API_KEY: ${{ secrets.NVIDIA_API_KEY }}
           PHOENIX_ENABLED: "false"
@@ -53,6 +65,8 @@ jobs:
           PYDANTIC_API_KEY: ${{ secrets.PYDANTIC_API_KEY }}
           OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
           ZAI_API_KEY: ${{ secrets.ZAI_API_KEY }}
+          # Gemini entra como ULTIMO fallback quando este secret existe.
+          GOOGLE_API_KEY: ${{ secrets.GOOGLE_API_KEY }}
           MAX_CONCORRENCIA_FLIP: ${{ inputs.max_concorrencia }}
           LIMITE_FLIP: ${{ inputs.limite_superior }}
           LIMITE_INFERIOR_FLIP: ${{ inputs.limite_inferior }}
@@ -60,6 +74,18 @@ jobs:
           MES_REF: ${{ inputs.mes_ref }}
           SNAPSHOT_DATA: "true"
           BAIRRO_SELECAO: ${{ inputs.bairro }}
+          FLIP_MODEL: nvidia/nemotron-3.5-lightning-30b-a3b
+          FLIP_MODEL_FALLBACKS: nvidia/nemotron-3-ultra-550b-a55b,nvidia/nemotron-3.5-bolt-e4b,mistralai/mistral-large-4-1t-a52b,meta/muse-glimmer-30b
+          ROTEADOR_MODELOS_TEXTO_NVIDIA: nvidia/nemotron-3.5-lightning-30b-a3b,nvidia/nemotron-3-ultra-550b-a55b,nvidia/nemotron-3.5-bolt-e4b,mistralai/mistral-large-4-1t-a52b,meta/muse-glimmer-30b
+          LANGCHAIN_API_KEY: ${{ secrets.LANGCHAIN_API_KEY }}
+          # A chave do CI devolve 401; sem trace o log fica limpo. Ligue so se
+          # o secret de producao for valido.
+          LANGCHAIN_TRACING_V2: "false"
+          FLIP_LS_PROJETO: Agente-Imovel-CI
+          FLIP_LOTE_TAG: ci-${{ inputs.bairro }}
+          # Usados so pelo motor react; inertes no grafo.
+          FLIP_MAX_TENTATIVAS: "2"
+          FLIP_LOOP_TIMEOUT_S: "600"
 
       - name: Commit parcial do flip
         if: always()

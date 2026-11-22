@@ -63,7 +63,29 @@ def carregar_imoveis() -> pd.DataFrame:
     df = df.sort_values(by="preco_por_m2")
     if BAIRRO:
         df = df[df["bairro"].str.lower().str.contains(BAIRRO.strip().lower())]
-    return df.iloc[LIMITE_INFERIOR:min(LIMITE_SUPERIOR, len(df))]
+    df = df.iloc[LIMITE_INFERIOR:min(LIMITE_SUPERIOR, len(df))]
+
+    # Retomada: um batch interrompido (timeout de 360 min do workflow) nao deve
+    # reavaliar o que o checkpoint ja tem -- e o rerun nao pode duplicar.
+    feitas = urls_ja_avaliadas()
+    if feitas:
+        antes = len(df)
+        df = df[~df["url"].astype(str).isin(feitas)]
+        logger.info("Checkpoint: %d de %d imoveis ja avaliados; faltam %d",
+                    antes - len(df), antes, len(df))
+    return df
+
+
+def urls_ja_avaliadas() -> set:
+    """URLs presentes no checkpoint parcial (retomada de batch interrompido)."""
+    if ARQUIVO_RESULTADO.exists():
+        try:
+            return set(
+                pd.read_parquet(ARQUIVO_RESULTADO, columns=["url"])["url"].astype(str)
+            )
+        except Exception as exc:  # noqa: BLE001 - checkpoint ilegivel recomeca
+            logger.warning("Checkpoint ilegivel (%s) - recomecando do zero.", exc)
+    return set()
 
 
 def salvar_checkpoint(saida: dict) -> None:
@@ -73,6 +95,8 @@ def salvar_checkpoint(saida: dict) -> None:
             linha = pd.concat([pd.read_parquet(ARQUIVO_RESULTADO), linha], ignore_index=True)
         except Exception:
             pass
+    # Rerun/retry nao pode duplicar o mesmo anuncio no parquet.
+    linha = linha.drop_duplicates(subset=["url"], keep="last")
     linha.to_parquet(ARQUIVO_RESULTADO, index=False)
 
 
