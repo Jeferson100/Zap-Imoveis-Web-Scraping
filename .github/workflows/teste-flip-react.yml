@@ -61,6 +61,8 @@ jobs:
           CEREBRAS_API_KEY: ${{ secrets.CEREBRAS_API_KEY }}
           OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
           ZAI_API_KEY: ${{ secrets.ZAI_API_KEY }}
+          # Gemini entra como ULTIMO fallback quando este secret existe.
+          GOOGLE_API_KEY: ${{ secrets.GOOGLE_API_KEY }}
           LANGCHAIN_API_KEY: ${{ secrets.LANGCHAIN_API_KEY }}
           # Trace desligado: a chave do CI devolve 401 e so poluia o log.
           LANGCHAIN_TRACING_V2: "false"
@@ -162,6 +164,8 @@ jobs:
           FLIP_MODEL_FALLBACKS: nvidia/nemotron-3.5-lightning-30b-a3b
           ROTEADOR_MODELOS_TEXTO_NVIDIA: nvidia/nemotron-3.5-lightning-30b-a3b
           NVIDIA_API_KEY: ${{ secrets.NVIDIA_API_KEY }}
+          # Gemini entra como ULTIMO fallback quando este secret existe.
+          GOOGLE_API_KEY: ${{ secrets.GOOGLE_API_KEY }}
           LANGCHAIN_TRACING_V2: "false"
           FLIP_LOOP_TIMEOUT_S: "600"
 
