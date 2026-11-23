@@ -32,7 +32,7 @@ jobs:
       - name: Instalar dependencias
         run: |
           pip install uv
-          uv sync --frozen
+          uv sync --frozen --no-dev --extra ml
 
       - name: Exportar dados do site
         run: |

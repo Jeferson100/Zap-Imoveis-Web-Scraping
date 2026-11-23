@@ -1,9 +1,17 @@
 uv_install:
-	uv pip install --upgrade pip && \
-		uv pip install -r pyproject.toml
+	uv sync --frozen --all-extras --no-dev
 
 uv_dev_install:
-	uv pip install -e ".[dev]"
+	uv sync --all-extras
+
+uv_install_scraping:
+	uv sync --frozen --no-dev --extra scraping --extra geo
+
+uv_install_ml:
+	uv sync --frozen --no-dev --extra geo --extra ml --extra ml-dl
+
+uv_install_agents:
+	uv sync --frozen --no-dev --extra agents --extra vision
 
 install:
 	pip install --upgrade pip && \

@@ -47,9 +47,7 @@ jobs:
             path: ~/.cache/uv
             key: ${{ runner.os }}-uv-${{ hashFiles('**/pyproject.toml', '**/uv.lock') }}
         - name: Instalar dependencias
-          run: |
-            uv venv
-            uv pip install -e .
+          run: uv sync --frozen --no-dev
         - name: Juntar batches
           run: uv run codigos_rodando/joinville/joinville_juncao_dados_aluguel.py
           env:

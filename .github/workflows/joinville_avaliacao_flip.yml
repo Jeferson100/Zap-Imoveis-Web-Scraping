@@ -1,0 +1,226 @@
+name: "Avaliacao Flip Joinville"
+
+# Workflow unificado de avaliacao de flip de Joinville (substitui os 39 arquivos
+# por bairro/faixa). Cada cron dispara um bairro no seu dia do mes; o job
+# `preparar` monta a matriz de batches (de 10 em 10) e `batches` roda no maximo
+# 3 em paralelo via `joinville_avaliacao_flip_base.yml`, seguido do `merge`.
+
+on:
+  schedule:
+    - cron: '0 9 3 * *'   # dia 3:  atiradores (0-400, motor react)
+    - cron: '0 9 4 * *'   # dia 4:  america (0-400)
+    - cron: '0 9 5 * *'   # dia 5:  centro (0-400)
+    - cron: '0 9 6 * *'   # dia 6:  costa e silva (0-400)
+    - cron: '0 9 7 * *'   # dia 7:  anita garibaldi (0-400)
+    - cron: '0 9 8 * *'   # dia 8:  saguacu (0-400)
+    - cron: '0 9 9 * *'   # dia 9:  gloria (0-400)
+    - cron: '0 9 10 * *'  # dia 10: santo antonio (0-400)
+    - cron: '0 9 11 * *'  # dia 11: bucarein (0-300)
+    - cron: '0 9 12 * *'  # dia 12: bom retiro (0-400)
+  workflow_dispatch:
+    inputs:
+      bairro:
+        description: "Bairro de Joinville para avaliar"
+        required: true
+        type: choice
+        default: "atiradores"
+        options:
+          - "atiradores"
+          - "america"
+          - "centro"
+          - "costa e silva"
+          - "anita garibaldi"
+          - "saguacu"
+          - "gloria"
+          - "santo antonio"
+          - "bucarein"
+          - "bom retiro"
+      limite_inferior:
+        description: "Indice inicial (default: 0)"
+        required: false
+        type: string
+        default: "0"
+      limite_superior:
+        description: "Indice final (vazio = default do bairro: 300 bucarein, 400 demais)"
+        required: false
+        type: string
+        default: ""
+      tamanho_batch:
+        description: "Imoveis por batch (default: 10)"
+        required: false
+        type: string
+        default: "10"
+      motor:
+        description: "Motor do agente (auto = react em atiradores, grafo nos demais)"
+        required: false
+        type: choice
+        default: "auto"
+        options:
+          - "auto"
+          - "react"
+          - "grafo"
+      mes_ref:
+        description: "Mes de referencia opcional (YYYY-MM)"
+        required: false
+        type: string
+        default: ""
+
+concurrency:
+  group: flip-joinville-${{ inputs.bairro || github.event.schedule }}
+  cancel-in-progress: false
+
+jobs:
+  preparar:
+    runs-on: ubuntu-latest
+    outputs:
+      bairro: ${{ steps.cfg.outputs.bairro }}
+      motor: ${{ steps.cfg.outputs.motor }}
+      limite_inferior: ${{ steps.cfg.outputs.limite_inferior }}
+      limite_superior: ${{ steps.cfg.outputs.limite_superior }}
+      mes_ref: ${{ steps.cfg.outputs.mes_ref }}
+      batches: ${{ steps.cfg.outputs.batches }}
+    steps:
+      - name: Resolver bairro, motor e matriz de batches
+        id: cfg
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          SCHEDULE: ${{ github.event.schedule }}
+          INPUT_BAIRRO: ${{ inputs.bairro }}
+          INPUT_INF: ${{ inputs.limite_inferior }}
+          INPUT_SUP: ${{ inputs.limite_superior }}
+          INPUT_STEP: ${{ inputs.tamanho_batch }}
+          INPUT_MOTOR: ${{ inputs.motor }}
+          INPUT_MES_REF: ${{ inputs.mes_ref }}
+        run: |
+          python3 - <<'PY'
+          import json
+          import os
+
+          CRON_MAP = {
+              "0 9 3 * *":  {"bairro": "atiradores",      "sup": 400, "motor": "react"},
+              "0 9 4 * *":  {"bairro": "america",         "sup": 400, "motor": "grafo"},
+              "0 9 5 * *":  {"bairro": "centro",          "sup": 400, "motor": "grafo"},
+              "0 9 6 * *":  {"bairro": "costa e silva",   "sup": 400, "motor": "grafo"},
+              "0 9 7 * *":  {"bairro": "anita garibaldi", "sup": 400, "motor": "grafo"},
+              "0 9 8 * *":  {"bairro": "saguacu",         "sup": 400, "motor": "grafo"},
+              "0 9 9 * *":  {"bairro": "gloria",          "sup": 400, "motor": "grafo"},
+              "0 9 10 * *": {"bairro": "santo antonio",   "sup": 400, "motor": "grafo"},
+              "0 9 11 * *": {"bairro": "bucarein",        "sup": 300, "motor": "grafo"},
+              "0 9 12 * *": {"bairro": "bom retiro",      "sup": 400, "motor": "grafo"},
+          }
+          BAIRRO_DEFAULTS = {v["bairro"]: v for v in CRON_MAP.values()}
+
+          if os.environ["EVENT_NAME"] == "schedule":
+              sched = os.environ["SCHEDULE"].strip()
+              if sched not in CRON_MAP:
+                  raise SystemExit(f"Cron nao mapeado: {sched!r}")
+              cfg = CRON_MAP[sched]
+              bairro = cfg["bairro"]
+              inf = 0
+              sup = cfg["sup"]
+              step = 10
+              motor = cfg["motor"]
+              mes_ref = ""
+          else:
+              bairro = os.environ["INPUT_BAIRRO"].strip()
+              defaults = BAIRRO_DEFAULTS.get(bairro, {"sup": 400, "motor": "grafo"})
+              inf = int(os.environ["INPUT_INF"] or "0")
+              sup = int(os.environ["INPUT_SUP"]) if os.environ["INPUT_SUP"].strip() else defaults["sup"]
+              step = max(1, int(os.environ["INPUT_STEP"] or "10"))
+              motor_in = (os.environ["INPUT_MOTOR"] or "auto").strip()
+              motor = defaults["motor"] if motor_in == "auto" else motor_in
+              mes_ref = os.environ["INPUT_MES_REF"].strip()
+
+          if sup <= inf:
+              raise SystemExit(f"Faixa invalida: limite_inferior={inf}, limite_superior={sup}")
+
+          batches = [
+              {"inf": str(i), "sup": str(min(i + step, sup))}
+              for i in range(inf, sup, step)
+          ]
+          print(f"bairro={bairro} | faixa={inf}..{sup} (step={step}, {len(batches)} batches) | motor={motor}")
+
+          with open(os.environ["GITHUB_OUTPUT"], "a", encoding="utf-8") as out:
+              out.write(f"bairro={bairro}\n")
+              out.write(f"motor={motor}\n")
+              out.write(f"limite_inferior={inf}\n")
+              out.write(f"limite_superior={sup}\n")
+              out.write(f"mes_ref={mes_ref}\n")
+              out.write(f"batches={json.dumps(batches)}\n")
+          PY
+
+  batches:
+    needs: [preparar]
+    strategy:
+      fail-fast: false
+      max-parallel: 3
+      matrix:
+        batch: ${{ fromJson(needs.preparar.outputs.batches) }}
+    uses: ./.github/workflows/joinville_avaliacao_flip_base.yml
+    with:
+      limite_inferior: ${{ matrix.batch.inf }}
+      limite_superior: ${{ matrix.batch.sup }}
+      bairro: ${{ needs.preparar.outputs.bairro }}
+      motor: ${{ needs.preparar.outputs.motor }}
+      mes_ref: ${{ needs.preparar.outputs.mes_ref }}
+    secrets: inherit
+
+  merge:
+    needs: [preparar, batches]
+    if: always() && needs.preparar.result == 'success'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: 'refs/heads/main'
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Instalar uv
+        run: pip install uv
+      - name: Instalar dependencias
+        run: uv sync --frozen --no-dev
+      - name: Juntar batches
+        run: uv run codigos_rodando/joinville/merge_batches.py
+        env:
+          BAIRRO_SELECAO: ${{ needs.preparar.outputs.bairro }}
+      - name: Commit merge
+        run: |
+          git config user.name "github-actions"
+          git config user.email "github-actions@github.com"
+          git add -A dados/joinville/
+          FEITO=false
+          git commit -m "Avaliacao Flip Joinville [${{ needs.preparar.outputs.limite_inferior }}-${{ needs.preparar.outputs.limite_superior }}]: merge batches ${{ needs.preparar.outputs.bairro }}" && FEITO=true || echo "Nada para commitar"
+          if [ "$FEITO" = true ]; then
+            # Merge toca o consolidado + deleta batches: retry com union-resolve
+            # (concat + dedupe por url) em vez de rebase -X ours, que descarta linhas.
+            ARQ="dados/joinville/*avaliacao_flip*.parquet dados/joinville/avaliacao_flip_*.parquet"
+            # Delta deste merge: reaplicamos so o que ESTE job mudou, para nao
+            # reverter arquivos que outros jobs publicaram enquanto rodavamos.
+            DELTA=$(git diff --name-only HEAD~1 HEAD || true)
+
+            OK=false
+            for tentativa in 1 2 3; do
+              git fetch origin main || { sleep 20; continue; }
+              # shellcheck disable=SC2086
+              uv run codigos_rodando/joinville/union_flip_parquet.py $ARQ
+
+              # --mixed: indice = main atual; worktree (merge + union) preservado.
+              # Com --soft, o indice velho ia no commit e revertia/deletava
+              # arquivos que outros jobs acabaram de publicar no main.
+              git reset origin/main
+              if [ -n "$DELTA" ]; then echo "$DELTA" | xargs -r git add -A --; fi
+              if git diff --cached --quiet; then
+                echo "merge ja integrado ao main, nada a commitar"
+                OK=true
+                break
+              fi
+              git commit -m "Avaliacao Flip Joinville [${{ needs.preparar.outputs.limite_inferior }}-${{ needs.preparar.outputs.limite_superior }}]: merge batches ${{ needs.preparar.outputs.bairro }}"
+              if git push origin main; then OK=true; break; fi
+              echo "push rejeitado (tentativa $tentativa)"
+              sleep 20
+            done
+            if [ "$OK" != true ]; then echo "push falhou 3x"; exit 1; fi
+          fi
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

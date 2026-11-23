@@ -167,6 +167,7 @@ jobs:
             app/
             scripts/
             pyproject.toml
+            uv.lock
             Makefile
           sparse-checkout-cone-mode: false
 
@@ -178,10 +179,6 @@ jobs:
       - name: Cache Python dependencies
         uses: actions/cache@v4
         with:
-          # O projeto instala com `uv pip install -r pyproject.toml` (Makefile),
-          # entao o cache util e ~/.cache/uv. Cachear so ~/.cache/pip guardava
-          # um diretorio que o uv nunca escreve. A chave passa a ser o uv.lock,
-          # que e o arquivo que realmente trava as versoes.
           path: |
             ~/.cache/pip
             ~/.cache/uv
@@ -194,21 +191,13 @@ jobs:
           python -m pip install --upgrade pip
           pip install uv
 
-      - name: Criar ambiente virtual
+      - name: Instalar as bibliotecas e o projeto
         run: |
-          uv venv
-
-      - name: Instalar as bibliotecas
-        run: |
-          source .venv/bin/activate
-          make uv_install
-
-      - name: Instalar o projeto
-        # `-e .` instala os pacotes de src/ (scraping_zap_imoveis, agente_*,
-        # shared). Isto NÃO é redundante com `make uv_install`, que só resolve
-        # as dependências da pyproject. O que era redundante era o
-        # `uv pip install playwright` que existia aqui.
-        run: uv pip install -e .
+          if [ "${{ inputs.instalar_playwright }}" = "true" ]; then
+            uv sync --frozen --no-dev --extra scraping --extra geo --extra ml --extra ml-dl
+          else
+            uv sync --frozen --no-dev --extra geo --extra ml --extra ml-dl
+          fi
 
       - name: Descobrir versao do Playwright
         id: playwright_versao

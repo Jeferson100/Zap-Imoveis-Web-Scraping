@@ -42,18 +42,15 @@ jobs:
       - name: Cache Python dependencies
         uses: actions/cache@v4
         with:
-          path: ~/.cache/pip
-          key: ${{ runner.os }}-pip-${{ hashFiles('**/pyproject.toml') }}
+          path: ~/.cache/uv
+          key: ${{ runner.os }}-uv-${{ hashFiles('uv.lock') }}
           restore-keys: |
-            ${{ runner.os }}-pip-
+            ${{ runner.os }}-uv-
 
       - run: pip install uv
 
-      - run: uv venv
-
-      - run: |
-          source .venv/bin/activate
-          make uv_install
+      - name: Instalar dependencias
+        run: uv sync --frozen --no-dev --extra geo --extra ml --extra ml-dl
 
       - name: Rodar predicao
         run: |

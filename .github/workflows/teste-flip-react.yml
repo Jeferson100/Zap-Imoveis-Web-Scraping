@@ -40,9 +40,7 @@ jobs:
       - name: Instalar uv e dependencias
         run: |
           pip install uv
-          uv venv
-          uv pip install -e .
-          uv pip install huggingface_hub
+          uv sync --frozen --no-dev --extra agents --extra vision
 
       - name: Rodar agente ReAct (deep agent)
         run: |
@@ -147,9 +145,7 @@ jobs:
       - name: Instalar uv e dependencias
         run: |
           pip install uv
-          uv venv
-          uv pip install -e .
-          uv pip install huggingface_hub
+          uv sync --frozen --no-dev --extra agents --extra vision
 
       - name: Rodar com modelo principal INVALIDO (forca fallback)
         run: |
