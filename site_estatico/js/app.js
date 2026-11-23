@@ -258,6 +258,16 @@ function atualizarLabelsSidebar() {
 }
 
 // ── Carregar Dados ──
+function _carregarScript(src) {
+    return new Promise((resolve, reject) => {
+        const script = document.createElement('script');
+        script.src = src;
+        script.onload = resolve;
+        script.onerror = reject;
+        document.head.appendChild(script);
+    });
+}
+
 function carregarDados(cidade) {
     atualizarTitulo(cidade);
     atualizarInfoIneditos(cidade);
@@ -266,25 +276,14 @@ function carregarDados(cidade) {
         : (modoAtual === 'ineditos' ? 'inéditos' : 'venda');
     const chaveDados = modoAtual === 'aluguel' ? 'DADOS_ALUGUEL'
         : (modoAtual === 'ineditos' ? 'DADOS_INEDITOS' : 'DADOS_IMOVEIS');
+    const chavePartes = chaveDados + '_PARTES';
     const prefixoJs = modoAtual === 'aluguel' ? 'dados_aluguel_'
         : (modoAtual === 'ineditos' ? 'dados_ineditos_' : 'dados_');
 
-    if (window[chaveDados] && window[chaveDados][cidade]) {
-        todosImoveis = window[chaveDados][cidade];
-        console.log('Dados carregados: ' + todosImoveis.length + ' imóveis (' + cidade + ' - ' + fonte + ')');
-        document.getElementById('data-atualizacao').textContent =
-            (CIDADES_NOMES[cidade] || cidade) + ' — ' + todosImoveis.length.toLocaleString('pt-BR') + ' imóveis (' + fonte + ')';
-        popularFiltros();
-        aplicarFiltros();
-        return;
-    }
-
-    const script = document.createElement('script');
-    script.src = 'data/' + prefixoJs + cidade + '.js';
-    script.onload = function() {
+    function finalizarCarga(origem) {
         if (window[chaveDados] && window[chaveDados][cidade]) {
             todosImoveis = window[chaveDados][cidade];
-            console.log('Dados carregados via script: ' + todosImoveis.length + ' imóveis (' + cidade + ' - ' + fonte + ')');
+            console.log('Dados carregados' + origem + ': ' + todosImoveis.length + ' imóveis (' + cidade + ' - ' + fonte + ')');
         } else {
             todosImoveis = [];
             console.error('Dados não encontrados após carregar script: ' + cidade + ' (' + fonte + ')');
@@ -293,14 +292,50 @@ function carregarDados(cidade) {
             (CIDADES_NOMES[cidade] || cidade) + ' — ' + todosImoveis.length.toLocaleString('pt-BR') + ' imóveis (' + fonte + ')';
         popularFiltros();
         aplicarFiltros();
-    };
-    script.onerror = function() {
+    }
+
+    function falharCarga() {
         console.error('Erro ao carregar dados: ' + cidade + ' (' + fonte + ')');
         todosImoveis = [];
         document.getElementById('data-atualizacao').textContent = 'Erro ao carregar dados de ' + (CIDADES_NOMES[cidade] || cidade);
         renderizarResumo([]);
-    };
-    document.head.appendChild(script);
+    }
+
+    if (window[chaveDados] && window[chaveDados][cidade]) {
+        finalizarCarga('');
+        return;
+    }
+
+    _carregarScript('data/' + prefixoJs + cidade + '.js')
+        .then(() => {
+            if (window[chaveDados] && window[chaveDados][cidade]) {
+                finalizarCarga(' via script');
+                return;
+            }
+            const partes = window[chavePartes] && window[chavePartes][cidade];
+            if (!Array.isArray(partes) || !partes.length) {
+                finalizarCarga(' via script');
+                return;
+            }
+            return Promise.all(partes.map(nome => _carregarScript('data/' + nome)))
+                .then(() => {
+                    const combinado = [];
+                    const mapaPartes = window._DADOS_PARTES || {};
+                    partes.forEach(nome => {
+                        const bloco = mapaPartes[nome];
+                        if (Array.isArray(bloco)) {
+                            for (let i = 0; i < bloco.length; i++) {
+                                combinado.push(bloco[i]);
+                            }
+                        }
+                        delete mapaPartes[nome];
+                    });
+                    window[chaveDados] = window[chaveDados] || {};
+                    window[chaveDados][cidade] = combinado;
+                    finalizarCarga(' via ' + partes.length + ' partes');
+                });
+        })
+        .catch(falharCarga);
 }
 
 // ── Filtros (Checkboxes) ──

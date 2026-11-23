@@ -15,8 +15,11 @@ import sys
 from pathlib import Path
 
 CONFLITO_RE = re.compile(rb'^(?:<<<<<<< |=======$|>>>>>>> )', re.MULTILINE)
+PARTES_RE = re.compile(r'window\.\w+_PARTES\["[^"]+"\]\s*=\s*(\[[^\]]*\]);')
 MODO_VALORES = {'venda', 'aluguel', 'predicao', 'ineditos'}
 ARQUIVOS_TEXTO = {'.html', '.js', '.json', '.css', '.md'}
+# Limite do GitHub e 100 MB; falhar cedo em 95 MB impede rejeicao no push.
+MAX_ARQUIVO_BYTES = 95 * 1024 * 1024
 
 
 def validar_conflitos(base_dir):
@@ -86,6 +89,41 @@ def cidades_do_index(base_dir):
     })
 
 
+def _validar_manifesto_partes(pasta_data, arq):
+    """Se arq for manifesto de partes (_PARTES), garante que todas existam."""
+    erros = []
+    if arq.stat().st_size > 64 * 1024:
+        return erros
+    texto = arq.read_text(encoding='utf-8', errors='ignore')
+    match = PARTES_RE.search(texto)
+    if not match:
+        return erros
+    try:
+        partes = json.loads(match.group(1))
+    except Exception as exc:
+        return [f'manifesto invalido em data/{arq.name}: {exc}']
+    if not partes:
+        return [f'manifesto vazio em data/{arq.name}']
+    for parte in partes:
+        if not (pasta_data / parte).exists():
+            erros.append(f'parte ausente referenciada por data/{arq.name}: data/{parte}')
+    return erros
+
+
+def validar_tamanhos(pasta_data):
+    erros = []
+    for arq in sorted(pasta_data.iterdir()):
+        if not arq.is_file():
+            continue
+        tamanho = arq.stat().st_size
+        if tamanho > MAX_ARQUIVO_BYTES:
+            mb = tamanho / (1024 * 1024)
+            erros.append(
+                f'arquivo acima do limite do GitHub ({mb:.2f} MB > 95 MB): data/{arq.name}'
+            )
+    return erros
+
+
 def validar_cidades(base_dir, pasta_data):
     erros = []
     cidades = cidades_do_index(base_dir)
@@ -94,8 +132,11 @@ def validar_cidades(base_dir, pasta_data):
 
     for cidade in cidades:
         for nome in (f'dados_{cidade}.js', f'stats_{cidade}.js'):
-            if not (pasta_data / nome).exists():
+            arq = pasta_data / nome
+            if not arq.exists():
                 erros.append(f'arquivo ausente: data/{nome}')
+            elif nome.startswith('dados_'):
+                erros.extend(_validar_manifesto_partes(pasta_data, arq))
 
         modelo = pasta_data / f'modelo_{cidade}.json'
         if modelo.exists():
@@ -112,8 +153,11 @@ def validar_cidades(base_dir, pasta_data):
         with open(aluguel, encoding='utf-8') as f:
             config = json.load(f)
         for cidade in config.get('cidades', []):
-            if not (pasta_data / f'dados_aluguel_{cidade}.js').exists():
+            arq = pasta_data / f'dados_aluguel_{cidade}.js'
+            if not arq.exists():
                 erros.append(f'arquivo ausente: data/dados_aluguel_{cidade}.js')
+            else:
+                erros.extend(_validar_manifesto_partes(pasta_data, arq))
     return erros
 
 
@@ -165,6 +209,7 @@ def main():
     erros.extend(validar_modelos(pasta_data))
     erros.extend(validar_cidades(base_dir, pasta_data))
     erros.extend(validar_ineditos(base_dir, pasta_data))
+    erros.extend(validar_tamanhos(pasta_data))
 
     if erros:
         print(f'Validacao falhou ({len(erros)} problema(s)):')

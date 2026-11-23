@@ -26,6 +26,120 @@ stats_todas_cidades = {}
 dados_aluguel_cidades = {}
 cidades_com_aluguel = []
 
+# Teto seguro abaixo do limite de 100 MB por arquivo do GitHub.
+MAX_ARQUIVO_JS_BYTES = int(os.environ.get('SITE_MAX_JS_MB', '35')) * 1024 * 1024
+
+_COLS_INT = (
+    'valor_imovel', 'dias_publicacao', 'quartos', 'banheiros', 'vagas',
+    'valor_predito', 'valor_predito_lo', 'valor_predito_hi',
+    'condominio', 'iptu',
+)
+
+
+def _compactar_df_export(df_export):
+    """Arredonda campos numéricos para reduzir o tamanho dos arquivos JS."""
+    if 'preco_por_m2' in df_export.columns:
+        df_export['preco_por_m2'] = (
+            pd.to_numeric(df_export['preco_por_m2'], errors='coerce')
+            .replace([np.inf, -np.inf], np.nan)
+            .fillna(0)
+            .round(0)
+            .astype(int)
+        )
+
+    if 'desvio_mediana' in df_export.columns:
+        df_export['desvio_mediana'] = (
+            pd.to_numeric(df_export['desvio_mediana'], errors='coerce')
+            .replace([np.inf, -np.inf], np.nan)
+            .fillna(0)
+            .round(2)
+        )
+
+    if 'score_potencial_flip' in df_export.columns:
+        num = pd.to_numeric(df_export['score_potencial_flip'], errors='coerce').replace([np.inf, -np.inf], np.nan)
+        df_export['score_potencial_flip'] = num.round(2)
+
+    if 'metragem' in df_export.columns:
+        num = pd.to_numeric(df_export['metragem'], errors='coerce').replace([np.inf, -np.inf], np.nan)
+        df_export['metragem'] = num.map(
+            lambda x: '' if pd.isna(x) else (int(x) if float(x).is_integer() else round(float(x), 1))
+        )
+
+    for c in _COLS_INT:
+        if c in df_export.columns:
+            num = pd.to_numeric(df_export[c], errors='coerce').replace([np.inf, -np.inf], np.nan)
+            df_export[c] = num.map(lambda x: '' if pd.isna(x) else int(round(float(x))))
+
+    for c in ('lat', 'lng'):
+        if c in df_export.columns:
+            num = pd.to_numeric(df_export[c], errors='coerce').replace([np.inf, -np.inf], np.nan)
+            df_export[c] = num.round(5)
+
+    for c in df_export.columns:
+        if df_export[c].dtype.name == 'category':
+            df_export[c] = df_export[c].astype(str)
+
+    return df_export.where(pd.notnull(df_export), '')
+
+
+def escrever_dados_js(pasta_saida, prefixo, chave_global, cidade, data, max_bytes=MAX_ARQUIVO_JS_BYTES):
+    """Grava dados_<cidade>.js único ou particionado em _p1.js, _p2.js... quando passa de max_bytes."""
+    for antigo in pasta_saida.glob(f'{prefixo}{cidade}_p*.js'):
+        antigo.unlink()
+
+    payload = json.dumps(data, ensure_ascii=False, default=str, separators=(',', ':'))
+    header = (
+        f'window.{chave_global} = window.{chave_global} || {{}};\n'
+        f'window.{chave_global}["{cidade}"] = '
+    )
+    if len((header + payload + ';\n').encode('utf-8')) <= max_bytes:
+        with open(pasta_saida / f'{prefixo}{cidade}.js', 'w', encoding='utf-8') as f:
+            f.write(header)
+            f.write(payload)
+            f.write(';\n')
+        return [f'{prefixo}{cidade}.js']
+
+    partes_nomes = []
+    chunk = []
+    chunk_bytes = 2  # []
+    overhead = 128
+
+    def _gravar_parte(itens):
+        idx = len(partes_nomes) + 1
+        nome = f'{prefixo}{cidade}_p{idx}.js'
+        conteudo = (
+            'window._DADOS_PARTES = window._DADOS_PARTES || {};\n'
+            f'window._DADOS_PARTES["{nome}"] = [' + ','.join(itens) + '];\n'
+        )
+        with open(pasta_saida / nome, 'w', encoding='utf-8') as f:
+            f.write(conteudo)
+        partes_nomes.append(nome)
+
+    for item in data:
+        serializado = json.dumps(item, ensure_ascii=False, default=str, separators=(',', ':'))
+        item_bytes = len(serializado.encode('utf-8')) + 1
+        if chunk and (chunk_bytes + item_bytes + overhead > max_bytes):
+            _gravar_parte(chunk)
+            chunk = []
+            chunk_bytes = 2
+        chunk.append(serializado)
+        chunk_bytes += item_bytes
+
+    if chunk or not partes_nomes:
+        _gravar_parte(chunk)
+
+    chave_partes = f'{chave_global}_PARTES'
+    manifesto = (
+        f'window.{chave_partes} = window.{chave_partes} || {{}};\n'
+        f'window.{chave_partes}["{cidade}"] = '
+        + json.dumps(partes_nomes, ensure_ascii=False, separators=(',', ':'))
+        + ';\n'
+    )
+    with open(pasta_saida / f'{prefixo}{cidade}.js', 'w', encoding='utf-8') as f:
+        f.write(manifesto)
+
+    return partes_nomes
+
 
 def _chave_anuncio(url):
     """Chave estável do anúncio, sem parâmetros de rastreamento da URL.
@@ -211,41 +325,17 @@ def exportar_cidade(cidade, base_dir):
 
     cols = [c for c in cols_base + cols_extra if c in df.columns]
 
-    df_export = df[cols].copy()
-
-    if 'preco_por_m2' in df_export.columns:
-        df_export['preco_por_m2'] = (
-            df_export['preco_por_m2']
-            .replace([np.inf, -np.inf], np.nan)
-            .fillna(0)
-        )
-        df_export['preco_por_m2'] = df_export['preco_por_m2'].astype(int)
-
-    if 'desvio_mediana' in df_export.columns:
-        df_export['desvio_mediana'] = (
-            df_export['desvio_mediana']
-            .replace([np.inf, -np.inf], np.nan)
-            .fillna(0)
-            .round(2)
-        )
-
-    for c in ['lat', 'lng']:
-        if c in df_export.columns:
-            df_export[c] = pd.to_numeric(df_export[c], errors='coerce')
-
-    for c in df_export.columns:
-        if df_export[c].dtype.name == 'category':
-            df_export[c] = df_export[c].astype(str)
-
-    df_export = df_export.where(pd.notnull(df_export), '')
+    df_export = _compactar_df_export(df[cols].copy())
 
     data = df_export.to_dict(orient='records')
 
     pasta_saida = base_dir / 'site_estatico' / 'data'
     pasta_saida.mkdir(parents=True, exist_ok=True)
 
-    with open(pasta_saida / f'imoveis_{cidade}.json', 'w', encoding='utf-8') as f:
-        json.dump(data, f, ensure_ascii=False, default=str)
+    # Remove JSON legado nao consumido pelo site (duplicava >100 MB em cidades grandes)
+    json_legado = pasta_saida / f'imoveis_{cidade}.json'
+    if json_legado.exists():
+        json_legado.unlink()
 
     if cidade == 'joinville':
         exportar_ineditos(cidade, base_dir, df, df_export, data_ref)
@@ -300,40 +390,15 @@ def exportar_aluguel_cidade(cidade, base_dir):
     ]
 
     cols = [c for c in cols_base + cols_extra if c in df.columns]
-    df_export = df[cols].copy()
-
-    if 'preco_por_m2' in df_export.columns:
-        df_export['preco_por_m2'] = (
-            df_export['preco_por_m2']
-            .replace([np.inf, -np.inf], np.nan)
-            .fillna(0)
-        )
-        df_export['preco_por_m2'] = df_export['preco_por_m2'].astype(int)
-
-    if 'desvio_mediana' in df_export.columns:
-        df_export['desvio_mediana'] = (
-            df_export['desvio_mediana']
-            .replace([np.inf, -np.inf], np.nan)
-            .fillna(0)
-            .round(2)
-        )
-
-    for c in ['lat', 'lng']:
-        if c in df_export.columns:
-            df_export[c] = pd.to_numeric(df_export[c], errors='coerce')
-
-    for c in df_export.columns:
-        if df_export[c].dtype.name == 'category':
-            df_export[c] = df_export[c].astype(str)
-
-    df_export = df_export.where(pd.notnull(df_export), '')
+    df_export = _compactar_df_export(df[cols].copy())
     data = df_export.to_dict(orient='records')
 
     pasta_saida = base_dir / 'site_estatico' / 'data'
     pasta_saida.mkdir(parents=True, exist_ok=True)
 
-    with open(pasta_saida / f'imoveis_aluguel_{cidade}.json', 'w', encoding='utf-8') as f:
-        json.dump(data, f, ensure_ascii=False, default=str)
+    json_legado = pasta_saida / f'imoveis_aluguel_{cidade}.json'
+    if json_legado.exists():
+        json_legado.unlink()
 
     print(f'  Exportados {len(data)} imóveis de aluguel ({data_ref})')
     return data
@@ -344,15 +409,11 @@ def gerar_dados_js(base_dir):
     pasta_saida.mkdir(parents=True, exist_ok=True)
 
     for cidade, data in dados_todas_cidades.items():
-        js = f'window.DADOS_IMOVEIS = window.DADOS_IMOVEIS || {{}};\n'
-        js += f'window.DADOS_IMOVEIS["{cidade}"] = '
-        js += json.dumps(data, ensure_ascii=False, default=str, separators=(',', ':'))
-        js += ';\n'
-
-        with open(pasta_saida / f'dados_{cidade}.js', 'w', encoding='utf-8') as f:
-            f.write(js)
-
-        print(f'  Gerado dados_{cidade}.js ({len(data)} imóveis)')
+        arquivos = escrever_dados_js(pasta_saida, 'dados_', 'DADOS_IMOVEIS', cidade, data)
+        if len(arquivos) > 1:
+            print(f'  Gerado dados_{cidade}.js ({len(data)} imóveis em {len(arquivos)} partes)')
+        else:
+            print(f'  Gerado dados_{cidade}.js ({len(data)} imóveis)')
 
     for cidade, stats in stats_todas_cidades.items():
         js = f'window.DADOS_STATS = window.DADOS_STATS || {{}};\n'
@@ -367,15 +428,11 @@ def gerar_dados_js(base_dir):
     print(f'\nGerados arquivos JS para {total_imoveis} imóveis de {len(dados_todas_cidades)} cidades')
 
     for cidade, data in dados_aluguel_cidades.items():
-        js = f'window.DADOS_ALUGUEL = window.DADOS_ALUGUEL || {{}};\n'
-        js += f'window.DADOS_ALUGUEL["{cidade}"] = '
-        js += json.dumps(data, ensure_ascii=False, default=str, separators=(',', ':'))
-        js += ';\n'
-
-        with open(pasta_saida / f'dados_aluguel_{cidade}.js', 'w', encoding='utf-8') as f:
-            f.write(js)
-
-        print(f'  Gerado dados_aluguel_{cidade}.js ({len(data)} imóveis)')
+        arquivos = escrever_dados_js(pasta_saida, 'dados_aluguel_', 'DADOS_ALUGUEL', cidade, data)
+        if len(arquivos) > 1:
+            print(f'  Gerado dados_aluguel_{cidade}.js ({len(data)} imóveis em {len(arquivos)} partes)')
+        else:
+            print(f'  Gerado dados_aluguel_{cidade}.js ({len(data)} imóveis)')
 
     if cidades_com_aluguel:
         config = {'cidades': cidades_com_aluguel}
