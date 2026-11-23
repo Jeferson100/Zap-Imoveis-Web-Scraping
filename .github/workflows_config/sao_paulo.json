@@ -1,0 +1,1952 @@
+{
+  "bela-vista": {
+    "bairro": "bela-vista",
+    "cidade_pasta": "sao_paulo",
+    "cron": "0 13 22 * *",
+    "coleta": [
+      {
+        "id": "coleta_chave_mao_0_38",
+        "arquivo": "sao_paulo_bela_vista_coleta_dados_chave_mao_0_38.py",
+        "bairro": "bela-vista",
+        "filtro_bairro": "",
+        "url_chaves": "https://www.chavesnamao.com.br/apartamentos-a-venda/sp-sao-paulo/bela-vista/?filtro=amin%3A{min}%2Camax%3A{max}&pg={pagina}",
+        "url_olx": "",
+        "url_zap": "",
+        "url_vivareal": ""
+      },
+      {
+        "id": "coleta_chave_mao_39_60",
+        "arquivo": "sao_paulo_bela_vista_coleta_dados_chave_mao_39_60.py",
+        "bairro": "bela-vista",
+        "filtro_bairro": "",
+        "url_chaves": "https://www.chavesnamao.com.br/apartamentos-a-venda/sp-sao-paulo/bela-vista/?filtro=amin%3A{min}%2Camax%3A{max}&pg={pagina}",
+        "url_olx": "",
+        "url_zap": "",
+        "url_vivareal": ""
+      },
+      {
+        "id": "coleta_chave_mao_61_120",
+        "arquivo": "sao_paulo_bela_vista_coleta_dados_chave_mao_61_120.py",
+        "bairro": "bela-vista",
+        "filtro_bairro": "",
+        "url_chaves": "https://www.chavesnamao.com.br/apartamentos-a-venda/sp-sao-paulo/bela-vista/?filtro=amin%3A{min}%2Camax%3A{max}&pg={pagina}",
+        "url_olx": "",
+        "url_zap": "",
+        "url_vivareal": ""
+      },
+      {
+        "id": "coleta_chave_mao_121_infinito",
+        "arquivo": "sao_paulo_bela_vista_coleta_dados_chave_mao_121_infinito.py",
+        "bairro": "bela-vista",
+        "filtro_bairro": "",
+        "url_chaves": "https://www.chavesnamao.com.br/apartamentos-a-venda/sp-sao-paulo/bela-vista/?filtro=amin%3A{min}%2Camax%3A{max}&pg={pagina}",
+        "url_olx": "",
+        "url_zap": "",
+        "url_vivareal": ""
+      },
+      {
+        "id": "coleta_olx_0_35",
+        "arquivo": "sao_paulo_bela_vista_coleta_dados_olx_0_35.py",
+        "bairro": "bela-vista",
+        "filtro_bairro": "",
+        "url_chaves": "",
+        "url_olx": "https://www.olx.com.br/imoveis/venda/estado-sp/sao-paulo-e-regiao/centro/bela-vista?ss={min}&se={max}&o={pagina}",
+        "url_zap": "",
+        "url_vivareal": ""
+      },
+      {
+        "id": "coleta_olx_36_50",
+        "arquivo": "sao_paulo_bela_vista_coleta_dados_olx_36_50.py",
+        "bairro": "bela-vista",
+        "filtro_bairro": "",
+        "url_chaves": "",
+        "url_olx": "https://www.olx.com.br/imoveis/venda/estado-sp/sao-paulo-e-regiao/centro/bela-vista?ss={min}&se={max}&o={pagina}",
+        "url_zap": "",
+        "url_vivareal": ""
+      },
+      {
+        "id": "coleta_olx_51_70",
+        "arquivo": "sao_paulo_bela_vista_coleta_dados_olx_51_70.py",
+        "bairro": "bela-vista",
+        "filtro_bairro": "",
+        "url_chaves": "",
+        "url_olx": "https://www.olx.com.br/imoveis/venda/estado-sp/sao-paulo-e-regiao/centro/bela-vista?ss={min}&se={max}&o={pagina}",
+        "url_zap": "",
+        "url_vivareal": ""
+      },
+      {
+        "id": "coleta_olx_71_100",
+        "arquivo": "sao_paulo_bela_vista_coleta_dados_olx_71_100.py",
+        "bairro": "bela-vista",
+        "filtro_bairro": "",
+        "url_chaves": "",
+        "url_olx": "https://www.olx.com.br/imoveis/venda/estado-sp/sao-paulo-e-regiao/centro/bela-vista?ss={min}&se={max}&o={pagina}",
+        "url_zap": "",
+        "url_vivareal": ""
+      },
+      {
+        "id": "coleta_olx_101_150",
+        "arquivo": "sao_paulo_bela_vista_coleta_dados_olx_101_150.py",
+        "bairro": "bela-vista",
+        "filtro_bairro": "",
+        "url_chaves": "",
+        "url_olx": "https://www.olx.com.br/imoveis/venda/estado-sp/sao-paulo-e-regiao/centro/bela-vista?ss={min}&se={max}&o={pagina}",
+        "url_zap": "",
+        "url_vivareal": ""
+      },
+      {
+        "id": "coleta_olx_151_infinito",
+        "arquivo": "sao_paulo_bela_vista_coleta_dados_olx_151_infinito.py",
+        "bairro": "bela-vista",
+        "filtro_bairro": "",
+        "url_chaves": "",
+        "url_olx": "https://www.olx.com.br/imoveis/venda/estado-sp/sao-paulo-e-regiao/centro/bela-vista?ss={min}&se={max}&o={pagina}",
+        "url_zap": "",
+        "url_vivareal": ""
+      },
+      {
+        "id": "coleta_viva_real_0_40",
+        "arquivo": "sao_paulo_bela_vista_coleta_dados_viva_real_0_40.py",
+        "bairro": "bela-vista",
+        "filtro_bairro": "",
+        "url_chaves": "",
+        "url_olx": "",
+        "url_zap": "",
+        "url_vivareal": "https://www.vivareal.com.br/venda/sp/sao-paulo/centro/bela-vista/?onde=%2CS%C3%A3o+Paulo%2CS%C3%A3o+Paulo%2CCentro%2CBela+Vista%2C%2C%2Cneighborhood%2CBR%3ESao+Paulo%3ENULL%3ESao+Paulo%3ECentro%3EBela+Vista%2C-23.555405%2C-46.645643%2C&pagina={pagina}"
+      },
+      {
+        "id": "coleta_viva_real_41_70",
+        "arquivo": "sao_paulo_bela_vista_coleta_dados_viva_real_41_70.py",
+        "bairro": "bela-vista",
+        "filtro_bairro": "",
+        "url_chaves": "",
+        "url_olx": "",
+        "url_zap": "",
+        "url_vivareal": "https://www.vivareal.com.br/venda/sp/sao-paulo/centro/bela-vista/?onde=%2CS%C3%A3o+Paulo%2CS%C3%A3o+Paulo%2CCentro%2CBela+Vista%2C%2C%2Cneighborhood%2CBR%3ESao+Paulo%3ENULL%3ESao+Paulo%3ECentro%3EBela+Vista%2C-23.555405%2C-46.645643%2C&pagina={pagina}"
+      },
+      {
+        "id": "coleta_viva_real_71_150",
+        "arquivo": "sao_paulo_bela_vista_coleta_dados_viva_real_71_150.py",
+        "bairro": "bela-vista",
+        "filtro_bairro": "",
+        "url_chaves": "",
+        "url_olx": "",
+        "url_zap": "",
+        "url_vivareal": "https://www.vivareal.com.br/venda/sp/sao-paulo/centro/bela-vista/?onde=%2CS%C3%A3o+Paulo%2CS%C3%A3o+Paulo%2CCentro%2CBela+Vista%2C%2C%2Cneighborhood%2CBR%3ESao+Paulo%3ENULL%3ESao+Paulo%3ECentro%3EBela+Vista%2C-23.555405%2C-46.645643%2C&pagina={pagina}"
+      },
+      {
+        "id": "coleta_viva_real_151_infinito",
+        "arquivo": "sao_paulo_bela_vista_coleta_dados_viva_real_151_infinito.py",
+        "bairro": "bela-vista",
+        "filtro_bairro": "",
+        "url_chaves": "",
+        "url_olx": "",
+        "url_zap": "",
+        "url_vivareal": "https://www.vivareal.com.br/venda/sp/sao-paulo/centro/bela-vista/?onde=%2CS%C3%A3o+Paulo%2CS%C3%A3o+Paulo%2CCentro%2CBela+Vista%2C%2C%2Cneighborhood%2CBR%3ESao+Paulo%3ENULL%3ESao+Paulo%3ECentro%3EBela+Vista%2C-23.555405%2C-46.645643%2C&pagina={pagina}"
+      },
+      {
+        "id": "coleta_zap_imoveis_0_40",
+        "arquivo": "sao_paulo_bela_vista_coleta_dados_zap_imoveis_0_40.py",
+        "bairro": "bela-vista",
+        "filtro_bairro": "",
+        "url_chaves": "",
+        "url_olx": "",
+        "url_zap": "https://www.zapimoveis.com.br/venda/imoveis/sp+sao-paulo+centro+bela-vista/?onde=%2CS%C3%A3o+Paulo%2CS%C3%A3o+Paulo%2CCentro%2CBela+Vista%2C%2C%2Cneighborhood%2CBR%3ESao+Paulo%3ENULL%3ESao+Paulo%3ECentro%3EBela+Vista%2C-23.555405%2C-46.645643%2C&pagina={pagina}",
+        "url_vivareal": ""
+      },
+      {
+        "id": "coleta_zap_imoveis_41_70",
+        "arquivo": "sao_paulo_bela_vista_coleta_dados_zap_imoveis_41_70.py",
+        "bairro": "bela-vista",
+        "filtro_bairro": "",
+        "url_chaves": "",
+        "url_olx": "",
+        "url_zap": "https://www.zapimoveis.com.br/venda/imoveis/sp+sao-paulo+centro+bela-vista/?onde=%2CS%C3%A3o+Paulo%2CS%C3%A3o+Paulo%2CCentro%2CBela+Vista%2C%2C%2Cneighborhood%2CBR%3ESao+Paulo%3ENULL%3ESao+Paulo%3ECentro%3EBela+Vista%2C-23.555405%2C-46.645643%2C&pagina={pagina}",
+        "url_vivareal": ""
+      },
+      {
+        "id": "coleta_zap_imoveis_71_150",
+        "arquivo": "sao_paulo_bela_vista_coleta_dados_zap_imoveis_71_150.py",
+        "bairro": "bela-vista",
+        "filtro_bairro": "",
+        "url_chaves": "",
+        "url_olx": "",
+        "url_zap": "https://www.zapimoveis.com.br/venda/imoveis/sp+sao-paulo+centro+bela-vista/?onde=%2CS%C3%A3o+Paulo%2CS%C3%A3o+Paulo%2CCentro%2CBela+Vista%2C%2C%2Cneighborhood%2CBR%3ESao+Paulo%3ENULL%3ESao+Paulo%3ECentro%3EBela+Vista%2C-23.555405%2C-46.645643%2C&pagina={pagina}",
+        "url_vivareal": ""
+      },
+      {
+        "id": "coleta_zap_imoveis_151_infinito",
+        "arquivo": "sao_paulo_bela_vista_coleta_dados_zap_imoveis_151_infinito.py",
+        "bairro": "bela-vista",
+        "filtro_bairro": "",
+        "url_chaves": "",
+        "url_olx": "",
+        "url_zap": "https://www.zapimoveis.com.br/venda/imoveis/sp+sao-paulo+centro+bela-vista/?onde=%2CS%C3%A3o+Paulo%2CS%C3%A3o+Paulo%2CCentro%2CBela+Vista%2C%2C%2Cneighborhood%2CBR%3ESao+Paulo%3ENULL%3ESao+Paulo%3ECentro%3EBela+Vista%2C-23.555405%2C-46.645643%2C&pagina={pagina}",
+        "url_vivareal": ""
+      }
+    ],
+    "limpeza": {
+      "arquivo_rodando_imovel": "sao_paulo_bela_vista_limpando_dados.py",
+      "cidade_limpeza": "sao paulo",
+      "cidade_localizacao": "Sao Paulo",
+      "estado_limpeza": "sp",
+      "estado_localizacao": "SP",
+      "BAIRRO": "bela-vista",
+      "FILTRO_BAIRRO": "bela vista",
+      "tipo_async": true
+    },
+    "melhores_configuracoes": "sao_paulo_melhores_configuraoes_modelo.py",
+    "otimizando": "sao_paulo_otimizando_melhores_modelos.py",
+    "melhor_modelo_geral": "sao_paulo_melhor_modelo_geral.py"
+  },
+  "itaim-bibi": {
+    "bairro": "itaim-bibi",
+    "cidade_pasta": "sao_paulo",
+    "cron": "0 13 15 * *",
+    "coleta": [
+      {
+        "id": "coleta_chave_mao_0_100",
+        "arquivo": "sao_paulo_itaim_bibi_coleta_dados_chave_mao_0_100.py",
+        "bairro": "itaim-bibi",
+        "filtro_bairro": "",
+        "url_chaves": "https://www.chavesnamao.com.br/apartamentos-a-venda/sp-sao-paulo/itaim-bibi/?filtro=amin%3A{min}%2Camax%3A{max}&pg={pagina}",
+        "url_olx": "",
+        "url_zap": "",
+        "url_vivareal": ""
+      },
+      {
+        "id": "coleta_chave_mao_101_200",
+        "arquivo": "sao_paulo_itaim_bibi_coleta_dados_chave_mao_101_200.py",
+        "bairro": "itaim-bibi",
+        "filtro_bairro": "",
+        "url_chaves": "https://www.chavesnamao.com.br/apartamentos-a-venda/sp-sao-paulo/itaim-bibi/?filtro=amin%3A{min}%2Camax%3A{max}&pg={pagina}",
+        "url_olx": "",
+        "url_zap": "",
+        "url_vivareal": ""
+      },
+      {
+        "id": "coleta_chave_mao_201_infinito",
+        "arquivo": "sao_paulo_itaim_bibi_coleta_dados_chave_mao_201_infinito.py",
+        "bairro": "itaim-bibi",
+        "filtro_bairro": "",
+        "url_chaves": "https://www.chavesnamao.com.br/apartamentos-a-venda/sp-sao-paulo/itaim-bibi/?filtro=amin%3A{min}%2Camax%3A{max}&pg={pagina}",
+        "url_olx": "",
+        "url_zap": "",
+        "url_vivareal": ""
+      },
+      {
+        "id": "coleta_olx_0_50",
+        "arquivo": "sao_paulo_itaim_bibi_coleta_dados_olx_0_50.py",
+        "bairro": "itaim-bibi",
+        "filtro_bairro": "",
+        "url_chaves": "",
+        "url_olx": "https://www.olx.com.br/imoveis/venda/estado-sp/sao-paulo-e-regiao/zona-sul/itaim-bibi?ss={min}&se={max}&o={pagina}",
+        "url_zap": "",
+        "url_vivareal": ""
+      },
+      {
+        "id": "coleta_olx_51_90",
+        "arquivo": "sao_paulo_itaim_bibi_coleta_dados_olx_51_90.py",
+        "bairro": "itaim-bibi",
+        "filtro_bairro": "",
+        "url_chaves": "",
+        "url_olx": "https://www.olx.com.br/imoveis/venda/estado-sp/sao-paulo-e-regiao/zona-sul/itaim-bibi?ss={min}&se={max}&o={pagina}",
+        "url_zap": "",
+        "url_vivareal": ""
+      },
+      {
+        "id": "coleta_olx_91_130",
+        "arquivo": "sao_paulo_itaim_bibi_coleta_dados_olx_91_130.py",
+        "bairro": "itaim-bibi",
+        "filtro_bairro": "",
+        "url_chaves": "",
+        "url_olx": "https://www.olx.com.br/imoveis/venda/estado-sp/sao-paulo-e-regiao/zona-sul/itaim-bibi?ss={min}&se={max}&o={pagina}",
+        "url_zap": "",
+        "url_vivareal": ""
+      },
+      {
+        "id": "coleta_olx_131_180",
+        "arquivo": "sao_paulo_itaim_bibi_coleta_dados_olx_131_180.py",
+        "bairro": "itaim-bibi",
+        "filtro_bairro": "",
+        "url_chaves": "",
+        "url_olx": "https://www.olx.com.br/imoveis/venda/estado-sp/sao-paulo-e-regiao/zona-sul/itaim-bibi?ss={min}&se={max}&o={pagina}",
+        "url_zap": "",
+        "url_vivareal": ""
+      },
+      {
+        "id": "coleta_olx_181_300",
+        "arquivo": "sao_paulo_itaim_bibi_coleta_dados_olx_181_300.py",
+        "bairro": "itaim-bibi",
+        "filtro_bairro": "",
+        "url_chaves": "",
+        "url_olx": "https://www.olx.com.br/imoveis/venda/estado-sp/sao-paulo-e-regiao/zona-sul/itaim-bibi?ss={min}&se={max}&o={pagina}",
+        "url_zap": "",
+        "url_vivareal": ""
+      },
+      {
+        "id": "coleta_olx_301_infinito",
+        "arquivo": "sao_paulo_itaim_bibi_coleta_dados_olx_301_infinito.py",
+        "bairro": "itaim-bibi",
+        "filtro_bairro": "",
+        "url_chaves": "",
+        "url_olx": "https://www.olx.com.br/imoveis/venda/estado-sp/sao-paulo-e-regiao/zona-sul/itaim-bibi?ss={min}&se={max}&o={pagina}",
+        "url_zap": "",
+        "url_vivareal": ""
+      },
+      {
+        "id": "coleta_viva_real_0_100",
+        "arquivo": "sao_paulo_itaim_bibi_coleta_dados_viva_real_0_100.py",
+        "bairro": "itaim-bibi",
+        "filtro_bairro": "",
+        "url_chaves": "",
+        "url_olx": "",
+        "url_zap": "",
+        "url_vivareal": "https://www.vivareal.com.br/venda/sp/sao-paulo/zona-sul/itaim-bibi/apartamento_residencial/?onde=%2CS%C3%A3o+Paulo%2CS%C3%A3o+Paulo%2CZona+Sul%2CItaim+Bibi%2C%2C%2Cneighborhood%2CBR%3ESao+Paulo%3ENULL%3ESao+Paulo%3EZona+Sul%3EItaim+Bibi%2C-23.583748%2C-46.678074%2C&tipos=apartamento_residencial&pagina={pagina}"
+      },
+      {
+        "id": "coleta_viva_real_101_200",
+        "arquivo": "sao_paulo_itaim_bibi_coleta_dados_viva_real_101_200.py",
+        "bairro": "itaim-bibi",
+        "filtro_bairro": "",
+        "url_chaves": "",
+        "url_olx": "",
+        "url_zap": "",
+        "url_vivareal": "https://www.vivareal.com.br/venda/sp/sao-paulo/zona-sul/itaim-bibi/apartamento_residencial/?onde=%2CS%C3%A3o+Paulo%2CS%C3%A3o+Paulo%2CZona+Sul%2CItaim+Bibi%2C%2C%2Cneighborhood%2CBR%3ESao+Paulo%3ENULL%3ESao+Paulo%3EZona+Sul%3EItaim+Bibi%2C-23.583748%2C-46.678074%2C&tipos=apartamento_residencial&pagina={pagina}"
+      },
+      {
+        "id": "coleta_viva_real_201_infinito",
+        "arquivo": "sao_paulo_itaim_bibi_coleta_dados_viva_real_201_infinito.py",
+        "bairro": "itaim-bibi",
+        "filtro_bairro": "",
+        "url_chaves": "",
+        "url_olx": "",
+        "url_zap": "",
+        "url_vivareal": "https://www.vivareal.com.br/venda/sp/sao-paulo/zona-sul/itaim-bibi/apartamento_residencial/?onde=%2CS%C3%A3o+Paulo%2CS%C3%A3o+Paulo%2CZona+Sul%2CItaim+Bibi%2C%2C%2Cneighborhood%2CBR%3ESao+Paulo%3ENULL%3ESao+Paulo%3EZona+Sul%3EItaim+Bibi%2C-23.583748%2C-46.678074%2C&tipos=apartamento_residencial&pagina={pagina}"
+      },
+      {
+        "id": "coleta_zap_imoveis_0_100",
+        "arquivo": "sao_paulo_itaim_bibi_coleta_dados_zap_imoveis_0_100.py",
+        "bairro": "itaim-bibi",
+        "filtro_bairro": "",
+        "url_chaves": "",
+        "url_olx": "",
+        "url_zap": "https://www.zapimoveis.com.br/venda/apartamentos/sp+sao-paulo+zona-sul+itaim-bibi/?onde=%2CS%C3%A3o+Paulo%2CS%C3%A3o+Paulo%2CZona+Sul%2CItaim+Bibi%2C%2C%2Cneighborhood%2CBR%3ESao+Paulo%3ENULL%3ESao+Paulo%3EZona+Sul%3EItaim+Bibi%2C-23.583748%2C-46.678074%2C&tipos=apartamento_residencial&pagina={pagina}",
+        "url_vivareal": ""
+      },
+      {
+        "id": "coleta_zap_imoveis_101_200",
+        "arquivo": "sao_paulo_itaim_bibi_coleta_dados_zap_imoveis_101_200.py",
+        "bairro": "itaim-bibi",
+        "filtro_bairro": "",
+        "url_chaves": "",
+        "url_olx": "",
+        "url_zap": "https://www.zapimoveis.com.br/venda/apartamentos/sp+sao-paulo+zona-sul+itaim-bibi/?onde=%2CS%C3%A3o+Paulo%2CS%C3%A3o+Paulo%2CZona+Sul%2CItaim+Bibi%2C%2C%2Cneighborhood%2CBR%3ESao+Paulo%3ENULL%3ESao+Paulo%3EZona+Sul%3EItaim+Bibi%2C-23.583748%2C-46.678074%2C&tipos=apartamento_residencial&pagina={pagina}",
+        "url_vivareal": ""
+      },
+      {
+        "id": "coleta_zap_imoveis_201_infinito",
+        "arquivo": "sao_paulo_itaim_bibi_coleta_dados_zap_imoveis_201_infinito.py",
+        "bairro": "itaim-bibi",
+        "filtro_bairro": "",
+        "url_chaves": "",
+        "url_olx": "",
+        "url_zap": "https://www.zapimoveis.com.br/venda/apartamentos/sp+sao-paulo+zona-sul+itaim-bibi/?onde=%2CS%C3%A3o+Paulo%2CS%C3%A3o+Paulo%2CZona+Sul%2CItaim+Bibi%2C%2C%2Cneighborhood%2CBR%3ESao+Paulo%3ENULL%3ESao+Paulo%3EZona+Sul%3EItaim+Bibi%2C-23.583748%2C-46.678074%2C&tipos=apartamento_residencial&pagina={pagina}",
+        "url_vivareal": ""
+      }
+    ],
+    "limpeza": {
+      "arquivo_rodando_imovel": "sao_paulo_itaim_bibi_limpando.py",
+      "cidade_limpeza": "sao paulo",
+      "cidade_localizacao": "Sao Paulo",
+      "estado_limpeza": "sp",
+      "estado_localizacao": "SP",
+      "BAIRRO": "itaim-bibi",
+      "FILTRO_BAIRRO": "itaim bibi",
+      "tipo_async": true
+    },
+    "melhores_configuracoes": "sao_paulo_melhores_configuraoes_modelo.py",
+    "otimizando": "sao_paulo_otimizando_melhores_modelos.py",
+    "melhor_modelo_geral": "sao_paulo_melhor_modelo_geral.py"
+  },
+  "jardins": {
+    "bairro": "jardins",
+    "cidade_pasta": "sao_paulo",
+    "cron": "0 16 16 * *",
+    "coleta": [
+      {
+        "id": "coleta_chave_mao_0_100",
+        "arquivo": "sao_paulo_jardins_coleta_dados_chave_mao_0_100.py",
+        "bairro": "jardins",
+        "filtro_bairro": "",
+        "url_chaves": "https://www.chavesnamao.com.br/apartamentos-a-venda/sp-sao-paulo/jardins/?filtro=amin%3A{min}%2Camax%3A{max}&pg={pagina}",
+        "url_olx": "",
+        "url_zap": "",
+        "url_vivareal": ""
+      },
+      {
+        "id": "coleta_chave_mao_101_200",
+        "arquivo": "sao_paulo_jardins_coleta_dados_chave_mao_101_200.py",
+        "bairro": "jardins",
+        "filtro_bairro": "",
+        "url_chaves": "https://www.chavesnamao.com.br/apartamentos-a-venda/sp-sao-paulo/jardins/?filtro=amin%3A{min}%2Camax%3A{max}&pg={pagina}",
+        "url_olx": "",
+        "url_zap": "",
+        "url_vivareal": ""
+      },
+      {
+        "id": "coleta_chave_mao_201_infinito",
+        "arquivo": "sao_paulo_jardins_coleta_dados_chave_mao_201_infinito.py",
+        "bairro": "jardins",
+        "filtro_bairro": "",
+        "url_chaves": "https://www.chavesnamao.com.br/apartamentos-a-venda/sp-sao-paulo/jardins/?filtro=amin%3A{min}%2Camax%3A{max}&pg={pagina}",
+        "url_olx": "",
+        "url_zap": "",
+        "url_vivareal": ""
+      },
+      {
+        "id": "coleta_olx_0_50",
+        "arquivo": "sao_paulo_jardins_coleta_dados_olx_0_50.py",
+        "bairro": "jardins",
+        "filtro_bairro": "",
+        "url_chaves": "",
+        "url_olx": "https://www.olx.com.br/imoveis/venda/apartamentos/estado-sp/sao-paulo-e-regiao/zona-sul/jardins?ss={min}&se={max}&o={pagina}",
+        "url_zap": "",
+        "url_vivareal": ""
+      },
+      {
+        "id": "coleta_olx_51_90",
+        "arquivo": "sao_paulo_jardins_coleta_dados_olx_51_90.py",
+        "bairro": "jardins",
+        "filtro_bairro": "",
+        "url_chaves": "",
+        "url_olx": "https://www.olx.com.br/imoveis/venda/apartamentos/estado-sp/sao-paulo-e-regiao/zona-sul/jardins?ss={min}&se={max}&o={pagina}",
+        "url_zap": "",
+        "url_vivareal": ""
+      },
+      {
+        "id": "coleta_olx_91_130",
+        "arquivo": "sao_paulo_jardins_coleta_dados_olx_91_130.py",
+        "bairro": "jardins",
+        "filtro_bairro": "",
+        "url_chaves": "",
+        "url_olx": "https://www.olx.com.br/imoveis/venda/apartamentos/estado-sp/sao-paulo-e-regiao/zona-sul/jardins?ss={min}&se={max}&o={pagina}",
+        "url_zap": "",
+        "url_vivareal": ""
+      },
+      {
+        "id": "coleta_olx_131_180",
+        "arquivo": "sao_paulo_jardins_coleta_dados_olx_131_180.py",
+        "bairro": "jardins",
+        "filtro_bairro": "",
+        "url_chaves": "",
+        "url_olx": "https://www.olx.com.br/imoveis/venda/apartamentos/estado-sp/sao-paulo-e-regiao/zona-sul/jardins?ss={min}&se={max}&o={pagina}",
+        "url_zap": "",
+        "url_vivareal": ""
+      },
+      {
+        "id": "coleta_olx_181_300",
+        "arquivo": "sao_paulo_jardins_coleta_dados_olx_181_300.py",
+        "bairro": "jardins",
+        "filtro_bairro": "",
+        "url_chaves": "",
+        "url_olx": "https://www.olx.com.br/imoveis/venda/apartamentos/estado-sp/sao-paulo-e-regiao/zona-sul/jardins?ss={min}&se={max}&o={pagina}",
+        "url_zap": "",
+        "url_vivareal": ""
+      },
+      {
+        "id": "coleta_olx_301_infinito",
+        "arquivo": "sao_paulo_jardins_coleta_dados_olx_301_infinito.py",
+        "bairro": "jardins",
+        "filtro_bairro": "",
+        "url_chaves": "",
+        "url_olx": "https://www.olx.com.br/imoveis/venda/apartamentos/estado-sp/sao-paulo-e-regiao/zona-sul/jardins?ss={min}&se={max}&o={pagina}",
+        "url_zap": "",
+        "url_vivareal": ""
+      },
+      {
+        "id": "coleta_viva_real_0_100",
+        "arquivo": "sao_paulo_jardins_coleta_dados_viva_real_0_100.py",
+        "bairro": "jardins",
+        "filtro_bairro": "",
+        "url_chaves": "",
+        "url_olx": "",
+        "url_zap": "",
+        "url_vivareal": "https://www.vivareal.com.br/venda/sp/sao-paulo/zona-oeste/jardins/?onde=%2CS%C3%A3o+Paulo%2CS%C3%A3o+Paulo%2CZona+Oeste%2CJardins%2C%2C%2Cneighborhood%2CBR%3ESao+Paulo%3ENULL%3ESao+Paulo%3EZona+Oeste%3EJardins%2C-23.573979%2C-46.660691%2C&pagina={pagina}"
+      },
+      {
+        "id": "coleta_viva_real_101_200",
+        "arquivo": "sao_paulo_jardins_coleta_dados_viva_real_101_200.py",
+        "bairro": "jardins",
+        "filtro_bairro": "",
+        "url_chaves": "",
+        "url_olx": "",
+        "url_zap": "",
+        "url_vivareal": "https://www.vivareal.com.br/venda/sp/sao-paulo/zona-oeste/jardins/?onde=%2CS%C3%A3o+Paulo%2CS%C3%A3o+Paulo%2CZona+Oeste%2CJardins%2C%2C%2Cneighborhood%2CBR%3ESao+Paulo%3ENULL%3ESao+Paulo%3EZona+Oeste%3EJardins%2C-23.573979%2C-46.660691%2C&pagina={pagina}"
+      },
+      {
+        "id": "coleta_viva_real_201_infinito",
+        "arquivo": "sao_paulo_jardins_coleta_dados_viva_real_201_infinito.py",
+        "bairro": "jardins",
+        "filtro_bairro": "",
+        "url_chaves": "",
+        "url_olx": "",
+        "url_zap": "",
+        "url_vivareal": "https://www.vivareal.com.br/venda/sp/sao-paulo/zona-oeste/jardins/?onde=%2CS%C3%A3o+Paulo%2CS%C3%A3o+Paulo%2CZona+Oeste%2CJardins%2C%2C%2Cneighborhood%2CBR%3ESao+Paulo%3ENULL%3ESao+Paulo%3EZona+Oeste%3EJardins%2C-23.573979%2C-46.660691%2C&pagina={pagina}"
+      },
+      {
+        "id": "coleta_zap_imoveis_0_100",
+        "arquivo": "sao_paulo_jardins_coleta_dados_zap_imoveis_0_100.py",
+        "bairro": "jardins",
+        "filtro_bairro": "",
+        "url_chaves": "",
+        "url_olx": "",
+        "url_zap": "https://www.zapimoveis.com.br/venda/imoveis/sp+sao-paulo+zona-oeste+jardins/?onde=%2CS%C3%A3o+Paulo%2CS%C3%A3o+Paulo%2CZona+Oeste%2CJardins%2C%2C%2Cneighborhood%2CBR%3ESao+Paulo%3ENULL%3ESao+Paulo%3EZona+Oeste%3EJardins%2C-23.573979%2C-46.660691%2C&pagina={pagina}",
+        "url_vivareal": ""
+      },
+      {
+        "id": "coleta_zap_imoveis_101_200",
+        "arquivo": "sao_paulo_jardins_coleta_dados_zap_imoveis_101_200.py",
+        "bairro": "jardins",
+        "filtro_bairro": "",
+        "url_chaves": "",
+        "url_olx": "",
+        "url_zap": "https://www.zapimoveis.com.br/venda/imoveis/sp+sao-paulo+zona-oeste+jardins/?onde=%2CS%C3%A3o+Paulo%2CS%C3%A3o+Paulo%2CZona+Oeste%2CJardins%2C%2C%2Cneighborhood%2CBR%3ESao+Paulo%3ENULL%3ESao+Paulo%3EZona+Oeste%3EJardins%2C-23.573979%2C-46.660691%2C&pagina={pagina}",
+        "url_vivareal": ""
+      },
+      {
+        "id": "coleta_zap_imoveis_201_infinito",
+        "arquivo": "sao_paulo_jardins_coleta_dados_zap_imoveis_201_infinito.py",
+        "bairro": "jardins",
+        "filtro_bairro": "",
+        "url_chaves": "",
+        "url_olx": "",
+        "url_zap": "https://www.zapimoveis.com.br/venda/imoveis/sp+sao-paulo+zona-oeste+jardins/?onde=%2CS%C3%A3o+Paulo%2CS%C3%A3o+Paulo%2CZona+Oeste%2CJardins%2C%2C%2Cneighborhood%2CBR%3ESao+Paulo%3ENULL%3ESao+Paulo%3EZona+Oeste%3EJardins%2C-23.573979%2C-46.660691%2C&pagina={pagina}",
+        "url_vivareal": ""
+      }
+    ],
+    "limpeza": {
+      "arquivo_rodando_imovel": "sao_paulo_jardins_limpando_dados.py",
+      "cidade_limpeza": "sao paulo",
+      "cidade_localizacao": "Sao Paulo",
+      "estado_limpeza": "sp",
+      "estado_localizacao": "SP",
+      "BAIRRO": "jardins",
+      "FILTRO_BAIRRO": "jardins",
+      "tipo_async": true
+    },
+    "melhores_configuracoes": "sao_paulo_melhores_configuraoes_modelo.py",
+    "otimizando": "sao_paulo_otimizando_melhores_modelos.py",
+    "melhor_modelo_geral": "sao_paulo_melhor_modelo_geral.py"
+  },
+  "moema": {
+    "bairro": "moema",
+    "cidade_pasta": "sao_paulo",
+    "cron": "0 16 17 * *",
+    "coleta": [
+      {
+        "id": "coleta_chave_mao_0_60",
+        "arquivo": "sao_paulo_moema_coleta_dados_chave_mao_0_60.py",
+        "bairro": "moema",
+        "filtro_bairro": "",
+        "url_chaves": "https://www.chavesnamao.com.br/apartamentos-a-venda/sp-sao-paulo/moema/?filtro=amin%3A{min}%2Camax%3A{max}&pg={pagina}",
+        "url_olx": "",
+        "url_zap": "",
+        "url_vivareal": ""
+      },
+      {
+        "id": "coleta_chave_mao_61_100",
+        "arquivo": "sao_paulo_moema_coleta_dados_chave_mao_61_100.py",
+        "bairro": "moema",
+        "filtro_bairro": "",
+        "url_chaves": "https://www.chavesnamao.com.br/apartamentos-a-venda/sp-sao-paulo/moema/?filtro=amin%3A{min}%2Camax%3A{max}&pg={pagina}",
+        "url_olx": "",
+        "url_zap": "",
+        "url_vivareal": ""
+      },
+      {
+        "id": "coleta_chave_mao_101_170",
+        "arquivo": "sao_paulo_moema_coleta_dados_chave_mao_101_170.py",
+        "bairro": "moema",
+        "filtro_bairro": "",
+        "url_chaves": "https://www.chavesnamao.com.br/apartamentos-a-venda/sp-sao-paulo/moema/?filtro=amin%3A{min}%2Camax%3A{max}&pg={pagina}",
+        "url_olx": "",
+        "url_zap": "",
+        "url_vivareal": ""
+      },
+      {
+        "id": "coleta_chave_mao_171_infinito",
+        "arquivo": "sao_paulo_moema_coleta_dados_chave_mao_171_infinito.py",
+        "bairro": "moema",
+        "filtro_bairro": "",
+        "url_chaves": "https://www.chavesnamao.com.br/apartamentos-a-venda/sp-sao-paulo/moema/?filtro=amin%3A{min}%2Camax%3A{max}&pg={pagina}",
+        "url_olx": "",
+        "url_zap": "",
+        "url_vivareal": ""
+      },
+      {
+        "id": "coleta_olx_0_40",
+        "arquivo": "sao_paulo_moema_coleta_dados_olx_0_40.py",
+        "bairro": "moema",
+        "filtro_bairro": "",
+        "url_chaves": "",
+        "url_olx": "https://www.olx.com.br/imoveis/venda/estado-sp/sao-paulo-e-regiao/zona-sul/moema?ss={min}&se={max}&o={pagina}",
+        "url_zap": "",
+        "url_vivareal": ""
+      },
+      {
+        "id": "coleta_olx_41_70",
+        "arquivo": "sao_paulo_moema_coleta_dados_olx_41_70.py",
+        "bairro": "moema",
+        "filtro_bairro": "",
+        "url_chaves": "",
+        "url_olx": "https://www.olx.com.br/imoveis/venda/estado-sp/sao-paulo-e-regiao/zona-sul/moema?ss={min}&se={max}&o={pagina}",
+        "url_zap": "",
+        "url_vivareal": ""
+      },
+      {
+        "id": "coleta_olx_71_100",
+        "arquivo": "sao_paulo_moema_coleta_dados_olx_71_100.py",
+        "bairro": "moema",
+        "filtro_bairro": "",
+        "url_chaves": "",
+        "url_olx": "https://www.olx.com.br/imoveis/venda/estado-sp/sao-paulo-e-regiao/zona-sul/moema?ss={min}&se={max}&o={pagina}",
+        "url_zap": "",
+        "url_vivareal": ""
+      },
+      {
+        "id": "coleta_olx_101_145",
+        "arquivo": "sao_paulo_moema_coleta_dados_olx_101_145.py",
+        "bairro": "moema",
+        "filtro_bairro": "",
+        "url_chaves": "",
+        "url_olx": "https://www.olx.com.br/imoveis/venda/estado-sp/sao-paulo-e-regiao/zona-sul/moema?ss={min}&se={max}&o={pagina}",
+        "url_zap": "",
+        "url_vivareal": ""
+      },
+      {
+        "id": "coleta_olx_146_190",
+        "arquivo": "sao_paulo_moema_coleta_dados_olx_146_190.py",
+        "bairro": "moema",
+        "filtro_bairro": "",
+        "url_chaves": "",
+        "url_olx": "https://www.olx.com.br/imoveis/venda/estado-sp/sao-paulo-e-regiao/zona-sul/moema?ss={min}&se={max}&o={pagina}",
+        "url_zap": "",
+        "url_vivareal": ""
+      },
+      {
+        "id": "coleta_olx_191_260",
+        "arquivo": "sao_paulo_moema_coleta_dados_olx_191_260.py",
+        "bairro": "moema",
+        "filtro_bairro": "",
+        "url_chaves": "",
+        "url_olx": "https://www.olx.com.br/imoveis/venda/estado-sp/sao-paulo-e-regiao/zona-sul/moema?ss={min}&se={max}&o={pagina}",
+        "url_zap": "",
+        "url_vivareal": ""
+      },
+      {
+        "id": "coleta_olx_261_infinito",
+        "arquivo": "sao_paulo_moema_coleta_dados_olx_261_infinito.py",
+        "bairro": "moema",
+        "filtro_bairro": "",
+        "url_chaves": "",
+        "url_olx": "https://www.olx.com.br/imoveis/venda/estado-sp/sao-paulo-e-regiao/zona-sul/moema?ss={min}&se={max}&o={pagina}",
+        "url_zap": "",
+        "url_vivareal": ""
+      },
+      {
+        "id": "coleta_viva_real_0_70",
+        "arquivo": "sao_paulo_moema_coleta_dados_viva_real_0_70.py",
+        "bairro": "moema",
+        "filtro_bairro": "",
+        "url_chaves": "",
+        "url_olx": "",
+        "url_zap": "",
+        "url_vivareal": "https://www.vivareal.com.br/venda/sp/sao-paulo/zona-sul/moema/apartamento_residencial/?onde=%2CS%C3%A3o+Paulo%2CS%C3%A3o+Paulo%2CZona+Sul%2CMoema%2C%2C%2Cneighborhood%2CBR%3ESao+Paulo%3ENULL%3ESao+Paulo%3EZona+Sul%3EMoema%2C-23.602021%2C-46.672103%2C&tipos=apartamento_residencial&pagina={pagina}"
+      },
+      {
+        "id": "coleta_viva_real_71_150",
+        "arquivo": "sao_paulo_moema_coleta_dados_viva_real_71_150.py",
+        "bairro": "moema",
+        "filtro_bairro": "",
+        "url_chaves": "",
+        "url_olx": "",
+        "url_zap": "",
+        "url_vivareal": "https://www.vivareal.com.br/venda/sp/sao-paulo/zona-sul/moema/apartamento_residencial/?onde=%2CS%C3%A3o+Paulo%2CS%C3%A3o+Paulo%2CZona+Sul%2CMoema%2C%2C%2Cneighborhood%2CBR%3ESao+Paulo%3ENULL%3ESao+Paulo%3EZona+Sul%3EMoema%2C-23.602021%2C-46.672103%2C&tipos=apartamento_residencial&pagina={pagina}"
+      },
+      {
+        "id": "coleta_viva_real_151_230",
+        "arquivo": "sao_paulo_moema_coleta_dados_viva_real_151_230.py",
+        "bairro": "moema",
+        "filtro_bairro": "",
+        "url_chaves": "",
+        "url_olx": "",
+        "url_zap": "",
+        "url_vivareal": "https://www.vivareal.com.br/venda/sp/sao-paulo/zona-sul/moema/apartamento_residencial/?onde=%2CS%C3%A3o+Paulo%2CS%C3%A3o+Paulo%2CZona+Sul%2CMoema%2C%2C%2Cneighborhood%2CBR%3ESao+Paulo%3ENULL%3ESao+Paulo%3EZona+Sul%3EMoema%2C-23.602021%2C-46.672103%2C&tipos=apartamento_residencial&pagina={pagina}"
+      },
+      {
+        "id": "coleta_viva_real_231_infinito",
+        "arquivo": "sao_paulo_moema_coleta_dados_viva_real_231_infinito.py",
+        "bairro": "moema",
+        "filtro_bairro": "",
+        "url_chaves": "",
+        "url_olx": "",
+        "url_zap": "",
+        "url_vivareal": "https://www.vivareal.com.br/venda/sp/sao-paulo/zona-sul/moema/apartamento_residencial/?onde=%2CS%C3%A3o+Paulo%2CS%C3%A3o+Paulo%2CZona+Sul%2CMoema%2C%2C%2Cneighborhood%2CBR%3ESao+Paulo%3ENULL%3ESao+Paulo%3EZona+Sul%3EMoema%2C-23.602021%2C-46.672103%2C&tipos=apartamento_residencial&pagina={pagina}"
+      },
+      {
+        "id": "coleta_zap_imoveis_0_70",
+        "arquivo": "sao_paulo_moema_coleta_dados_zap_imoveis_0_70.py",
+        "bairro": "moema",
+        "filtro_bairro": "",
+        "url_chaves": "",
+        "url_olx": "",
+        "url_zap": "https://www.zapimoveis.com.br/venda/apartamentos/sp+sao-paulo+zona-sul+moema/?onde=%2CS%C3%A3o+Paulo%2CS%C3%A3o+Paulo%2CZona+Sul%2CMoema%2C%2C%2Cneighborhood%2CBR%3ESao+Paulo%3ENULL%3ESao+Paulo%3EZona+Sul%3EMoema%2C-23.612476%2C-46.661547%2C&tipos=apartamento_residencial&pagina={pagina}",
+        "url_vivareal": ""
+      },
+      {
+        "id": "coleta_zap_imoveis_71_150",
+        "arquivo": "sao_paulo_moema_coleta_dados_zap_imoveis_71_150.py",
+        "bairro": "moema",
+        "filtro_bairro": "",
+        "url_chaves": "",
+        "url_olx": "",
+        "url_zap": "https://www.zapimoveis.com.br/venda/apartamentos/sp+sao-paulo+zona-sul+moema/?onde=%2CS%C3%A3o+Paulo%2CS%C3%A3o+Paulo%2CZona+Sul%2CMoema%2C%2C%2Cneighborhood%2CBR%3ESao+Paulo%3ENULL%3ESao+Paulo%3EZona+Sul%3EMoema%2C-23.612476%2C-46.661547%2C&tipos=apartamento_residencial&pagina={pagina}",
+        "url_vivareal": ""
+      },
+      {
+        "id": "coleta_zap_imoveis_151_230",
+        "arquivo": "sao_paulo_moema_coleta_dados_zap_imoveis_151_230.py",
+        "bairro": "moema",
+        "filtro_bairro": "",
+        "url_chaves": "",
+        "url_olx": "",
+        "url_zap": "https://www.zapimoveis.com.br/venda/apartamentos/sp+sao-paulo+zona-sul+moema/?onde=%2CS%C3%A3o+Paulo%2CS%C3%A3o+Paulo%2CZona+Sul%2CMoema%2C%2C%2Cneighborhood%2CBR%3ESao+Paulo%3ENULL%3ESao+Paulo%3EZona+Sul%3EMoema%2C-23.612476%2C-46.661547%2C&tipos=apartamento_residencial&pagina={pagina}",
+        "url_vivareal": ""
+      },
+      {
+        "id": "coleta_zap_imoveis_231_infinito",
+        "arquivo": "sao_paulo_moema_coleta_dados_zap_imoveis_231_infinito.py",
+        "bairro": "moema",
+        "filtro_bairro": "",
+        "url_chaves": "",
+        "url_olx": "",
+        "url_zap": "https://www.zapimoveis.com.br/venda/apartamentos/sp+sao-paulo+zona-sul+moema/?onde=%2CS%C3%A3o+Paulo%2CS%C3%A3o+Paulo%2CZona+Sul%2CMoema%2C%2C%2Cneighborhood%2CBR%3ESao+Paulo%3ENULL%3ESao+Paulo%3EZona+Sul%3EMoema%2C-23.612476%2C-46.661547%2C&tipos=apartamento_residencial&pagina={pagina}",
+        "url_vivareal": ""
+      }
+    ],
+    "limpeza": {
+      "arquivo_rodando_imovel": "sao_paulo_moema_limpando_dados.py",
+      "cidade_limpeza": "sao paulo",
+      "cidade_localizacao": "Sao Paulo",
+      "estado_limpeza": "sp",
+      "estado_localizacao": "SP",
+      "BAIRRO": "moema",
+      "FILTRO_BAIRRO": "moema",
+      "tipo_async": true
+    },
+    "melhores_configuracoes": "sao_paulo_melhores_configuraoes_modelo.py",
+    "otimizando": "sao_paulo_otimizando_melhores_modelos.py",
+    "melhor_modelo_geral": "sao_paulo_melhor_modelo_geral.py"
+  },
+  "paraiso": {
+    "bairro": "paraiso",
+    "cidade_pasta": "sao_paulo",
+    "cron": "0 16 21 * *",
+    "coleta": [
+      {
+        "id": "coleta_chave_mao_0_100",
+        "arquivo": "sao_paulo_paraiso_coleta_dados_chave_mao_0_100.py",
+        "bairro": "paraiso",
+        "filtro_bairro": "",
+        "url_chaves": "https://www.chavesnamao.com.br/apartamentos-a-venda/sp-sao-paulo/paraiso/?filtro=amin%3A{min}%2Camax%3A{max}&pg={pagina}",
+        "url_olx": "",
+        "url_zap": "",
+        "url_vivareal": ""
+      },
+      {
+        "id": "coleta_chave_mao_101_200",
+        "arquivo": "sao_paulo_paraiso_coleta_dados_chave_mao_101_200.py",
+        "bairro": "paraiso",
+        "filtro_bairro": "",
+        "url_chaves": "https://www.chavesnamao.com.br/apartamentos-a-venda/sp-sao-paulo/paraiso/?filtro=amin%3A{min}%2Camax%3A{max}&pg={pagina}",
+        "url_olx": "",
+        "url_zap": "",
+        "url_vivareal": ""
+      },
+      {
+        "id": "coleta_chave_mao_201_infinito",
+        "arquivo": "sao_paulo_paraiso_coleta_dados_chave_mao_201_infinito.py",
+        "bairro": "paraiso",
+        "filtro_bairro": "",
+        "url_chaves": "https://www.chavesnamao.com.br/apartamentos-a-venda/sp-sao-paulo/paraiso/?filtro=amin%3A{min}%2Camax%3A{max}&pg={pagina}",
+        "url_olx": "",
+        "url_zap": "",
+        "url_vivareal": ""
+      },
+      {
+        "id": "coleta_olx_0_50",
+        "arquivo": "sao_paulo_paraiso_coleta_dados_olx_0_50.py",
+        "bairro": "paraiso",
+        "filtro_bairro": "",
+        "url_chaves": "",
+        "url_olx": "https://www.olx.com.br/imoveis/venda/estado-sp/sao-paulo-e-regiao/zona-sul/paraiso?ss={min}&se={max}&o={pagina}",
+        "url_zap": "",
+        "url_vivareal": ""
+      },
+      {
+        "id": "coleta_olx_51_90",
+        "arquivo": "sao_paulo_paraiso_coleta_dados_olx_51_90.py",
+        "bairro": "paraiso",
+        "filtro_bairro": "",
+        "url_chaves": "",
+        "url_olx": "https://www.olx.com.br/imoveis/venda/estado-sp/sao-paulo-e-regiao/zona-sul/paraiso?ss={min}&se={max}&o={pagina}",
+        "url_zap": "",
+        "url_vivareal": ""
+      },
+      {
+        "id": "coleta_olx_91_130",
+        "arquivo": "sao_paulo_paraiso_coleta_dados_olx_91_130.py",
+        "bairro": "paraiso",
+        "filtro_bairro": "",
+        "url_chaves": "",
+        "url_olx": "https://www.olx.com.br/imoveis/venda/estado-sp/sao-paulo-e-regiao/zona-sul/paraiso?ss={min}&se={max}&o={pagina}",
+        "url_zap": "",
+        "url_vivareal": ""
+      },
+      {
+        "id": "coleta_olx_131_180",
+        "arquivo": "sao_paulo_paraiso_coleta_dados_olx_131_180.py",
+        "bairro": "paraiso",
+        "filtro_bairro": "",
+        "url_chaves": "",
+        "url_olx": "https://www.olx.com.br/imoveis/venda/estado-sp/sao-paulo-e-regiao/zona-sul/paraiso?ss={min}&se={max}&o={pagina}",
+        "url_zap": "",
+        "url_vivareal": ""
+      },
+      {
+        "id": "coleta_olx_181_300",
+        "arquivo": "sao_paulo_paraiso_coleta_dados_olx_181_300.py",
+        "bairro": "paraiso",
+        "filtro_bairro": "",
+        "url_chaves": "",
+        "url_olx": "https://www.olx.com.br/imoveis/venda/estado-sp/sao-paulo-e-regiao/zona-sul/paraiso?ss={min}&se={max}&o={pagina}",
+        "url_zap": "",
+        "url_vivareal": ""
+      },
+      {
+        "id": "coleta_olx_301_infinito",
+        "arquivo": "sao_paulo_paraiso_coleta_dados_olx_301_infinito.py",
+        "bairro": "paraiso",
+        "filtro_bairro": "",
+        "url_chaves": "",
+        "url_olx": "https://www.olx.com.br/imoveis/venda/estado-sp/sao-paulo-e-regiao/zona-sul/paraiso?ss={min}&se={max}&o={pagina}",
+        "url_zap": "",
+        "url_vivareal": ""
+      },
+      {
+        "id": "coleta_viva_real_0_100",
+        "arquivo": "sao_paulo_paraiso_coleta_dados_viva_real_0_100.py",
+        "bairro": "paraiso",
+        "filtro_bairro": "",
+        "url_chaves": "",
+        "url_olx": "",
+        "url_zap": "",
+        "url_vivareal": "https://www.vivareal.com.br/venda/sp/sao-paulo/zona-sul/paraiso/?onde=%2CS%C3%A3o+Paulo%2CS%C3%A3o+Paulo%2CZona+Sul%2CPara%C3%ADso%2C%2C%2Cneighborhood%2CBR%3ESao+Paulo%3ENULL%3ESao+Paulo%3EZona+Sul%3EParaiso%2C-23.57476%2C-46.648786%2C&pagina={pagina}"
+      },
+      {
+        "id": "coleta_viva_real_101_200",
+        "arquivo": "sao_paulo_paraiso_coleta_dados_viva_real_101_200.py",
+        "bairro": "paraiso",
+        "filtro_bairro": "",
+        "url_chaves": "",
+        "url_olx": "",
+        "url_zap": "",
+        "url_vivareal": "https://www.vivareal.com.br/venda/sp/sao-paulo/zona-sul/paraiso/?onde=%2CS%C3%A3o+Paulo%2CS%C3%A3o+Paulo%2CZona+Sul%2CPara%C3%ADso%2C%2C%2Cneighborhood%2CBR%3ESao+Paulo%3ENULL%3ESao+Paulo%3EZona+Sul%3EParaiso%2C-23.57476%2C-46.648786%2C&pagina={pagina}"
+      },
+      {
+        "id": "coleta_viva_real_201_infinito",
+        "arquivo": "sao_paulo_paraiso_coleta_dados_viva_real_201_infinito.py",
+        "bairro": "paraiso",
+        "filtro_bairro": "",
+        "url_chaves": "",
+        "url_olx": "",
+        "url_zap": "",
+        "url_vivareal": "https://www.vivareal.com.br/venda/sp/sao-paulo/zona-sul/paraiso/?onde=%2CS%C3%A3o+Paulo%2CS%C3%A3o+Paulo%2CZona+Sul%2CPara%C3%ADso%2C%2C%2Cneighborhood%2CBR%3ESao+Paulo%3ENULL%3ESao+Paulo%3EZona+Sul%3EParaiso%2C-23.57476%2C-46.648786%2C&pagina={pagina}"
+      },
+      {
+        "id": "coleta_zap_imoveis_0_100",
+        "arquivo": "sao_paulo_paraiso_coleta_dados_zap_imoveis_0_100.py",
+        "bairro": "paraiso",
+        "filtro_bairro": "",
+        "url_chaves": "",
+        "url_olx": "",
+        "url_zap": "https://www.zapimoveis.com.br/venda/imoveis/sp+sao-paulo+zona-sul+paraiso/?onde=%2CS%C3%A3o+Paulo%2CS%C3%A3o+Paulo%2CZona+Sul%2CPara%C3%ADso%2C%2C%2Cneighborhood%2CBR%3ESao+Paulo%3ENULL%3ESao+Paulo%3EZona+Sul%3EParaiso%2C-23.57476%2C-46.648786%2C&pagina={pagina}",
+        "url_vivareal": ""
+      },
+      {
+        "id": "coleta_zap_imoveis_101_200",
+        "arquivo": "sao_paulo_paraiso_coleta_dados_zap_imoveis_101_200.py",
+        "bairro": "paraiso",
+        "filtro_bairro": "",
+        "url_chaves": "",
+        "url_olx": "",
+        "url_zap": "https://www.zapimoveis.com.br/venda/imoveis/sp+sao-paulo+zona-sul+paraiso/?onde=%2CS%C3%A3o+Paulo%2CS%C3%A3o+Paulo%2CZona+Sul%2CPara%C3%ADso%2C%2C%2Cneighborhood%2CBR%3ESao+Paulo%3ENULL%3ESao+Paulo%3EZona+Sul%3EParaiso%2C-23.57476%2C-46.648786%2C&pagina={pagina}",
+        "url_vivareal": ""
+      },
+      {
+        "id": "coleta_zap_imoveis_201_infinito",
+        "arquivo": "sao_paulo_paraiso_coleta_dados_zap_imoveis_201_infinito.py",
+        "bairro": "paraiso",
+        "filtro_bairro": "",
+        "url_chaves": "",
+        "url_olx": "",
+        "url_zap": "https://www.zapimoveis.com.br/venda/imoveis/sp+sao-paulo+zona-sul+paraiso/?onde=%2CS%C3%A3o+Paulo%2CS%C3%A3o+Paulo%2CZona+Sul%2CPara%C3%ADso%2C%2C%2Cneighborhood%2CBR%3ESao+Paulo%3ENULL%3ESao+Paulo%3EZona+Sul%3EParaiso%2C-23.57476%2C-46.648786%2C&pagina={pagina}",
+        "url_vivareal": ""
+      }
+    ],
+    "limpeza": {
+      "arquivo_rodando_imovel": "sao_paulo_paraiso_limpando_dados.py",
+      "cidade_limpeza": "sao paulo",
+      "cidade_localizacao": "Sao Paulo",
+      "estado_limpeza": "sp",
+      "estado_localizacao": "SP",
+      "BAIRRO": "paraiso",
+      "FILTRO_BAIRRO": "paraiso",
+      "tipo_async": true
+    },
+    "melhores_configuracoes": "sao_paulo_melhores_configuraoes_modelo.py",
+    "otimizando": "sao_paulo_otimizando_melhores_modelos.py",
+    "melhor_modelo_geral": "sao_paulo_melhor_modelo_geral.py"
+  },
+  "perdizes": {
+    "bairro": "perdizes",
+    "cidade_pasta": "sao_paulo",
+    "cron": "0 16 20 * *",
+    "coleta": [
+      {
+        "id": "coleta_chave_mao_0_100",
+        "arquivo": "sao_paulo_perdizes_coleta_dados_chave_mao_0_100.py",
+        "bairro": "perdizes",
+        "filtro_bairro": "",
+        "url_chaves": "https://www.chavesnamao.com.br/apartamentos-a-venda/sp-sao-paulo/perdizes/?filtro=amin%3A{min}%2Camax%3A{max}&pg={pagina}",
+        "url_olx": "",
+        "url_zap": "",
+        "url_vivareal": ""
+      },
+      {
+        "id": "coleta_chave_mao_101_200",
+        "arquivo": "sao_paulo_perdizes_coleta_dados_chave_mao_101_200.py",
+        "bairro": "perdizes",
+        "filtro_bairro": "",
+        "url_chaves": "https://www.chavesnamao.com.br/apartamentos-a-venda/sp-sao-paulo/perdizes/?filtro=amin%3A{min}%2Camax%3A{max}&pg={pagina}",
+        "url_olx": "",
+        "url_zap": "",
+        "url_vivareal": ""
+      },
+      {
+        "id": "coleta_chave_mao_201_infinito",
+        "arquivo": "sao_paulo_perdizes_coleta_dados_chave_mao_201_infinito.py",
+        "bairro": "perdizes",
+        "filtro_bairro": "",
+        "url_chaves": "https://www.chavesnamao.com.br/apartamentos-a-venda/sp-sao-paulo/perdizes/?filtro=amin%3A{min}%2Camax%3A{max}&pg={pagina}",
+        "url_olx": "",
+        "url_zap": "",
+        "url_vivareal": ""
+      },
+      {
+        "id": "coleta_olx_0_50",
+        "arquivo": "sao_paulo_perdizes_coleta_dados_olx_0_50.py",
+        "bairro": "perdizes",
+        "filtro_bairro": "",
+        "url_chaves": "",
+        "url_olx": "https://www.olx.com.br/imoveis/venda/estado-sp/sao-paulo-e-regiao/zona-oeste/perdizes?ss={min}&se={max}&o={pagina}",
+        "url_zap": "",
+        "url_vivareal": ""
+      },
+      {
+        "id": "coleta_olx_51_90",
+        "arquivo": "sao_paulo_perdizes_coleta_dados_olx_51_90.py",
+        "bairro": "perdizes",
+        "filtro_bairro": "",
+        "url_chaves": "",
+        "url_olx": "https://www.olx.com.br/imoveis/venda/estado-sp/sao-paulo-e-regiao/zona-oeste/perdizes?ss={min}&se={max}&o={pagina}",
+        "url_zap": "",
+        "url_vivareal": ""
+      },
+      {
+        "id": "coleta_olx_91_130",
+        "arquivo": "sao_paulo_perdizes_coleta_dados_olx_91_130.py",
+        "bairro": "perdizes",
+        "filtro_bairro": "",
+        "url_chaves": "",
+        "url_olx": "https://www.olx.com.br/imoveis/venda/estado-sp/sao-paulo-e-regiao/zona-oeste/perdizes?ss={min}&se={max}&o={pagina}",
+        "url_zap": "",
+        "url_vivareal": ""
+      },
+      {
+        "id": "coleta_olx_131_180",
+        "arquivo": "sao_paulo_perdizes_coleta_dados_olx_131_180.py",
+        "bairro": "perdizes",
+        "filtro_bairro": "",
+        "url_chaves": "",
+        "url_olx": "https://www.olx.com.br/imoveis/venda/estado-sp/sao-paulo-e-regiao/zona-oeste/perdizes?ss={min}&se={max}&o={pagina}",
+        "url_zap": "",
+        "url_vivareal": ""
+      },
+      {
+        "id": "coleta_olx_181_300",
+        "arquivo": "sao_paulo_perdizes_coleta_dados_olx_181_300.py",
+        "bairro": "perdizes",
+        "filtro_bairro": "",
+        "url_chaves": "",
+        "url_olx": "https://www.olx.com.br/imoveis/venda/estado-sp/sao-paulo-e-regiao/zona-oeste/perdizes?ss={min}&se={max}&o={pagina}",
+        "url_zap": "",
+        "url_vivareal": ""
+      },
+      {
+        "id": "coleta_olx_301_infinito",
+        "arquivo": "sao_paulo_perdizes_coleta_dados_olx_301_infinito.py",
+        "bairro": "perdizes",
+        "filtro_bairro": "",
+        "url_chaves": "",
+        "url_olx": "https://www.olx.com.br/imoveis/venda/estado-sp/sao-paulo-e-regiao/zona-oeste/perdizes?ss={min}&se={max}&o={pagina}",
+        "url_zap": "",
+        "url_vivareal": ""
+      },
+      {
+        "id": "coleta_viva_real_0_100",
+        "arquivo": "sao_paulo_perdizes_coleta_dados_viva_real_0_100.py",
+        "bairro": "perdizes",
+        "filtro_bairro": "",
+        "url_chaves": "",
+        "url_olx": "",
+        "url_zap": "",
+        "url_vivareal": "https://www.vivareal.com.br/venda/sp/sao-paulo/zona-oeste/perdizes/apartamento_residencial/?onde=%2CS%C3%A3o+Paulo%2CS%C3%A3o+Paulo%2CZona+Oeste%2CPerdizes%2C%2C%2Cneighborhood%2CBR%3ESao+Paulo%3ENULL%3ESao+Paulo%3EZona+Oeste%3EPerdizes%2C-23.537335%2C-46.671543%2C&tipos=apartamento_residencial&pagina={pagina}"
+      },
+      {
+        "id": "coleta_viva_real_101_200",
+        "arquivo": "sao_paulo_perdizes_coleta_dados_viva_real_101_200.py",
+        "bairro": "perdizes",
+        "filtro_bairro": "",
+        "url_chaves": "",
+        "url_olx": "",
+        "url_zap": "",
+        "url_vivareal": "https://www.vivareal.com.br/venda/sp/sao-paulo/zona-oeste/perdizes/apartamento_residencial/?onde=%2CS%C3%A3o+Paulo%2CS%C3%A3o+Paulo%2CZona+Oeste%2CPerdizes%2C%2C%2Cneighborhood%2CBR%3ESao+Paulo%3ENULL%3ESao+Paulo%3EZona+Oeste%3EPerdizes%2C-23.537335%2C-46.671543%2C&tipos=apartamento_residencial&pagina={pagina}"
+      },
+      {
+        "id": "coleta_viva_real_201_infinito",
+        "arquivo": "sao_paulo_perdizes_coleta_dados_viva_real_201_infinito.py",
+        "bairro": "perdizes",
+        "filtro_bairro": "",
+        "url_chaves": "",
+        "url_olx": "",
+        "url_zap": "",
+        "url_vivareal": "https://www.vivareal.com.br/venda/sp/sao-paulo/zona-oeste/perdizes/apartamento_residencial/?onde=%2CS%C3%A3o+Paulo%2CS%C3%A3o+Paulo%2CZona+Oeste%2CPerdizes%2C%2C%2Cneighborhood%2CBR%3ESao+Paulo%3ENULL%3ESao+Paulo%3EZona+Oeste%3EPerdizes%2C-23.537335%2C-46.671543%2C&tipos=apartamento_residencial&pagina={pagina}"
+      },
+      {
+        "id": "coleta_zap_imoveis_0_100",
+        "arquivo": "sao_paulo_perdizes_coleta_dados_zap_imoveis_0_100.py",
+        "bairro": "perdizes",
+        "filtro_bairro": "",
+        "url_chaves": "",
+        "url_olx": "",
+        "url_zap": "https://www.zapimoveis.com.br/venda/apartamentos/sp+sao-paulo+zona-oeste+perdizes/?onde=%2CS%C3%A3o+Paulo%2CS%C3%A3o+Paulo%2CZona+Oeste%2CPerdizes%2C%2C%2Cneighborhood%2CBR%3ESao+Paulo%3ENULL%3ESao+Paulo%3EZona+Oeste%3EPerdizes%2C-23.537335%2C-46.671543%2C&tipos=apartamento_residencial&pagina={pagina}",
+        "url_vivareal": ""
+      },
+      {
+        "id": "coleta_zap_imoveis_101_200",
+        "arquivo": "sao_paulo_perdizes_coleta_dados_zap_imoveis_101_200.py",
+        "bairro": "perdizes",
+        "filtro_bairro": "",
+        "url_chaves": "",
+        "url_olx": "",
+        "url_zap": "https://www.zapimoveis.com.br/venda/apartamentos/sp+sao-paulo+zona-oeste+perdizes/?onde=%2CS%C3%A3o+Paulo%2CS%C3%A3o+Paulo%2CZona+Oeste%2CPerdizes%2C%2C%2Cneighborhood%2CBR%3ESao+Paulo%3ENULL%3ESao+Paulo%3EZona+Oeste%3EPerdizes%2C-23.537335%2C-46.671543%2C&tipos=apartamento_residencial&pagina={pagina}",
+        "url_vivareal": ""
+      },
+      {
+        "id": "coleta_zap_imoveis_201_infinito",
+        "arquivo": "sao_paulo_perdizes_coleta_dados_zap_imoveis_201_infinito.py",
+        "bairro": "perdizes",
+        "filtro_bairro": "",
+        "url_chaves": "",
+        "url_olx": "",
+        "url_zap": "https://www.zapimoveis.com.br/venda/apartamentos/sp+sao-paulo+zona-oeste+perdizes/?onde=%2CS%C3%A3o+Paulo%2CS%C3%A3o+Paulo%2CZona+Oeste%2CPerdizes%2C%2C%2Cneighborhood%2CBR%3ESao+Paulo%3ENULL%3ESao+Paulo%3EZona+Oeste%3EPerdizes%2C-23.537335%2C-46.671543%2C&tipos=apartamento_residencial&pagina={pagina}",
+        "url_vivareal": ""
+      }
+    ],
+    "limpeza": {
+      "arquivo_rodando_imovel": "sao_paulo_perdizes_limpando_dados.py",
+      "cidade_limpeza": "sao paulo",
+      "cidade_localizacao": "Sao Paulo",
+      "estado_limpeza": "sp",
+      "estado_localizacao": "SP",
+      "BAIRRO": "perdizes",
+      "FILTRO_BAIRRO": "perdizes",
+      "tipo_async": true
+    },
+    "melhores_configuracoes": "sao_paulo_melhores_configuraoes_modelo.py",
+    "otimizando": "sao_paulo_otimizando_melhores_modelos.py",
+    "melhor_modelo_geral": "sao_paulo_melhor_modelo_geral.py"
+  },
+  "pinheiros": {
+    "bairro": "pinheiros",
+    "cidade_pasta": "sao_paulo",
+    "cron": "0 16 19 * *",
+    "coleta": [
+      {
+        "id": "coleta_chave_mao_0_40",
+        "arquivo": "sao_paulo_pinheiros_coleta_dados_chave_mao_0_40.py",
+        "bairro": "pinheiros",
+        "filtro_bairro": "",
+        "url_chaves": "https://www.chavesnamao.com.br/apartamentos-a-venda/sp-sao-paulo/pinheiros/?filtro=amin%3A{min}%2Camax%3A{max}&pg={pagina}",
+        "url_olx": "",
+        "url_zap": "",
+        "url_vivareal": ""
+      },
+      {
+        "id": "coleta_chave_mao_41_70",
+        "arquivo": "sao_paulo_pinheiros_coleta_dados_chave_mao_41_70.py",
+        "bairro": "pinheiros",
+        "filtro_bairro": "",
+        "url_chaves": "https://www.chavesnamao.com.br/apartamentos-a-venda/sp-sao-paulo/pinheiros/?filtro=amin%3A{min}%2Camax%3A{max}&pg={pagina}",
+        "url_olx": "",
+        "url_zap": "",
+        "url_vivareal": ""
+      },
+      {
+        "id": "coleta_chave_mao_71_90",
+        "arquivo": "sao_paulo_pinheiros_coleta_dados_chave_mao_71_90.py",
+        "bairro": "pinheiros",
+        "filtro_bairro": "",
+        "url_chaves": "https://www.chavesnamao.com.br/apartamentos-a-venda/sp-sao-paulo/pinheiros/?filtro=amin%3A{min}%2Camax%3A{max}&pg={pagina}",
+        "url_olx": "",
+        "url_zap": "",
+        "url_vivareal": ""
+      },
+      {
+        "id": "coleta_chave_mao_91_120",
+        "arquivo": "sao_paulo_pinheiros_coleta_dados_chave_mao_91_120.py",
+        "bairro": "pinheiros",
+        "filtro_bairro": "",
+        "url_chaves": "https://www.chavesnamao.com.br/apartamentos-a-venda/sp-sao-paulo/pinheiros/?filtro=amin%3A{min}%2Camax%3A{max}&pg={pagina}",
+        "url_olx": "",
+        "url_zap": "",
+        "url_vivareal": ""
+      },
+      {
+        "id": "coleta_chave_mao_121_infinito",
+        "arquivo": "sao_paulo_pinheiros_coleta_dados_chave_mao_121_infinito.py",
+        "bairro": "pinheiros",
+        "filtro_bairro": "",
+        "url_chaves": "https://www.chavesnamao.com.br/apartamentos-a-venda/sp-sao-paulo/pinheiros/?filtro=amin%3A{min}%2Camax%3A{max}&pg={pagina}",
+        "url_olx": "",
+        "url_zap": "",
+        "url_vivareal": ""
+      },
+      {
+        "id": "coleta_olx_0_50",
+        "arquivo": "sao_paulo_pinheiros_coleta_dados_olx_0_50.py",
+        "bairro": "pinheiros",
+        "filtro_bairro": "",
+        "url_chaves": "",
+        "url_olx": "https://www.olx.com.br/imoveis/venda/estado-sp/sao-paulo-e-regiao/zona-oeste/pinheiros?ss={min}&se={max}&o={pagina}",
+        "url_zap": "",
+        "url_vivareal": ""
+      },
+      {
+        "id": "coleta_olx_51_90",
+        "arquivo": "sao_paulo_pinheiros_coleta_dados_olx_51_90.py",
+        "bairro": "pinheiros",
+        "filtro_bairro": "",
+        "url_chaves": "",
+        "url_olx": "https://www.olx.com.br/imoveis/venda/estado-sp/sao-paulo-e-regiao/zona-oeste/pinheiros?ss={min}&se={max}&o={pagina}",
+        "url_zap": "",
+        "url_vivareal": ""
+      },
+      {
+        "id": "coleta_olx_91_130",
+        "arquivo": "sao_paulo_pinheiros_coleta_dados_olx_91_130.py",
+        "bairro": "pinheiros",
+        "filtro_bairro": "",
+        "url_chaves": "",
+        "url_olx": "https://www.olx.com.br/imoveis/venda/estado-sp/sao-paulo-e-regiao/zona-oeste/pinheiros?ss={min}&se={max}&o={pagina}",
+        "url_zap": "",
+        "url_vivareal": ""
+      },
+      {
+        "id": "coleta_olx_131_180",
+        "arquivo": "sao_paulo_pinheiros_coleta_dados_olx_131_180.py",
+        "bairro": "pinheiros",
+        "filtro_bairro": "",
+        "url_chaves": "",
+        "url_olx": "https://www.olx.com.br/imoveis/venda/estado-sp/sao-paulo-e-regiao/zona-oeste/pinheiros?ss={min}&se={max}&o={pagina}",
+        "url_zap": "",
+        "url_vivareal": ""
+      },
+      {
+        "id": "coleta_olx_181_300",
+        "arquivo": "sao_paulo_pinheiros_coleta_dados_olx_181_300.py",
+        "bairro": "pinheiros",
+        "filtro_bairro": "",
+        "url_chaves": "",
+        "url_olx": "https://www.olx.com.br/imoveis/venda/estado-sp/sao-paulo-e-regiao/zona-oeste/pinheiros?ss={min}&se={max}&o={pagina}",
+        "url_zap": "",
+        "url_vivareal": ""
+      },
+      {
+        "id": "coleta_olx_301_infinito",
+        "arquivo": "sao_paulo_pinheiros_coleta_dados_olx_301_infinito.py",
+        "bairro": "pinheiros",
+        "filtro_bairro": "",
+        "url_chaves": "",
+        "url_olx": "https://www.olx.com.br/imoveis/venda/estado-sp/sao-paulo-e-regiao/zona-oeste/pinheiros?ss={min}&se={max}&o={pagina}",
+        "url_zap": "",
+        "url_vivareal": ""
+      },
+      {
+        "id": "coleta_viva_real_0_33",
+        "arquivo": "sao_paulo_pinheiros_coleta_dados_viva_real_0_33.py",
+        "bairro": "pinheiros",
+        "filtro_bairro": "",
+        "url_chaves": "",
+        "url_olx": "",
+        "url_zap": "",
+        "url_vivareal": "https://www.vivareal.com.br/venda/sp/sao-paulo/zona-oeste/pinheiros/?onde=%2CS%C3%A3o+Paulo%2CS%C3%A3o+Paulo%2CZona+Oeste%2CPinheiros%2C%2C%2Cneighborhood%2CBR%3ESao+Paulo%3ENULL%3ESao+Paulo%3EZona+Oeste%3EPinheiros%2C-23.563579%2C-46.691607%2C&pagina={pagina}"
+      },
+      {
+        "id": "coleta_viva_real_34_60",
+        "arquivo": "sao_paulo_pinheiros_coleta_dados_viva_real_34_60.py",
+        "bairro": "pinheiros",
+        "filtro_bairro": "",
+        "url_chaves": "",
+        "url_olx": "",
+        "url_zap": "",
+        "url_vivareal": "https://www.vivareal.com.br/venda/sp/sao-paulo/zona-oeste/pinheiros/?onde=%2CS%C3%A3o+Paulo%2CS%C3%A3o+Paulo%2CZona+Oeste%2CPinheiros%2C%2C%2Cneighborhood%2CBR%3ESao+Paulo%3ENULL%3ESao+Paulo%3EZona+Oeste%3EPinheiros%2C-23.563579%2C-46.691607%2C&pagina={pagina}"
+      },
+      {
+        "id": "coleta_viva_real_61_85",
+        "arquivo": "sao_paulo_pinheiros_coleta_dados_viva_real_61_85.py",
+        "bairro": "pinheiros",
+        "filtro_bairro": "",
+        "url_chaves": "",
+        "url_olx": "",
+        "url_zap": "",
+        "url_vivareal": "https://www.vivareal.com.br/venda/sp/sao-paulo/zona-oeste/pinheiros/?onde=%2CS%C3%A3o+Paulo%2CS%C3%A3o+Paulo%2CZona+Oeste%2CPinheiros%2C%2C%2Cneighborhood%2CBR%3ESao+Paulo%3ENULL%3ESao+Paulo%3EZona+Oeste%3EPinheiros%2C-23.563579%2C-46.691607%2C&pagina={pagina}"
+      },
+      {
+        "id": "coleta_viva_real_86_115",
+        "arquivo": "sao_paulo_pinheiros_coleta_dados_viva_real_86_115.py",
+        "bairro": "pinheiros",
+        "filtro_bairro": "",
+        "url_chaves": "",
+        "url_olx": "",
+        "url_zap": "",
+        "url_vivareal": "https://www.vivareal.com.br/venda/sp/sao-paulo/zona-oeste/pinheiros/?onde=%2CS%C3%A3o+Paulo%2CS%C3%A3o+Paulo%2CZona+Oeste%2CPinheiros%2C%2C%2Cneighborhood%2CBR%3ESao+Paulo%3ENULL%3ESao+Paulo%3EZona+Oeste%3EPinheiros%2C-23.563579%2C-46.691607%2C&pagina={pagina}"
+      },
+      {
+        "id": "coleta_viva_real_116_170",
+        "arquivo": "sao_paulo_pinheiros_coleta_dados_viva_real_116_170.py",
+        "bairro": "pinheiros",
+        "filtro_bairro": "",
+        "url_chaves": "",
+        "url_olx": "",
+        "url_zap": "",
+        "url_vivareal": "https://www.vivareal.com.br/venda/sp/sao-paulo/zona-oeste/pinheiros/?onde=%2CS%C3%A3o+Paulo%2CS%C3%A3o+Paulo%2CZona+Oeste%2CPinheiros%2C%2C%2Cneighborhood%2CBR%3ESao+Paulo%3ENULL%3ESao+Paulo%3EZona+Oeste%3EPinheiros%2C-23.563579%2C-46.691607%2C&pagina={pagina}"
+      },
+      {
+        "id": "coleta_viva_real_171_300",
+        "arquivo": "sao_paulo_pinheiros_coleta_dados_viva_real_171_300.py",
+        "bairro": "pinheiros",
+        "filtro_bairro": "",
+        "url_chaves": "",
+        "url_olx": "",
+        "url_zap": "",
+        "url_vivareal": "https://www.vivareal.com.br/venda/sp/sao-paulo/zona-oeste/pinheiros/?onde=%2CS%C3%A3o+Paulo%2CS%C3%A3o+Paulo%2CZona+Oeste%2CPinheiros%2C%2C%2Cneighborhood%2CBR%3ESao+Paulo%3ENULL%3ESao+Paulo%3EZona+Oeste%3EPinheiros%2C-23.563579%2C-46.691607%2C&pagina={pagina}"
+      },
+      {
+        "id": "coleta_viva_real_301_infinito",
+        "arquivo": "sao_paulo_pinheiros_coleta_dados_viva_real_301_infinito.py",
+        "bairro": "pinheiros",
+        "filtro_bairro": "",
+        "url_chaves": "",
+        "url_olx": "",
+        "url_zap": "",
+        "url_vivareal": "https://www.vivareal.com.br/venda/sp/sao-paulo/zona-oeste/pinheiros/?onde=%2CS%C3%A3o+Paulo%2CS%C3%A3o+Paulo%2CZona+Oeste%2CPinheiros%2C%2C%2Cneighborhood%2CBR%3ESao+Paulo%3ENULL%3ESao+Paulo%3EZona+Oeste%3EPinheiros%2C-23.563579%2C-46.691607%2C&pagina={pagina}"
+      },
+      {
+        "id": "coleta_zap_imoveis_0_33",
+        "arquivo": "sao_paulo_pinheiros_coleta_dados_zap_imoveis_0_33.py",
+        "bairro": "pinheiros",
+        "filtro_bairro": "",
+        "url_chaves": "",
+        "url_olx": "",
+        "url_zap": "https://www.zapimoveis.com.br/venda/imoveis/sp+sao-paulo+zona-oeste+pinheiros/?onde=%2CS%C3%A3o+Paulo%2CS%C3%A3o+Paulo%2CZona+Oeste%2CPinheiros%2C%2C%2Cneighborhood%2CBR%3ESao+Paulo%3ENULL%3ESao+Paulo%3EZona+Oeste%3EPinheiros%2C-23.563579%2C-46.691607%2C&pagina={pagina}",
+        "url_vivareal": ""
+      },
+      {
+        "id": "coleta_zap_imoveis_34_60",
+        "arquivo": "sao_paulo_pinheiros_coleta_dados_zap_imoveis_34_60.py",
+        "bairro": "pinheiros",
+        "filtro_bairro": "",
+        "url_chaves": "",
+        "url_olx": "",
+        "url_zap": "https://www.zapimoveis.com.br/venda/imoveis/sp+sao-paulo+zona-oeste+pinheiros/?onde=%2CS%C3%A3o+Paulo%2CS%C3%A3o+Paulo%2CZona+Oeste%2CPinheiros%2C%2C%2Cneighborhood%2CBR%3ESao+Paulo%3ENULL%3ESao+Paulo%3EZona+Oeste%3EPinheiros%2C-23.563579%2C-46.691607%2C&pagina={pagina}",
+        "url_vivareal": ""
+      },
+      {
+        "id": "coleta_zap_imoveis_61_85",
+        "arquivo": "sao_paulo_pinheiros_coleta_dados_zap_imoveis_61_85.py",
+        "bairro": "pinheiros",
+        "filtro_bairro": "",
+        "url_chaves": "",
+        "url_olx": "",
+        "url_zap": "https://www.zapimoveis.com.br/venda/imoveis/sp+sao-paulo+zona-oeste+pinheiros/?onde=%2CS%C3%A3o+Paulo%2CS%C3%A3o+Paulo%2CZona+Oeste%2CPinheiros%2C%2C%2Cneighborhood%2CBR%3ESao+Paulo%3ENULL%3ESao+Paulo%3EZona+Oeste%3EPinheiros%2C-23.563579%2C-46.691607%2C&pagina={pagina}",
+        "url_vivareal": ""
+      },
+      {
+        "id": "coleta_zap_imoveis_86_115",
+        "arquivo": "sao_paulo_pinheiros_coleta_dados_zap_imoveis_86_115.py",
+        "bairro": "pinheiros",
+        "filtro_bairro": "",
+        "url_chaves": "",
+        "url_olx": "",
+        "url_zap": "https://www.zapimoveis.com.br/venda/imoveis/sp+sao-paulo+zona-oeste+pinheiros/?onde=%2CS%C3%A3o+Paulo%2CS%C3%A3o+Paulo%2CZona+Oeste%2CPinheiros%2C%2C%2Cneighborhood%2CBR%3ESao+Paulo%3ENULL%3ESao+Paulo%3EZona+Oeste%3EPinheiros%2C-23.563579%2C-46.691607%2C&pagina={pagina}",
+        "url_vivareal": ""
+      },
+      {
+        "id": "coleta_zap_imoveis_116_170",
+        "arquivo": "sao_paulo_pinheiros_coleta_dados_zap_imoveis_116_170.py",
+        "bairro": "pinheiros",
+        "filtro_bairro": "",
+        "url_chaves": "",
+        "url_olx": "",
+        "url_zap": "https://www.zapimoveis.com.br/venda/imoveis/sp+sao-paulo+zona-oeste+pinheiros/?onde=%2CS%C3%A3o+Paulo%2CS%C3%A3o+Paulo%2CZona+Oeste%2CPinheiros%2C%2C%2Cneighborhood%2CBR%3ESao+Paulo%3ENULL%3ESao+Paulo%3EZona+Oeste%3EPinheiros%2C-23.563579%2C-46.691607%2C&pagina={pagina}",
+        "url_vivareal": ""
+      },
+      {
+        "id": "coleta_zap_imoveis_171_300",
+        "arquivo": "sao_paulo_pinheiros_coleta_dados_zap_imoveis_171_300.py",
+        "bairro": "pinheiros",
+        "filtro_bairro": "",
+        "url_chaves": "",
+        "url_olx": "",
+        "url_zap": "",
+        "url_vivareal": ""
+      },
+      {
+        "id": "coleta_zap_imoveis_301_infinito",
+        "arquivo": "sao_paulo_pinheiros_coleta_dados_zap_imoveis_301_infinito.py",
+        "bairro": "pinheiros",
+        "filtro_bairro": "",
+        "url_chaves": "",
+        "url_olx": "",
+        "url_zap": "https://www.zapimoveis.com.br/venda/imoveis/sp+sao-paulo+zona-oeste+pinheiros/?onde=%2CS%C3%A3o+Paulo%2CS%C3%A3o+Paulo%2CZona+Oeste%2CPinheiros%2C%2C%2Cneighborhood%2CBR%3ESao+Paulo%3ENULL%3ESao+Paulo%3EZona+Oeste%3EPinheiros%2C-23.563579%2C-46.691607%2C&pagina={pagina}",
+        "url_vivareal": ""
+      }
+    ],
+    "limpeza": {
+      "arquivo_rodando_imovel": "sao_paulo_pinheiros_limpando_dados.py",
+      "cidade_limpeza": "sao paulo",
+      "cidade_localizacao": "Sao Paulo",
+      "estado_limpeza": "sp",
+      "estado_localizacao": "SP",
+      "BAIRRO": "pinheiros",
+      "FILTRO_BAIRRO": "pinheiros",
+      "tipo_async": true
+    },
+    "melhores_configuracoes": "sao_paulo_melhores_configuraoes_modelo.py",
+    "otimizando": "sao_paulo_otimizando_melhores_modelos.py",
+    "melhor_modelo_geral": "sao_paulo_melhor_modelo_geral.py"
+  },
+  "santana": {
+    "bairro": "santana",
+    "cidade_pasta": "sao_paulo",
+    "cron": "0 16 22 * *",
+    "coleta": [
+      {
+        "id": "coleta_chave_mao_0_55",
+        "arquivo": "sao_paulo_santana_coleta_dados_chave_mao_0_55.py",
+        "bairro": "santana",
+        "filtro_bairro": "",
+        "url_chaves": "https://www.chavesnamao.com.br/apartamentos-a-venda/sp-sao-paulo/santana/?filtro=amin%3A{min}%2Camax%3A{max}&pg={pagina}",
+        "url_olx": "",
+        "url_zap": "",
+        "url_vivareal": ""
+      },
+      {
+        "id": "coleta_chave_mao_56_85",
+        "arquivo": "sao_paulo_santana_coleta_dados_chave_mao_56_85.py",
+        "bairro": "santana",
+        "filtro_bairro": "",
+        "url_chaves": "https://www.chavesnamao.com.br/apartamentos-a-venda/sp-sao-paulo/santana/?filtro=amin%3A{min}%2Camax%3A{max}&pg={pagina}",
+        "url_olx": "",
+        "url_zap": "",
+        "url_vivareal": ""
+      },
+      {
+        "id": "coleta_chave_mao_86_130",
+        "arquivo": "sao_paulo_santana_coleta_dados_chave_mao_86_130.py",
+        "bairro": "santana",
+        "filtro_bairro": "",
+        "url_chaves": "https://www.chavesnamao.com.br/apartamentos-a-venda/sp-sao-paulo/santana/?filtro=amin%3A{min}%2Camax%3A{max}&pg={pagina}",
+        "url_olx": "",
+        "url_zap": "",
+        "url_vivareal": ""
+      },
+      {
+        "id": "coleta_chave_mao_131_230",
+        "arquivo": "sao_paulo_santana_coleta_dados_chave_mao_131_230.py",
+        "bairro": "santana",
+        "filtro_bairro": "",
+        "url_chaves": "https://www.chavesnamao.com.br/apartamentos-a-venda/sp-sao-paulo/santana/?filtro=amin%3A{min}%2Camax%3A{max}&pg={pagina}",
+        "url_olx": "",
+        "url_zap": "",
+        "url_vivareal": ""
+      },
+      {
+        "id": "coleta_chave_mao_231_infinito",
+        "arquivo": "sao_paulo_santana_coleta_dados_chave_mao_231_infinito.py",
+        "bairro": "santana",
+        "filtro_bairro": "",
+        "url_chaves": "https://www.chavesnamao.com.br/apartamentos-a-venda/sp-sao-paulo/santana/?filtro=amin%3A{min}%2Camax%3A{max}&pg={pagina}",
+        "url_olx": "",
+        "url_zap": "",
+        "url_vivareal": ""
+      },
+      {
+        "id": "coleta_olx_0_50",
+        "arquivo": "sao_paulo_santana_coleta_dados_olx_0_50.py",
+        "bairro": "santana",
+        "filtro_bairro": "",
+        "url_chaves": "",
+        "url_olx": "https://www.olx.com.br/imoveis/venda/estado-sp/sao-paulo-e-regiao/zona-norte/santana?ss={min}&se={max}&o={pagina}",
+        "url_zap": "",
+        "url_vivareal": ""
+      },
+      {
+        "id": "coleta_olx_51_90",
+        "arquivo": "sao_paulo_santana_coleta_dados_olx_51_90.py",
+        "bairro": "santana",
+        "filtro_bairro": "",
+        "url_chaves": "",
+        "url_olx": "https://www.olx.com.br/imoveis/venda/estado-sp/sao-paulo-e-regiao/zona-norte/santana?ss={min}&se={max}&o={pagina}",
+        "url_zap": "",
+        "url_vivareal": ""
+      },
+      {
+        "id": "coleta_olx_91_130",
+        "arquivo": "sao_paulo_santana_coleta_dados_olx_91_130.py",
+        "bairro": "santana",
+        "filtro_bairro": "",
+        "url_chaves": "",
+        "url_olx": "https://www.olx.com.br/imoveis/venda/estado-sp/sao-paulo-e-regiao/zona-norte/santana?ss={min}&se={max}&o={pagina}",
+        "url_zap": "",
+        "url_vivareal": ""
+      },
+      {
+        "id": "coleta_olx_131_180",
+        "arquivo": "sao_paulo_santana_coleta_dados_olx_131_180.py",
+        "bairro": "santana",
+        "filtro_bairro": "",
+        "url_chaves": "",
+        "url_olx": "https://www.olx.com.br/imoveis/venda/estado-sp/sao-paulo-e-regiao/zona-norte/santana?ss={min}&se={max}&o={pagina}",
+        "url_zap": "",
+        "url_vivareal": ""
+      },
+      {
+        "id": "coleta_olx_181_300",
+        "arquivo": "sao_paulo_santana_coleta_dados_olx_181_300.py",
+        "bairro": "santana",
+        "filtro_bairro": "",
+        "url_chaves": "",
+        "url_olx": "https://www.olx.com.br/imoveis/venda/estado-sp/sao-paulo-e-regiao/zona-norte/santana?ss={min}&se={max}&o={pagina}",
+        "url_zap": "",
+        "url_vivareal": ""
+      },
+      {
+        "id": "coleta_olx_301_infinito",
+        "arquivo": "sao_paulo_santana_coleta_dados_olx_301_infinito.py",
+        "bairro": "santana",
+        "filtro_bairro": "",
+        "url_chaves": "",
+        "url_olx": "https://www.olx.com.br/imoveis/venda/estado-sp/sao-paulo-e-regiao/zona-norte/santana?ss={min}&se={max}&o={pagina}",
+        "url_zap": "",
+        "url_vivareal": ""
+      },
+      {
+        "id": "coleta_viva_real_0_70",
+        "arquivo": "sao_paulo_santana_coleta_dados_viva_real_0_70.py",
+        "bairro": "santana",
+        "filtro_bairro": "",
+        "url_chaves": "",
+        "url_olx": "",
+        "url_zap": "",
+        "url_vivareal": "https://www.vivareal.com.br/venda/sp/sao-paulo/zona-norte/santana/?onde=%2CS%C3%A3o+Paulo%2CS%C3%A3o+Paulo%2CZona+Norte%2CSantana%2C%2C%2Cneighborhood%2CBR%3ESao+Paulo%3ENULL%3ESao+Paulo%3EZona+Norte%3ESantana%2C-23.498996%2C-46.625592%2C&pagina={pagina}"
+      },
+      {
+        "id": "coleta_viva_real_71_120",
+        "arquivo": "sao_paulo_santana_coleta_dados_viva_real_71_120.py",
+        "bairro": "santana",
+        "filtro_bairro": "",
+        "url_chaves": "",
+        "url_olx": "",
+        "url_zap": "",
+        "url_vivareal": "https://www.vivareal.com.br/venda/sp/sao-paulo/zona-norte/santana/?onde=%2CS%C3%A3o+Paulo%2CS%C3%A3o+Paulo%2CZona+Norte%2CSantana%2C%2C%2Cneighborhood%2CBR%3ESao+Paulo%3ENULL%3ESao+Paulo%3EZona+Norte%3ESantana%2C-23.498996%2C-46.625592%2C&pagina={pagina}"
+      },
+      {
+        "id": "coleta_viva_real_121_220",
+        "arquivo": "sao_paulo_santana_coleta_dados_viva_real_121_220.py",
+        "bairro": "santana",
+        "filtro_bairro": "",
+        "url_chaves": "",
+        "url_olx": "",
+        "url_zap": "",
+        "url_vivareal": "https://www.vivareal.com.br/venda/sp/sao-paulo/zona-norte/santana/?onde=%2CS%C3%A3o+Paulo%2CS%C3%A3o+Paulo%2CZona+Norte%2CSantana%2C%2C%2Cneighborhood%2CBR%3ESao+Paulo%3ENULL%3ESao+Paulo%3EZona+Norte%3ESantana%2C-23.498996%2C-46.625592%2C&pagina={pagina}"
+      },
+      {
+        "id": "coleta_viva_real_221_infinito",
+        "arquivo": "sao_paulo_santana_coleta_dados_viva_real_221_infinito.py",
+        "bairro": "santana",
+        "filtro_bairro": "",
+        "url_chaves": "",
+        "url_olx": "",
+        "url_zap": "",
+        "url_vivareal": "https://www.vivareal.com.br/venda/sp/sao-paulo/zona-norte/santana/?onde=%2CS%C3%A3o+Paulo%2CS%C3%A3o+Paulo%2CZona+Norte%2CSantana%2C%2C%2Cneighborhood%2CBR%3ESao+Paulo%3ENULL%3ESao+Paulo%3EZona+Norte%3ESantana%2C-23.498996%2C-46.625592%2C&pagina={pagina}"
+      },
+      {
+        "id": "coleta_zap_imoveis_0_70",
+        "arquivo": "sao_paulo_santana_coleta_dados_zap_imoveis_0_70.py",
+        "bairro": "santana",
+        "filtro_bairro": "",
+        "url_chaves": "",
+        "url_olx": "",
+        "url_zap": "https://www.zapimoveis.com.br/venda/imoveis/sp+sao-paulo+zona-norte+santana/?onde=%2CS%C3%A3o+Paulo%2CS%C3%A3o+Paulo%2CZona+Norte%2CSantana%2C%2C%2Cneighborhood%2CBR%3ESao+Paulo%3ENULL%3ESao+Paulo%3EZona+Norte%3ESantana%2C-23.498996%2C-46.625592%2C&pagina={pagina}",
+        "url_vivareal": ""
+      },
+      {
+        "id": "coleta_zap_imoveis_71_120",
+        "arquivo": "sao_paulo_santana_coleta_dados_zap_imoveis_71_120.py",
+        "bairro": "santana",
+        "filtro_bairro": "",
+        "url_chaves": "",
+        "url_olx": "",
+        "url_zap": "https://www.zapimoveis.com.br/venda/imoveis/sp+sao-paulo+zona-norte+santana/?onde=%2CS%C3%A3o+Paulo%2CS%C3%A3o+Paulo%2CZona+Norte%2CSantana%2C%2C%2Cneighborhood%2CBR%3ESao+Paulo%3ENULL%3ESao+Paulo%3EZona+Norte%3ESantana%2C-23.498996%2C-46.625592%2C&pagina={pagina}",
+        "url_vivareal": ""
+      },
+      {
+        "id": "coleta_zap_imoveis_121_220",
+        "arquivo": "sao_paulo_santana_coleta_dados_zap_imoveis_121_220.py",
+        "bairro": "santana",
+        "filtro_bairro": "",
+        "url_chaves": "",
+        "url_olx": "",
+        "url_zap": "https://www.zapimoveis.com.br/venda/imoveis/sp+sao-paulo+zona-norte+santana/?onde=%2CS%C3%A3o+Paulo%2CS%C3%A3o+Paulo%2CZona+Norte%2CSantana%2C%2C%2Cneighborhood%2CBR%3ESao+Paulo%3ENULL%3ESao+Paulo%3EZona+Norte%3ESantana%2C-23.498996%2C-46.625592%2C&pagina={pagina}",
+        "url_vivareal": ""
+      },
+      {
+        "id": "coleta_zap_imoveis_221_infinito",
+        "arquivo": "sao_paulo_santana_coleta_dados_zap_imoveis_221_infinito.py",
+        "bairro": "santana",
+        "filtro_bairro": "",
+        "url_chaves": "",
+        "url_olx": "",
+        "url_zap": "https://www.zapimoveis.com.br/venda/imoveis/sp+sao-paulo+zona-norte+santana/?onde=%2CS%C3%A3o+Paulo%2CS%C3%A3o+Paulo%2CZona+Norte%2CSantana%2C%2C%2Cneighborhood%2CBR%3ESao+Paulo%3ENULL%3ESao+Paulo%3EZona+Norte%3ESantana%2C-23.498996%2C-46.625592%2C&pagina={pagina}",
+        "url_vivareal": ""
+      }
+    ],
+    "limpeza": {
+      "arquivo_rodando_imovel": "sao_paulo_santana_limpando_dados.py",
+      "cidade_limpeza": "sao paulo",
+      "cidade_localizacao": "Sao Paulo",
+      "estado_limpeza": "sp",
+      "estado_localizacao": "SP",
+      "BAIRRO": "santana",
+      "FILTRO_BAIRRO": "santana",
+      "tipo_async": true
+    },
+    "melhores_configuracoes": "sao_paulo_melhores_configuraoes_modelo.py",
+    "otimizando": "sao_paulo_otimizando_melhores_modelos.py",
+    "melhor_modelo_geral": "sao_paulo_melhor_modelo_geral.py"
+  },
+  "vila-andrade": {
+    "bairro": "vila-andrade",
+    "cidade_pasta": "sao_paulo",
+    "cron": "0 13 23 * *",
+    "coleta": [
+      {
+        "id": "coleta_chave_mao_0_70",
+        "arquivo": "sao_paulo_vila_andrade_coleta_dados_chave_mao_0_70.py",
+        "bairro": "vila-andrade",
+        "filtro_bairro": "",
+        "url_chaves": "https://www.chavesnamao.com.br/imoveis-a-venda/sp-sao-paulo/vila-andrade/?filtro=amin%3A{min}%2Camax%3A{max}&pg={pagina}",
+        "url_olx": "",
+        "url_zap": "",
+        "url_vivareal": ""
+      },
+      {
+        "id": "coleta_chave_mao_71_130",
+        "arquivo": "sao_paulo_vila_andrade_coleta_dados_chave_mao_71_130.py",
+        "bairro": "vila-andrade",
+        "filtro_bairro": "",
+        "url_chaves": "https://www.chavesnamao.com.br/imoveis-a-venda/sp-sao-paulo/vila-andrade/?filtro=amin%3A{min}%2Camax%3A{max}&pg={pagina}",
+        "url_olx": "",
+        "url_zap": "",
+        "url_vivareal": ""
+      },
+      {
+        "id": "coleta_chave_mao_131_infinito",
+        "arquivo": "sao_paulo_vila_andrade_coleta_dados_chave_mao_131_infinito.py",
+        "bairro": "vila-andrade",
+        "filtro_bairro": "",
+        "url_chaves": "https://www.chavesnamao.com.br/imoveis-a-venda/sp-sao-paulo/vila-andrade/?filtro=amin%3A{min}%2Camax%3A{max}&pg={pagina}",
+        "url_olx": "",
+        "url_zap": "",
+        "url_vivareal": ""
+      },
+      {
+        "id": "coleta_olx_0_60",
+        "arquivo": "sao_paulo_vila_andrade_coleta_dados_olx_0_60.py",
+        "bairro": "vila-andrade",
+        "filtro_bairro": "",
+        "url_chaves": "",
+        "url_olx": "https://www.olx.com.br/imoveis/venda/estado-sp/sao-paulo-e-regiao/zona-sul/vila-andrade?ss={min}&se={max}&o={pagina}",
+        "url_zap": "",
+        "url_vivareal": ""
+      },
+      {
+        "id": "coleta_olx_61_80",
+        "arquivo": "sao_paulo_vila_andrade_coleta_dados_olx_61_80.py",
+        "bairro": "vila-andrade",
+        "filtro_bairro": "",
+        "url_chaves": "",
+        "url_olx": "https://www.olx.com.br/imoveis/venda/estado-sp/sao-paulo-e-regiao/zona-sul/vila-andrade?ss={min}&se={max}&o={pagina}",
+        "url_zap": "",
+        "url_vivareal": ""
+      },
+      {
+        "id": "coleta_olx_81_105",
+        "arquivo": "sao_paulo_vila_andrade_coleta_dados_olx_81_105.py",
+        "bairro": "vila-andrade",
+        "filtro_bairro": "",
+        "url_chaves": "",
+        "url_olx": "https://www.olx.com.br/imoveis/venda/estado-sp/sao-paulo-e-regiao/zona-sul/vila-andrade?ss={min}&se={max}&o={pagina}",
+        "url_zap": "",
+        "url_vivareal": ""
+      },
+      {
+        "id": "coleta_olx_106_140",
+        "arquivo": "sao_paulo_vila_andrade_coleta_dados_olx_106_140.py",
+        "bairro": "vila-andrade",
+        "filtro_bairro": "",
+        "url_chaves": "",
+        "url_olx": "https://www.olx.com.br/imoveis/venda/estado-sp/sao-paulo-e-regiao/zona-sul/vila-andrade?ss={min}&se={max}&o={pagina}",
+        "url_zap": "",
+        "url_vivareal": ""
+      },
+      {
+        "id": "coleta_olx_141_200",
+        "arquivo": "sao_paulo_vila_andrade_coleta_dados_olx_141_200.py",
+        "bairro": "vila-andrade",
+        "filtro_bairro": "",
+        "url_chaves": "",
+        "url_olx": "https://www.olx.com.br/imoveis/venda/estado-sp/sao-paulo-e-regiao/zona-sul/vila-andrade?ss={min}&se={max}&o={pagina}",
+        "url_zap": "",
+        "url_vivareal": ""
+      },
+      {
+        "id": "coleta_olx_201_infinito",
+        "arquivo": "sao_paulo_vila_andrade_coleta_dados_olx_201_infinito.py",
+        "bairro": "vila-andrade",
+        "filtro_bairro": "",
+        "url_chaves": "",
+        "url_olx": "https://www.olx.com.br/imoveis/venda/estado-sp/sao-paulo-e-regiao/zona-sul/vila-andrade?ss={min}&se={max}&o={pagina}",
+        "url_zap": "",
+        "url_vivareal": ""
+      },
+      {
+        "id": "coleta_viva_real_0_80",
+        "arquivo": "sao_paulo_vila_andrade_coleta_dados_viva_real_0_80.py",
+        "bairro": "vila-andrade",
+        "filtro_bairro": "",
+        "url_chaves": "",
+        "url_olx": "",
+        "url_zap": "",
+        "url_vivareal": "https://www.vivareal.com.br/venda/sp/sao-paulo/zona-sul/vila-andrade/?onde=%2CS%C3%A3o+Paulo%2CS%C3%A3o+Paulo%2CZona+Sul%2CVila+Andrade%2C%2C%2Cneighborhood%2CBR%3ESao+Paulo%3ENULL%3ESao+Paulo%3EZona+Sul%3EVILA+ANDRADE%2C-23.631509%2C-46.736743%2C&pagina={pagina}"
+      },
+      {
+        "id": "coleta_viva_real_81_150",
+        "arquivo": "sao_paulo_vila_andrade_coleta_dados_viva_real_81_150.py",
+        "bairro": "vila-andrade",
+        "filtro_bairro": "",
+        "url_chaves": "",
+        "url_olx": "",
+        "url_zap": "",
+        "url_vivareal": "https://www.vivareal.com.br/venda/sp/sao-paulo/zona-sul/vila-andrade/?onde=%2CS%C3%A3o+Paulo%2CS%C3%A3o+Paulo%2CZona+Sul%2CVila+Andrade%2C%2C%2Cneighborhood%2CBR%3ESao+Paulo%3ENULL%3ESao+Paulo%3EZona+Sul%3EVILA+ANDRADE%2C-23.631509%2C-46.736743%2C&pagina={pagina}"
+      },
+      {
+        "id": "coleta_viva_real_151_infinito",
+        "arquivo": "sao_paulo_vila_andrade_coleta_dados_viva_real_151_infinito.py",
+        "bairro": "vila-andrade",
+        "filtro_bairro": "",
+        "url_chaves": "",
+        "url_olx": "",
+        "url_zap": "",
+        "url_vivareal": "https://www.vivareal.com.br/venda/sp/sao-paulo/zona-sul/vila-andrade/?onde=%2CS%C3%A3o+Paulo%2CS%C3%A3o+Paulo%2CZona+Sul%2CVila+Andrade%2C%2C%2Cneighborhood%2CBR%3ESao+Paulo%3ENULL%3ESao+Paulo%3EZona+Sul%3EVILA+ANDRADE%2C-23.631509%2C-46.736743%2C&pagina={pagina}"
+      },
+      {
+        "id": "coleta_zap_imoveis_0_80",
+        "arquivo": "sao_paulo_vila_andrade_coleta_dados_zap_imoveis_0_80.py",
+        "bairro": "vila-andrade",
+        "filtro_bairro": "",
+        "url_chaves": "",
+        "url_olx": "",
+        "url_zap": "https://www.zapimoveis.com.br/venda/imoveis/sp+sao-paulo+zona-sul+vl-andrade/?onde=%2CS%C3%A3o+Paulo%2CS%C3%A3o+Paulo%2CZona+Sul%2CVila+Andrade%2C%2C%2Cneighborhood%2CBR%3ESao+Paulo%3ENULL%3ESao+Paulo%3EZona+Sul%3EVILA+ANDRADE%2C-23.631509%2C-46.736743%2C&pagina={pagina}",
+        "url_vivareal": ""
+      },
+      {
+        "id": "coleta_zap_imoveis_81_150",
+        "arquivo": "sao_paulo_vila_andrade_coleta_dados_zap_imoveis_81_150.py",
+        "bairro": "vila-andrade",
+        "filtro_bairro": "",
+        "url_chaves": "",
+        "url_olx": "",
+        "url_zap": "https://www.zapimoveis.com.br/venda/imoveis/sp+sao-paulo+zona-sul+vl-andrade/?onde=%2CS%C3%A3o+Paulo%2CS%C3%A3o+Paulo%2CZona+Sul%2CVila+Andrade%2C%2C%2Cneighborhood%2CBR%3ESao+Paulo%3ENULL%3ESao+Paulo%3EZona+Sul%3EVILA+ANDRADE%2C-23.631509%2C-46.736743%2C&pagina={pagina}",
+        "url_vivareal": ""
+      },
+      {
+        "id": "coleta_zap_imoveis_151_infinito",
+        "arquivo": "sao_paulo_vila_andrade_coleta_dados_zap_imoveis_151_infinito.py",
+        "bairro": "vila-andrade",
+        "filtro_bairro": "",
+        "url_chaves": "",
+        "url_olx": "",
+        "url_zap": "https://www.zapimoveis.com.br/venda/imoveis/sp+sao-paulo+zona-sul+vl-andrade/?onde=%2CS%C3%A3o+Paulo%2CS%C3%A3o+Paulo%2CZona+Sul%2CVila+Andrade%2C%2C%2Cneighborhood%2CBR%3ESao+Paulo%3ENULL%3ESao+Paulo%3EZona+Sul%3EVILA+ANDRADE%2C-23.631509%2C-46.736743%2C&pagina={pagina}",
+        "url_vivareal": ""
+      }
+    ],
+    "limpeza": {
+      "arquivo_rodando_imovel": "sao_paulo_vila_andrade_limpando_dados.py",
+      "cidade_limpeza": "sao paulo",
+      "cidade_localizacao": "Sao Paulo",
+      "estado_limpeza": "sp",
+      "estado_localizacao": "SP",
+      "BAIRRO": "vila-andrade",
+      "FILTRO_BAIRRO": "vila andrade",
+      "tipo_async": true
+    },
+    "melhores_configuracoes": "sao_paulo_melhores_configuraoes_modelo.py",
+    "otimizando": "sao_paulo_otimizando_melhores_modelos.py",
+    "melhor_modelo_geral": "sao_paulo_melhor_modelo_geral.py"
+  },
+  "vila-mariana": {
+    "bairro": "vila-mariana",
+    "cidade_pasta": "sao_paulo",
+    "cron": "0 16 18 * *",
+    "coleta": [
+      {
+        "id": "coleta_chave_mao_0_60",
+        "arquivo": "sao_paulo_vila_mariana_coleta_dados_chave_mao_0_60.py",
+        "bairro": "vila-mariana",
+        "filtro_bairro": "",
+        "url_chaves": "https://www.chavesnamao.com.br/apartamentos-a-venda/sp-sao-paulo/vila-mariana/?filtro=amin%3A{min}%2Camax%3A{max}&pg={pagina}",
+        "url_olx": "",
+        "url_zap": "",
+        "url_vivareal": ""
+      },
+      {
+        "id": "coleta_chave_mao_61_90",
+        "arquivo": "sao_paulo_vila_mariana_coleta_dados_chave_mao_61_90.py",
+        "bairro": "vila-mariana",
+        "filtro_bairro": "",
+        "url_chaves": "https://www.chavesnamao.com.br/apartamentos-a-venda/sp-sao-paulo/vila-mariana/?filtro=amin%3A{min}%2Camax%3A{max}&pg={pagina}",
+        "url_olx": "",
+        "url_zap": "",
+        "url_vivareal": ""
+      },
+      {
+        "id": "coleta_chave_mao_101_150",
+        "arquivo": "sao_paulo_vila_mariana_coleta_dados_chave_mao_91_150.py",
+        "bairro": "vila-mariana",
+        "filtro_bairro": "",
+        "url_chaves": "https://www.chavesnamao.com.br/apartamentos-a-venda/sp-sao-paulo/vila-mariana/?filtro=amin%3A{min}%2Camax%3A{max}&pg={pagina}",
+        "url_olx": "",
+        "url_zap": "",
+        "url_vivareal": ""
+      },
+      {
+        "id": "coleta_chave_mao_151_infinito",
+        "arquivo": "sao_paulo_vila_mariana_coleta_dados_chave_mao_151_infinito.py",
+        "bairro": "vila-mariana",
+        "filtro_bairro": "",
+        "url_chaves": "https://www.chavesnamao.com.br/apartamentos-a-venda/sp-sao-paulo/vila-mariana/?filtro=amin%3A{min}%2Camax%3A{max}&pg={pagina}",
+        "url_olx": "",
+        "url_zap": "",
+        "url_vivareal": ""
+      },
+      {
+        "id": "coleta_olx_0_35",
+        "arquivo": "sao_paulo_vila_mariana_coleta_dados_olx_0_35.py",
+        "bairro": "vila-mariana",
+        "filtro_bairro": "",
+        "url_chaves": "",
+        "url_olx": "https://www.olx.com.br/imoveis/venda/estado-sp/sao-paulo-e-regiao/zona-sul/vila-mariana?ss={min}&se={max}&o={pagina}",
+        "url_zap": "",
+        "url_vivareal": ""
+      },
+      {
+        "id": "coleta_olx_36_60",
+        "arquivo": "sao_paulo_vila_mariana_coleta_dados_olx_36_60.py",
+        "bairro": "vila-mariana",
+        "filtro_bairro": "",
+        "url_chaves": "",
+        "url_olx": "https://www.olx.com.br/imoveis/venda/estado-sp/sao-paulo-e-regiao/zona-sul/vila-mariana?ss={min}&se={max}&o={pagina}",
+        "url_zap": "",
+        "url_vivareal": ""
+      },
+      {
+        "id": "coleta_olx_61_80",
+        "arquivo": "sao_paulo_vila_mariana_coleta_dados_olx_61_80.py",
+        "bairro": "vila-mariana",
+        "filtro_bairro": "",
+        "url_chaves": "",
+        "url_olx": "https://www.olx.com.br/imoveis/venda/estado-sp/sao-paulo-e-regiao/zona-sul/vila-mariana?ss={min}&se={max}&o={pagina}",
+        "url_zap": "",
+        "url_vivareal": ""
+      },
+      {
+        "id": "coleta_olx_81_100",
+        "arquivo": "sao_paulo_vila_mariana_coleta_dados_olx_81_100.py",
+        "bairro": "vila-mariana",
+        "filtro_bairro": "",
+        "url_chaves": "",
+        "url_olx": "https://www.olx.com.br/imoveis/venda/estado-sp/sao-paulo-e-regiao/zona-sul/vila-mariana?ss={min}&se={max}&o={pagina}",
+        "url_zap": "",
+        "url_vivareal": ""
+      },
+      {
+        "id": "coleta_olx_101_130",
+        "arquivo": "sao_paulo_vila_mariana_coleta_dados_olx_101_130.py",
+        "bairro": "vila-mariana",
+        "filtro_bairro": "",
+        "url_chaves": "",
+        "url_olx": "https://www.olx.com.br/imoveis/venda/estado-sp/sao-paulo-e-regiao/zona-sul/vila-mariana?ss={min}&se={max}&o={pagina}",
+        "url_zap": "",
+        "url_vivareal": ""
+      },
+      {
+        "id": "coleta_olx_131_180",
+        "arquivo": "sao_paulo_vila_mariana_coleta_dados_olx_131_180.py",
+        "bairro": "vila-mariana",
+        "filtro_bairro": "",
+        "url_chaves": "",
+        "url_olx": "https://www.olx.com.br/imoveis/venda/estado-sp/sao-paulo-e-regiao/zona-sul/vila-mariana?ss={min}&se={max}&o={pagina}",
+        "url_zap": "",
+        "url_vivareal": ""
+      },
+      {
+        "id": "coleta_olx_181_240",
+        "arquivo": "sao_paulo_vila_mariana_coleta_dados_olx_181_240.py",
+        "bairro": "vila-mariana",
+        "filtro_bairro": "",
+        "url_chaves": "",
+        "url_olx": "https://www.olx.com.br/imoveis/venda/estado-sp/sao-paulo-e-regiao/zona-sul/vila-mariana?ss={min}&se={max}&o={pagina}",
+        "url_zap": "",
+        "url_vivareal": ""
+      },
+      {
+        "id": "coleta_olx_241_infinito",
+        "arquivo": "sao_paulo_vila_mariana_coleta_dados_olx_241_infinito.py",
+        "bairro": "vila-mariana",
+        "filtro_bairro": "",
+        "url_chaves": "",
+        "url_olx": "https://www.olx.com.br/imoveis/venda/estado-sp/sao-paulo-e-regiao/zona-sul/vila-mariana?ss={min}&se={max}&o={pagina}",
+        "url_zap": "",
+        "url_vivareal": ""
+      },
+      {
+        "id": "coleta_viva_real_0_60",
+        "arquivo": "sao_paulo_vila_mariana_coleta_dados_viva_real_0_60.py",
+        "bairro": "vila-mariana",
+        "filtro_bairro": "",
+        "url_chaves": "",
+        "url_olx": "",
+        "url_zap": "",
+        "url_vivareal": "https://www.vivareal.com.br/venda/sp/sao-paulo/zona-sul/vila-mariana/apartamento_residencial/?onde=%2CS%C3%A3o+Paulo%2CS%C3%A3o+Paulo%2CZona+Sul%2CVila+Mariana%2C%2C%2Cneighborhood%2CBR%3ESao+Paulo%3ENULL%3ESao+Paulo%3EZona+Sul%3EVila+Mariana%2C-23.589702%2C-46.634638%2C&tipos=apartamento_residencial&pagina={pagina}"
+      },
+      {
+        "id": "coleta_viva_real_61_90",
+        "arquivo": "sao_paulo_vila_mariana_coleta_dados_viva_real_61_90.py",
+        "bairro": "vila-mariana",
+        "filtro_bairro": "",
+        "url_chaves": "",
+        "url_olx": "",
+        "url_zap": "",
+        "url_vivareal": "https://www.vivareal.com.br/venda/sp/sao-paulo/zona-sul/vila-mariana/apartamento_residencial/?onde=%2CS%C3%A3o+Paulo%2CS%C3%A3o+Paulo%2CZona+Sul%2CVila+Mariana%2C%2C%2Cneighborhood%2CBR%3ESao+Paulo%3ENULL%3ESao+Paulo%3EZona+Sul%3EVila+Mariana%2C-23.589702%2C-46.634638%2C&tipos=apartamento_residencial&pagina={pagina}"
+      },
+      {
+        "id": "coleta_viva_real_91_110",
+        "arquivo": "sao_paulo_vila_mariana_coleta_dados_viva_real_91_110.py",
+        "bairro": "vila-mariana",
+        "filtro_bairro": "",
+        "url_chaves": "",
+        "url_olx": "",
+        "url_zap": "",
+        "url_vivareal": "https://www.vivareal.com.br/venda/sp/sao-paulo/zona-sul/vila-mariana/apartamento_residencial/?onde=%2CS%C3%A3o+Paulo%2CS%C3%A3o+Paulo%2CZona+Sul%2CVila+Mariana%2C%2C%2Cneighborhood%2CBR%3ESao+Paulo%3ENULL%3ESao+Paulo%3EZona+Sul%3EVila+Mariana%2C-23.589702%2C-46.634638%2C&tipos=apartamento_residencial&pagina={pagina}"
+      },
+      {
+        "id": "coleta_viva_real_111_infinito",
+        "arquivo": "sao_paulo_vila_mariana_coleta_dados_viva_real_111_infinito.py",
+        "bairro": "vila-mariana",
+        "filtro_bairro": "",
+        "url_chaves": "",
+        "url_olx": "",
+        "url_zap": "",
+        "url_vivareal": "https://www.vivareal.com.br/venda/sp/sao-paulo/zona-sul/vila-mariana/apartamento_residencial/?onde=%2CS%C3%A3o+Paulo%2CS%C3%A3o+Paulo%2CZona+Sul%2CVila+Mariana%2C%2C%2Cneighborhood%2CBR%3ESao+Paulo%3ENULL%3ESao+Paulo%3EZona+Sul%3EVila+Mariana%2C-23.589702%2C-46.634638%2C&tipos=apartamento_residencial&pagina={pagina}"
+      },
+      {
+        "id": "coleta_zap_imoveis_0_60",
+        "arquivo": "sao_paulo_vila_mariana_coleta_dados_zap_imoveis_0_60.py",
+        "bairro": "vila-mariana",
+        "filtro_bairro": "",
+        "url_chaves": "",
+        "url_olx": "",
+        "url_zap": "https://www.zapimoveis.com.br/venda/apartamentos/sp+sao-paulo+zona-sul+vl-mariana/?onde=%2CS%C3%A3o+Paulo%2CS%C3%A3o+Paulo%2CZona+Sul%2CVila+Mariana%2C%2C%2Cneighborhood%2CBR%3ESao+Paulo%3ENULL%3ESao+Paulo%3EZona+Sul%3EVila+Mariana%2C-23.589702%2C-46.634638%2C&tipos=apartamento_residencial&pagina={pagina}",
+        "url_vivareal": ""
+      },
+      {
+        "id": "coleta_zap_imoveis_61_110",
+        "arquivo": "sao_paulo_vila_mariana_coleta_dados_zap_imoveis_61_110.py",
+        "bairro": "vila-mariana",
+        "filtro_bairro": "",
+        "url_chaves": "",
+        "url_olx": "",
+        "url_zap": "https://www.zapimoveis.com.br/venda/apartamentos/sp+sao-paulo+zona-sul+vl-mariana/?onde=%2CS%C3%A3o+Paulo%2CS%C3%A3o+Paulo%2CZona+Sul%2CVila+Mariana%2C%2C%2Cneighborhood%2CBR%3ESao+Paulo%3ENULL%3ESao+Paulo%3EZona+Sul%3EVila+Mariana%2C-23.589702%2C-46.634638%2C&tipos=apartamento_residencial&pagina={pagina}",
+        "url_vivareal": ""
+      },
+      {
+        "id": "coleta_zap_imoveis_111_infinito",
+        "arquivo": "sao_paulo_vila_mariana_coleta_dados_zap_imoveis_111_infinito.py",
+        "bairro": "vila-mariana",
+        "filtro_bairro": "",
+        "url_chaves": "",
+        "url_olx": "",
+        "url_zap": "https://www.zapimoveis.com.br/venda/apartamentos/sp+sao-paulo+zona-sul+vl-mariana/?onde=%2CS%C3%A3o+Paulo%2CS%C3%A3o+Paulo%2CZona+Sul%2CVila+Mariana%2C%2C%2Cneighborhood%2CBR%3ESao+Paulo%3ENULL%3ESao+Paulo%3EZona+Sul%3EVila+Mariana%2C-23.589702%2C-46.634638%2C&tipos=apartamento_residencial&pagina={pagina}",
+        "url_vivareal": ""
+      }
+    ],
+    "limpeza": {
+      "arquivo_rodando_imovel": "sao_paulo_vila_mariana_limpando_dados.py",
+      "cidade_limpeza": "sao paulo",
+      "cidade_localizacao": "Sao Paulo",
+      "estado_limpeza": "sp",
+      "estado_localizacao": "SP",
+      "BAIRRO": "vila-mariana",
+      "FILTRO_BAIRRO": "vila mariana",
+      "tipo_async": true
+    },
+    "melhores_configuracoes": "sao_paulo_melhores_configuraoes_modelo.py",
+    "otimizando": "sao_paulo_otimizando_melhores_modelos.py",
+    "melhor_modelo_geral": "sao_paulo_melhor_modelo_geral.py"
+  }
+}

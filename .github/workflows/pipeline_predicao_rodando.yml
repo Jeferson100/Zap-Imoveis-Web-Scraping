@@ -28,12 +28,18 @@ on:
         required: false
         default: "False"
         type: string
+      checkout_ref:
+        required: false
+        type: string
+        default: ""
 
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.checkout_ref != '' && inputs.checkout_ref || github.ref }}
 
       - uses: actions/setup-python@v5
         with:

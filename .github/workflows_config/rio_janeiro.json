@@ -1,0 +1,1232 @@
+{
+  "barra-tijuca": {
+    "bairro": "barra-tijuca",
+    "cidade_pasta": "rio_janeiro",
+    "cron": "0 9 26 * *",
+    "coleta": [
+      {
+        "id": "coleta_barra_chave_mao_0_110",
+        "arquivo": "rio_janeiro_barra_tijuca_coleta_dados_chave_mao_0_110.py",
+        "bairro": "barra-tijuca",
+        "filtro_bairro": "",
+        "url_chaves": "https://www.chavesnamao.com.br/imoveis/rj-rio-de-janeiro/barra-da-tijuca/?filtro=amin%3A{min}%2Camax%3A{max}&pg={pagina}",
+        "url_olx": "",
+        "url_zap": "",
+        "url_vivareal": ""
+      },
+      {
+        "id": "coleta_barra_chave_mao_111_250",
+        "arquivo": "rio_janeiro_barra_tijuca_coleta_dados_chave_mao_111_250.py",
+        "bairro": "barra-tijuca",
+        "filtro_bairro": "",
+        "url_chaves": "https://www.chavesnamao.com.br/imoveis/rj-rio-de-janeiro/barra-da-tijuca/?filtro=amin%3A{min}%2Camax%3A{max}&pg={pagina}",
+        "url_olx": "",
+        "url_zap": "",
+        "url_vivareal": ""
+      },
+      {
+        "id": "coleta_barra_chave_mao_251_infinito",
+        "arquivo": "rio_janeiro_barra_tijuca_coleta_dados_chave_mao_251_infinito.py",
+        "bairro": "barra-tijuca",
+        "filtro_bairro": "",
+        "url_chaves": "https://www.chavesnamao.com.br/imoveis/rj-rio-de-janeiro/barra-da-tijuca/?filtro=amin%3A{min}%2Camax%3A{max}&pg={pagina}",
+        "url_olx": "",
+        "url_zap": "",
+        "url_vivareal": ""
+      },
+      {
+        "id": "coleta_leblon_olx_0_78",
+        "arquivo": "rio_janeiro_barra_tijuca_coleta_dados_olx_0_78.py",
+        "bairro": "barra-tijuca",
+        "filtro_bairro": "",
+        "url_chaves": "",
+        "url_olx": "https://www.olx.com.br/imoveis/venda/apartamentos/estado-rj/rio-de-janeiro-e-regiao/zona-oeste/barra-da-tijuca?ss={min}&se={max}&o={pagina}",
+        "url_zap": "",
+        "url_vivareal": ""
+      },
+      {
+        "id": "coleta_leblon_olx_79_110",
+        "arquivo": "rio_janeiro_barra_tijuca_coleta_dados_olx_79_110.py",
+        "bairro": "barra-tijuca",
+        "filtro_bairro": "",
+        "url_chaves": "",
+        "url_olx": "https://www.olx.com.br/imoveis/venda/apartamentos/estado-rj/rio-de-janeiro-e-regiao/zona-oeste/barra-da-tijuca?ss={min}&se={max}&o={pagina}",
+        "url_zap": "",
+        "url_vivareal": ""
+      },
+      {
+        "id": "coleta_leblon_olx_111_140",
+        "arquivo": "rio_janeiro_barra_tijuca_coleta_dados_olx_111_140.py",
+        "bairro": "barra-tijuca",
+        "filtro_bairro": "",
+        "url_chaves": "",
+        "url_olx": "https://www.olx.com.br/imoveis/venda/apartamentos/estado-rj/rio-de-janeiro-e-regiao/zona-oeste/barra-da-tijuca?ss={min}&se={max}&o={pagina}",
+        "url_zap": "",
+        "url_vivareal": ""
+      },
+      {
+        "id": "coleta_leblon_olx_141_190",
+        "arquivo": "rio_janeiro_barra_tijuca_coleta_dados_olx_141_190.py",
+        "bairro": "barra-tijuca",
+        "filtro_bairro": "",
+        "url_chaves": "",
+        "url_olx": "https://www.olx.com.br/imoveis/venda/apartamentos/estado-rj/rio-de-janeiro-e-regiao/zona-oeste/barra-da-tijuca?ss={min}&se={max}&o={pagina}",
+        "url_zap": "",
+        "url_vivareal": ""
+      },
+      {
+        "id": "coleta_leblon_olx_191_290",
+        "arquivo": "rio_janeiro_barra_tijuca_coleta_dados_olx_191_290.py",
+        "bairro": "barra-tijuca",
+        "filtro_bairro": "",
+        "url_chaves": "",
+        "url_olx": "https://www.olx.com.br/imoveis/venda/apartamentos/estado-rj/rio-de-janeiro-e-regiao/zona-oeste/barra-da-tijuca?ss={min}&se={max}&o={pagina}",
+        "url_zap": "",
+        "url_vivareal": ""
+      },
+      {
+        "id": "coleta_leblon_olx_291_infinito",
+        "arquivo": "rio_janeiro_barra_tijuca_coleta_dados_olx_291_infinito.py",
+        "bairro": "barra-tijuca",
+        "filtro_bairro": "",
+        "url_chaves": "",
+        "url_olx": "https://www.olx.com.br/imoveis/venda/apartamentos/estado-rj/rio-de-janeiro-e-regiao/zona-oeste/barra-da-tijuca?ss={min}&se={max}&o={pagina}",
+        "url_zap": "",
+        "url_vivareal": ""
+      },
+      {
+        "id": "coleta_barra_viva_real_0_85",
+        "arquivo": "rio_janeiro_barra_tijuca_coleta_dados_viva_real_0_85.py",
+        "bairro": "barra-tijuca",
+        "filtro_bairro": "",
+        "url_chaves": "",
+        "url_olx": "",
+        "url_zap": "",
+        "url_vivareal": "https://www.vivareal.com.br/venda/rj/rio-de-janeiro/zona-oeste/barra-da-tijuca/?onde=%2CRio+de+Janeiro%2CRio+de+Janeiro%2CZona+Oeste%2CBarra+da+Tijuca%2C%2C%2Cneighborhood%2CBR%3ERio+de+Janeiro%3ENULL%3ERio+de+Janeiro%3EZona+Oeste%3EBarra+da+Tijuca%2C-23.004019%2C-43.366107%2C&pagina={pagina}"
+      },
+      {
+        "id": "coleta_barra_viva_real_86_140",
+        "arquivo": "rio_janeiro_barra_tijuca_coleta_dados_viva_real_86_140.py",
+        "bairro": "barra-tijuca",
+        "filtro_bairro": "",
+        "url_chaves": "",
+        "url_olx": "",
+        "url_zap": "",
+        "url_vivareal": "https://www.vivareal.com.br/venda/rj/rio-de-janeiro/zona-oeste/barra-da-tijuca/?onde=%2CRio+de+Janeiro%2CRio+de+Janeiro%2CZona+Oeste%2CBarra+da+Tijuca%2C%2C%2Cneighborhood%2CBR%3ERio+de+Janeiro%3ENULL%3ERio+de+Janeiro%3EZona+Oeste%3EBarra+da+Tijuca%2C-23.004019%2C-43.366107%2C&pagina={pagina}"
+      },
+      {
+        "id": "coleta_barra_viva_real_141_250",
+        "arquivo": "rio_janeiro_barra_tijuca_coleta_dados_viva_real_141_250.py",
+        "bairro": "barra-tijuca",
+        "filtro_bairro": "",
+        "url_chaves": "",
+        "url_olx": "",
+        "url_zap": "",
+        "url_vivareal": "https://www.vivareal.com.br/venda/rj/rio-de-janeiro/zona-oeste/barra-da-tijuca/?onde=%2CRio+de+Janeiro%2CRio+de+Janeiro%2CZona+Oeste%2CBarra+da+Tijuca%2C%2C%2Cneighborhood%2CBR%3ERio+de+Janeiro%3ENULL%3ERio+de+Janeiro%3EZona+Oeste%3EBarra+da+Tijuca%2C-23.004019%2C-43.366107%2C&pagina={pagina}"
+      },
+      {
+        "id": "coleta_barra_viva_real_251_450",
+        "arquivo": "rio_janeiro_barra_tijuca_coleta_dados_viva_real_251_450.py",
+        "bairro": "barra-tijuca",
+        "filtro_bairro": "",
+        "url_chaves": "",
+        "url_olx": "",
+        "url_zap": "",
+        "url_vivareal": "https://www.vivareal.com.br/venda/rj/rio-de-janeiro/zona-oeste/barra-da-tijuca/?onde=%2CRio+de+Janeiro%2CRio+de+Janeiro%2CZona+Oeste%2CBarra+da+Tijuca%2C%2C%2Cneighborhood%2CBR%3ERio+de+Janeiro%3ENULL%3ERio+de+Janeiro%3EZona+Oeste%3EBarra+da+Tijuca%2C-23.004019%2C-43.366107%2C&pagina={pagina}"
+      },
+      {
+        "id": "coleta_barra_viva_real_451_infinito",
+        "arquivo": "rio_janeiro_barra_tijuca_coleta_dados_viva_real_251_450.py",
+        "bairro": "barra-tijuca",
+        "filtro_bairro": "",
+        "url_chaves": "",
+        "url_olx": "",
+        "url_zap": "",
+        "url_vivareal": "https://www.vivareal.com.br/venda/rj/rio-de-janeiro/zona-oeste/barra-da-tijuca/?onde=%2CRio+de+Janeiro%2CRio+de+Janeiro%2CZona+Oeste%2CBarra+da+Tijuca%2C%2C%2Cneighborhood%2CBR%3ERio+de+Janeiro%3ENULL%3ERio+de+Janeiro%3EZona+Oeste%3EBarra+da+Tijuca%2C-23.004019%2C-43.366107%2C&pagina={pagina}"
+      },
+      {
+        "id": "coleta_barra_zap_0_85",
+        "arquivo": "rio_janeiro_barra_tijuca_coleta_dados_zap_imoveis_0_85.py",
+        "bairro": "barra-tijuca",
+        "filtro_bairro": "",
+        "url_chaves": "",
+        "url_olx": "",
+        "url_zap": "https://www.zapimoveis.com.br/venda/imoveis/rj+rio-de-janeiro+zona-oeste+barra-da-tijuca/?onde=%2CRio+de+Janeiro%2CRio+de+Janeiro%2CZona+Oeste%2CBarra+da+Tijuca%2C%2C%2Cneighborhood%2CBR%3ERio+de+Janeiro%3ENULL%3ERio+de+Janeiro%3EZona+Oeste%3EBarra+da+Tijuca%2C-23.004019%2C-43.366107%2C&pagina={pagina}",
+        "url_vivareal": ""
+      },
+      {
+        "id": "coleta_barra_zap_86_140",
+        "arquivo": "rio_janeiro_barra_tijuca_coleta_dados_zap_imoveis_86_140.py",
+        "bairro": "barra-tijuca",
+        "filtro_bairro": "",
+        "url_chaves": "",
+        "url_olx": "",
+        "url_zap": "https://www.zapimoveis.com.br/venda/imoveis/rj+rio-de-janeiro+zona-oeste+barra-da-tijuca/?onde=%2CRio+de+Janeiro%2CRio+de+Janeiro%2CZona+Oeste%2CBarra+da+Tijuca%2C%2C%2Cneighborhood%2CBR%3ERio+de+Janeiro%3ENULL%3ERio+de+Janeiro%3EZona+Oeste%3EBarra+da+Tijuca%2C-23.004019%2C-43.366107%2C&pagina={pagina}",
+        "url_vivareal": ""
+      },
+      {
+        "id": "coleta_barra_zap_141_250",
+        "arquivo": "rio_janeiro_barra_tijuca_coleta_dados_zap_imoveis_141_250.py",
+        "bairro": "barra-tijuca",
+        "filtro_bairro": "",
+        "url_chaves": "",
+        "url_olx": "",
+        "url_zap": "https://www.zapimoveis.com.br/venda/imoveis/rj+rio-de-janeiro+zona-oeste+barra-da-tijuca/?onde=%2CRio+de+Janeiro%2CRio+de+Janeiro%2CZona+Oeste%2CBarra+da+Tijuca%2C%2C%2Cneighborhood%2CBR%3ERio+de+Janeiro%3ENULL%3ERio+de+Janeiro%3EZona+Oeste%3EBarra+da+Tijuca%2C-23.004019%2C-43.366107%2C&pagina={pagina}",
+        "url_vivareal": ""
+      },
+      {
+        "id": "coleta_barra_zap_251_450",
+        "arquivo": "rio_janeiro_barra_tijuca_coleta_dados_zap_imoveis_251_450.py",
+        "bairro": "barra-tijuca",
+        "filtro_bairro": "",
+        "url_chaves": "",
+        "url_olx": "",
+        "url_zap": "https://www.zapimoveis.com.br/venda/imoveis/rj+rio-de-janeiro+zona-oeste+barra-da-tijuca/?onde=%2CRio+de+Janeiro%2CRio+de+Janeiro%2CZona+Oeste%2CBarra+da+Tijuca%2C%2C%2Cneighborhood%2CBR%3ERio+de+Janeiro%3ENULL%3ERio+de+Janeiro%3EZona+Oeste%3EBarra+da+Tijuca%2C-23.004019%2C-43.366107%2C&pagina={pagina}",
+        "url_vivareal": ""
+      },
+      {
+        "id": "coleta_barra_zap_451_infinito",
+        "arquivo": "rio_janeiro_barra_tijuca_coleta_dados_zap_imoveis_251_450.py",
+        "bairro": "barra-tijuca",
+        "filtro_bairro": "",
+        "url_chaves": "",
+        "url_olx": "",
+        "url_zap": "https://www.zapimoveis.com.br/venda/imoveis/rj+rio-de-janeiro+zona-oeste+barra-da-tijuca/?onde=%2CRio+de+Janeiro%2CRio+de+Janeiro%2CZona+Oeste%2CBarra+da+Tijuca%2C%2C%2Cneighborhood%2CBR%3ERio+de+Janeiro%3ENULL%3ERio+de+Janeiro%3EZona+Oeste%3EBarra+da+Tijuca%2C-23.004019%2C-43.366107%2C&pagina={pagina}",
+        "url_vivareal": ""
+      }
+    ],
+    "limpeza": {
+      "arquivo_rodando_imovel": "rio_janeiro_barra_tijuca_limpando_dados.py",
+      "cidade_limpeza": "rio de janeiro",
+      "cidade_localizacao": "Rio de Janeiro",
+      "estado_limpeza": "rj",
+      "estado_localizacao": "RJ",
+      "BAIRRO": "barra-tijuca",
+      "FILTRO_BAIRRO": "barra da tijuca",
+      "tipo_async": true
+    },
+    "melhores_configuracoes": "rio_janeiro_melhores_configuraoes_modelo.py",
+    "otimizando": "rio_janeiro_otimizando_melhores_modelos.py",
+    "melhor_modelo_geral": "rio_janeiro_melhor_modelo_geral.py"
+  },
+  "botafogo": {
+    "bairro": "botafogo",
+    "cidade_pasta": "rio_janeiro",
+    "cron": "0 9 27 * *",
+    "coleta": [
+      {
+        "id": "coleta_botafogo_chave_mao",
+        "arquivo": "rio_janeiro_botafogo_coleta_dados_chave_mao.py",
+        "bairro": "botafogo",
+        "filtro_bairro": "",
+        "url_chaves": "https://www.chavesnamao.com.br/imoveis/rj-rio-de-janeiro/botafogo/?filtro=amin%3A{min}%2Camax%3A{max}&pg={pagina}",
+        "url_olx": "",
+        "url_zap": "",
+        "url_vivareal": ""
+      },
+      {
+        "id": "coleta_botafogo_olx_0_95",
+        "arquivo": "rio_janeiro_botafogo_coleta_dados_olx_0_95.py",
+        "bairro": "botafogo",
+        "filtro_bairro": "",
+        "url_chaves": "",
+        "url_olx": "https://www.olx.com.br/imoveis/venda/estado-rj/rio-de-janeiro-e-regiao/zona-sul/botafogo?ss={min}&se={max}&o={pagina}",
+        "url_zap": "",
+        "url_vivareal": ""
+      },
+      {
+        "id": "coleta_botafogo_olx_96_infinito",
+        "arquivo": "rio_janeiro_botafogo_coleta_dados_olx_96_infinito.py",
+        "bairro": "botafogo",
+        "filtro_bairro": "",
+        "url_chaves": "",
+        "url_olx": "https://www.olx.com.br/imoveis/venda/estado-rj/rio-de-janeiro-e-regiao/zona-sul/botafogo?ss={min}&se={max}&o={pagina}",
+        "url_zap": "",
+        "url_vivareal": ""
+      },
+      {
+        "id": "coleta_botafogo_zap_0_100",
+        "arquivo": "rio_janeiro_botafogo_coleta_dados_zap_imoveis_0_100.py",
+        "bairro": "botafogo",
+        "filtro_bairro": "",
+        "url_chaves": "",
+        "url_olx": "",
+        "url_zap": "https://www.zapimoveis.com.br/venda/imoveis/rj+rio-de-janeiro+zona-sul+botafogo/?onde=%2CRio+de+Janeiro%2CRio+de+Janeiro%2CZona+Sul%2CBotafogo%2C%2C%2Cneighborhood%2CBR%3ERio+de+Janeiro%3ENULL%3ERio+de+Janeiro%3EZona+Sul%3EBotafogo%2C-22.947439%2C-43.182741%2C&pagina={pagina}",
+        "url_vivareal": ""
+      },
+      {
+        "id": "coleta_botafogo_zap_101_infinito",
+        "arquivo": "rio_janeiro_botafogo_coleta_dados_zap_imoveis_101_infinito.py",
+        "bairro": "botafogo",
+        "filtro_bairro": "",
+        "url_chaves": "",
+        "url_olx": "",
+        "url_zap": "https://www.zapimoveis.com.br/venda/imoveis/rj+rio-de-janeiro+zona-sul+botafogo/?onde=%2CRio+de+Janeiro%2CRio+de+Janeiro%2CZona+Sul%2CBotafogo%2C%2C%2Cneighborhood%2CBR%3ERio+de+Janeiro%3ENULL%3ERio+de+Janeiro%3EZona+Sul%3EBotafogo%2C-22.947439%2C-43.182741%2C&pagina={pagina}",
+        "url_vivareal": ""
+      },
+      {
+        "id": "coleta_botafogo_viva_real_0_100",
+        "arquivo": "rio_janeiro_botafogo_coleta_dados_viva_real_0_100.py",
+        "bairro": "botafogo",
+        "filtro_bairro": "",
+        "url_chaves": "",
+        "url_olx": "",
+        "url_zap": "",
+        "url_vivareal": "https://www.vivareal.com.br/venda/rj/rio-de-janeiro/zona-sul/botafogo/?onde=%2CRio+de+Janeiro%2CRio+de+Janeiro%2CZona+Sul%2CBotafogo%2C%2C%2Cneighborhood%2CBR%3ERio+de+Janeiro%3ENULL%3ERio+de+Janeiro%3EZona+Sul%3EBotafogo%2C-22.951098%2C-43.180746%2C&pagina={pagina}"
+      },
+      {
+        "id": "coleta_botafogo_viva_real_101_infinito",
+        "arquivo": "rio_janeiro_botafogo_coleta_dados_viva_real_101_infinito.py",
+        "bairro": "botafogo",
+        "filtro_bairro": "",
+        "url_chaves": "",
+        "url_olx": "",
+        "url_zap": "",
+        "url_vivareal": "https://www.vivareal.com.br/venda/rj/rio-de-janeiro/zona-sul/botafogo/?onde=%2CRio+de+Janeiro%2CRio+de+Janeiro%2CZona+Sul%2CBotafogo%2C%2C%2Cneighborhood%2CBR%3ERio+de+Janeiro%3ENULL%3ERio+de+Janeiro%3EZona+Sul%3EBotafogo%2C-22.951098%2C-43.180746%2C&pagina={pagina}"
+      }
+    ],
+    "limpeza": {
+      "arquivo_rodando_imovel": "rio_janeiro_botafogo_limpando_dados.py",
+      "cidade_limpeza": "rio de janeiro",
+      "cidade_localizacao": "Rio de Janeiro",
+      "estado_limpeza": "rj",
+      "estado_localizacao": "RJ",
+      "BAIRRO": "botafogo",
+      "FILTRO_BAIRRO": "botafogo",
+      "tipo_async": true
+    },
+    "melhores_configuracoes": "rio_janeiro_melhores_configuraoes_modelo.py",
+    "otimizando": "rio_janeiro_otimizando_melhores_modelos.py",
+    "melhor_modelo_geral": "rio_janeiro_melhor_modelo_geral.py"
+  },
+  "copacabana": {
+    "bairro": "copacabana",
+    "cidade_pasta": "rio_janeiro",
+    "cron": "0 10 27 * *",
+    "coleta": [
+      {
+        "id": "coleta_copacabana_chave_mao_0_85",
+        "arquivo": "rio_janeiro_copacabana_coleta_dados_chave_mao_0_85.py",
+        "bairro": "copacabana",
+        "filtro_bairro": "",
+        "url_chaves": "https://www.chavesnamao.com.br/imoveis-a-venda/rj-rio-de-janeiro/copacabana/?filtro=amin%3A{min}%2Camax%3A{max}&pg={pagina}",
+        "url_olx": "",
+        "url_zap": "",
+        "url_vivareal": ""
+      },
+      {
+        "id": "coleta_copacabana_chave_mao_86_160",
+        "arquivo": "rio_janeiro_copacabana_coleta_dados_chave_mao_86_160.py",
+        "bairro": "copacabana",
+        "filtro_bairro": "",
+        "url_chaves": "https://www.chavesnamao.com.br/imoveis-a-venda/rj-rio-de-janeiro/copacabana/?filtro=amin%3A{min}%2Camax%3A{max}&pg={pagina}",
+        "url_olx": "",
+        "url_zap": "",
+        "url_vivareal": ""
+      },
+      {
+        "id": "coleta_copacabana_chave_mao_161_infinito",
+        "arquivo": "rio_janeiro_copacabana_coleta_dados_chave_mao_161_infinito.py",
+        "bairro": "copacabana",
+        "filtro_bairro": "",
+        "url_chaves": "https://www.chavesnamao.com.br/imoveis-a-venda/rj-rio-de-janeiro/copacabana/?filtro=amin%3A{min}%2Camax%3A{max}&pg={pagina}",
+        "url_olx": "",
+        "url_zap": "",
+        "url_vivareal": ""
+      },
+      {
+        "id": "coleta_copacabana_olx_0_55",
+        "arquivo": "rio_janeiro_copacabana_coleta_dados_olx_0_55.py",
+        "bairro": "copacabana",
+        "filtro_bairro": "",
+        "url_chaves": "",
+        "url_olx": "https://www.olx.com.br/imoveis/venda/estado-rj/rio-de-janeiro-e-regiao/zona-sul/copacabana?ss={min}&se={max}&o={pagina}",
+        "url_zap": "",
+        "url_vivareal": ""
+      },
+      {
+        "id": "coleta_copacabana_olx_56_90",
+        "arquivo": "rio_janeiro_copacabana_coleta_dados_olx_56_90.py",
+        "bairro": "copacabana",
+        "filtro_bairro": "",
+        "url_chaves": "",
+        "url_olx": "https://www.olx.com.br/imoveis/venda/estado-rj/rio-de-janeiro-e-regiao/zona-sul/copacabana?ss={min}&se={max}&o={pagina}",
+        "url_zap": "",
+        "url_vivareal": ""
+      },
+      {
+        "id": "coleta_copacabana_olx_91_120",
+        "arquivo": "rio_janeiro_copacabana_coleta_dados_olx_91_120.py",
+        "bairro": "copacabana",
+        "filtro_bairro": "",
+        "url_chaves": "",
+        "url_olx": "https://www.olx.com.br/imoveis/venda/estado-rj/rio-de-janeiro-e-regiao/zona-sul/copacabana?ss={min}&se={max}&o={pagina}",
+        "url_zap": "",
+        "url_vivareal": ""
+      },
+      {
+        "id": "coleta_copacabana_olx_121_170",
+        "arquivo": "rio_janeiro_copacabana_coleta_dados_olx_121_170.py",
+        "bairro": "copacabana",
+        "filtro_bairro": "",
+        "url_chaves": "",
+        "url_olx": "https://www.olx.com.br/imoveis/venda/estado-rj/rio-de-janeiro-e-regiao/zona-sul/copacabana?ss={min}&se={max}&o={pagina}",
+        "url_zap": "",
+        "url_vivareal": ""
+      },
+      {
+        "id": "coleta_copacabana_olx_171_240",
+        "arquivo": "rio_janeiro_copacabana_coleta_dados_olx_171_240.py",
+        "bairro": "copacabana",
+        "filtro_bairro": "",
+        "url_chaves": "",
+        "url_olx": "https://www.olx.com.br/imoveis/venda/estado-rj/rio-de-janeiro-e-regiao/zona-sul/copacabana?ss={min}&se={max}&o={pagina}",
+        "url_zap": "",
+        "url_vivareal": ""
+      },
+      {
+        "id": "coleta_copacabana_olx_241_infinito",
+        "arquivo": "rio_janeiro_copacabana_coleta_dados_olx_241_infinito.py",
+        "bairro": "copacabana",
+        "filtro_bairro": "",
+        "url_chaves": "",
+        "url_olx": "https://www.olx.com.br/imoveis/venda/estado-rj/rio-de-janeiro-e-regiao/zona-sul/copacabana?ss={min}&se={max}&o={pagina}",
+        "url_zap": "",
+        "url_vivareal": ""
+      },
+      {
+        "id": "coleta_barra_viva_real_0_50",
+        "arquivo": "rio_janeiro_copacabana_coleta_dados_viva_real_0_50.py",
+        "bairro": "copacabana",
+        "filtro_bairro": "",
+        "url_chaves": "",
+        "url_olx": "",
+        "url_zap": "",
+        "url_vivareal": "https://www.vivareal.com.br/venda/rj/rio-de-janeiro/zona-sul/copacabana/?onde=%2CRio+de+Janeiro%2CRio+de+Janeiro%2CZona+Sul%2CCopacabana%2C%2C%2Cneighborhood%2CBR%3ERio+de+Janeiro%3ENULL%3ERio+de+Janeiro%3EZona+Sul%3ECopacabana%2C-22.969281%2C-43.186794%2C&pagina={pagina}"
+      },
+      {
+        "id": "coleta_barra_viva_real_51_90",
+        "arquivo": "rio_janeiro_copacabana_coleta_dados_viva_real_51_90.py",
+        "bairro": "copacabana",
+        "filtro_bairro": "",
+        "url_chaves": "",
+        "url_olx": "",
+        "url_zap": "",
+        "url_vivareal": "https://www.vivareal.com.br/venda/rj/rio-de-janeiro/zona-sul/copacabana/?onde=%2CRio+de+Janeiro%2CRio+de+Janeiro%2CZona+Sul%2CCopacabana%2C%2C%2Cneighborhood%2CBR%3ERio+de+Janeiro%3ENULL%3ERio+de+Janeiro%3EZona+Sul%3ECopacabana%2C-22.969281%2C-43.186794%2C&pagina={pagina}"
+      },
+      {
+        "id": "coleta_barra_viva_real_91_130",
+        "arquivo": "rio_janeiro_copacabana_coleta_dados_viva_real_91_130.py",
+        "bairro": "copacabana",
+        "filtro_bairro": "",
+        "url_chaves": "",
+        "url_olx": "",
+        "url_zap": "",
+        "url_vivareal": "https://www.vivareal.com.br/venda/rj/rio-de-janeiro/zona-sul/copacabana/?onde=%2CRio+de+Janeiro%2CRio+de+Janeiro%2CZona+Sul%2CCopacabana%2C%2C%2Cneighborhood%2CBR%3ERio+de+Janeiro%3ENULL%3ERio+de+Janeiro%3EZona+Sul%3ECopacabana%2C-22.969281%2C-43.186794%2C&pagina={pagina}"
+      },
+      {
+        "id": "coleta_barra_viva_real_131_200",
+        "arquivo": "rio_janeiro_copacabana_coleta_dados_viva_real_131_200.py",
+        "bairro": "copacabana",
+        "filtro_bairro": "",
+        "url_chaves": "",
+        "url_olx": "",
+        "url_zap": "",
+        "url_vivareal": "https://www.vivareal.com.br/venda/rj/rio-de-janeiro/zona-sul/copacabana/?onde=%2CRio+de+Janeiro%2CRio+de+Janeiro%2CZona+Sul%2CCopacabana%2C%2C%2Cneighborhood%2CBR%3ERio+de+Janeiro%3ENULL%3ERio+de+Janeiro%3EZona+Sul%3ECopacabana%2C-22.969281%2C-43.186794%2C&pagina={pagina}"
+      },
+      {
+        "id": "coleta_barra_viva_real_201_infinito",
+        "arquivo": "rio_janeiro_copacabana_coleta_dados_viva_real_201_infinito.py",
+        "bairro": "copacabana",
+        "filtro_bairro": "",
+        "url_chaves": "",
+        "url_olx": "",
+        "url_zap": "",
+        "url_vivareal": "https://www.vivareal.com.br/venda/rj/rio-de-janeiro/zona-sul/copacabana/?onde=%2CRio+de+Janeiro%2CRio+de+Janeiro%2CZona+Sul%2CCopacabana%2C%2C%2Cneighborhood%2CBR%3ERio+de+Janeiro%3ENULL%3ERio+de+Janeiro%3EZona+Sul%3ECopacabana%2C-22.969281%2C-43.186794%2C&pagina={pagina}"
+      },
+      {
+        "id": "coleta_barra_zap_0_50",
+        "arquivo": "rio_janeiro_copacabana_coleta_dados_zap_imoveis_0_50.py",
+        "bairro": "copacabana",
+        "filtro_bairro": "",
+        "url_chaves": "",
+        "url_olx": "",
+        "url_zap": "https://www.zapimoveis.com.br/venda/imoveis/rj+rio-de-janeiro+zona-sul+copacabana/?onde=%2CRio+de+Janeiro%2CRio+de+Janeiro%2CZona+Sul%2CCopacabana%2C%2C%2Cneighborhood%2CBR%3ERio+de+Janeiro%3ENULL%3ERio+de+Janeiro%3EZona+Sul%3ECopacabana%2C-22.969281%2C-43.186794%2C&pagina={pagina}",
+        "url_vivareal": ""
+      },
+      {
+        "id": "coleta_barra_zap_51_90",
+        "arquivo": "rio_janeiro_copacabana_coleta_dados_zap_imoveis_51_90.py",
+        "bairro": "copacabana",
+        "filtro_bairro": "",
+        "url_chaves": "",
+        "url_olx": "",
+        "url_zap": "https://www.zapimoveis.com.br/venda/imoveis/rj+rio-de-janeiro+zona-sul+copacabana/?onde=%2CRio+de+Janeiro%2CRio+de+Janeiro%2CZona+Sul%2CCopacabana%2C%2C%2Cneighborhood%2CBR%3ERio+de+Janeiro%3ENULL%3ERio+de+Janeiro%3EZona+Sul%3ECopacabana%2C-22.969281%2C-43.186794%2C&pagina={pagina}",
+        "url_vivareal": ""
+      },
+      {
+        "id": "coleta_barra_zap_91_130",
+        "arquivo": "rio_janeiro_copacabana_coleta_dados_zap_imoveis_91_130.py",
+        "bairro": "copacabana",
+        "filtro_bairro": "",
+        "url_chaves": "",
+        "url_olx": "",
+        "url_zap": "https://www.zapimoveis.com.br/venda/imoveis/rj+rio-de-janeiro+zona-sul+copacabana/?onde=%2CRio+de+Janeiro%2CRio+de+Janeiro%2CZona+Sul%2CCopacabana%2C%2C%2Cneighborhood%2CBR%3ERio+de+Janeiro%3ENULL%3ERio+de+Janeiro%3EZona+Sul%3ECopacabana%2C-22.969281%2C-43.186794%2C&pagina={pagina}",
+        "url_vivareal": ""
+      },
+      {
+        "id": "coleta_barra_zap_131_200",
+        "arquivo": "rio_janeiro_copacabana_coleta_dados_zap_imoveis_131_200.py",
+        "bairro": "copacabana",
+        "filtro_bairro": "",
+        "url_chaves": "",
+        "url_olx": "",
+        "url_zap": "https://www.zapimoveis.com.br/venda/imoveis/rj+rio-de-janeiro+zona-sul+copacabana/?onde=%2CRio+de+Janeiro%2CRio+de+Janeiro%2CZona+Sul%2CCopacabana%2C%2C%2Cneighborhood%2CBR%3ERio+de+Janeiro%3ENULL%3ERio+de+Janeiro%3EZona+Sul%3ECopacabana%2C-22.969281%2C-43.186794%2C&pagina={pagina}",
+        "url_vivareal": ""
+      },
+      {
+        "id": "coleta_barra_zap_201_infinito",
+        "arquivo": "rio_janeiro_copacabana_coleta_dados_zap_imoveis_201_infinito.py",
+        "bairro": "copacabana",
+        "filtro_bairro": "",
+        "url_chaves": "",
+        "url_olx": "",
+        "url_zap": "https://www.zapimoveis.com.br/venda/imoveis/rj+rio-de-janeiro+zona-sul+copacabana/?onde=%2CRio+de+Janeiro%2CRio+de+Janeiro%2CZona+Sul%2CCopacabana%2C%2C%2Cneighborhood%2CBR%3ERio+de+Janeiro%3ENULL%3ERio+de+Janeiro%3EZona+Sul%3ECopacabana%2C-22.969281%2C-43.186794%2C&pagina={pagina}",
+        "url_vivareal": ""
+      }
+    ],
+    "limpeza": {
+      "arquivo_rodando_imovel": "rio_janeiro_copacabana_limpando_dados.py",
+      "cidade_limpeza": "rio de janeiro",
+      "cidade_localizacao": "Rio de Janeiro",
+      "estado_limpeza": "rj",
+      "estado_localizacao": "RJ",
+      "BAIRRO": "copacabana",
+      "FILTRO_BAIRRO": "copacabana",
+      "tipo_async": true
+    },
+    "melhores_configuracoes": "rio_janeiro_melhores_configuraoes_modelo.py",
+    "otimizando": "rio_janeiro_otimizando_melhores_modelos.py",
+    "melhor_modelo_geral": "rio_janeiro_melhor_modelo_geral.py"
+  },
+  "flamengo": {
+    "bairro": "flamengo",
+    "cidade_pasta": "rio_janeiro",
+    "cron": "0 9 28 * *",
+    "coleta": [
+      {
+        "id": "coleta_flamengo_chave_mao",
+        "arquivo": "rio_janeiro_flamengo_coleta_dados_chave_mao.py",
+        "bairro": "flamengo",
+        "filtro_bairro": "",
+        "url_chaves": "https://www.chavesnamao.com.br/imoveis-a-venda/rj-rio-de-janeiro/flamengo/?filtro=amin%3A{min}%2Camax%3A{max}&pg={pagina}",
+        "url_olx": "",
+        "url_zap": "",
+        "url_vivareal": ""
+      },
+      {
+        "id": "coleta_flamengo_olx_0_100",
+        "arquivo": "rio_janeiro_flamengo_coleta_dados_olx_0_100.py",
+        "bairro": "flamengo",
+        "filtro_bairro": "",
+        "url_chaves": "",
+        "url_olx": "https://www.olx.com.br/imoveis/venda/estado-rj/rio-de-janeiro-e-regiao/zona-sul/flamengo?ss={min}&se={max}&o={pagina}",
+        "url_zap": "",
+        "url_vivareal": ""
+      },
+      {
+        "id": "coleta_flamengo_olx_101_infinito",
+        "arquivo": "rio_janeiro_flamengo_coleta_dados_olx_101_infinito.py",
+        "bairro": "flamengo",
+        "filtro_bairro": "",
+        "url_chaves": "",
+        "url_olx": "https://www.olx.com.br/imoveis/venda/estado-rj/rio-de-janeiro-e-regiao/zona-sul/flamengo?ss={min}&se={max}&o={pagina}",
+        "url_zap": "",
+        "url_vivareal": ""
+      },
+      {
+        "id": "coleta_flamengo_zap",
+        "arquivo": "rio_janeiro_flamengo_coleta_dados_zap_imoveis.py",
+        "bairro": "flamengo",
+        "filtro_bairro": "",
+        "url_chaves": "",
+        "url_olx": "",
+        "url_zap": "https://www.zapimoveis.com.br/venda/imoveis/rj+rio-de-janeiro+zona-sul+flamengo/?onde=%2CRio+de+Janeiro%2CRio+de+Janeiro%2CZona+Sul%2CFlamengo%2C%2C%2Cneighborhood%2CBR%3ERio+de+Janeiro%3ENULL%3ERio+de+Janeiro%3EZona+Sul%3EFlamengo%2C-22.933236%2C-43.174695%2C&pagina={pagina}",
+        "url_vivareal": ""
+      },
+      {
+        "id": "coleta_flamengo_viva_real",
+        "arquivo": "rio_janeiro_flamengo_coleta_dados_viva_real.py",
+        "bairro": "flamengo",
+        "filtro_bairro": "",
+        "url_chaves": "",
+        "url_olx": "",
+        "url_zap": "",
+        "url_vivareal": "https://www.vivareal.com.br/venda/rj/rio-de-janeiro/zona-sul/flamengo/?onde=%2CRio+de+Janeiro%2CRio+de+Janeiro%2CZona+Sul%2CFlamengo%2C%2C%2Cneighborhood%2CBR%3ERio+de+Janeiro%3ENULL%3ERio+de+Janeiro%3EZona+Sul%3EFlamengo%2C-22.933236%2C-43.174695%2C&pagina={pagina}"
+      }
+    ],
+    "limpeza": {
+      "arquivo_rodando_imovel": "rio_janeiro_flamengo_limpando_dados.py",
+      "cidade_limpeza": "rio de janeiro",
+      "cidade_localizacao": "Rio de Janeiro",
+      "estado_limpeza": "rj",
+      "estado_localizacao": "RJ",
+      "BAIRRO": "flamengo",
+      "FILTRO_BAIRRO": "flamengo",
+      "tipo_async": true
+    },
+    "melhores_configuracoes": "rio_janeiro_melhores_configuraoes_modelo.py",
+    "otimizando": "rio_janeiro_otimizando_melhores_modelos.py",
+    "melhor_modelo_geral": "rio_janeiro_melhor_modelo_geral.py"
+  },
+  "ipanema": {
+    "bairro": "ipanema",
+    "cidade_pasta": "rio_janeiro",
+    "cron": "0 9 25 * *",
+    "coleta": [
+      {
+        "id": "coleta_ipanema_chave_mao",
+        "arquivo": "rio_janeiro_ipanema_coleta_dados_chave_mao.py",
+        "bairro": "ipanema",
+        "filtro_bairro": "",
+        "url_chaves": "https://www.chavesnamao.com.br/imoveis-a-venda/rj-rio-de-janeiro/ipanema/?filtro=amin%3A{min}%2Camax%3A{max}&pg={pagina}",
+        "url_olx": "",
+        "url_zap": "",
+        "url_vivareal": ""
+      },
+      {
+        "id": "coleta_ipanema_olx_0_130",
+        "arquivo": "rio_janeiro_ipanema_coleta_dados_olx_0_130.py",
+        "bairro": "ipanema",
+        "filtro_bairro": "",
+        "url_chaves": "",
+        "url_olx": "https://www.olx.com.br/imoveis/venda/estado-rj/rio-de-janeiro-e-regiao/zona-sul/ipanema?ss={min}&se={max}&o={pagina}",
+        "url_zap": "",
+        "url_vivareal": ""
+      },
+      {
+        "id": "coleta_ipanema_olx_101_infinito",
+        "arquivo": "rio_janeiro_ipanema_coleta_dados_olx_131_infinito.py",
+        "bairro": "ipanema",
+        "filtro_bairro": "",
+        "url_chaves": "",
+        "url_olx": "https://www.olx.com.br/imoveis/venda/estado-rj/rio-de-janeiro-e-regiao/zona-sul/ipanema?ss={min}&se={max}&o={pagina}",
+        "url_zap": "",
+        "url_vivareal": ""
+      },
+      {
+        "id": "coleta_ipanema_zap_0_130",
+        "arquivo": "rio_janeiro_ipanema_coleta_dados_zap_imoveis_0_130.py",
+        "bairro": "ipanema",
+        "filtro_bairro": "",
+        "url_chaves": "",
+        "url_olx": "",
+        "url_zap": "https://www.zapimoveis.com.br/venda/imoveis/rj+rio-de-janeiro+zona-sul+ipanema/?onde=%2CRio+de+Janeiro%2CRio+de+Janeiro%2CZona+Sul%2CIpanema%2C%2C%2Cneighborhood%2CBR%3ERio+de+Janeiro%3ENULL%3ERio+de+Janeiro%3EZona+Sul%3EIpanema%2C-22.9846%2C-43.19862%2C&pagina={pagina}",
+        "url_vivareal": ""
+      },
+      {
+        "id": "coleta_ipanema_zap_131_infinito",
+        "arquivo": "rio_janeiro_ipanema_coleta_dados_zap_imoveis_131_infinito.py",
+        "bairro": "ipanema",
+        "filtro_bairro": "",
+        "url_chaves": "",
+        "url_olx": "",
+        "url_zap": "https://www.zapimoveis.com.br/venda/imoveis/rj+rio-de-janeiro+zona-sul+ipanema/?onde=%2CRio+de+Janeiro%2CRio+de+Janeiro%2CZona+Sul%2CIpanema%2C%2C%2Cneighborhood%2CBR%3ERio+de+Janeiro%3ENULL%3ERio+de+Janeiro%3EZona+Sul%3EIpanema%2C-22.9846%2C-43.19862%2C&pagina={pagina}",
+        "url_vivareal": ""
+      },
+      {
+        "id": "coleta_leblon_viva_real_0_130",
+        "arquivo": "rio_janeiro_ipanema_coleta_dados_viva_real_0_130.py",
+        "bairro": "ipanema",
+        "filtro_bairro": "",
+        "url_chaves": "",
+        "url_olx": "",
+        "url_zap": "",
+        "url_vivareal": "https://www.vivareal.com.br/venda/rj/rio-de-janeiro/zona-sul/ipanema/?onde=%2CRio+de+Janeiro%2CRio+de+Janeiro%2CZona+Sul%2CIpanema%2C%2C%2Cneighborhood%2CBR%3ERio+de+Janeiro%3ENULL%3ERio+de+Janeiro%3EZona+Sul%3EIpanema%2C-22.9846%2C-43.19862%2C={pagina}"
+      },
+      {
+        "id": "coleta_leblon_viva_real_131_infinito",
+        "arquivo": "rio_janeiro_ipanema_coleta_dados_viva_real_131_infinito.py",
+        "bairro": "ipanema",
+        "filtro_bairro": "",
+        "url_chaves": "",
+        "url_olx": "",
+        "url_zap": "",
+        "url_vivareal": "https://www.vivareal.com.br/venda/rj/rio-de-janeiro/zona-sul/ipanema/?onde=%2CRio+de+Janeiro%2CRio+de+Janeiro%2CZona+Sul%2CIpanema%2C%2C%2Cneighborhood%2CBR%3ERio+de+Janeiro%3ENULL%3ERio+de+Janeiro%3EZona+Sul%3EIpanema%2C-22.9846%2C-43.19862%2C={pagina}"
+      }
+    ],
+    "limpeza": {
+      "arquivo_rodando_imovel": "rio_janeiro_ipanema_limpando_dados.py",
+      "cidade_limpeza": "rio de janeiro",
+      "cidade_localizacao": "Rio de Janeiro",
+      "estado_limpeza": "rj",
+      "estado_localizacao": "RJ",
+      "BAIRRO": "ipanema",
+      "FILTRO_BAIRRO": "ipanema",
+      "tipo_async": true
+    },
+    "melhores_configuracoes": "rio_janeiro_melhores_configuraoes_modelo.py",
+    "otimizando": "rio_janeiro_otimizando_melhores_modelos.py",
+    "melhor_modelo_geral": "rio_janeiro_melhor_modelo_geral.py"
+  },
+  "lagoa": {
+    "bairro": "lagoa",
+    "cidade_pasta": "rio_janeiro",
+    "cron": "0 16 25 * *",
+    "coleta": [
+      {
+        "id": "coleta_leblon_chave_mao",
+        "arquivo": "rio_janeiro_lagoa_coleta_dados_chave_mao.py",
+        "bairro": "lagoa",
+        "filtro_bairro": "",
+        "url_chaves": "https://www.chavesnamao.com.br/imoveis-a-venda/rj-rio-de-janeiro/lagoa/?filtro=amin%3A{min}%2Camax%3A{max}&pg={pagina}",
+        "url_olx": "",
+        "url_zap": "",
+        "url_vivareal": ""
+      },
+      {
+        "id": "coleta_leblon_olx_0_150",
+        "arquivo": "rio_janeiro_lagoa_coleta_dados_olx_0_150.py",
+        "bairro": "lagoa",
+        "filtro_bairro": "",
+        "url_chaves": "",
+        "url_olx": "https://www.olx.com.br/imoveis/venda/estado-rj/rio-de-janeiro-e-regiao/zona-sul/lagoa?ss={min}&se={max}&o={pagina}",
+        "url_zap": "",
+        "url_vivareal": ""
+      },
+      {
+        "id": "coleta_leblon_olx_101_infinito",
+        "arquivo": "rio_janeiro_lagoa_coleta_dados_olx_151_infinito.py",
+        "bairro": "lagoa",
+        "filtro_bairro": "",
+        "url_chaves": "",
+        "url_olx": "https://www.olx.com.br/imoveis/venda/estado-rj/rio-de-janeiro-e-regiao/zona-sul/lagoa?ss={min}&se={max}&o={pagina}",
+        "url_zap": "",
+        "url_vivareal": ""
+      },
+      {
+        "id": "coleta_leblon_zap",
+        "arquivo": "rio_janeiro_lagoa_coleta_dados_zap_imoveis.py",
+        "bairro": "lagoa",
+        "filtro_bairro": "",
+        "url_chaves": "",
+        "url_olx": "",
+        "url_zap": "https://www.zapimoveis.com.br/venda/imoveis/rj+rio-de-janeiro+zona-sul+lagoa/?onde=%2CRio+de+Janeiro%2CRio+de+Janeiro%2CZona+Sul%2CLagoa%2C%2C%2Cneighborhood%2CBR%3ERio+de+Janeiro%3ENULL%3ERio+de+Janeiro%3EZona+Sul%3ELagoa%2C-22.96182%2C-43.203077%2C&pagina={pagina}",
+        "url_vivareal": ""
+      },
+      {
+        "id": "coleta_leblon_viva_real",
+        "arquivo": "rio_janeiro_lagoa_coleta_dados_viva_real.py",
+        "bairro": "lagoa",
+        "filtro_bairro": "",
+        "url_chaves": "",
+        "url_olx": "",
+        "url_zap": "",
+        "url_vivareal": "https://www.vivareal.com.br/venda/rj/rio-de-janeiro/zona-sul/lagoa/?onde=%2CRio+de+Janeiro%2CRio+de+Janeiro%2CZona+Sul%2CLagoa%2C%2C%2Cneighborhood%2CBR%3ERio+de+Janeiro%3ENULL%3ERio+de+Janeiro%3EZona+Sul%3ELagoa%2C-22.96182%2C-43.203077%2C&pagina={pagina}"
+      }
+    ],
+    "limpeza": {
+      "arquivo_rodando_imovel": "rio_janeiro_lagoa_limpando_dados.py",
+      "cidade_limpeza": "rio de janeiro",
+      "cidade_localizacao": "Rio de Janeiro",
+      "estado_limpeza": "rj",
+      "estado_localizacao": "RJ",
+      "BAIRRO": "lagoa",
+      "FILTRO_BAIRRO": "lagoa",
+      "tipo_async": true
+    },
+    "melhores_configuracoes": "rio_janeiro_melhores_configuraoes_modelo.py",
+    "otimizando": "rio_janeiro_otimizando_melhores_modelos.py",
+    "melhor_modelo_geral": "rio_janeiro_melhor_modelo_geral.py"
+  },
+  "laranjeiras": {
+    "bairro": "laranjeiras",
+    "cidade_pasta": "rio_janeiro",
+    "cron": "0 21 28 * *",
+    "coleta": [
+      {
+        "id": "coleta_laranjeiras_chave_mao",
+        "arquivo": "rio_janeiro_laranjeiras_coleta_dados_chave_mao.py",
+        "bairro": "laranjeiras",
+        "filtro_bairro": "",
+        "url_chaves": "https://www.chavesnamao.com.br/imoveis-a-venda/rj-rio-de-janeiro/laranjeiras/?filtro=amin%3A{min}%2Camax%3A{max}&pg={pagina}",
+        "url_olx": "",
+        "url_zap": "",
+        "url_vivareal": ""
+      },
+      {
+        "id": "coleta_laranjeiras_olx_0_100",
+        "arquivo": "rio_janeiro_laranjeiras_coleta_dados_olx_0_100.py",
+        "bairro": "laranjeiras",
+        "filtro_bairro": "",
+        "url_chaves": "",
+        "url_olx": "https://www.olx.com.br/imoveis/venda/estado-rj/rio-de-janeiro-e-regiao/zona-sul/laranjeiras?ss={min}&se={max}&o={pagina}",
+        "url_zap": "",
+        "url_vivareal": ""
+      },
+      {
+        "id": "coleta_laranjeiras_olx_101_infinito",
+        "arquivo": "rio_janeiro_laranjeiras_coleta_dados_olx_101_infinito.py",
+        "bairro": "laranjeiras",
+        "filtro_bairro": "",
+        "url_chaves": "",
+        "url_olx": "https://www.olx.com.br/imoveis/venda/estado-rj/rio-de-janeiro-e-regiao/zona-sul/laranjeiras?ss={min}&se={max}&o={pagina}",
+        "url_zap": "",
+        "url_vivareal": ""
+      },
+      {
+        "id": "coleta_laranjeiras_zap",
+        "arquivo": "rio_janeiro_laranjeiras_coleta_dados_zap_imoveis.py",
+        "bairro": "laranjeiras",
+        "filtro_bairro": "",
+        "url_chaves": "",
+        "url_olx": "",
+        "url_zap": "https://www.zapimoveis.com.br/venda/imoveis/rj+rio-de-janeiro+zona-sul+laranjeiras/?onde=%2CRio+de+Janeiro%2CRio+de+Janeiro%2CZona+Sul%2CLaranjeiras%2C%2C%2Cneighborhood%2CBR%3ERio+de+Janeiro%3ENULL%3ERio+de+Janeiro%3EZona+Sul%3ELaranjeiras%2C-22.933263%2C-43.185007%2C&pagina={pagina}",
+        "url_vivareal": ""
+      },
+      {
+        "id": "coleta_laranjeiras_viva_real",
+        "arquivo": "rio_janeiro_laranjeiras_coleta_dados_viva_real.py",
+        "bairro": "laranjeiras",
+        "filtro_bairro": "",
+        "url_chaves": "",
+        "url_olx": "",
+        "url_zap": "",
+        "url_vivareal": "https://www.vivareal.com.br/venda/rj/rio-de-janeiro/zona-sul/laranjeiras/?onde=%2CRio+de+Janeiro%2CRio+de+Janeiro%2CZona+Sul%2CLaranjeiras%2C%2C%2Cneighborhood%2CBR%3ERio+de+Janeiro%3ENULL%3ERio+de+Janeiro%3EZona+Sul%3ELaranjeiras%2C-22.933263%2C-43.185007%2C&pagina={pagina}"
+      }
+    ],
+    "limpeza": {
+      "arquivo_rodando_imovel": "rio_janeiro_laranjeiras_limpando_dados.py",
+      "cidade_limpeza": "rio de janeiro",
+      "cidade_localizacao": "Rio de Janeiro",
+      "estado_limpeza": "rj",
+      "estado_localizacao": "RJ",
+      "BAIRRO": "laranjeiras",
+      "FILTRO_BAIRRO": "laranjeiras",
+      "tipo_async": true
+    },
+    "melhores_configuracoes": "rio_janeiro_melhores_configuraoes_modelo.py",
+    "otimizando": "rio_janeiro_otimizando_melhores_modelos.py",
+    "melhor_modelo_geral": "rio_janeiro_melhor_modelo_geral.py"
+  },
+  "leblon": {
+    "bairro": "leblon",
+    "cidade_pasta": "rio_janeiro",
+    "cron": "0 16 24 * *",
+    "coleta": [
+      {
+        "id": "coleta_leblon_chave_mao",
+        "arquivo": "rio_janeiro_leblon_coleta_dados_chave_mao.py",
+        "bairro": "leblon",
+        "filtro_bairro": "",
+        "url_chaves": "https://www.chavesnamao.com.br/imoveis-a-venda/rj-rio-de-janeiro/leblon/?filtro=amin%3A{min}%2Camax%3A{max}&pg={pagina}",
+        "url_olx": "",
+        "url_zap": "",
+        "url_vivareal": ""
+      },
+      {
+        "id": "coleta_leblon_olx_0_100",
+        "arquivo": "rio_janeiro_leblon_coleta_dados_olx_0_100.py",
+        "bairro": "leblon",
+        "filtro_bairro": "",
+        "url_chaves": "",
+        "url_olx": "https://www.olx.com.br/imoveis/venda/estado-rj/rio-de-janeiro-e-regiao/zona-sul/leblon?ss={min}&se={max}&o={pagina}",
+        "url_zap": "",
+        "url_vivareal": ""
+      },
+      {
+        "id": "coleta_leblon_olx_101_infinito",
+        "arquivo": "rio_janeiro_leblon_coleta_dados_olx_101_infinito.py",
+        "bairro": "leblon",
+        "filtro_bairro": "",
+        "url_chaves": "",
+        "url_olx": "https://www.olx.com.br/imoveis/venda/estado-rj/rio-de-janeiro-e-regiao/zona-sul/leblon?ss={min}&se={max}&o={pagina}",
+        "url_zap": "",
+        "url_vivareal": ""
+      },
+      {
+        "id": "coleta_leblon_zap",
+        "arquivo": "rio_janeiro_leblon_coleta_dados_zap_imoveis.py",
+        "bairro": "leblon",
+        "filtro_bairro": "",
+        "url_chaves": "",
+        "url_olx": "",
+        "url_zap": "https://www.zapimoveis.com.br/venda/imoveis/rj+rio-de-janeiro+zona-sul+leblon/?onde=%2CRio+de+Janeiro%2CRio+de+Janeiro%2CZona+Sul%2CLeblon%2C%2C%2Cneighborhood%2CBR%3ERio+de+Janeiro%3ENULL%3ERio+de+Janeiro%3EZona+Sul%3ELeblon%2C-22.983927%2C-43.216114%2C&pagina={pagina}",
+        "url_vivareal": ""
+      },
+      {
+        "id": "coleta_leblon_viva_real",
+        "arquivo": "rio_janeiro_leblon_coleta_dados_viva_real.py",
+        "bairro": "leblon",
+        "filtro_bairro": "",
+        "url_chaves": "",
+        "url_olx": "",
+        "url_zap": "",
+        "url_vivareal": "https://www.vivareal.com.br/venda/rj/rio-de-janeiro/zona-sul/leblon/?onde=%2CRio+de+Janeiro%2CRio+de+Janeiro%2CZona+Sul%2CLeblon%2C%2C%2Cneighborhood%2CBR%3ERio+de+Janeiro%3ENULL%3ERio+de+Janeiro%3EZona+Sul%3ELeblon%2C-22.983927%2C-43.216114%2C&pagina={pagina}"
+      }
+    ],
+    "limpeza": {
+      "arquivo_rodando_imovel": "rio_janeiro_leblon_limpando_dados.py",
+      "cidade_limpeza": "rio de janeiro",
+      "cidade_localizacao": "Rio de Janeiro",
+      "estado_limpeza": "rj",
+      "estado_localizacao": "RJ",
+      "BAIRRO": "leblon",
+      "FILTRO_BAIRRO": "leblon",
+      "tipo_async": true
+    },
+    "melhores_configuracoes": "rio_janeiro_melhores_configuraoes_modelo.py",
+    "otimizando": "rio_janeiro_otimizando_melhores_modelos.py",
+    "melhor_modelo_geral": "rio_janeiro_melhor_modelo_geral.py"
+  },
+  "recreio-bandeirantes": {
+    "bairro": "recreio-bandeirantes",
+    "cidade_pasta": "rio_janeiro",
+    "cron": "0 9 29 * *",
+    "coleta": [
+      {
+        "id": "coleta_recreio_chave_mao_0_130",
+        "arquivo": "rio_janeiro_recreio_bandeirantes_coleta_dados_chave_mao_0_130.py",
+        "bairro": "recreio-bandeirantes",
+        "filtro_bairro": "",
+        "url_chaves": "https://www.chavesnamao.com.br/imoveis-a-venda/rj-rio-de-janeiro/recreio-dos-bandeirantes/?filtro=amin%3A{min}%2Camax%3A{max}&pg={pagina}",
+        "url_olx": "",
+        "url_zap": "",
+        "url_vivareal": ""
+      },
+      {
+        "id": "coleta_recreio_chave_mao_131_infinito",
+        "arquivo": "rio_janeiro_recreio_bandeirantes_coleta_dados_chave_mao_131_infinito.py",
+        "bairro": "recreio-bandeirantes",
+        "filtro_bairro": "",
+        "url_chaves": "https://www.chavesnamao.com.br/imoveis-a-venda/rj-rio-de-janeiro/recreio-dos-bandeirantes/?filtro=amin%3A{min}%2Camax%3A{max}&pg={pagina}",
+        "url_olx": "",
+        "url_zap": "",
+        "url_vivareal": ""
+      },
+      {
+        "id": "coleta_recreio_olx_0_85",
+        "arquivo": "rio_janeiro_recreio_bandeirantes_coleta_dados_olx_0_85.py",
+        "bairro": "recreio-bandeirantes",
+        "filtro_bairro": "",
+        "url_chaves": "",
+        "url_olx": "https://www.olx.com.br/imoveis/venda/estado-rj/rio-de-janeiro-e-regiao/zona-oeste/recreio?ss={min}&se={max}&o={pagina}",
+        "url_zap": "",
+        "url_vivareal": ""
+      },
+      {
+        "id": "coleta_recreio_olx_86_130",
+        "arquivo": "rio_janeiro_recreio_bandeirantes_coleta_dados_olx_86_130.py",
+        "bairro": "recreio-bandeirantes",
+        "filtro_bairro": "",
+        "url_chaves": "",
+        "url_olx": "https://www.olx.com.br/imoveis/venda/estado-rj/rio-de-janeiro-e-regiao/zona-oeste/recreio?ss={min}&se={max}&o={pagina}",
+        "url_zap": "",
+        "url_vivareal": ""
+      },
+      {
+        "id": "coleta_recreio_olx_131_210",
+        "arquivo": "rio_janeiro_recreio_bandeirantes_coleta_dados_olx_131_210.py",
+        "bairro": "recreio-bandeirantes",
+        "filtro_bairro": "",
+        "url_chaves": "",
+        "url_olx": "https://www.olx.com.br/imoveis/venda/estado-rj/rio-de-janeiro-e-regiao/zona-oeste/recreio?ss={min}&se={max}&o={pagina}",
+        "url_zap": "",
+        "url_vivareal": ""
+      },
+      {
+        "id": "coleta_recreio_olx_211_infinito",
+        "arquivo": "rio_janeiro_recreio_bandeirantes_coleta_dados_olx_211_infinito.py",
+        "bairro": "recreio-bandeirantes",
+        "filtro_bairro": "",
+        "url_chaves": "",
+        "url_olx": "https://www.olx.com.br/imoveis/venda/estado-rj/rio-de-janeiro-e-regiao/zona-oeste/recreio?ss={min}&se={max}&o={pagina}",
+        "url_zap": "",
+        "url_vivareal": ""
+      },
+      {
+        "id": "coleta_recreio_viva_real_0_85",
+        "arquivo": "rio_janeiro_recreio_bandeirantes_coleta_dados_viva_real_0_85.py",
+        "bairro": "recreio-bandeirantes",
+        "filtro_bairro": "",
+        "url_chaves": "",
+        "url_olx": "",
+        "url_zap": "",
+        "url_vivareal": "https://www.vivareal.com.br/venda/rj/rio-de-janeiro/zona-oeste/recreio-dos-bandeirantes/?onde=%2CRio+de+Janeiro%2CRio+de+Janeiro%2CZona+Oeste%2CRecreio+Dos+Bandeirantes%2C%2C%2Cneighborhood%2CBR%3ERio+de+Janeiro%3ENULL%3ERio+de+Janeiro%3EZona+Oeste%3ERecreio+Dos+Bandeirantes%2C-23.017871%2C-43.464748%2C&pagina={pagina}"
+      },
+      {
+        "id": "coleta_recreio_viva_real_86_130",
+        "arquivo": "rio_janeiro_recreio_bandeirantes_coleta_dados_viva_real_86_130.py",
+        "bairro": "recreio-bandeirantes",
+        "filtro_bairro": "",
+        "url_chaves": "",
+        "url_olx": "",
+        "url_zap": "",
+        "url_vivareal": "https://www.vivareal.com.br/venda/rj/rio-de-janeiro/zona-oeste/recreio-dos-bandeirantes/?onde=%2CRio+de+Janeiro%2CRio+de+Janeiro%2CZona+Oeste%2CRecreio+Dos+Bandeirantes%2C%2C%2Cneighborhood%2CBR%3ERio+de+Janeiro%3ENULL%3ERio+de+Janeiro%3EZona+Oeste%3ERecreio+Dos+Bandeirantes%2C-23.017871%2C-43.464748%2C&pagina={pagina}"
+      },
+      {
+        "id": "coleta_recreio_viva_real_131_190",
+        "arquivo": "rio_janeiro_recreio_bandeirantes_coleta_dados_viva_real_131_190.py",
+        "bairro": "recreio-bandeirantes",
+        "filtro_bairro": "",
+        "url_chaves": "",
+        "url_olx": "",
+        "url_zap": "",
+        "url_vivareal": "https://www.vivareal.com.br/venda/rj/rio-de-janeiro/zona-oeste/recreio-dos-bandeirantes/?onde=%2CRio+de+Janeiro%2CRio+de+Janeiro%2CZona+Oeste%2CRecreio+Dos+Bandeirantes%2C%2C%2Cneighborhood%2CBR%3ERio+de+Janeiro%3ENULL%3ERio+de+Janeiro%3EZona+Oeste%3ERecreio+Dos+Bandeirantes%2C-23.017871%2C-43.464748%2C&pagina={pagina}"
+      },
+      {
+        "id": "coleta_recreio_viva_real_191_300",
+        "arquivo": "rio_janeiro_recreio_bandeirantes_coleta_dados_viva_real_191_300.py",
+        "bairro": "recreio-bandeirantes",
+        "filtro_bairro": "",
+        "url_chaves": "",
+        "url_olx": "",
+        "url_zap": "",
+        "url_vivareal": "https://www.vivareal.com.br/venda/rj/rio-de-janeiro/zona-oeste/recreio-dos-bandeirantes/?onde=%2CRio+de+Janeiro%2CRio+de+Janeiro%2CZona+Oeste%2CRecreio+Dos+Bandeirantes%2C%2C%2Cneighborhood%2CBR%3ERio+de+Janeiro%3ENULL%3ERio+de+Janeiro%3EZona+Oeste%3ERecreio+Dos+Bandeirantes%2C-23.017871%2C-43.464748%2C&pagina={pagina}"
+      },
+      {
+        "id": "coleta_recreio_viva_real_301_infinito",
+        "arquivo": "rio_janeiro_recreio_bandeirantes_coleta_dados_viva_real_301_infinito.py",
+        "bairro": "recreio-bandeirantes",
+        "filtro_bairro": "",
+        "url_chaves": "",
+        "url_olx": "",
+        "url_zap": "",
+        "url_vivareal": "https://www.vivareal.com.br/venda/rj/rio-de-janeiro/zona-oeste/recreio-dos-bandeirantes/?onde=%2CRio+de+Janeiro%2CRio+de+Janeiro%2CZona+Oeste%2CRecreio+Dos+Bandeirantes%2C%2C%2Cneighborhood%2CBR%3ERio+de+Janeiro%3ENULL%3ERio+de+Janeiro%3EZona+Oeste%3ERecreio+Dos+Bandeirantes%2C-23.017871%2C-43.464748%2C&pagina={pagina}"
+      },
+      {
+        "id": "coleta_recreio_zap_0_85",
+        "arquivo": "rio_janeiro_recreio_bandeirantes_coleta_dados_zap_imoveis_0_85.py",
+        "bairro": "recreio-bandeirantes",
+        "filtro_bairro": "",
+        "url_chaves": "",
+        "url_olx": "",
+        "url_zap": "https://www.zapimoveis.com.br/venda/imoveis/rj+rio-de-janeiro+zona-oeste+recreio-dos-bandeirantes/?onde=%2CRio+de+Janeiro%2CRio+de+Janeiro%2CZona+Oeste%2CRecreio+Dos+Bandeirantes%2C%2C%2Cneighborhood%2CBR%3ERio+de+Janeiro%3ENULL%3ERio+de+Janeiro%3EZona+Oeste%3ERecreio+Dos+Bandeirantes%2C-23.017871%2C-43.464748%2C&pagina={pagina}",
+        "url_vivareal": ""
+      },
+      {
+        "id": "coleta_recreio_zap_86_140",
+        "arquivo": "rio_janeiro_recreio_bandeirantes_coleta_dados_zap_imoveis_86_130.py",
+        "bairro": "recreio-bandeirantes",
+        "filtro_bairro": "",
+        "url_chaves": "",
+        "url_olx": "",
+        "url_zap": "https://www.zapimoveis.com.br/venda/imoveis/rj+rio-de-janeiro+zona-oeste+recreio-dos-bandeirantes/?onde=%2CRio+de+Janeiro%2CRio+de+Janeiro%2CZona+Oeste%2CRecreio+Dos+Bandeirantes%2C%2C%2Cneighborhood%2CBR%3ERio+de+Janeiro%3ENULL%3ERio+de+Janeiro%3EZona+Oeste%3ERecreio+Dos+Bandeirantes%2C-23.017871%2C-43.464748%2C&pagina={pagina}",
+        "url_vivareal": ""
+      },
+      {
+        "id": "coleta_recreio_zap_131_190",
+        "arquivo": "rio_janeiro_recreio_bandeirantes_coleta_dados_zap_imoveis_131_190.py",
+        "bairro": "recreio-bandeirantes",
+        "filtro_bairro": "",
+        "url_chaves": "",
+        "url_olx": "",
+        "url_zap": "https://www.zapimoveis.com.br/venda/imoveis/rj+rio-de-janeiro+zona-oeste+recreio-dos-bandeirantes/?onde=%2CRio+de+Janeiro%2CRio+de+Janeiro%2CZona+Oeste%2CRecreio+Dos+Bandeirantes%2C%2C%2Cneighborhood%2CBR%3ERio+de+Janeiro%3ENULL%3ERio+de+Janeiro%3EZona+Oeste%3ERecreio+Dos+Bandeirantes%2C-23.017871%2C-43.464748%2C&pagina={pagina}",
+        "url_vivareal": ""
+      },
+      {
+        "id": "coleta_recreio_zap_191_300",
+        "arquivo": "rio_janeiro_recreio_bandeirantes_coleta_dados_zap_imoveis_191_300.py",
+        "bairro": "recreio-bandeirantes",
+        "filtro_bairro": "",
+        "url_chaves": "",
+        "url_olx": "",
+        "url_zap": "https://www.zapimoveis.com.br/venda/imoveis/rj+rio-de-janeiro+zona-oeste+recreio-dos-bandeirantes/?onde=%2CRio+de+Janeiro%2CRio+de+Janeiro%2CZona+Oeste%2CRecreio+Dos+Bandeirantes%2C%2C%2Cneighborhood%2CBR%3ERio+de+Janeiro%3ENULL%3ERio+de+Janeiro%3EZona+Oeste%3ERecreio+Dos+Bandeirantes%2C-23.017871%2C-43.464748%2C&pagina={pagina}",
+        "url_vivareal": ""
+      },
+      {
+        "id": "coleta_recreio_zap_301_infinito",
+        "arquivo": "rio_janeiro_recreio_bandeirantes_coleta_dados_zap_imoveis_301_infinito.py",
+        "bairro": "recreio-bandeirantes",
+        "filtro_bairro": "",
+        "url_chaves": "",
+        "url_olx": "",
+        "url_zap": "https://www.zapimoveis.com.br/venda/imoveis/rj+rio-de-janeiro+zona-oeste+recreio-dos-bandeirantes/?onde=%2CRio+de+Janeiro%2CRio+de+Janeiro%2CZona+Oeste%2CRecreio+Dos+Bandeirantes%2C%2C%2Cneighborhood%2CBR%3ERio+de+Janeiro%3ENULL%3ERio+de+Janeiro%3EZona+Oeste%3ERecreio+Dos+Bandeirantes%2C-23.017871%2C-43.464748%2C&pagina={pagina}",
+        "url_vivareal": ""
+      }
+    ],
+    "limpeza": {
+      "arquivo_rodando_imovel": "rio_janeiro_recreio_bandeirantes_limpando_dados.py",
+      "cidade_limpeza": "rio de janeiro",
+      "cidade_localizacao": "Rio de Janeiro",
+      "estado_limpeza": "rj",
+      "estado_localizacao": "RJ",
+      "BAIRRO": "recreio-bandeirantes",
+      "FILTRO_BAIRRO": "recreio dos bandeirantes",
+      "tipo_async": true
+    },
+    "melhores_configuracoes": "rio_janeiro_melhores_configuraoes_modelo.py",
+    "otimizando": "rio_janeiro_otimizando_melhores_modelos.py",
+    "melhor_modelo_geral": "rio_janeiro_melhor_modelo_geral.py"
+  },
+  "tijuca": {
+    "bairro": "tijuca",
+    "cidade_pasta": "rio_janeiro",
+    "cron": "0 9 30 * *",
+    "coleta": [
+      {
+        "id": "coleta_tijuca_chave_mao_0_100",
+        "arquivo": "rio_janeiro_tijuca_coleta_dados_chave_mao_0_100.py",
+        "bairro": "tijuca",
+        "filtro_bairro": "",
+        "url_chaves": "https://www.chavesnamao.com.br/imoveis-a-venda/rj-rio-de-janeiro/tijuca/?filtro=amin%3A{min}%2Camax%3A{max}&pg={pagina}",
+        "url_olx": "",
+        "url_zap": "",
+        "url_vivareal": ""
+      },
+      {
+        "id": "coleta_tijuca_chave_mao_101_infinito",
+        "arquivo": "rio_janeiro_tijuca_coleta_dados_chave_mao_101_infinito.py",
+        "bairro": "tijuca",
+        "filtro_bairro": "",
+        "url_chaves": "https://www.chavesnamao.com.br/imoveis-a-venda/rj-rio-de-janeiro/tijuca/?filtro=amin%3A{min}%2Camax%3A{max}&pg={pagina}",
+        "url_olx": "",
+        "url_zap": "",
+        "url_vivareal": ""
+      },
+      {
+        "id": "coleta_tijuca_olx_0_70",
+        "arquivo": "rio_janeiro_tijuca_coleta_dados_olx_0_70.py",
+        "bairro": "tijuca",
+        "filtro_bairro": "",
+        "url_chaves": "",
+        "url_olx": "https://www.olx.com.br/imoveis/venda/estado-rj/rio-de-janeiro-e-regiao/zona-norte/tijuca-e-regiao?ss={min}&se={max}&o={pagina}",
+        "url_zap": "",
+        "url_vivareal": ""
+      },
+      {
+        "id": "coleta_tijuca_olx_71_90",
+        "arquivo": "rio_janeiro_tijuca_coleta_dados_olx_71_90.py",
+        "bairro": "tijuca",
+        "filtro_bairro": "",
+        "url_chaves": "",
+        "url_olx": "https://www.olx.com.br/imoveis/venda/estado-rj/rio-de-janeiro-e-regiao/zona-norte/tijuca-e-regiao?ss={min}&se={max}&o={pagina}",
+        "url_zap": "",
+        "url_vivareal": ""
+      },
+      {
+        "id": "coleta_tijuca_olx_91_120",
+        "arquivo": "rio_janeiro_tijuca_coleta_dados_olx_91_120.py",
+        "bairro": "tijuca",
+        "filtro_bairro": "",
+        "url_chaves": "",
+        "url_olx": "https://www.olx.com.br/imoveis/venda/estado-rj/rio-de-janeiro-e-regiao/zona-norte/tijuca-e-regiao?ss={min}&se={max}&o={pagina}",
+        "url_zap": "",
+        "url_vivareal": ""
+      },
+      {
+        "id": "coleta_tijuca_olx_121_190",
+        "arquivo": "rio_janeiro_tijuca_coleta_dados_olx_121_190.py",
+        "bairro": "tijuca",
+        "filtro_bairro": "",
+        "url_chaves": "",
+        "url_olx": "https://www.olx.com.br/imoveis/venda/estado-rj/rio-de-janeiro-e-regiao/zona-norte/tijuca-e-regiao?ss={min}&se={max}&o={pagina}",
+        "url_zap": "",
+        "url_vivareal": ""
+      },
+      {
+        "id": "coleta_tijuca_olx_191_infinito",
+        "arquivo": "rio_janeiro_tijuca_coleta_dados_olx_191_infinito.py",
+        "bairro": "tijuca",
+        "filtro_bairro": "",
+        "url_chaves": "",
+        "url_olx": "https://www.olx.com.br/imoveis/venda/estado-rj/rio-de-janeiro-e-regiao/zona-norte/tijuca-e-regiao?ss={min}&se={max}&o={pagina}",
+        "url_zap": "",
+        "url_vivareal": ""
+      },
+      {
+        "id": "coleta_tijuca_viva_real_0_74",
+        "arquivo": "rio_janeiro_tijuca_coleta_dados_viva_real_0_74.py",
+        "bairro": "tijuca",
+        "filtro_bairro": "",
+        "url_chaves": "",
+        "url_olx": "",
+        "url_zap": "",
+        "url_vivareal": "https://www.vivareal.com.br/venda/rj/rio-de-janeiro/zona-norte/tijuca/?onde=%2CRio+de+Janeiro%2CRio+de+Janeiro%2CZona+Norte%2CTijuca%2C%2C%2Cneighborhood%2CBR%3ERio+de+Janeiro%3ENULL%3ERio+de+Janeiro%3EZona+Norte%3ETijuca%2C-22.932443%2C-43.241107%2C&pagina={pagina}"
+      },
+      {
+        "id": "coleta_tijuca_viva_real_75_110",
+        "arquivo": "rio_janeiro_tijuca_coleta_dados_viva_real_75_110.py",
+        "bairro": "tijuca",
+        "filtro_bairro": "",
+        "url_chaves": "",
+        "url_olx": "",
+        "url_zap": "",
+        "url_vivareal": "https://www.vivareal.com.br/venda/rj/rio-de-janeiro/zona-norte/tijuca/?onde=%2CRio+de+Janeiro%2CRio+de+Janeiro%2CZona+Norte%2CTijuca%2C%2C%2Cneighborhood%2CBR%3ERio+de+Janeiro%3ENULL%3ERio+de+Janeiro%3EZona+Norte%3ETijuca%2C-22.932443%2C-43.241107%2C&pagina={pagina}"
+      },
+      {
+        "id": "coleta_tijuca_viva_real_111_180",
+        "arquivo": "rio_janeiro_tijuca_coleta_dados_viva_real_111_180.py",
+        "bairro": "tijuca",
+        "filtro_bairro": "",
+        "url_chaves": "",
+        "url_olx": "",
+        "url_zap": "",
+        "url_vivareal": "https://www.vivareal.com.br/venda/rj/rio-de-janeiro/zona-norte/tijuca/?onde=%2CRio+de+Janeiro%2CRio+de+Janeiro%2CZona+Norte%2CTijuca%2C%2C%2Cneighborhood%2CBR%3ERio+de+Janeiro%3ENULL%3ERio+de+Janeiro%3EZona+Norte%3ETijuca%2C-22.932443%2C-43.241107%2C&pagina={pagina}"
+      },
+      {
+        "id": "coleta_tijuca_viva_real_181_infinito",
+        "arquivo": "rio_janeiro_tijuca_coleta_dados_viva_real_181_infinito.py",
+        "bairro": "tijuca",
+        "filtro_bairro": "",
+        "url_chaves": "",
+        "url_olx": "",
+        "url_zap": "",
+        "url_vivareal": "https://www.vivareal.com.br/venda/rj/rio-de-janeiro/zona-norte/tijuca/?onde=%2CRio+de+Janeiro%2CRio+de+Janeiro%2CZona+Norte%2CTijuca%2C%2C%2Cneighborhood%2CBR%3ERio+de+Janeiro%3ENULL%3ERio+de+Janeiro%3EZona+Norte%3ETijuca%2C-22.932443%2C-43.241107%2C&pagina={pagina}"
+      },
+      {
+        "id": "coleta_tijuca_zap_0_74",
+        "arquivo": "rio_janeiro_tijuca_coleta_dados_zap_imoveis_0_74.py",
+        "bairro": "tijuca",
+        "filtro_bairro": "",
+        "url_chaves": "",
+        "url_olx": "",
+        "url_zap": "https://www.zapimoveis.com.br/venda/imoveis/rj+rio-de-janeiro+zona-norte+tijuca/?onde=%2CRio+de+Janeiro%2CRio+de+Janeiro%2CZona+Norte%2CTijuca%2C%2C%2Cneighborhood%2CBR%3ERio+de+Janeiro%3ENULL%3ERio+de+Janeiro%3EZona+Norte%3ETijuca%2C-22.932443%2C-43.241107%2C&pagina={pagina}",
+        "url_vivareal": ""
+      },
+      {
+        "id": "coleta_tijuca_zap_75_110",
+        "arquivo": "rio_janeiro_tijuca_coleta_dados_zap_imoveis_75_110.py",
+        "bairro": "tijuca",
+        "filtro_bairro": "",
+        "url_chaves": "",
+        "url_olx": "",
+        "url_zap": "https://www.zapimoveis.com.br/venda/imoveis/rj+rio-de-janeiro+zona-norte+tijuca/?onde=%2CRio+de+Janeiro%2CRio+de+Janeiro%2CZona+Norte%2CTijuca%2C%2C%2Cneighborhood%2CBR%3ERio+de+Janeiro%3ENULL%3ERio+de+Janeiro%3EZona+Norte%3ETijuca%2C-22.932443%2C-43.241107%2C&pagina={pagina}",
+        "url_vivareal": ""
+      },
+      {
+        "id": "coleta_tijuca_zap_111_180",
+        "arquivo": "rio_janeiro_tijuca_coleta_dados_zap_imoveis_111_180.py",
+        "bairro": "tijuca",
+        "filtro_bairro": "",
+        "url_chaves": "",
+        "url_olx": "",
+        "url_zap": "https://www.zapimoveis.com.br/venda/imoveis/rj+rio-de-janeiro+zona-norte+tijuca/?onde=%2CRio+de+Janeiro%2CRio+de+Janeiro%2CZona+Norte%2CTijuca%2C%2C%2Cneighborhood%2CBR%3ERio+de+Janeiro%3ENULL%3ERio+de+Janeiro%3EZona+Norte%3ETijuca%2C-22.932443%2C-43.241107%2C&pagina={pagina}",
+        "url_vivareal": ""
+      },
+      {
+        "id": "coleta_tijuca_zap_181_infinito",
+        "arquivo": "rio_janeiro_tijuca_coleta_dados_zap_imoveis_181_infinito.py",
+        "bairro": "tijuca",
+        "filtro_bairro": "",
+        "url_chaves": "",
+        "url_olx": "",
+        "url_zap": "https://www.zapimoveis.com.br/venda/imoveis/rj+rio-de-janeiro+zona-norte+tijuca/?onde=%2CRio+de+Janeiro%2CRio+de+Janeiro%2CZona+Norte%2CTijuca%2C%2C%2Cneighborhood%2CBR%3ERio+de+Janeiro%3ENULL%3ERio+de+Janeiro%3EZona+Norte%3ETijuca%2C-22.932443%2C-43.241107%2C&pagina={pagina}",
+        "url_vivareal": ""
+      }
+    ],
+    "limpeza": {
+      "arquivo_rodando_imovel": "rio_janeiro_tijuca_limpando_dados.py",
+      "cidade_limpeza": "rio de janeiro",
+      "cidade_localizacao": "Rio de Janeiro",
+      "estado_limpeza": "rj",
+      "estado_localizacao": "RJ",
+      "BAIRRO": "tijuca",
+      "FILTRO_BAIRRO": "tijuca",
+      "tipo_async": true
+    },
+    "melhores_configuracoes": "rio_janeiro_melhores_configuraoes_modelo.py",
+    "otimizando": "rio_janeiro_otimizando_melhores_modelos.py",
+    "melhor_modelo_geral": "rio_janeiro_melhor_modelo_geral.py"
+  }
+}

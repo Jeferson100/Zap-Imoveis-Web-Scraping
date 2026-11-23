@@ -1,0 +1,218 @@
+name: "Pipeline Sao Paulo (Bairros)"
+
+# Workflow unificado de Sao Paulo (substitui os 80 arquivos por bairro/etapa).
+# Configuracao completa dos 10 bairros em `.github/workflows_config/sao_paulo.json`.
+
+on:
+  schedule:
+    - cron: '0 13 15 * *'  # dia 15: itaim-bibi
+    - cron: '0 16 16 * *'  # dia 16: jardins
+    - cron: '0 16 17 * *'  # dia 17: moema
+    - cron: '0 16 18 * *'  # dia 18: vila-mariana
+    - cron: '0 16 19 * *'  # dia 19: pinheiros
+    - cron: '0 16 20 * *'  # dia 20: perdizes
+    - cron: '0 16 21 * *'  # dia 21: paraiso
+    - cron: '0 13 22 * *'  # dia 22: bela-vista
+    - cron: '0 16 22 * *'  # dia 22: santana
+    - cron: '0 13 23 * *'  # dia 23: vila-andrade
+  workflow_dispatch:
+    inputs:
+      bairro:
+        description: "Bairro de Sao Paulo"
+        required: true
+        type: choice
+        default: "moema"
+        options:
+          - "bela-vista"
+          - "itaim-bibi"
+          - "jardins"
+          - "moema"
+          - "paraiso"
+          - "perdizes"
+          - "pinheiros"
+          - "santana"
+          - "vila-andrade"
+          - "vila-mariana"
+      etapa_inicial:
+        description: "Etapa inicial do pipeline"
+        required: false
+        type: choice
+        default: "coleta"
+        options:
+          - "coleta"
+          - "limpeza"
+          - "melhores_configuracoes"
+          - "otimizando"
+          - "melhor_modelo_geral"
+      mes_ref:
+        description: "Mes de referencia opcional (YYYY-MM)"
+        required: false
+        type: string
+        default: ""
+
+concurrency:
+  group: pipeline-sp-${{ inputs.bairro || github.event.schedule }}
+  cancel-in-progress: false
+
+jobs:
+  preparar:
+    runs-on: ubuntu-latest
+    outputs:
+      bairro: ${{ steps.cfg.outputs.bairro }}
+      cidade_pasta: ${{ steps.cfg.outputs.cidade_pasta }}
+      mes_ref: ${{ steps.cfg.outputs.mes_ref }}
+      coleta_matrix: ${{ steps.cfg.outputs.coleta_matrix }}
+      limpeza_arquivo: ${{ steps.cfg.outputs.limpeza_arquivo }}
+      limpeza_cidade_limpeza: ${{ steps.cfg.outputs.limpeza_cidade_limpeza }}
+      limpeza_cidade_localizacao: ${{ steps.cfg.outputs.limpeza_cidade_localizacao }}
+      limpeza_estado_limpeza: ${{ steps.cfg.outputs.limpeza_estado_limpeza }}
+      limpeza_estado_localizacao: ${{ steps.cfg.outputs.limpeza_estado_localizacao }}
+      limpeza_bairro: ${{ steps.cfg.outputs.limpeza_bairro }}
+      limpeza_filtro_bairro: ${{ steps.cfg.outputs.limpeza_filtro_bairro }}
+      limpeza_tipo_async: ${{ steps.cfg.outputs.limpeza_tipo_async }}
+      arq_melhores: ${{ steps.cfg.outputs.arq_melhores }}
+      arq_otimizando: ${{ steps.cfg.outputs.arq_otimizando }}
+      arq_melhor_geral: ${{ steps.cfg.outputs.arq_melhor_geral }}
+      rodar_coleta: ${{ steps.cfg.outputs.rodar_coleta }}
+      rodar_limpeza: ${{ steps.cfg.outputs.rodar_limpeza }}
+      rodar_melhores: ${{ steps.cfg.outputs.rodar_melhores }}
+      rodar_otimizando: ${{ steps.cfg.outputs.rodar_otimizando }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout: |
+            .github/workflows_config/sao_paulo.json
+          sparse-checkout-cone-mode: false
+
+      - name: Carregar configuracao do bairro
+        id: cfg
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          SCHEDULE: ${{ github.event.schedule }}
+          INPUT_BAIRRO: ${{ inputs.bairro }}
+          INPUT_ETAPA: ${{ inputs.etapa_inicial }}
+          INPUT_MES_REF: ${{ inputs.mes_ref }}
+        run: |
+          python3 - <<'PY'
+          import json
+          import os
+          from pathlib import Path
+
+          data = json.loads(Path(".github/workflows_config/sao_paulo.json").read_text(encoding="utf-8"))
+          etapas = ["coleta", "limpeza", "melhores_configuracoes", "otimizando", "melhor_modelo_geral"]
+
+          if os.environ["EVENT_NAME"] == "schedule":
+              sched = os.environ["SCHEDULE"].strip()
+              matches = [v for v in data.values() if v["cron"] == sched]
+              if len(matches) != 1:
+                  raise SystemExit(f"Cron {sched!r} retornou {len(matches)} bairros")
+              cfg = matches[0]
+              etapa = "coleta"
+              mes_ref = ""
+          else:
+              bairro = os.environ["INPUT_BAIRRO"].strip()
+              if bairro not in data:
+                  raise SystemExit(f"Bairro desconhecido: {bairro!r}")
+              cfg = data[bairro]
+              etapa = (os.environ["INPUT_ETAPA"] or "coleta").strip()
+              mes_ref = os.environ["INPUT_MES_REF"].strip()
+
+          idx = etapas.index(etapa)
+          limp = cfg["limpeza"]
+          print(f"SP bairro={cfg['bairro']} | etapa_inicial={etapa} | coleta_jobs={len(cfg['coleta'])}")
+
+          with open(os.environ["GITHUB_OUTPUT"], "a", encoding="utf-8") as out:
+              out.write(f"bairro={cfg['bairro']}\n")
+              out.write(f"cidade_pasta={cfg['cidade_pasta']}\n")
+              out.write(f"mes_ref={mes_ref}\n")
+              out.write(f"coleta_matrix={json.dumps(cfg['coleta'])}\n")
+              out.write(f"limpeza_arquivo={limp['arquivo_rodando_imovel']}\n")
+              out.write(f"limpeza_cidade_limpeza={limp['cidade_limpeza']}\n")
+              out.write(f"limpeza_cidade_localizacao={limp['cidade_localizacao']}\n")
+              out.write(f"limpeza_estado_limpeza={limp['estado_limpeza']}\n")
+              out.write(f"limpeza_estado_localizacao={limp['estado_localizacao']}\n")
+              out.write(f"limpeza_bairro={limp['BAIRRO']}\n")
+              out.write(f"limpeza_filtro_bairro={limp['FILTRO_BAIRRO']}\n")
+              out.write(f"limpeza_tipo_async={'true' if limp['tipo_async'] else 'false'}\n")
+              out.write(f"arq_melhores={cfg['melhores_configuracoes']}\n")
+              out.write(f"arq_otimizando={cfg['otimizando']}\n")
+              out.write(f"arq_melhor_geral={cfg['melhor_modelo_geral']}\n")
+              out.write(f"rodar_coleta={'true' if idx <= 0 else 'false'}\n")
+              out.write(f"rodar_limpeza={'true' if idx <= 1 else 'false'}\n")
+              out.write(f"rodar_melhores={'true' if idx <= 2 else 'false'}\n")
+              out.write(f"rodar_otimizando={'true' if idx <= 3 else 'false'}\n")
+          PY
+
+  coleta:
+    needs: [preparar]
+    if: needs.preparar.outputs.rodar_coleta == 'true'
+    strategy:
+      fail-fast: false
+      max-parallel: 6
+      matrix:
+        item: ${{ fromJson(needs.preparar.outputs.coleta_matrix) }}
+    uses: ./.github/workflows/pipeline_cidade_rodando.yml
+    with:
+      cidade_pasta: ${{ needs.preparar.outputs.cidade_pasta }}
+      arquivo_rodando_imovel: ${{ matrix.item.arquivo }}
+      BAIRRO: ${{ matrix.item.bairro }}
+      FILTRO_BAIRRO: ${{ matrix.item.filtro_bairro }}
+      URL_TEMPLATE_CHAVES: ${{ matrix.item.url_chaves }}
+      URL_TEMPLATE_OLX: ${{ matrix.item.url_olx }}
+      URL_TEMPLATE_ZAP: ${{ matrix.item.url_zap }}
+      URL_TEMPLATE_VIVAREAL: ${{ matrix.item.url_vivareal }}
+    secrets: inherit
+
+  limpeza:
+    needs: [preparar, coleta]
+    if: always() && needs.preparar.result == 'success' && needs.preparar.outputs.rodar_limpeza == 'true'
+    uses: ./.github/workflows/pipeline_cidade_rodando.yml
+    with:
+      cidade_pasta: ${{ needs.preparar.outputs.cidade_pasta }}
+      arquivo_rodando_imovel: ${{ needs.preparar.outputs.limpeza_arquivo }}
+      cidade_limpeza: ${{ needs.preparar.outputs.limpeza_cidade_limpeza }}
+      cidade_localizacao: ${{ needs.preparar.outputs.limpeza_cidade_localizacao }}
+      estado_limpeza: ${{ needs.preparar.outputs.limpeza_estado_limpeza }}
+      estado_localizacao: ${{ needs.preparar.outputs.limpeza_estado_localizacao }}
+      BAIRRO: ${{ needs.preparar.outputs.limpeza_bairro }}
+      FILTRO_BAIRRO: ${{ needs.preparar.outputs.limpeza_filtro_bairro }}
+      tipo_async: ${{ needs.preparar.outputs.limpeza_tipo_async == 'true' }}
+      instalar_playwright: false
+      checkout_ref: refs/heads/main
+    secrets: inherit
+
+  melhores_configuracoes:
+    needs: [preparar, limpeza]
+    if: always() && needs.preparar.result == 'success' && needs.preparar.outputs.rodar_melhores == 'true' && (needs.limpeza.result == 'success' || needs.limpeza.result == 'skipped')
+    uses: ./.github/workflows/pipeline_predicao_rodando.yml
+    with:
+      cidade_pasta: ${{ needs.preparar.outputs.cidade_pasta }}
+      arquivo_rodando_imovel: ${{ needs.preparar.outputs.arq_melhores }}
+      bairro: ${{ needs.preparar.outputs.bairro }}
+      mes_ref: ${{ needs.preparar.outputs.mes_ref }}
+      checkout_ref: refs/heads/main
+    secrets: inherit
+
+  otimizando:
+    needs: [preparar, melhores_configuracoes]
+    if: always() && needs.preparar.result == 'success' && needs.preparar.outputs.rodar_otimizando == 'true' && (needs.melhores_configuracoes.result == 'success' || needs.melhores_configuracoes.result == 'skipped')
+    uses: ./.github/workflows/pipeline_predicao_rodando.yml
+    with:
+      cidade_pasta: ${{ needs.preparar.outputs.cidade_pasta }}
+      arquivo_rodando_imovel: ${{ needs.preparar.outputs.arq_otimizando }}
+      bairro: ${{ needs.preparar.outputs.bairro }}
+      mes_ref: ${{ needs.preparar.outputs.mes_ref }}
+      checkout_ref: refs/heads/main
+    secrets: inherit
+
+  melhor_modelo_geral:
+    needs: [preparar, otimizando]
+    if: always() && needs.preparar.result == 'success' && (needs.otimizando.result == 'success' || needs.otimizando.result == 'skipped')
+    uses: ./.github/workflows/pipeline_predicao_rodando.yml
+    with:
+      cidade_pasta: ${{ needs.preparar.outputs.cidade_pasta }}
+      arquivo_rodando_imovel: ${{ needs.preparar.outputs.arq_melhor_geral }}
+      bairro: ${{ needs.preparar.outputs.bairro }}
+      mes_ref: ${{ needs.preparar.outputs.mes_ref }}
+      checkout_ref: refs/heads/main
+    secrets: inherit
