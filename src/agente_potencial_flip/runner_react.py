@@ -203,8 +203,13 @@ async def _resolver_interrupts(sessao, out):
 
 def _texto_util(texto) -> bool:
     """True se o texto tem conteudo de verdade ('...' e vazio na pratica)."""
+    import re
     limpo = str(texto or "").strip().strip(".… \t\n")
-    return len(limpo) >= 10
+    if len(limpo) < 15:
+        return False
+    if re.search(r"(?i)^(iniciando|aguardando|chamando|etapa \d|vou |recalculando)", limpo):
+        return False
+    return True
 
 
 def _saida(sessao, graders):

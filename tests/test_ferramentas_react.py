@@ -156,6 +156,16 @@ def test_saida_trata_reticencias_como_vazia():
     assert len(saida.justificativa_potencial) > 20
 
 
+def test_saida_trata_etapa_em_andamento_como_vazia():
+    fr.ESTADO_AGENTE.clear()
+    sessao = _sessao(_Flip(justificativa="Iniciando etapa 1: classificacao"))
+
+    saida = rr._saida(sessao, _graders())
+
+    assert "sintetizado pelo runner" in saida.justificativa_potencial
+    assert "Iniciando etapa 1" not in saida.justificativa_potencial
+
+
 def test_timeout_imovel_le_env(monkeypatch):
     monkeypatch.setenv("FLIP_LOOP_TIMEOUT_S", "600")
     assert rr._timeout_imovel() == 600.0

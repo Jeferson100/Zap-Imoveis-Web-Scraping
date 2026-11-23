@@ -54,10 +54,20 @@ def avaliar_graders(
         "G1": [], "G2": [], "G3": [], "G4": [], "G5": [], "G6": []
     }
 
-    # G1: imagem válida
+    # G1/G2: imagem válida e conservação coerente
+    # Quando o classificador não tem pesos ou fotos (fallback), imagem traz
+    # ambiente='desconhecido' e classe_conservacao=None/'indefinido'.
+    # Nesses casos, G1 e G2 não devem travar o agente nem forçar retries inúteis.
+    imagem_fallback = (
+        imagem is None
+        or getattr(imagem, "ambiente", None) == "desconhecido"
+        or getattr(imagem, "classe_conservacao", None) in (None, "indefinido", "")
+        or getattr(imagem, "problemas_visiveis", []) == ["Sem fotos para o classificador"]
+    )
+
     if imagem is None:
         erros["G1"].append("analise de imagens ausente")
-    else:
+    elif not imagem_fallback:
         if getattr(imagem, "ambiente", None) not in AMBIENTES:
             erros["G1"].append(f"ambiente invalido: {imagem.ambiente}")
         if getattr(imagem, "classe_conservacao", None) not in LABELS:
@@ -78,21 +88,35 @@ def avaliar_graders(
                     f"[{lo}, {hi}) +/- {TOLERANCIA_G2}"
                 )
 
-    # G3: completude da validação e do flip
+    # G3: completude da validação e do flip, com checagem de coerência
     if validacao is None:
         erros["G3"].append("validacao ausente")
     if flip is None:
         erros["G3"].append("analise de flip ausente")
     else:
-        if getattr(flip, "potencial_house_flip", None) not in ("True", "False"):
+        pot = getattr(flip, "potencial_house_flip", None)
+        if pot not in ("True", "False"):
             erros["G3"].append(
-                f"potencial_house_flip invalido: {flip.potencial_house_flip}"
+                f"potencial_house_flip invalido: {pot}"
             )
-        if not str(getattr(flip, "justificativa_potencial", "") or "").strip():
-            erros["G3"].append("justificativa vazia")
+        just = str(getattr(flip, "justificativa_potencial", "") or "").strip()
+        if not just or len(just) < 15:
+            erros["G3"].append("justificativa vazia ou excessivamente curta")
+        
+        # Detectar se o modelo emitiu justificativa preliminar de etapa em andamento
+        import re
+        if re.search(r"(?i)^(iniciando|aguardando|chamando|etapa \d|vou |recalculando)", just):
+            erros["G3"].append(f"justificativa de etapa em andamento (incompleta): '{just[:60]}...'")
+
         score = _num(getattr(flip, "score_potencial_flip", None))
         if not 0 <= score <= 10:
             erros["G3"].append(f"score fora de [0,10]: {score}")
+
+        # Coerência entre potencial_house_flip e score
+        if pot == "True" and score < 5.0:
+            erros["G3"].append(f"incoerencia: potencial_house_flip=True mas score={score} (< 5.0)")
+        if pot == "False" and score >= 7.0:
+            erros["G3"].append(f"incoerencia: potencial_house_flip=False mas score={score} (>= 7.0)")
 
     # G4: a regra de 15% vem das métricas determinísticas, não do modelo
     if metricas is None:

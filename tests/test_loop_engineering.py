@@ -45,6 +45,39 @@ def test_blend_e_grader_g5():
     assert res["passou"]["G5"], res["erros"]["G5"]
 
 
+def test_fallback_imagem_nao_reprova_g1_g2():
+    # Quando o classificador cai em fallback (sem pesos no CI), ambiente='desconhecido'
+    # e conservacao=None/'indefinido'. G1 e G2 nao devem reprovar.
+    img_fallback = SimpleNamespace(
+        ambiente="desconhecido",
+        classe_conservacao=None,
+        confianca_ambiente=0.0,
+        confianca_conservacao=0.0,
+        score_conservacao=0.0,
+        problemas_visiveis=["Pesos do classificador ausentes (fold*.pt); usando fallback"],
+    )
+    res = avaliar_graders(img_fallback, analise(), None, METRICAS)
+    assert res["passou"]["G1"] is True
+    assert res["passou"]["G2"] is True
+
+
+def test_g3_reprova_justificativa_incompleta_e_incoerencia():
+    # Justificativa curta ou de etapa intermediaria
+    bad_analise = analise()
+    bad_analise.justificativa_potencial = "Iniciando avaliação - etapa 1: classificar fotos"
+    res = avaliar_graders(None, bad_analise, None, METRICAS)
+    assert res["passou"]["G3"] is False
+    assert any("etapa em andamento" in e for e in res["erros"]["G3"])
+
+    # Incoerência: True mas score baixo (< 5.0)
+    incoerente = analise()
+    incoerente.score_potencial_flip = 2.3
+    incoerente.potencial_house_flip = "True"
+    res = avaliar_graders(None, incoerente, None, METRICAS)
+    assert res["passou"]["G3"] is False
+    assert any("potencial_house_flip=True mas score=2.3" in e for e in res["erros"]["G3"])
+
+
 def test_g4_reprova_flip_sem_roi():
     Metricas = dict(METRICAS, passa_regra_15pct=False)
     res = avaliar_graders(None, analise(roi_pass=True), None, Metricas)
