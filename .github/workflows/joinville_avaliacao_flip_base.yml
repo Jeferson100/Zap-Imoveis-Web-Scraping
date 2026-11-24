@@ -22,10 +22,10 @@ on:
         type: string
         default: ""
       motor:
-        description: "grafo (padrao, script antigo) ou react (agente novo)"
+        description: "react (padrao, agente novo) ou grafo (script antigo)"
         required: false
         type: string
-        default: "grafo"
+        default: "react"
 
 jobs:
   avaliacao_flip:

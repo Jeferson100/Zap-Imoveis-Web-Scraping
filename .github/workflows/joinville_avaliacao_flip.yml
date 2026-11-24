@@ -8,15 +8,15 @@ name: "Avaliacao Flip Joinville"
 on:
   schedule:
     - cron: '0 9 3 * *'   # dia 3:  atiradores (0-400, motor react)
-    - cron: '0 9 4 * *'   # dia 4:  america (0-400)
-    - cron: '0 9 5 * *'   # dia 5:  centro (0-400)
-    - cron: '0 9 6 * *'   # dia 6:  costa e silva (0-400)
-    - cron: '0 9 7 * *'   # dia 7:  anita garibaldi (0-400)
-    - cron: '0 9 8 * *'   # dia 8:  saguacu (0-400)
-    - cron: '0 9 9 * *'   # dia 9:  gloria (0-400)
-    - cron: '0 9 10 * *'  # dia 10: santo antonio (0-400)
-    - cron: '0 9 11 * *'  # dia 11: bucarein (0-300)
-    - cron: '0 9 12 * *'  # dia 12: bom retiro (0-400)
+    - cron: '0 9 4 * *'   # dia 4:  america (0-400, motor react)
+    - cron: '0 9 5 * *'   # dia 5:  centro (0-400, motor react)
+    - cron: '0 9 6 * *'   # dia 6:  costa e silva (0-400, motor react)
+    - cron: '0 9 7 * *'   # dia 7:  anita garibaldi (0-400, motor react)
+    - cron: '0 9 8 * *'   # dia 8:  saguacu (0-400, motor react)
+    - cron: '0 9 9 * *'   # dia 9:  gloria (0-400, motor react)
+    - cron: '0 9 10 * *'  # dia 10: santo antonio (0-400, motor react)
+    - cron: '0 9 11 * *'  # dia 11: bucarein (0-300, motor react)
+    - cron: '0 9 12 * *'  # dia 12: bom retiro (0-400, motor react)
   workflow_dispatch:
     inputs:
       bairro:
@@ -51,7 +51,7 @@ on:
         type: string
         default: "10"
       motor:
-        description: "Motor do agente (auto = react em atiradores, grafo nos demais)"
+        description: "Motor do agente (auto = react em todos os bairros)"
         required: false
         type: choice
         default: "auto"
@@ -98,15 +98,15 @@ jobs:
 
           CRON_MAP = {
               "0 9 3 * *":  {"bairro": "atiradores",      "sup": 400, "motor": "react"},
-              "0 9 4 * *":  {"bairro": "america",         "sup": 400, "motor": "grafo"},
-              "0 9 5 * *":  {"bairro": "centro",          "sup": 400, "motor": "grafo"},
-              "0 9 6 * *":  {"bairro": "costa e silva",   "sup": 400, "motor": "grafo"},
-              "0 9 7 * *":  {"bairro": "anita garibaldi", "sup": 400, "motor": "grafo"},
-              "0 9 8 * *":  {"bairro": "saguacu",         "sup": 400, "motor": "grafo"},
-              "0 9 9 * *":  {"bairro": "gloria",          "sup": 400, "motor": "grafo"},
-              "0 9 10 * *": {"bairro": "santo antonio",   "sup": 400, "motor": "grafo"},
-              "0 9 11 * *": {"bairro": "bucarein",        "sup": 300, "motor": "grafo"},
-              "0 9 12 * *": {"bairro": "bom retiro",      "sup": 400, "motor": "grafo"},
+              "0 9 4 * *":  {"bairro": "america",         "sup": 400, "motor": "react"},
+              "0 9 5 * *":  {"bairro": "centro",          "sup": 400, "motor": "react"},
+              "0 9 6 * *":  {"bairro": "costa e silva",   "sup": 400, "motor": "react"},
+              "0 9 7 * *":  {"bairro": "anita garibaldi", "sup": 400, "motor": "react"},
+              "0 9 8 * *":  {"bairro": "saguacu",         "sup": 400, "motor": "react"},
+              "0 9 9 * *":  {"bairro": "gloria",          "sup": 400, "motor": "react"},
+              "0 9 10 * *": {"bairro": "santo antonio",   "sup": 400, "motor": "react"},
+              "0 9 11 * *": {"bairro": "bucarein",        "sup": 300, "motor": "react"},
+              "0 9 12 * *": {"bairro": "bom retiro",      "sup": 400, "motor": "react"},
           }
           BAIRRO_DEFAULTS = {v["bairro"]: v for v in CRON_MAP.values()}
 
@@ -123,7 +123,7 @@ jobs:
               mes_ref = ""
           else:
               bairro = os.environ["INPUT_BAIRRO"].strip()
-              defaults = BAIRRO_DEFAULTS.get(bairro, {"sup": 400, "motor": "grafo"})
+              defaults = BAIRRO_DEFAULTS.get(bairro, {"sup": 400, "motor": "react"})
               inf = int(os.environ["INPUT_INF"] or "0")
               sup = int(os.environ["INPUT_SUP"]) if os.environ["INPUT_SUP"].strip() else defaults["sup"]
               step = max(1, int(os.environ["INPUT_STEP"] or "10"))
