@@ -40,12 +40,6 @@ ARQUIVO_RESULTADO = (
 )
 
 
-ARQUIVO_FALHAS = (
-    BASE_DIR / "dados" / CIDADE
-    / f"{CIDADE}_avaliacao_flip_{MES_REF}_{LIMITE_INFERIOR}_{LIMITE_SUPERIOR}_{BAIRRO_SLUG}_falhas.parquet"
-)
-
-
 def carregar_imoveis() -> pd.DataFrame:
     df = pd.read_parquet(ARQUIVO_DADOS)
     if os.getenv("SNAPSHOT_DATA"):
@@ -83,38 +77,38 @@ def carregar_imoveis() -> pd.DataFrame:
 
 
 def urls_ja_avaliadas() -> set:
-    """URLs presentes no checkpoint parcial ou falhas (retomada de batch interrompido)."""
-    urls = set()
-    for arq in (ARQUIVO_RESULTADO, ARQUIVO_FALHAS):
-        if arq.exists():
-            try:
-                urls.update(
-                    pd.read_parquet(arq, columns=["url"])["url"].astype(str)
-                )
-            except Exception as exc:  # noqa: BLE001 - checkpoint ilegivel recomeca
-                logger.warning("Checkpoint %s ilegivel (%s) - ignorando.", arq.name, exc)
-    return urls
+    """URLs presentes no checkpoint parcial (retomada de batch interrompido)."""
+    if ARQUIVO_RESULTADO.exists():
+        try:
+            return set(
+                pd.read_parquet(ARQUIVO_RESULTADO, columns=["url"])["url"].astype(str)
+            )
+        except Exception as exc:  # noqa: BLE001 - checkpoint ilegivel recomeca
+            logger.warning("Checkpoint ilegivel (%s) - recomecando do zero.", exc)
+    return set()
 
 
 def salvar_checkpoint(saida: dict) -> None:
-    # Separa runs com falha/incompletos (sem decisão válida ou com erro) para ARQUIVO_FALHAS
+    # Descarta runs com falha/incompletos (sem decisao valida ou com erro) sem gravar arquivo extra.
     tem_decisao = (
         saida.get("score_potencial_flip") is not None
         and saida.get("potencial_house_flip") in ("True", "False")
         and not saida.get("erro")
         and saida.get("justificativa") not in (None, "", "flip indisponivel")
     )
-    destino = ARQUIVO_RESULTADO if tem_decisao else ARQUIVO_FALHAS
+    if not tem_decisao:
+        logger.warning("Run sem decisao valida ignorado (nao salvo no parquet): %s", saida.get("url"))
+        return
 
     linha = pd.DataFrame([saida])
-    if destino.exists():
+    if ARQUIVO_RESULTADO.exists():
         try:
-            linha = pd.concat([pd.read_parquet(destino), linha], ignore_index=True)
+            linha = pd.concat([pd.read_parquet(ARQUIVO_RESULTADO), linha], ignore_index=True)
         except Exception:
             pass
     # Rerun/retry nao pode duplicar o mesmo anuncio no parquet.
     linha = linha.drop_duplicates(subset=["url"], keep="last")
-    linha.to_parquet(destino, index=False)
+    linha.to_parquet(ARQUIVO_RESULTADO, index=False)
 
 
 def montar_payload(linha: pd.Series) -> dict:
