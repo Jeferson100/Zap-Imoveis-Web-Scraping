@@ -34,6 +34,10 @@ from agente_potencial_flip.tools_flip import explicar_metricas, metricas_flip_to
 from shared.serialization import converter_numpy
 from agente_potencial_flip.trace_flip import ExigePensamento
 from agente_validacao.subgrafo_validacao import subgrafo_validacao, SubgrafoValidacaoState
+from agente_potencial_flip.comparaveis_proximos import (
+    min_comparaveis_arv,
+    usar_proximos_no_arv,
+)
 from agente_potencial_flip.loop_engineering import avaliar_graders
 
 logger = logging.getLogger("agente_ci")
@@ -303,10 +307,32 @@ def calcular_metricas_tool(dados_imovel_json: str = "", refazer: bool = False) -
         dados = dict(payload.get("dados_imovel") or {})
         aplicadas, base = {}, "bruto_sem_validacao"
 
+    # Comparaveis proximos (mesma rua ou raio 300m): quando a publicacao traz rua
+    # real e ha >= min_comparaveis_arv() vizinhos (default 5), usa p50_m2_proximos
+    # no lugar do p50_bairro para o ARV refletir a microrregiao.
+    comp = payload.get("comparaveis_proximos")
+    p50_bairro_original = dados.get("p50_bairro")
+    usou_proximos_no_arv = False
+    if (
+        isinstance(comp, dict)
+        and usar_proximos_no_arv()
+        and int(comp.get("n_comparaveis") or 0) >= min_comparaveis_arv()
+        and float(comp.get("p50_m2_proximos") or 0) > 0
+    ):
+        dados = dict(dados)
+        dados["p50_bairro"] = float(comp["p50_m2_proximos"])
+        usou_proximos_no_arv = True
+
     detalhe = converter_numpy(explicar_metricas(dados))
     detalhe["base_dados"] = base
     detalhe["correcoes_aplicadas"] = aplicadas
     detalhe["fonte"] = "metricas"
+    if isinstance(comp, dict):
+        detalhe["comparaveis_proximos"] = converter_numpy({
+            **comp,
+            "usado_no_arv": usou_proximos_no_arv,
+            "p50_bairro_original": p50_bairro_original,
+        })
     detalhe["validacao"] = None if validacao is None else {
         "dados_consistentes": getattr(validacao, "dados_consistentes", None),
         "possui_erros": getattr(validacao, "possui_erros", None),
@@ -441,6 +467,11 @@ SYSTEM_FLIP_NB += (
     "planejamento. IGNORE-AS: nao fazem parte da avaliacao. Use SOMENTE as 5 "
     "ferramentas do flip, na ordem 1 a 5. Nunca delegue, nunca crie tarefas, "
     "nunca escreva arquivos."
+    "\n9) Se `calcular_metricas_tool` devolver `comparaveis_proximos` (imovel com "
+    "rua informada), cite na justificativa e nos riscos a origem (`mesma_rua` ou "
+    "`raio_300m`), a quantidade `n_comparaveis` e a mediana `p50_m2_proximos` "
+    "comparada ao preco/m2 do imovel. Quando `usado_no_arv=true`, deixe explicito "
+    "que o ARV usou os comparaveis proximos no lugar da mediana do bairro."
 )
 
 

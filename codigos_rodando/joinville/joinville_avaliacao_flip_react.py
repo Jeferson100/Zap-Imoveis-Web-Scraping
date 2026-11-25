@@ -17,6 +17,10 @@ import sys
 
 sys.path.insert(0, str(BASE_DIR))
 
+from agente_potencial_flip.comparaveis_proximos import (  # noqa: E402
+    buscar_comparaveis_proximos,
+    preparar_pool_comparaveis,
+)
 from agente_potencial_flip.runner_react import avaliar_imovel_agente  # noqa: E402
 from shared.serialization import converter_numpy  # noqa: E402
 
@@ -40,13 +44,19 @@ ARQUIVO_RESULTADO = (
 )
 
 
+POOL_COMPARAVEIS = pd.DataFrame()
+
+
 def carregar_imoveis() -> pd.DataFrame:
+    global POOL_COMPARAVEIS
     df = pd.read_parquet(ARQUIVO_DADOS)
     if os.getenv("SNAPSHOT_DATA"):
         snap = ARQUIVO_DADOS.with_suffix(".snapshot.parquet")
         if not snap.exists():
             df.to_parquet(snap)
         df = pd.read_parquet(snap)
+    # Pool completo (antes de fatiar o batch) para buscar vizinhos na mesma rua ou raio de 300m.
+    POOL_COMPARAVEIS = preparar_pool_comparaveis(df)
     # Mesmo contrato do script original: filtrar -> ordenar por preco_por_m2 ->
     # fatiar por POSICAO (iloc). O indice do parquet e esparso (atiradores tem
     # indices 469, 727, 918...), entao filtrar por df.index selecionaria zero
@@ -111,10 +121,12 @@ def salvar_checkpoint(saida: dict) -> None:
     linha.to_parquet(ARQUIVO_RESULTADO, index=False)
 
 
-def montar_payload(linha: pd.Series) -> dict:
+def montar_payload(linha: pd.Series, pool: pd.DataFrame | None = None) -> dict:
     fotos = linha.get("fotos")
     urls = [str(u) for u in fotos if u] if isinstance(fotos, (np.ndarray, list)) else []
-    return {
+    pool_ref = POOL_COMPARAVEIS if pool is None else pool
+    comp = buscar_comparaveis_proximos(linha, pool_ref) if pool_ref is not None and not pool_ref.empty else None
+    payload = {
         "_id": str(linha.get("url", "")),
         "dados_imovel": converter_numpy({
             "metragem": linha.get("metragem", 0),
@@ -126,11 +138,15 @@ def montar_payload(linha: pd.Series) -> dict:
             "banheiros": linha.get("banheiros", 0),
             "vagas": linha.get("vagas", 0),
             "bairro": str(linha.get("bairro", "") or ""),
+            "rua": str(linha.get("rua", "") or ""),
             "tipo_imovel": str(linha.get("tipo_imovel", "") or ""),
         }),
         "fotos_urls": urls,
         "descricao_texto": str(linha.get("descricao", "") or ""),
     }
+    if comp is not None:
+        payload["comparaveis_proximos"] = converter_numpy(comp)
+    return payload
 
 
 async def processar_um(linha: pd.Series, i: int, total: int) -> dict:
@@ -146,6 +162,7 @@ async def processar_um(linha: pd.Series, i: int, total: int) -> dict:
         logger.error("traceback:\n%s", traceback.format_exc())
         saida, metricas, erro = None, {}, str(exc)
 
+    comp_m = metricas.get("comparaveis_proximos") or {}
     registro = {
         "url": url,
         "score_potencial_flip": getattr(saida, "score_potencial_flip", None),
@@ -163,6 +180,10 @@ async def processar_um(linha: pd.Series, i: int, total: int) -> dict:
         "ambiente_fotos": getattr(saida, "ambiente_fotos", None),
         "conservacao_fotos": getattr(saida, "conservacao_fotos", None),
         "metricas_base": metricas.get("base_dados"),
+        "origem_comparaveis": comp_m.get("origem"),
+        "n_comparaveis_proximos": comp_m.get("n_comparaveis"),
+        "p50_m2_proximos": comp_m.get("p50_m2_proximos"),
+        "proximos_usado_no_arv": comp_m.get("usado_no_arv"),
         "erro": erro,
     }
     salvar_checkpoint(registro)
