@@ -183,7 +183,7 @@ jobs:
 
   melhores_configuracoes:
     needs: [preparar, limpeza]
-    if: always() && needs.preparar.result == 'success' && needs.preparar.outputs.rodar_melhores == 'true' && (needs.limpeza.result == 'success' || needs.limpeza.result == 'skipped')
+    if: always() && needs.preparar.result == 'success' && needs.preparar.outputs.rodar_melhores == 'true' && (needs.limpeza.result == 'success' || needs.preparar.outputs.rodar_limpeza == 'false')
     uses: ./.github/workflows/pipeline_predicao_rodando.yml
     with:
       cidade_pasta: ${{ needs.preparar.outputs.cidade_pasta }}
@@ -195,7 +195,7 @@ jobs:
 
   otimizando:
     needs: [preparar, melhores_configuracoes]
-    if: always() && needs.preparar.result == 'success' && needs.preparar.outputs.rodar_otimizando == 'true' && (needs.melhores_configuracoes.result == 'success' || needs.melhores_configuracoes.result == 'skipped')
+    if: always() && needs.preparar.result == 'success' && needs.preparar.outputs.rodar_otimizando == 'true' && (needs.melhores_configuracoes.result == 'success' || needs.preparar.outputs.rodar_melhores == 'false')
     uses: ./.github/workflows/pipeline_predicao_rodando.yml
     with:
       cidade_pasta: ${{ needs.preparar.outputs.cidade_pasta }}
@@ -207,7 +207,7 @@ jobs:
 
   melhor_modelo_geral:
     needs: [preparar, otimizando]
-    if: always() && needs.preparar.result == 'success' && (needs.otimizando.result == 'success' || needs.otimizando.result == 'skipped')
+    if: always() && needs.preparar.result == 'success' && (needs.otimizando.result == 'success' || needs.preparar.outputs.rodar_otimizando == 'false')
     uses: ./.github/workflows/pipeline_predicao_rodando.yml
     with:
       cidade_pasta: ${{ needs.preparar.outputs.cidade_pasta }}

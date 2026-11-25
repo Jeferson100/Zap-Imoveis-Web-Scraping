@@ -22,7 +22,7 @@ jobs:
         run: uv sync --frozen --no-dev --extra agents --extra vision
 
       - name: Coletar catalogo + probe
-        run: uv run codigos_rodando/joinville/joinville_catalogo_modelos.py
+        run: uv run --no-sync codigos_rodando/joinville/joinville_catalogo_modelos.py
         env:
           NVIDIA_API_KEY: ${{ secrets.NVIDIA_API_KEY }}
           GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}

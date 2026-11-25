@@ -36,17 +36,17 @@ jobs:
 
       - name: Exportar dados do site
         run: |
-          uv run python scripts/exportar_dados.py
+          uv run --no-sync python scripts/exportar_dados.py
         env:
           CIDADE_EXPORTAR: todas
 
       - name: Exportar modelos JS
         run: |
-          uv run python scripts/exportar_modelo_js.py todas
+          uv run --no-sync python scripts/exportar_modelo_js.py todas
 
       - name: Validar artefatos do site
         run: |
-          uv run python scripts/validar_site.py
+          uv run --no-sync python scripts/validar_site.py
 
       - name: Sincronizar site_estatico para Analise-imoveis
         run: |

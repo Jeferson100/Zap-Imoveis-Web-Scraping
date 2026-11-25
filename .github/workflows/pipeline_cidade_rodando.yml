@@ -146,7 +146,7 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: ${{ inputs.timeout_minutos }}
     if: ${{ !inputs.exigir_sucesso_anterior || github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success' || (inputs.permitir_parcial && github.event.workflow_run.conclusion == 'cancelled') }}
     steps:
@@ -244,7 +244,7 @@ jobs:
           CAMINHO_EXECUCAO="codigos_rodando/${{ inputs.cidade_pasta }}/${{ inputs.BAIRRO != '' && format('{0}/', inputs.BAIRRO) || '' }}${{ inputs.arquivo_rodando_imovel }}"
           
           echo "Executando: $CAMINHO_EXECUCAO"
-          uv run $CAMINHO_EXECUCAO
+          uv run --no-sync $CAMINHO_EXECUCAO
         env:
           CIDADE_PASTA: ${{ inputs.cidade_pasta }}
           HEADLESS: ${{ inputs.headless }}

@@ -45,7 +45,7 @@ jobs:
       - name: Rodar agente ReAct (deep agent)
         run: |
           mkdir -p logs
-          uv run codigos_rodando/joinville/joinville_avaliacao_flip_react.py 2>&1 | tee logs/flip_react.log
+          uv run --no-sync codigos_rodando/joinville/joinville_avaliacao_flip_react.py 2>&1 | tee logs/flip_react.log
         env:
           LIMITE_INFERIOR_FLIP: "0"
           LIMITE_SUPERIOR_FLIP: ${{ inputs.limite }}
@@ -79,7 +79,7 @@ jobs:
           LIMITE: ${{ inputs.limite }}
           BAIRRO: ${{ inputs.bairro }}
         run: |
-          uv run python - <<'PY'
+          uv run --no-sync python - <<'PY'
           import glob
           import os
           import pandas as pd
@@ -150,7 +150,7 @@ jobs:
       - name: Rodar com modelo principal INVALIDO (forca fallback)
         run: |
           mkdir -p logs
-          uv run codigos_rodando/joinville/joinville_avaliacao_flip_react.py 2>&1 | tee logs/flip_fallback.log
+          uv run --no-sync codigos_rodando/joinville/joinville_avaliacao_flip_react.py 2>&1 | tee logs/flip_fallback.log
         env:
           LIMITE_INFERIOR_FLIP: "0"
           LIMITE_SUPERIOR_FLIP: "2"
@@ -167,7 +167,7 @@ jobs:
 
       - name: Validar fallback
         run: |
-          uv run python - <<'PY'
+          uv run --no-sync python - <<'PY'
           import glob
           import os
           import pandas as pd
